@@ -19,13 +19,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 (function loadDivorceEnergyModule(){
  if(document.querySelector('script[data-lumera-divorce]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-9';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-9';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
+ const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-10';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-10';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
 })();
 
 (function loadLumeraWorkspace(){
  if(document.querySelector('script[data-lumera-workspace]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-workspace.css?v=20260818-9';css.dataset.lumeraWorkspace='1';document.head.appendChild(css);
- const audit=document.createElement('link');audit.rel='stylesheet';audit.href='lumera-layout-audit.css?v=20260818-9';audit.dataset.lumeraLayoutAudit='1';document.head.appendChild(audit);
- const js=document.createElement('script');js.src='lumera-workspace.js?v=20260818-9';js.dataset.lumeraWorkspace='1';js.defer=true;document.body.appendChild(js);
+ const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-workspace.css?v=20260818-10';css.dataset.lumeraWorkspace='1';document.head.appendChild(css);
+ const audit=document.createElement('link');audit.rel='stylesheet';audit.href='lumera-layout-audit.css?v=20260818-10';audit.dataset.lumeraLayoutAudit='1';document.head.appendChild(audit);
+ const js=document.createElement('script');js.src='lumera-workspace.js?v=20260818-10';js.dataset.lumeraWorkspace='1';js.defer=true;document.body.appendChild(js);
+})();
+
+(function loadLumeraV13(){
+ if(document.querySelector('script[data-lumera-v13]'))return;
+ const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v13.css?v=20260818-10';css.dataset.lumeraV13='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='lumera-v13.js?v=20260818-10';js.dataset.lumeraV13='1';js.defer=true;document.body.appendChild(js);
 })();
