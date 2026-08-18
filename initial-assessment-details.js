@@ -16,3 +16,9 @@ function decorateHistory(){setTimeout(()=>{const box=$('historyList');if(!box)re
 function install(){const o=new MutationObserver(()=>{if($('reportView')&&!$('reportView').classList.contains('hidden'))decorateReport();if($('historyView')&&!$('historyView').classList.contains('hidden'))decorateHistory()});['reportView','historyView'].forEach(id=>{const el=$(id);if(el)o.observe(el,{attributes:true,attributeFilter:['class']})})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
+
+(function loadDivorceEnergyModule(){
+ if(document.querySelector('script[data-lumera-divorce]'))return;
+ const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-7';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-7';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
+})();
