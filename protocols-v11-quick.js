@@ -3,32 +3,27 @@
 'use strict';
 const P=(label,command)=>({label,command});
 Object.assign(PLANS,{
-/* Limpeza / Reequilibrio */
 quick_clean_tension:P('Tensão ou carga acumulada','Reduzir a tensão percebida e favorecer retorno gradual a um estado de maior centramento, presença e estabilidade.'),
 quick_clean_emotion:P('Emoção predominante pedindo regulação','Acolher e regular a emoção predominante sem suprimi-la, fortalecendo segurança, compreensão e capacidade de resposta.'),
 quick_clean_external:P('Influência externa ou ambiental percebida','Reduzir o impacto de estímulos, conflitos ou demandas externas que estejam mantendo sobrecarga e fortalecer limites e recuperação.'),
 quick_clean_energy:P('Desequilíbrio energético percebido','Dentro da prática espiritual, realizar o reequilíbrio energético percebido como adequado para esta sessão, reforçando centramento e limites sem tratá-lo como fato objetivo.'),
 quick_clean_restore:P('Necessidade de recuperação e recomposição','Favorecer descanso, recuperação e recomposição compatíveis com as necessidades atuais e com medidas concretas de autocuidado.'),
-/* Dia difícil */
 quick_day_body:P('Corpo ainda em estado de alerta ou tensão','Reduzir ativação e tensão percebidas, favorecendo descanso, respiração, hidratação, alimentação ou outras necessidades concretas identificadas.'),
 quick_day_emotion:P('Impacto emocional do dia ainda ativo','Processar o impacto emocional do dia de forma proporcional, diferenciando o que precisa ser sentido, resolvido ou simplesmente encerrado.'),
 quick_day_event:P('Situação específica do dia ainda aberta','Delimitar o que permanece pendente na situação identificada e definir o menor fechamento ou próximo passo possível.'),
 quick_day_other:P('Carga que não pertence ao momento atual','Dentro da prática adotada, liberar simbolicamente cargas percebidas como não pertencentes ao momento atual e reforçar limites e presença.'),
 quick_day_sleep:P('Dificuldade de encerrar o dia e entrar em repouso','Favorecer transição para repouso, reduzindo ruminação e estímulos e fortalecendo uma rotina de desaceleração compatível com a realidade atual.'),
-/* Decisão */
 quick_decision_fear:P('Medo ou ansiedade interferindo na decisão','Reduzir a influência de medo ou ansiedade desproporcionais para permitir avaliação mais clara das opções, riscos e consequências.'),
 quick_decision_pressure:P('Pressão externa interferindo na decisão','Diferenciar expectativas e pressões externas dos próprios critérios de decisão, preservando responsabilidade e autonomia.'),
 quick_decision_info:P('Informação objetiva insuficiente','Identificar a informação concreta que ainda falta antes de decidir e evitar substituir dados necessários por interpretações simbólicas.'),
 quick_decision_bias:P('Apego excessivo a uma opção','Reduzir apego prévio a um resultado e revisar alternativas, custos, benefícios e riscos com maior abertura.'),
 quick_decision_center:P('Necessidade de centramento antes de decidir','Favorecer centramento e clareza antes de tomar a decisão, adiando a escolha quando necessário até haver condições suficientes de discernimento.'),
-/* Encerramento de ciclo */
 quick_cycle_grief:P('Luto ou emoção de encerramento ainda ativa','Reconhecer e integrar emoções associadas ao encerramento, permitindo elaboração sem exigir esquecimento ou ausência de significado.'),
 quick_cycle_pending:P('Pendência prática impedindo encerramento','Identificar e resolver, quando possível, pendências concretas necessárias para concluir este ciclo com responsabilidade.'),
 quick_cycle_attachment:P('Apego à identidade ou papel do ciclo anterior','Separar identidade atual do papel, vínculo ou contexto que está terminando, preservando aprendizados sem obrigação de permanecer no mesmo lugar.'),
 quick_cycle_relation:P('Vínculo relacional ainda precisando de limite ou fechamento','Clarificar limites, conversas, acordos ou distância necessários para que o encerramento seja seguro e coerente.'),
 quick_cycle_symbolic:P('Vínculo simbólico ou energético percebido com o ciclo','Dentro da prática espiritual, realizar simbolicamente o encerramento do vínculo percebido, preservando aprendizados e reforçando autonomia e presença.'),
 quick_cycle_next:P('Dificuldade de abrir espaço para o próximo ciclo','Reduzir resistência à transição e fortalecer disponibilidade gradual para novas rotinas, escolhas e possibilidades.'),
-/* Após conflito */
 quick_conflict_activation:P('Ativação emocional ainda elevada após o conflito','Reduzir ativação antes de retomar a conversa, favorecendo uma resposta mais segura e menos reativa.'),
 quick_conflict_hurt:P('Mágoa ou ressentimento pedindo processamento','Reconhecer o impacto do conflito e diferenciar sentimento, interpretação e necessidade antes de buscar resolução.'),
 quick_conflict_responsibility:P('Responsabilidade própria ainda não reconhecida','Identificar a parte de responsabilidade que pode ser assumida e reparada sem assumir culpa pelo que pertence à outra pessoa.'),
@@ -39,43 +34,26 @@ quick_conflict_energy:P('Carga energética percebida após o conflito','Dentro d
 });
 const q=(id,section,text,tag,parent)=>({id,section,q:text,tag,parent});
 Object.assign(DATA,{
-quick_balance:{title:'Limpeza e Reequilíbrio',kind:'quick',copy:'Sessão breve para identificar o que precisa de reequilíbrio agora.',questions:[
- q('qb_tension','Estado atual','Há tensão, sobrecarga ou sensação de carga acumulada que precisa ser reduzida agora?','quick_clean_tension'),
- q('qb_emotion','Estado atual','Há uma emoção predominante que precisa de regulação nesta sessão?','quick_clean_emotion'),
- q('qb_external','Estado atual','Há influência do ambiente, de demandas ou de interações externas mantendo o desequilíbrio?','quick_clean_external'),
- q('qb_energy','Espiritual / simbólico','Dentro da sua prática, há algum desequilíbrio energético percebido que precisa ser trabalhado agora?','quick_clean_energy'),
- q('qb_restore','Recuperação','Há necessidade de recuperação ou recomposição além da limpeza realizada?','quick_clean_restore')
-]},
-quick_hardday:{title:'Reequilíbrio após um Dia Difícil',kind:'quick',copy:'Sessão breve para encerrar o impacto de um dia intenso.',questions:[
- q('qd_body','Corpo','O corpo ainda está em estado de alerta, tensão ou exaustão por causa do dia?','quick_day_body'),
- q('qd_emotion','Emocional','O impacto emocional do dia ainda está ativo?','quick_day_emotion'),
- q('qd_event','Situação','Há uma situação específica de hoje que continua aberta internamente ou exige um próximo passo?','quick_day_event'),
- q('qd_other','Espiritual / simbólico','Dentro da sua prática, há alguma carga percebida como não pertencente ao momento atual que precisa ser liberada?','quick_day_other'),
- q('qd_sleep','Encerramento','Há dificuldade de encerrar mentalmente o dia e entrar em repouso?','quick_day_sleep')
-]},
-quick_decision:{title:'Preparação para uma Decisão Importante',kind:'quick',copy:'Sessão breve para reduzir ruído antes de uma decisão.',questions:[
- q('qq_fear','Clareza','Medo ou ansiedade estão interferindo de forma relevante na clareza desta decisão?','quick_decision_fear'),
- q('qq_pressure','Clareza','Pressões ou expectativas de outras pessoas estão interferindo na decisão?','quick_decision_pressure'),
- q('qq_info','Informação','Ainda falta alguma informação objetiva importante para decidir com responsabilidade?','quick_decision_info'),
- q('qq_bias','Alternativas','Há apego excessivo a uma opção ou resultado específico?','quick_decision_bias'),
- q('qq_center','Centramento','É necessário maior centramento antes de tomar esta decisão?','quick_decision_center')
-]},
-quick_cycle:{title:'Encerramento de Ciclo',kind:'quick',copy:'Sessão breve para apoiar fechamento e transição.',questions:[
- q('qc_grief','Emocional','Há tristeza, luto, raiva ou outra emoção de encerramento que ainda precisa ser processada?','quick_cycle_grief'),
- q('qc_pending','Prático','Há alguma pendência concreta que impede considerar este ciclo encerrado?','quick_cycle_pending'),
- q('qc_attachment','Identidade','Há apego a um papel, identidade ou versão de si ligada ao ciclo anterior?','quick_cycle_attachment'),
- q('qc_relation','Relações','Há algum vínculo que ainda precise de conversa, limite ou fechamento?','quick_cycle_relation'),
- q('qc_symbolic','Espiritual / simbólico','Dentro da sua prática, há algum vínculo simbólico ou energético com este ciclo que precisa ser encerrado?','quick_cycle_symbolic'),
- q('qc_next','Transição','Há resistência relevante a abrir espaço para o próximo ciclo?','quick_cycle_next')
-]},
-quick_conflict:{title:'Reequilíbrio após Conflito',kind:'quick',copy:'Sessão breve para regular o impacto de um conflito antes de decidir o próximo passo.',questions:[
- q('qf_activation','Regulação','A ativação emocional ainda está alta demais para retomar a situação com clareza?','quick_conflict_activation'),
- q('qf_hurt','Emocional','Há mágoa ou ressentimento que precisa ser processado antes de buscar resolução?','quick_conflict_hurt'),
- q('qf_resp','Responsabilidade','Há alguma parte de responsabilidade própria que ainda precisa ser reconhecida ou reparada?','quick_conflict_responsibility'),
- q('qf_boundary','Limites','Há algum limite que precisa ser estabelecido ou reforçado após este conflito?','quick_conflict_boundary'),
- q('qf_talk','Reparação','Há necessidade de uma conversa de reparação ou esclarecimento?','quick_conflict_conversation'),
- q('qf_space','Pausa','É necessário um período de espaço antes de uma nova interação?','quick_conflict_distance'),
- q('qf_energy','Espiritual / simbólico','Dentro da sua prática, há alguma carga energética percebida após o conflito que precisa ser equilibrada?','quick_conflict_energy')
-]}
+quick_balance:{title:'Limpeza e Reequilíbrio',kind:'quick',copy:'Sessão breve para identificar o que precisa de reequilíbrio agora.',questions:[q('qb_tension','Estado atual','Há tensão, sobrecarga ou sensação de carga acumulada que precisa ser reduzida agora?','quick_clean_tension'),q('qb_emotion','Estado atual','Há uma emoção predominante que precisa de regulação nesta sessão?','quick_clean_emotion'),q('qb_external','Estado atual','Há influência do ambiente, de demandas ou de interações externas mantendo o desequilíbrio?','quick_clean_external'),q('qb_energy','Espiritual / simbólico','Dentro da sua prática, há algum desequilíbrio energético percebido que precisa ser trabalhado agora?','quick_clean_energy'),q('qb_restore','Recuperação','Há necessidade de recuperação ou recomposição além da limpeza realizada?','quick_clean_restore')]},
+quick_hardday:{title:'Reequilíbrio após um Dia Difícil',kind:'quick',copy:'Sessão breve para encerrar o impacto de um dia intenso.',questions:[q('qd_body','Corpo','O corpo ainda está em estado de alerta, tensão ou exaustão por causa do dia?','quick_day_body'),q('qd_emotion','Emocional','O impacto emocional do dia ainda está ativo?','quick_day_emotion'),q('qd_event','Situação','Há uma situação específica de hoje que continua aberta internamente ou exige um próximo passo?','quick_day_event'),q('qd_other','Espiritual / simbólico','Dentro da sua prática, há alguma carga percebida como não pertencente ao momento atual que precisa ser liberada?','quick_day_other'),q('qd_sleep','Encerramento','Há dificuldade de encerrar mentalmente o dia e entrar em repouso?','quick_day_sleep')]},
+quick_decision:{title:'Preparação para uma Decisão Importante',kind:'quick',copy:'Sessão breve para reduzir ruído antes de uma decisão.',questions:[q('qq_fear','Clareza','Medo ou ansiedade estão interferindo de forma relevante na clareza desta decisão?','quick_decision_fear'),q('qq_pressure','Clareza','Pressões ou expectativas de outras pessoas estão interferindo na decisão?','quick_decision_pressure'),q('qq_info','Informação','Ainda falta alguma informação objetiva importante para decidir com responsabilidade?','quick_decision_info'),q('qq_bias','Alternativas','Há apego excessivo a uma opção ou resultado específico?','quick_decision_bias'),q('qq_center','Centramento','É necessário maior centramento antes de tomar esta decisão?','quick_decision_center')]},
+quick_cycle:{title:'Encerramento de Ciclo',kind:'quick',copy:'Sessão breve para apoiar fechamento e transição.',questions:[q('qc_grief','Emocional','Há tristeza, luto, raiva ou outra emoção de encerramento que ainda precisa ser processada?','quick_cycle_grief'),q('qc_pending','Prático','Há alguma pendência concreta que impede considerar este ciclo encerrado?','quick_cycle_pending'),q('qc_attachment','Identidade','Há apego a um papel, identidade ou versão de si ligada ao ciclo anterior?','quick_cycle_attachment'),q('qc_relation','Relações','Há algum vínculo que ainda precise de conversa, limite ou fechamento?','quick_cycle_relation'),q('qc_symbolic','Espiritual / simbólico','Dentro da sua prática, há algum vínculo simbólico ou energético com este ciclo que precisa ser encerrado?','quick_cycle_symbolic'),q('qc_next','Transição','Há resistência relevante a abrir espaço para o próximo ciclo?','quick_cycle_next')]},
+quick_conflict:{title:'Reequilíbrio após Conflito',kind:'quick',copy:'Sessão breve para regular o impacto de um conflito antes de decidir o próximo passo.',questions:[q('qf_activation','Regulação','A ativação emocional ainda está alta demais para retomar a situação com clareza?','quick_conflict_activation'),q('qf_hurt','Emocional','Há mágoa ou ressentimento que precisa ser processado antes de buscar resolução?','quick_conflict_hurt'),q('qf_resp','Responsabilidade','Há alguma parte de responsabilidade própria que ainda precisa ser reconhecida ou reparada?','quick_conflict_responsibility'),q('qf_boundary','Limites','Há algum limite que precisa ser estabelecido ou reforçado após este conflito?','quick_conflict_boundary'),q('qf_talk','Reparação','Há necessidade de uma conversa de reparação ou esclarecimento?','quick_conflict_conversation'),q('qf_space','Pausa','É necessário um período de espaço antes de uma nova interação?','quick_conflict_distance'),q('qf_energy','Espiritual / simbólico','Dentro da sua prática, há alguma carga energética percebida após o conflito que precisa ser equilibrada?','quick_conflict_energy')]}
 });
+
+/* Home-only progressive discovery. This does not intercept protocol/controller actions. */
+function enhanceHome(){
+ const home=document.getElementById('homeView'); if(!home||document.getElementById('protocolSearch'))return;
+ const deep=document.getElementById('deepHeading')?.closest('.homeSection');
+ const quick=document.getElementById('quickHeading')?.closest('.homeSection');
+ const master=document.getElementById('masterHeading')?.closest('.homeSection');
+ const nav=document.createElement('div'); nav.className='homeTools'; nav.innerHTML='<label class="searchLabel" for="protocolSearch">Encontrar um protocolo</label><div class="searchWrap"><input id="protocolSearch" type="search" inputmode="search" autocomplete="off" placeholder="Ex.: família, dinheiro, conflito..." aria-describedby="searchHelp"><button id="clearProtocolSearch" type="button" class="searchClear" aria-label="Limpar busca">Limpar</button></div><small id="searchHelp">Digite uma palavra para mostrar apenas opções relacionadas.</small><div class="categoryJumps" aria-label="Atalhos"><button type="button" data-jump="master">Não sei por onde começar</button><button type="button" data-jump="deep">Investigações</button><button type="button" data-jump="quick">Sessões rápidas</button></div><p id="searchEmpty" class="searchEmpty hidden">Nenhum protocolo encontrado. Tente outra palavra ou use o Protocolo Mestre.</p>';
+ home.querySelector('.homeIntro')?.after(nav);
+ const input=document.getElementById('protocolSearch'),clear=document.getElementById('clearProtocolSearch'),empty=document.getElementById('searchEmpty');
+ const cards=[...home.querySelectorAll('[data-open-mode]')];
+ function filter(){const term=input.value.trim().toLocaleLowerCase('pt-BR');let shown=0;cards.forEach(card=>{const match=!term||card.textContent.toLocaleLowerCase('pt-BR').includes(term);card.classList.toggle('searchHidden',!match);if(match)shown++});home.querySelectorAll('.protocolSubgroup').forEach(g=>g.classList.toggle('searchHidden',term&&![...g.querySelectorAll('[data-open-mode]')].some(c=>!c.classList.contains('searchHidden'))));if(master)master.classList.toggle('searchSectionEmpty',term&&![...master.querySelectorAll('[data-open-mode]')].some(c=>!c.classList.contains('searchHidden')));if(deep)deep.classList.toggle('searchSectionEmpty',term&&![...deep.querySelectorAll('[data-open-mode]')].some(c=>!c.classList.contains('searchHidden')));if(quick)quick.classList.toggle('searchSectionEmpty',term&&![...quick.querySelectorAll('[data-open-mode]')].some(c=>!c.classList.contains('searchHidden')));empty.classList.toggle('hidden',shown>0);clear.classList.toggle('visible',!!term)}
+ input.addEventListener('input',filter);clear.addEventListener('click',()=>{input.value='';filter();input.focus()});
+ nav.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.jump==='master'?master:b.dataset.jump==='deep'?deep:quick;target?.scrollIntoView({behavior:'smooth',block:'start'})}));
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceHome);else enhanceHome();
 })();
