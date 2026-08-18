@@ -22,3 +22,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-7';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
  const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-7';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
 })();
+
+(function loadLumeraWorkspace(){
+ if(document.querySelector('script[data-lumera-workspace]'))return;
+ const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-workspace.css?v=20260818-8';css.dataset.lumeraWorkspace='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='lumera-workspace.js?v=20260818-8';js.dataset.lumeraWorkspace='1';js.defer=true;document.body.appendChild(js);
+})();
