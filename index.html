@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#78876c">
+<title>Protocolos Interativos</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header>
+  <div>
+    <p class="eyebrow">Radiestesia • protocolo guiado</p>
+    <h1>Protocolos Interativos</h1>
+    <p class="lead">Investigue múltiplas camadas, priorize causas e gere uma síntese personalizada da sessão.</p>
+  </div>
+  <button id="historyBtn" class="ghost">Histórico</button>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-mode="finance">Vida Financeira</button>
+  <button class="tab" data-mode="career">Carreira / Profissional</button>
+</nav>
+
+<main>
+<section id="startView" class="card">
+  <span class="pill">Nova sessão</span>
+  <h2 id="startTitle"></h2>
+  <p id="startCopy" class="muted"></p>
+  <div class="scale">
+    <label for="initialIntensity">Intensidade percebida do desequilíbrio hoje</label>
+    <div class="rangeRow">
+      <input id="initialIntensity" type="range" min="0" max="100" value="50">
+      <output id="initialOut">50%</output>
+    </div>
+  </div>
+  <button id="startBtn" class="primary wide">Iniciar investigação</button>
+</section>
+
+<section id="questionView" class="card hidden">
+  <div class="questionTop">
+    <span id="sectionPill" class="pill"></span>
+    <span id="counter" class="muted"></span>
+  </div>
+  <div class="progress"><span id="progressBar"></span></div>
+  <h2 id="question"></h2>
+  <p id="hint" class="muted">Marque “Sim” quando o item estiver presente ou relevante. “Não sei” será registrado sem entrar automaticamente nos achados.</p>
+  <div class="answerGrid">
+    <button class="answer yes" data-answer="yes">Sim</button>
+    <button class="answer no" data-answer="no">Não</button>
+    <button class="answer unsure" data-answer="unsure">Não sei</button>
+  </div>
+  <div class="row">
+    <button id="backBtn" class="ghost">← Voltar</button>
+    <button id="finishEarlyBtn" class="ghost">Finalizar com o que encontrei</button>
+  </div>
+</section>
+
+<section id="priorityView" class="card hidden">
+  <span class="pill">Priorização</span>
+  <h2>Quais pontos parecem prioritários nesta sessão?</h2>
+  <p class="muted">Selecione todos os que deseja trabalhar hoje. O relatório final continuará mostrando os demais achados.</p>
+  <div id="priorityList" class="checkList"></div>
+  <button id="toTreatmentBtn" class="primary wide">Continuar para tratamento</button>
+</section>
+
+<section id="treatmentView" class="card hidden">
+  <span class="pill">Tratamento e validação</span>
+  <h2>Registre o que foi feito nesta sessão</h2>
+
+  <div class="field">
+    <label for="methods">Método, gráfico ou técnica utilizada</label>
+    <textarea id="methods" placeholder="Ex.: gráfico utilizado, tempo, observações..."></textarea>
+  </div>
+
+  <div class="field">
+    <label for="notes">Observações</label>
+    <textarea id="notes" placeholder="Percepções, eventos, emoções, formulação da causa raiz..."></textarea>
+  </div>
+
+  <div class="scale">
+    <label for="finalIntensity">Intensidade percebida após a sessão</label>
+    <div class="rangeRow">
+      <input id="finalIntensity" type="range" min="0" max="100" value="20">
+      <output id="finalOut">20%</output>
+    </div>
+  </div>
+
+  <button id="makeReportBtn" class="primary wide">Gerar síntese da sessão</button>
+</section>
+
+<section id="reportView" class="hidden">
+  <div class="card reportHead">
+    <span class="pill">Síntese personalizada</span>
+    <h2 id="reportTitle"></h2>
+    <p id="reportMeta" class="muted"></p>
+  </div>
+  <div id="reportBody"></div>
+  <div class="card">
+    <div class="row">
+      <button id="copyBtn" class="primary">Copiar relatório</button>
+      <button id="newBtn" class="ghost">Nova sessão</button>
+    </div>
+  </div>
+</section>
+
+<section id="historyView" class="card hidden">
+  <div class="row between">
+    <div>
+      <span class="pill">Histórico local</span>
+      <h2>Sessões salvas neste aparelho</h2>
+    </div>
+    <button id="closeHistory" class="ghost">Fechar</button>
+  </div>
+  <p class="muted">Os dados ficam no armazenamento local deste navegador. Eles não são enviados para um servidor.</p>
+  <div id="historyList"></div>
+</section>
+</main>
+
+<footer>Uso reflexivo/espiritual. Não substitui avaliação financeira, psicológica, médica ou profissional.</footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
