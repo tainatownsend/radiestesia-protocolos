@@ -19,8 +19,17 @@ function when(a){const d=a?.updatedAt||a?.createdAt;if(!d)return'';try{return ne
 function dispatch(){window.dispatchEvent(new Event('storage'));window.dispatchEvent(new CustomEvent('lumera:datachange'))}
 function removeAssessment(id){const arr=load().filter(x=>String(x.id)!==String(id));save(arr);if(String(localStorage.getItem(ACTIVE))===String(id))localStorage.removeItem(ACTIVE);dispatch()}
 function currentDraft(){const id=localStorage.getItem(ACTIVE);if(id){const a=load().find(x=>String(x.id)===String(id)&& (x.status==='draft'||x.status==='protocol-pending'));if(a)return a}return drafts()[0]||null}
-function waitForResume(id){return new Promise(resolve=>{let n=0;const tick=()=>{const b=document.querySelector(`[data-resume="${CSS.escape(String(id))}"]`);if(b)return resolve(b);if(++n>16)return resolve(null);setTimeout(tick,10)};tick()})}
-async function resumeAssessment(id){localStorage.setItem(ACTIVE,String(id));const hv=$('historyView');if(hv&&!hv.classList.contains('hidden'))$('closeHistory')?.click();$('historyBtn')?.click();const b=await waitForResume(id);if(b){b.click();return true}$('closeHistory')?.click();showToast(t('Não consegui abrir este rascunho. Atualize a página e tente novamente.','I could not open this draft. Refresh the page and try again.'));return false}
+function waitForResume(id){return new Promise(resolve=>{let n=0;const tick=()=>{const b=document.querySelector(`[data-resume="${CSS.escape(String(id))}"]`);if(b)return resolve(b);if(++n>22)return resolve(null);setTimeout(tick,10)};tick()})}
+async function resumeAssessment(id){
+ const arr=load(),i=arr.findIndex(x=>String(x.id)===String(id));if(i<0)return false;
+ const originalStatus=arr[i].status||'draft';localStorage.setItem(ACTIVE,String(id));
+ arr[i]={...arr[i],status:'assessment-only'};save(arr);
+ const hv=$('historyView');if(hv&&!hv.classList.contains('hidden'))$('closeHistory')?.click();
+ $('historyBtn')?.click();const b=await waitForResume(id);
+ const restore=load(),ri=restore.findIndex(x=>String(x.id)===String(id));if(ri>=0){restore[ri]={...restore[ri],status:originalStatus};save(restore)}
+ if(b){b.click();dispatch();return true}
+ $('closeHistory')?.click();showToast(t('Não consegui abrir este rascunho. Atualize a página e tente novamente.','I could not open this draft. Refresh the page and try again.'));return false
+}
 function newestOverallDraft(){const a=drafts()[0];const ds=load(DIV,[]).filter(x=>x?.status==='draft').sort((x,y)=>new Date(y.updatedAt||y.createdAt||0)-new Date(x.updatedAt||x.createdAt||0))[0];const p=load(PDRAFT,null);return [a&&{type:'assessment',date:a.updatedAt||a.createdAt,item:a},ds&&{type:'divorce',date:ds.updatedAt||ds.createdAt,item:ds},p&&{type:'protocol',date:p.updatedAt||p.createdAt,item:p}].filter(Boolean).sort((x,y)=>new Date(y.date||0)-new Date(x.date||0))[0]||null}
 function showToast(msg){let el=$('v17Toast');if(!el){el=document.createElement('div');el.id='v17Toast';el.className='v17Toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000)}
 function closeDecision(){$('v17DraftDecision')?.remove();document.body.classList.remove('v17ModalOpen')}
