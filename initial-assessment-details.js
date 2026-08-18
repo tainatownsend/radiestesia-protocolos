@@ -42,3 +42,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  const js=document.createElement('script');js.src='lumera-v14.js?v=20260818-14';js.dataset.lumeraV14='1';js.defer=true;document.body.appendChild(js);
  const drafts=document.createElement('script');drafts.src='lumera-v14-drafts.js?v=20260818-14';drafts.dataset.lumeraV14Drafts='1';drafts.defer=true;document.body.appendChild(drafts);
 })();
+
+(function loadLumeraV15(){
+ if(document.querySelector('script[data-lumera-v15]'))return;
+ const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v15.css?v=20260818-15';css.dataset.lumeraV15='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='lumera-v15.js?v=20260818-15';js.dataset.lumeraV15='1';js.defer=true;document.body.appendChild(js);
+})();
