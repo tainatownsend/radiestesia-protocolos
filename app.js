@@ -1,238 +1,97 @@
-var DATA={"finance": {"title": "Vida Financeira", "copy": "O protocolo percorre manifestações, crenças, emoções, comportamentos, experiências, família, relacionamentos, identidade e fatores práticos.", "questions": [{"id": "f_generate", "section": "Manifestação", "q": "Existe dificuldade relevante para gerar ou aumentar renda?", "tags": ["geracao"]}, {"id": "f_keep", "section": "Manifestação", "q": "Existe dificuldade para manter dinheiro ou construir reserva?", "tags": ["manutencao"]}, {"id": "f_debt", "section": "Manifestação", "q": "Dívidas ou compromissos financeiros são parte importante do desequilíbrio?", "tags": ["dividas"]}, {"id": "f_receive", "section": "Manifestação", "q": "Existe desconforto em receber, cobrar, negociar ou aceitar ajuda/oportunidades?", "tags": ["receber"]}, {"id": "f_scarcity", "section": "Crenças", "q": "Existe uma crença recorrente de que dinheiro falta, acaba ou é muito difícil de conseguir?", "tags": ["escassez"]}, {"id": "f_worth", "section": "Crenças", "q": "Existe sensação de não merecer ganhar, receber ou ter mais?", "tags": ["merecimento"]}, {"id": "f_guilt", "section": "Crenças", "q": "Existe culpa por prosperar, ter mais que pessoas próximas ou associar riqueza a egoísmo?", "tags": ["culpa"]}, {"id": "f_sacrifice", "section": "Crenças", "q": "Existe a crença de que dinheiro só vem com sofrimento, sacrifício ou trabalho excessivo?", "tags": ["sacrificio"]}, {"id": "f_fear", "section": "Emoções", "q": "Medo de perder, faltar, fracassar, assumir risco ou crescer influencia decisões financeiras?", "tags": ["medo"]}, {"id": "f_anxiety", "section": "Emoções", "q": "Vergonha, ansiedade ou insegurança aparecem com frequência quando você lida com dinheiro?", "tags": ["emocao"]}, {"id": "f_behavior", "section": "Comportamento", "q": "Há padrões repetitivos de gasto impulsivo, evitação de contas, procrastinação ou abandono de planejamento?", "tags": ["comportamento"]}, {"id": "f_event", "section": "Experiências", "q": "Existe um evento marcante ligado a perda, pobreza, dívida, desemprego, dependência ou conflito financeiro?", "tags": ["evento"]}, {"id": "f_family", "section": "Família", "q": "Você identifica repetição de padrões financeiros importantes da família ou gerações anteriores?", "tags": ["familia"]}, {"id": "f_relation", "section": "Relacionamentos", "q": "Existe medo de que prosperar, ganhar mais ou impor limites financeiros altere algum vínculo importante?", "tags": ["relacionamento"]}, {"id": "f_identity", "section": "Identidade", "q": "Você se identifica com rótulos como “sou ruim com dinheiro”, “não consigo prosperar” ou “preciso provar meu valor trabalhando muito”?", "tags": ["identidade"]}, {"id": "f_energy", "section": "Espiritual / energético", "q": "Dentro das suas crenças, existe um componente simbólico ou energético que você deseja trabalhar?", "tags": ["energetico"]}, {"id": "f_struct", "section": "Realidade prática", "q": "Existem fatores objetivos importantes como renda insuficiente, juros altos, despesas excessivas ou ausência de planejamento?", "tags": ["pratico"]}]}, "career": {"title": "Carreira / Profissional", "copy": "O protocolo investiga direção, progressão, execução, reconhecimento, transição, empreendedorismo, exaustão, crenças, identidade e barreiras externas.", "questions": [{"id": "c_direction", "section": "Direção", "q": "Existe falta de direção ou dificuldade para escolher o próximo caminho profissional?", "tags": ["direcao"]}, {"id": "c_options", "section": "Direção", "q": "Você mantém muitas possibilidades abertas por medo de renunciar a alguma delas?", "tags": ["opcoes"]}, {"id": "c_progress", "section": "Progressão", "q": "Existe sensação de estagnação ou crescimento abaixo do esperado?", "tags": ["progressao"]}, {"id": "c_diss", "section": "Trabalho atual", "q": "Existe insatisfação relevante com função, empresa, ambiente, remuneração ou propósito?", "tags": ["insatisfacao"]}, {"id": "c_execute", "section": "Execução", "q": "Existe dificuldade recorrente de foco, priorização, início ou conclusão?", "tags": ["execucao"]}, {"id": "c_perfect", "section": "Execução", "q": "Perfeccionismo ou medo de falhar atrasam decisões e entregas?", "tags": ["perfeccionismo"]}, {"id": "c_visibility", "section": "Reconhecimento", "q": "Existe dificuldade de mostrar resultados, fazer networking, pedir oportunidades ou negociar remuneração?", "tags": ["visibilidade"]}, {"id": "c_transition", "section": "Transição", "q": "Medo de perder estabilidade, recomeçar ou desperdiçar a trajetória anterior dificulta uma mudança desejada?", "tags": ["transicao"]}, {"id": "c_entre", "section": "Empreendedorismo", "q": "Existe desejo genuíno de empreender ou construir algo próprio?", "tags": ["empreender"]}, {"id": "c_burn", "section": "Energia", "q": "Sobrecarga ou exaustão estão interferindo na clareza e capacidade de decisão profissional?", "tags": ["exaustao"]}, {"id": "c_belief", "section": "Crenças", "q": "Existe crença como “preciso estar 100% preparada”, “não sou boa o suficiente” ou “sucesso exige sofrimento”?", "tags": ["crenca"]}, {"id": "c_emotion", "section": "Emoções", "q": "Medo de julgamento, exposição, rejeição, vergonha ou insegurança influencia sua carreira?", "tags": ["cemocao"]}, {"id": "c_identity", "section": "Identidade", "q": "Existe conflito entre sua identidade profissional atual/antiga e quem você deseja se tornar?", "tags": ["cidentidade"]}, {"id": "c_event", "section": "Experiências", "q": "Uma experiência anterior de crítica, rejeição, fracasso, ambiente tóxico ou sobrecarga ainda influencia suas decisões?", "tags": ["cevento"]}, {"id": "c_family", "section": "Família", "q": "Existem padrões familiares de sacrifício, estabilidade, obrigação ou medo de risco influenciando suas escolhas?", "tags": ["cfamilia"]}, {"id": "c_behavior", "section": "Comportamento", "q": "Há padrão recorrente de procrastinar, estudar indefinidamente, evitar exposição, aceitar tarefas demais ou mudar de direção?", "tags": ["ccomportamento"]}, {"id": "c_struct", "section": "Realidade externa", "q": "Existem barreiras objetivas como mercado, experiência, credencial, localização, networking ou portfólio?", "tags": ["cestrutural"]}, {"id": "c_energy", "section": "Espiritual / energético", "q": "Dentro das suas crenças, existe um componente simbólico ou energético que você deseja trabalhar?", "tags": ["cenergetico"]}]}};
-var PLANS={"geracao": {"label": "Geração de renda", "clean": "Crenças ou medos que reduzam iniciativa, negociação ou busca de oportunidades.", "treat": "Mapear capacidade de gerar valor e barreiras reais à renda.", "energize": "Iniciativa, confiança e percepção de oportunidades.", "action": "Definir uma ação concreta para aumentar renda ou valor profissional."}, "manutencao": {"label": "Manutenção de recursos", "clean": "Padrões que dificultem reter dinheiro e construir segurança.", "treat": "Criar estrutura para separar consumo, compromissos e reserva.", "energize": "Consistência e segurança.", "action": "Automatizar uma pequena parcela para reserva ou objetivo definido."}, "dividas": {"label": "Endividamento", "clean": "Vergonha e evitação que impeçam olhar a situação com clareza.", "treat": "Organizar saldos, juros, pagamentos mínimos e prioridade.", "energize": "Disciplina e senso de progresso.", "action": "Criar uma ordem objetiva de amortização das dívidas."}, "receber": {"label": "Capacidade de receber", "clean": "Desconforto em cobrar, negociar ou aceitar recursos.", "treat": "Trabalhar reciprocidade e valor entregue.", "energize": "Merecimento e assertividade.", "action": "Praticar uma negociação, pedido ou conversa concreta sobre valor."}, "escassez": {"label": "Crença de escassez", "clean": "Medo de falta, expectativa automática de perda e crença de que nunca haverá o suficiente.", "treat": "Ressignificar segurança, suficiência e relação com incerteza.", "energize": "Segurança interna, confiança, capacidade de receber e manter recursos.", "action": "Usar números reais para construir reserva e reduzir decisões guiadas apenas pela sensação de falta."}, "merecimento": {"label": "Merecimento", "clean": "Culpa por receber, autodesvalorização e crença de não merecer mais.", "treat": "Valor próprio, permissão para receber e reciprocidade.", "energize": "Autovalor, capacidade de cobrar, receber e negociar.", "action": "Revisar onde você está aceitando menos remuneração, apoio ou oportunidade do que seria razoável."}, "culpa": {"label": "Culpa ligada à prosperidade", "clean": "Associação entre prosperidade, egoísmo e afastamento de pessoas próximas.", "treat": "Separar prosperidade de culpa e pertencimento de auto-limitação.", "energize": "Permissão para prosperar com responsabilidade e limites saudáveis.", "action": "Definir um limite concreto entre ajudar outras pessoas e comprometer sua própria estabilidade."}, "sacrificio": {"label": "Dinheiro associado a sacrifício", "clean": "Crença de que valor e renda exigem sofrimento ou excesso de trabalho.", "treat": "Ressignificar produtividade, descanso, eficiência e valor entregue.", "energize": "Eficiência, merecimento e equilíbrio.", "action": "Buscar uma forma de aumentar valor/renda que não dependa apenas de aumentar horas trabalhadas."}, "medo": {"label": "Medo financeiro", "clean": "Medo de perder, faltar, crescer ou assumir riscos.", "treat": "Separar risco real de antecipação emocional.", "energize": "Discernimento, segurança e coragem para riscos calculados.", "action": "Converter a decisão temida em cenários, números e limites objetivos."}, "emocao": {"label": "Carga emocional financeira", "clean": "Vergonha, ansiedade e insegurança associadas a dinheiro.", "treat": "Identificar gatilhos e separar emoção de decisão.", "energize": "Calma, clareza e autocontrole.", "action": "Evitar decisões financeiras importantes durante picos emocionais e revisá-las posteriormente."}, "comportamento": {"label": "Padrão comportamental financeiro", "clean": "Automatismos de gasto, evitação, procrastinação ou inconsistência.", "treat": "Interromper a sequência gatilho → comportamento → consequência.", "energize": "Disciplina, organização e consistência.", "action": "Escolher um único hábito financeiro mensurável para praticar por 30 dias."}, "evento": {"label": "Evento financeiro marcante", "clean": "Carga emocional e significado atual atribuídos ao evento passado.", "treat": "Separar a experiência passada da realidade financeira atual.", "energize": "Segurança e confiança para novas decisões.", "action": "Identificar qual comportamento atual nasceu desse evento e testar uma alternativa segura."}, "familia": {"label": "Padrão familiar/transgeracional", "clean": "Lealdades e repetição de padrões familiares de escassez, dívida ou sacrifício.", "treat": "Separar pertencimento familiar de repetição financeira.", "energize": "Autonomia e identidade financeira própria.", "action": "Definir uma regra financeira conscientemente diferente do padrão familiar identificado."}, "relacionamento": {"label": "Vínculo relacional", "clean": "Medo de que prosperidade, limites ou autonomia ameacem relações.", "treat": "Limites e pertencimento sem auto-limitação financeira.", "energize": "Autonomia e segurança relacional.", "action": "Estabelecer um limite financeiro ou uma conversa sobre responsabilidade compartilhada."}, "identidade": {"label": "Identidade financeira", "clean": "Rótulos pessoais que transformam histórico em identidade fixa.", "treat": "Construir uma narrativa baseada em competências e evidências atuais.", "energize": "Autoconfiança e capacidade de aprender.", "action": "Executar uma ação pequena que produza evidência concreta de competência financeira."}, "energetico": {"label": "Componente simbólico/energético", "clean": "O padrão simbólico identificado dentro da prática adotada.", "treat": "Aplicar o método escolhido e validar posteriormente se houve mudança observável.", "energize": "Equilíbrio, segurança e intenção clara.", "action": "Associar o trabalho energético a uma mudança concreta de comportamento."}, "pratico": {"label": "Fator financeiro objetivo", "clean": "Evitar transformar um problema matemático em bloqueio energético.", "treat": "Priorizar renda, despesas, juros, dívida, reserva e planejamento.", "energize": "Clareza, disciplina e decisão.", "action": "Atacar primeiro o fator objetivo de maior impacto mensurável."}, "direcao": {"label": "Direção profissional", "clean": "Medo de escolher ou necessidade de decisão perfeita.", "treat": "Tratar escolha como experimento, não sentença definitiva.", "energize": "Clareza e tolerância à incerteza.", "action": "Escolher uma direção para testar por 30–90 dias."}, "opcoes": {"label": "Excesso de opções", "clean": "Apego a manter todas as possibilidades abertas.", "treat": "Prioridade, renúncia e custo de oportunidade.", "energize": "Foco e constância.", "action": "Eleger uma prioridade principal e estacionar as demais."}, "progressao": {"label": "Estagnação profissional", "clean": "Crenças de impotência ou espera passiva por reconhecimento.", "treat": "Separar barreiras internas de limitações estruturais.", "energize": "Agência e estratégia.", "action": "Definir o próximo requisito concreto para progressão."}, "insatisfacao": {"label": "Insatisfação profissional", "clean": "Ressentimento, frustração ou identificação excessiva com o trabalho atual.", "treat": "Separar função, empresa, ambiente, remuneração e propósito.", "energize": "Autonomia e abertura.", "action": "Definir o que precisaria mudar para permanecer — ou o primeiro passo para sair."}, "execucao": {"label": "Execução", "clean": "Confusão e excesso que impedem iniciar ou concluir.", "treat": "Reduzir escopo e transformar objetivos em próximas ações.", "energize": "Foco e finalização.", "action": "Definir a próxima ação concreta de um único projeto."}, "perfeccionismo": {"label": "Perfeccionismo / medo de falhar", "clean": "Necessidade de estar pronta ou acertar de primeira.", "treat": "Erro como feedback e exposição gradual.", "energize": "Coragem e tolerância à imperfeição.", "action": "Entregar uma versão suficientemente boa antes de se sentir 100% pronta."}, "visibilidade": {"label": "Visibilidade e reconhecimento", "clean": "Medo de autopromoção, julgamento ou rejeição.", "treat": "Separar comunicação de impacto de busca de aprovação.", "energize": "Assertividade e confiança.", "action": "Documentar resultados e iniciar uma conversa sobre oportunidade ou remuneração."}, "transicao": {"label": "Transição profissional", "clean": "Apego à trajetória anterior e medo de perder estabilidade.", "treat": "Identidade profissional e risco gradual.", "energize": "Flexibilidade e confiança em aprender.", "action": "Criar uma transição por etapas em vez de uma ruptura abrupta."}, "empreender": {"label": "Impulso empreendedor", "clean": "Medo excessivo de risco, julgamento ou fracasso.", "treat": "Transformar risco abstrato em experimento controlado.", "energize": "Criatividade, autonomia e consistência.", "action": "Validar problema, público e oferta em pequena escala."}, "exaustao": {"label": "Sobrecarga / exaustão", "clean": "Pressão interna para produzir continuamente e culpa por reduzir ritmo.", "treat": "Recuperação, limites e reorganização antes de decisões grandes.", "energize": "Energia, estabilidade e clareza.", "action": "Reduzir uma fonte concreta de sobrecarga e observar o impacto."}, "crenca": {"label": "Crença profissional limitante", "clean": "Crenças de incompetência, perfeição ou sofrimento como requisito de sucesso.", "treat": "Questionar origem e substituir por critérios baseados em evidência.", "energize": "Autoconfiança e aprendizado.", "action": "Executar uma ação que contradiga diretamente a crença."}, "cemocao": {"label": "Carga emocional profissional", "clean": "Medo, vergonha, insegurança ou ansiedade ligados à carreira.", "treat": "Identificar gatilhos e separar emoção de evidência.", "energize": "Calma e confiança.", "action": "Exposição gradual à situação profissional evitada."}, "cidentidade": {"label": "Identidade profissional", "clean": "Apego a cargo, formação, status ou imagem antiga.", "treat": "Permitir evolução sem interpretar mudança como perda de identidade.", "energize": "Flexibilidade e autonomia.", "action": "Descrever sua nova identidade em competências e impacto, não apenas títulos."}, "cevento": {"label": "Experiência profissional anterior", "clean": "Carga emocional de crítica, rejeição, fracasso ou ambiente tóxico.", "treat": "Separar o evento passado das expectativas atuais.", "energize": "Segurança e abertura.", "action": "Testar uma situação semelhante em contexto mais seguro."}, "cfamilia": {"label": "Padrão familiar ligado ao trabalho", "clean": "Lealdades de sacrifício, estabilidade, obrigação ou medo de risco.", "treat": "Separar pertencimento familiar de escolha profissional.", "energize": "Autonomia e permissão para prosperar.", "action": "Tomar uma decisão baseada em seus critérios atuais, não apenas no padrão familiar."}, "ccomportamento": {"label": "Padrão comportamental profissional", "clean": "Procrastinação, excesso de estudo, evitação de exposição ou dificuldade de concluir.", "treat": "Modificar gatilhos, ambiente e sequência de ação.", "energize": "Consistência e execução.", "action": "Definir um comportamento simples e mensurável para repetir semanalmente."}, "cestrutural": {"label": "Barreira externa/estrutural", "clean": "Evitar interpretar como falha interna aquilo que é limitação objetiva.", "treat": "Mapear requisitos, mercado, experiência, credenciais, portfólio e networking.", "energize": "Persistência e adaptabilidade.", "action": "Escolher a barreira de maior impacto e criar um plano para reduzi-la."}, "cenergetico": {"label": "Componente simbólico/energético", "clean": "O padrão identificado dentro da prática adotada.", "treat": "Aplicar o método escolhido e validar mudança concreta posteriormente.", "energize": "Clareza, confiança e equilíbrio.", "action": "Associar a sessão a um comportamento profissional observável."}};
-
-(function(){
-"use strict";
-var state={mode:"finance",i:0,answers:[],findings:[],priorities:[],initial:50,final:20};
-
-function $(id){return document.getElementById(id)}
-function show(id){
-  ["startView","questionView","priorityView","treatmentView","reportView","historyView"].forEach(function(x){$(x).classList.add("hidden")});
-  $(id).classList.remove("hidden");
-}
-function syncStart(){
-  $("startTitle").textContent=DATA[state.mode].title;
-  $("startCopy").textContent=DATA[state.mode].copy;
-}
-function setMode(m){
-  state.mode=m;
-  document.querySelectorAll(".tab").forEach(function(b){
-    b.classList.toggle("active",b.getAttribute("data-mode")===m);
-  });
-  reset(false);
-  syncStart();
-  show("startView");
-}
-function reset(){
-  var m=state.mode;
-  state={mode:m,i:0,answers:[],findings:[],priorities:[],initial:50,final:20};
-  $("initialIntensity").value=50;
-  $("initialOut").textContent="50%";
-  $("finalIntensity").value=20;
-  $("finalOut").textContent="20%";
-  $("methods").value="";
-  $("notes").value="";
-}
-function renderQ(){
-  var qs=DATA[state.mode].questions,q=qs[state.i];
-  $("sectionPill").textContent=q.section;
-  $("counter").textContent=(state.i+1)+" de "+qs.length;
-  $("question").textContent=q.q;
-  $("progressBar").style.width=((state.i)/qs.length*100)+"%";
-  $("backBtn").disabled=state.i===0;
-}
-function answer(a){
-  var q=DATA[state.mode].questions[state.i];
-  state.answers.push({id:q.id,q:q.q,answer:a,tags:q.tags});
-  if(a==="yes"){
-    q.tags.forEach(function(t){
-      if(state.findings.indexOf(t)<0) state.findings.push(t);
-    });
-  }
-  state.i++;
-  if(state.i>=DATA[state.mode].questions.length){prioritize()}else{renderQ()}
-}
-function back(){
-  if(!state.answers.length)return;
-  state.answers.pop();
-  state.i--;
-  rebuildFindings();
-  renderQ();
-}
-function rebuildFindings(){
-  state.findings=[];
-  state.answers.forEach(function(a){
-    if(a.answer==="yes"){
-      a.tags.forEach(function(t){
-        if(state.findings.indexOf(t)<0)state.findings.push(t);
-      });
-    }
-  });
-}
-function prioritize(){
-  var list=$("priorityList");
-  list.innerHTML="";
-  var f=state.findings.filter(function(t){return PLANS[t]});
-  if(!f.length){
-    var p=document.createElement("p");
-    p.className="muted";
-    p.textContent="Nenhum fator específico foi marcado como presente. Você ainda pode registrar observações e gerar uma síntese de manutenção.";
-    list.appendChild(p);
-  }
-  f.forEach(function(t){
-    var d=document.createElement("label");
-    d.className="check";
-    d.innerHTML='<input type="checkbox" value="'+t+'" checked><span><b>'+PLANS[t].label+'</b><small>Incluir como prioridade de tratamento nesta sessão</small></span>';
-    list.appendChild(d);
-  });
-  show("priorityView");
-}
-function toTreatment(){
-  state.priorities=[];
-  document.querySelectorAll("#priorityList input:checked").forEach(function(x){
-    state.priorities.push(x.value);
-  });
-  show("treatmentView");
-}
-function unique(arr){
-  return arr.filter(function(x,i){return x && arr.indexOf(x)===i});
-}
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g,function(m){
-    return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[m];
-  });
-}
-function makeReport(){
-  state.initial=parseInt($("initialIntensity").value,10);
-  state.final=parseInt($("finalIntensity").value,10);
-
-  var selected=state.priorities.length?state.priorities:state.findings.filter(function(t){return PLANS[t]});
-  var all=state.findings.filter(function(t){return PLANS[t]});
-  var yes=state.answers.filter(function(a){return a.answer==="yes"}).length;
-  var unsure=state.answers.filter(function(a){return a.answer==="unsure"}).length;
-
-  var sections=[
-    ["Causas e focos identificados",unique(all.map(function(t){return PLANS[t].label}))],
-    ["Prioridades desta sessão",unique(selected.map(function(t){return PLANS[t].label}))],
-    ["Limpeza sugerida",unique(selected.map(function(t){return PLANS[t].clean}))],
-    ["Tratamento / equilíbrio",unique(selected.map(function(t){return PLANS[t].treat}))],
-    ["Reenergização",unique(selected.map(function(t){return PLANS[t].energize}))],
-    ["Ações práticas",unique(selected.map(function(t){return PLANS[t].action}))]
-  ];
-
-  $("reportTitle").textContent=DATA[state.mode].title+" — síntese da sessão";
-  $("reportMeta").textContent=yes+" respostas positivas • "+unsure+" respostas “não sei” • intensidade "+state.initial+"% → "+state.final+"%";
-
-  var body=$("reportBody");
-  body.innerHTML='<div class="card metric"><div><span class="muted">Antes</span><strong>'+state.initial+'%</strong></div><div><span class="muted">Depois</span><strong>'+state.final+'%</strong></div></div>';
-
-  sections.forEach(function(s){
-    var c=document.createElement("section");
-    c.className="card reportSection";
-    var h=document.createElement("h3");
-    h.textContent=s[0];
-    c.appendChild(h);
-    if(!s[1].length){
-      var p=document.createElement("p");
-      p.className="muted";
-      p.textContent="Nenhum item específico registrado.";
-      c.appendChild(p);
-    }else{
-      var ul=document.createElement("ul");
-      s[1].forEach(function(x){
-        var li=document.createElement("li");
-        li.textContent=x;
-        ul.appendChild(li);
-      });
-      c.appendChild(ul);
-    }
-    body.appendChild(c);
-  });
-
-  if($("methods").value || $("notes").value){
-    var c=document.createElement("section");
-    c.className="card reportSection";
-    c.innerHTML="<h3>Registro da sessão</h3>"+
-      ($("methods").value?"<p><b>Método:</b> "+escapeHtml($("methods").value)+"</p>":"")+
-      ($("notes").value?"<p><b>Observações:</b> "+escapeHtml($("notes").value)+"</p>":"");
-    body.appendChild(c);
-  }
-
-  saveSession(sections);
-  show("reportView");
-}
-function saveSession(sections){
-  try{
-    var h=JSON.parse(localStorage.getItem("rt_sessions")||"[]");
-    h.unshift({
-      date:new Date().toISOString(),
-      mode:state.mode,
-      title:DATA[state.mode].title,
-      initial:state.initial,
-      final:state.final,
-      findings:state.findings,
-      priorities:state.priorities,
-      methods:$("methods").value,
-      notes:$("notes").value,
-      sections:sections
-    });
-    h=h.slice(0,50);
-    localStorage.setItem("rt_sessions",JSON.stringify(h));
-  }catch(e){}
-}
-function history(){
-  var box=$("historyList");
-  box.innerHTML="";
-  var h=[];
-  try{h=JSON.parse(localStorage.getItem("rt_sessions")||"[]")}catch(e){}
-  if(!h.length){
-    box.innerHTML='<p class="muted">Nenhuma sessão salva ainda.</p>';
-  }
-  h.forEach(function(s){
-    var d=document.createElement("div");
-    d.className="historyItem";
-    var dt=new Date(s.date);
-    d.innerHTML="<b>"+s.title+"</b><div class='muted'>"+dt.toLocaleString("pt-BR")+" • "+s.initial+"% → "+s.final+"% • "+s.findings.length+" achados</div>";
-    box.appendChild(d);
-  });
-  show("historyView");
-}
-function copyReport(){
-  var text=$("reportView").innerText;
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(function(){
-      $("copyBtn").textContent="Copiado";
-      setTimeout(function(){$("copyBtn").textContent="Copiar relatório"},1200);
-    });
-  }
-}
-
-document.querySelectorAll(".tab").forEach(function(b){
-  b.onclick=function(){setMode(b.getAttribute("data-mode"))};
-});
-document.querySelectorAll("[data-answer]").forEach(function(b){
-  b.onclick=function(){answer(b.getAttribute("data-answer"))};
-});
-
-$("initialIntensity").oninput=function(){$("initialOut").textContent=this.value+"%"};
-$("finalIntensity").oninput=function(){$("finalOut").textContent=this.value+"%"};
-
-$("startBtn").onclick=function(){
-  state.initial=parseInt($("initialIntensity").value,10);
-  state.i=0;
-  state.answers=[];
-  state.findings=[];
-  show("questionView");
-  renderQ();
-};
-$("backBtn").onclick=back;
-$("finishEarlyBtn").onclick=prioritize;
-$("toTreatmentBtn").onclick=toTreatment;
-$("makeReportBtn").onclick=makeReport;
-$("newBtn").onclick=function(){reset();syncStart();show("startView")};
-$("historyBtn").onclick=history;
-$("closeHistory").onclick=function(){show("startView")};
-$("copyBtn").onclick=copyReport;
-
-syncStart();
-})();
+const C=(label,command)=>({label,command});
+const PLANS={
+crencas_fin:C('Crenças limitantes financeiras','Eliminar e ressignificar crenças limitantes que impedem um fluxo financeiro saudável, preservando aprendizados úteis e fortalecendo crenças compatíveis com segurança, autonomia e prosperidade.'),
+merecimento:C('Merecimento financeiro','Eliminar crenças limitantes ligadas ao não merecimento e fortalecer permissão interna para receber, prosperar e administrar recursos com responsabilidade.'),
+escassez:C('Escassez e falta','Limpar padrões de escassez e medo de falta que estejam ativos na relação com dinheiro e fortalecer segurança, suficiência e discernimento.'),
+receber:C('Dificuldade de receber','Eliminar bloqueios internos relacionados a receber, cobrar, negociar e aceitar prosperidade de forma ética e equilibrada.'),
+sacrificio:C('Dinheiro associado a sacrifício','Ressignificar a associação entre dinheiro, sofrimento e excesso de trabalho, fortalecendo uma relação baseada em valor, eficiência e equilíbrio.'),
+culpa:C('Culpa ou vergonha financeira','Limpar culpa e vergonha associadas a dinheiro e prosperidade, fortalecendo responsabilidade sem autopunição.'),
+medo:C('Medos financeiros','Limpar medos desproporcionais relacionados a perda, fracasso, crescimento e risco, fortalecendo discernimento e segurança.'),
+identidade:C('Identidade financeira limitante','Desfazer identificações e rótulos que limitam a vida financeira e fortalecer uma identidade capaz de aprender, administrar e prosperar.'),
+comportamento:C('Padrões comportamentais financeiros','Interromper padrões comportamentais repetitivos que prejudicam a vida financeira e fortalecer escolhas conscientes e consistentes.'),
+evento:C('Experiências financeiras passadas','Ressignificar experiências passadas que ainda condicionam a relação atual com dinheiro, mantendo o aprendizado e liberando respostas que já não servem.'),
+pratico:C('Fatores financeiros objetivos','Tratar prioritariamente os fatores financeiros objetivos identificados, com clareza sobre renda, despesas, dívidas, juros, reserva e planejamento.'),
+relacionamento:C('Influências relacionais financeiras','Limpar padrões relacionais que comprometem limites e autonomia financeira e fortalecer acordos claros e responsabilidade compartilhada.'),
+ambiente_fin:C('Influências externas e ambientais','Neutralizar, dentro do que está sob meu controle, influências externas que prejudicam minha organização financeira e fortalecer adaptação e ação prática.'),
+familia:C('Padrões financeiros transgeracionais','Interromper a repetição de padrões familiares financeiros que já não são funcionais, preservando pertencimento e aprendizados sem reproduzir limitações.'),
+lealdade:C('Lealdades familiares ligadas à prosperidade','Liberar lealdades familiares que associem pertencimento à limitação financeira e fortalecer permissão para prosperar sem romper vínculos afetivos.'),
+heranca_crencas:C('Crenças financeiras herdadas','Identificar, questionar e ressignificar crenças financeiras herdadas que não correspondem à realidade ou aos valores atuais.'),
+votos:C('Votos, promessas ou juramentos — financeiro','Dentro da minha prática espiritual, identificar e liberar votos, promessas ou juramentos que eu considere limitantes para a vida material, mantendo apenas compromissos alinhados aos meus valores atuais.'),
+pactos:C('Pactos ou contratos simbólicos — financeiro','Dentro da minha prática espiritual, revisar e encerrar simbolicamente pactos, contratos ou acordos que eu considere incompatíveis com uma vida financeira saudável e ética.'),
+karma:C('Padrões interpretados como kármicos — financeiro','Dentro da minha prática espiritual, trabalhar e ressignificar padrões que interpreto como kármicos relacionados a dinheiro, merecimento, poder ou prosperidade.'),
+vinculos_energeticos:C('Vínculos ou cargas energéticas — financeiro','Dentro da minha prática espiritual, limpar e equilibrar vínculos ou cargas energéticas percebidas como prejudiciais à vida financeira, reforçando limites e centramento.'),
+outra_fin:C('Outra causa raiz financeira','Aprofundar a investigação com perguntas binárias até delimitar natureza, origem e manifestação da causa; formular um comando específico somente depois de identificá-la.'),
+crencas_carreira:C('Crenças limitantes profissionais','Eliminar e ressignificar crenças limitantes que impedem desenvolvimento profissional, reconhecimento, aprendizado e crescimento sustentável.'),
+merecimento_carreira:C('Merecimento profissional','Eliminar crenças de não merecimento ligadas a sucesso, reconhecimento e remuneração e fortalecer autovalor profissional.'),
+medo_fracasso:C('Medo de falhar ou ser julgada','Limpar medos desproporcionais de falha, julgamento e inadequação e fortalecer aprendizagem, exposição gradual e ação.'),
+medo_sucesso:C('Medo ou culpa pelo sucesso','Ressignificar conflitos ligados a sucesso, visibilidade, liderança e crescimento, fortalecendo permissão para avançar com responsabilidade.'),
+perfeccionismo:C('Perfeccionismo','Reduzir a necessidade de perfeição e certeza antes de agir, fortalecendo progresso, experimentação e conclusão.'),
+direcao:C('Direção profissional','Limpar ruído interno que dificulta priorização e fortalecer clareza para escolher e sustentar uma direção profissional por tempo suficiente para testá-la.'),
+identidade_carreira:C('Identidade profissional','Liberar identificações profissionais que já não servem e fortalecer uma identidade coerente com competências, valores e próximo ciclo.'),
+comportamento_carreira:C('Padrões comportamentais profissionais','Interromper padrões de procrastinação, evitação, dispersão ou excesso de compromissos e fortalecer execução consistente.'),
+exaustao:C('Sobrecarga e exaustão','Reduzir padrões de sobrecarga que prejudicam clareza e desempenho e fortalecer limites, recuperação e ritmo sustentável.'),
+evento_carreira:C('Experiências profissionais passadas','Ressignificar experiências profissionais passadas que ainda condicionam decisões atuais, preservando aprendizado e liberando respostas desatualizadas.'),
+estrutura_carreira:C('Barreiras externas de carreira','Tratar objetivamente as barreiras externas identificadas, priorizando a de maior impacto sobre a próxima oportunidade profissional.'),
+trabalho_atual:C('Limitações do trabalho atual','Clarificar e tratar os fatores do contexto profissional atual que limitam crescimento, reconhecimento, remuneração ou bem-estar.'),
+relacoes_carreira:C('Influências relacionais na carreira','Fortalecer limites e autonomia diante de relações que interferem negativamente em decisões profissionais.'),
+familia_carreira:C('Padrões profissionais transgeracionais','Interromper padrões familiares de sacrifício, excesso de trabalho, submissão ou estagnação que já não são funcionais.'),
+lealdade_carreira:C('Lealdades familiares ligadas ao sucesso','Liberar lealdades familiares que associem pertencimento a permanecer pequena profissionalmente e fortalecer permissão para crescer sem romper vínculos.'),
+heranca_carreira:C('Crenças profissionais herdadas','Identificar, questionar e ressignificar crenças familiares herdadas sobre trabalho, sucesso, estabilidade, dinheiro e profissão.'),
+votos_carreira:C('Votos, promessas ou juramentos — carreira','Dentro da minha prática espiritual, identificar e liberar votos, promessas ou juramentos que eu considere limitantes para trabalho, visibilidade, liderança ou prosperidade profissional.'),
+pactos_carreira:C('Pactos ou contratos simbólicos — carreira','Dentro da minha prática espiritual, revisar e encerrar simbolicamente pactos, contratos ou acordos que eu considere incompatíveis com uma carreira saudável e alinhada aos meus valores.'),
+karma_carreira:C('Padrões interpretados como kármicos — carreira','Dentro da minha prática espiritual, trabalhar e ressignificar padrões que interpreto como kármicos relacionados a trabalho, poder, sucesso, reconhecimento ou liderança.'),
+vinculos_carreira:C('Vínculos ou cargas energéticas — carreira','Dentro da minha prática espiritual, limpar e equilibrar vínculos ou cargas energéticas percebidas como prejudiciais à carreira, reforçando limites e centramento.'),
+outra_carreira:C('Outra causa raiz profissional','Aprofundar a investigação com perguntas binárias até delimitar natureza, origem e manifestação da causa; formular um comando específico somente depois de identificá-la.')};
+const Q=(id,section,q,tag,parent)=>({id,section,q,tag,parent});
+const DATA={finance:{title:'Vida Financeira',copy:'Um “Sim” abre perguntas mais específicas; um “Não” pula aquele ramo. O objetivo é investigar todas as categorias relevantes, sem encerrar a sessão no primeiro achado.',questions:[
+Q('f_internal','Origem','Há fatores internos contribuindo para o desequilíbrio financeiro?'),
+Q('f_beliefs','Interno • Crenças','Há crenças limitantes relacionadas à vida financeira?','crencas_fin','f_internal'),
+Q('f_worth','Interno • Crenças','Há crenças limitantes relacionadas ao merecimento?','merecimento','f_beliefs'),
+Q('f_scarcity','Interno • Crenças','Há crenças de escassez, falta ou medo de não haver dinheiro suficiente?','escassez','f_beliefs'),
+Q('f_receive','Interno • Crenças','Há crenças que dificultam receber, cobrar, negociar ou aceitar prosperidade?','receber','f_beliefs'),
+Q('f_sacrifice','Interno • Crenças','Há crenças que associam dinheiro ou prosperidade a sofrimento, sacrifício ou excesso de trabalho?','sacrificio','f_beliefs'),
+Q('f_guilt','Interno • Emoções','Há culpa, vergonha ou conflito interno relacionado a ter, ganhar ou acumular dinheiro?','culpa','f_internal'),
+Q('f_fear','Interno • Emoções','Há medos relacionados a perder dinheiro, fracassar, crescer ou assumir riscos financeiros?','medo','f_internal'),
+Q('f_identity','Interno • Identidade','Há uma identidade, autoimagem ou rótulo pessoal que limita a prosperidade financeira?','identidade','f_internal'),
+Q('f_behavior','Interno • Comportamento','Há comportamentos repetitivos que prejudicam o fluxo financeiro, como impulsividade, evitação ou procrastinação?','comportamento','f_internal'),
+Q('f_event','Interno • Experiências','Há experiências passadas ou eventos marcantes ainda influenciando negativamente a relação com dinheiro?','evento','f_internal'),
+Q('f_external','Origem','Há fatores externos contribuindo para o desequilíbrio financeiro?'),
+Q('f_struct','Externo • Estrutura','Há fatores objetivos como renda insuficiente, juros, dívidas, despesas ou falta de planejamento que precisam ser tratados?','pratico','f_external'),
+Q('f_relation','Externo • Relações','Há pessoas, vínculos ou dinâmicas relacionais interferindo negativamente na vida financeira?','relacionamento','f_external'),
+Q('f_environment','Externo • Ambiente','Há influência do ambiente, trabalho, contexto econômico ou responsabilidades externas dificultando o fluxo financeiro?','ambiente_fin','f_external'),
+Q('f_ancestral','Origem','Há fatores familiares, ancestrais ou transgeracionais relacionados ao desequilíbrio financeiro?'),
+Q('f_family_pattern','Ancestralidade','Há repetição de padrões familiares de escassez, dívida, perda, dependência ou sacrifício?','familia','f_ancestral'),
+Q('f_loyalty','Ancestralidade','Há lealdades invisíveis ou necessidade de pertencimento familiar associadas a não prosperar mais que outros membros da família?','lealdade','f_ancestral'),
+Q('f_inherited_belief','Ancestralidade','Há crenças, medos ou regras sobre dinheiro herdados do sistema familiar?','heranca_crencas','f_ancestral'),
+Q('f_spiritual','Origem','Dentro da sua prática ou sistema de crenças, há fatores espirituais, simbólicos ou energéticos relacionados ao desequilíbrio financeiro?'),
+Q('f_vows','Espiritual / simbólico','Há votos, promessas ou juramentos que, dentro da sua prática, estejam associados a limitação financeira ou material?','votos','f_spiritual'),
+Q('f_pacts','Espiritual / simbólico','Há pactos, contratos, acordos ou compromissos simbólicos que devam ser investigados em relação à prosperidade?','pactos','f_spiritual'),
+Q('f_karma','Espiritual / simbólico','Há padrões interpretados pela sua prática como kármicos relacionados a dinheiro, prosperidade, poder ou merecimento?','karma','f_spiritual'),
+Q('f_ties','Espiritual / simbólico','Há vínculos, cordões, influências ou cargas energéticas que, dentro da sua prática, devam ser tratados nesta área?','vinculos_energeticos','f_spiritual'),
+Q('f_other','Causa raiz','Há alguma outra causa raiz relevante para a vida financeira que ainda não foi identificada por este protocolo?','outra_fin')]},career:{title:'Carreira / Profissional',copy:'Um “Sim” abre perguntas mais específicas; um “Não” pula aquele ramo. A investigação percorre causas internas, externas, ancestrais e, dentro da sua prática, espirituais ou simbólicas.',questions:[
+Q('c_internal','Origem','Há fatores internos contribuindo para o desequilíbrio profissional ou de carreira?'),
+Q('c_beliefs','Interno • Crenças','Há crenças limitantes relacionadas à carreira, trabalho, sucesso ou capacidade profissional?','crencas_carreira','c_internal'),
+Q('c_worth','Interno • Crenças','Há crenças limitantes relacionadas a merecimento de sucesso, reconhecimento ou remuneração?','merecimento_carreira','c_beliefs'),
+Q('c_failure','Interno • Crenças','Há crenças ou medos relacionados a falhar, errar, ser julgada ou não estar suficientemente preparada?','medo_fracasso','c_beliefs'),
+Q('c_success','Interno • Crenças','Há medo, culpa ou conflito interno relacionado ao sucesso, visibilidade, liderança ou crescimento?','medo_sucesso','c_beliefs'),
+Q('c_perfect','Interno • Padrões','Há perfeccionismo, excesso de preparação ou necessidade de certeza impedindo movimento profissional?','perfeccionismo','c_internal'),
+Q('c_direction','Interno • Direção','Há dificuldade de escolher, priorizar ou sustentar uma direção profissional?','direcao','c_internal'),
+Q('c_identity','Interno • Identidade','Há conflito entre sua identidade profissional atual e a identidade necessária para o próximo ciclo?','identidade_carreira','c_internal'),
+Q('c_behavior','Interno • Comportamento','Há procrastinação, evitação de exposição, dificuldade de concluir ou excesso de compromissos afetando a carreira?','comportamento_carreira','c_internal'),
+Q('c_burn','Interno • Energia','Há sobrecarga ou exaustão interferindo na clareza, motivação ou capacidade de avançar?','exaustao','c_internal'),
+Q('c_event','Interno • Experiências','Há experiências profissionais passadas ainda influenciando negativamente decisões atuais?','evento_carreira','c_internal'),
+Q('c_external','Origem','Há fatores externos contribuindo para o desequilíbrio profissional ou de carreira?'),
+Q('c_struct','Externo • Estrutura','Há barreiras objetivas de mercado, experiência, credenciais, localização, portfólio ou networking?','estrutura_carreira','c_external'),
+Q('c_work','Externo • Trabalho','Há fatores do trabalho ou empresa atual limitando crescimento, reconhecimento, remuneração ou bem-estar?','trabalho_atual','c_external'),
+Q('c_people','Externo • Relações','Há pessoas, relações profissionais ou familiares interferindo negativamente nas decisões de carreira?','relacoes_carreira','c_external'),
+Q('c_ancestral','Origem','Há fatores familiares, ancestrais ou transgeracionais relacionados ao desequilíbrio profissional?'),
+Q('c_family_pattern','Ancestralidade','Há repetição de padrões familiares de sacrifício, excesso de trabalho, estagnação, submissão ou medo de risco?','familia_carreira','c_ancestral'),
+Q('c_loyalty','Ancestralidade','Há lealdades invisíveis ou necessidade de pertencimento associadas a não ultrapassar profissionalmente membros da família?','lealdade_carreira','c_ancestral'),
+Q('c_inherited','Ancestralidade','Há crenças ou regras familiares herdadas sobre trabalho, sucesso, dinheiro, estabilidade ou profissão?','heranca_carreira','c_ancestral'),
+Q('c_spiritual','Origem','Dentro da sua prática ou sistema de crenças, há fatores espirituais, simbólicos ou energéticos relacionados à carreira?'),
+Q('c_vows','Espiritual / simbólico','Há votos, promessas ou juramentos que, dentro da sua prática, estejam associados a trabalho, serviço, pobreza, invisibilidade ou limitação profissional?','votos_carreira','c_spiritual'),
+Q('c_pacts','Espiritual / simbólico','Há pactos, contratos, acordos ou compromissos simbólicos que devam ser investigados em relação à carreira?','pactos_carreira','c_spiritual'),
+Q('c_karma','Espiritual / simbólico','Há padrões interpretados pela sua prática como kármicos relacionados a trabalho, poder, sucesso, reconhecimento ou liderança?','karma_carreira','c_spiritual'),
+Q('c_ties','Espiritual / simbólico','Há vínculos, cordões, influências ou cargas energéticas que, dentro da sua prática, devam ser tratados nesta área?','vinculos_carreira','c_spiritual'),
+Q('c_other','Causa raiz','Há alguma outra causa raiz relevante para a carreira que ainda não foi identificada por este protocolo?','outra_carreira')]}};
+(function(){'use strict';let state={mode:'finance',visible:[],i:0,answers:{},findings:[],initial:50,final:20};const $=id=>document.getElementById(id);function show(id){['startView','questionView','priorityView','treatmentView','reportView','historyView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}function sync(){$('startTitle').textContent=DATA[state.mode].title;$('startCopy').textContent=DATA[state.mode].copy}function reset(){let m=state.mode;state={mode:m,visible:[],i:0,answers:{},findings:[],initial:50,final:20};$('initialIntensity').value=50;$('initialOut').textContent='50%';$('finalIntensity').value=20;$('finalOut').textContent='20%';$('methods').value='';$('notes').value=''}function setMode(m){state.mode=m;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));reset();sync();show('startView')}function eligible(){return DATA[state.mode].questions.filter(q=>!q.parent||state.answers[q.parent]==='yes')}function rebuild(){state.visible=eligible()}function render(){rebuild();let q=state.visible[state.i];if(!q){finish();return}$('sectionPill').textContent=q.section;$('counter').textContent=(state.i+1)+' de '+state.visible.length;$('question').textContent=q.q;$('progressBar').style.width=(state.i/Math.max(state.visible.length,1)*100)+'%';$('backBtn').disabled=state.i===0}function answer(a){let q=state.visible[state.i];state.answers[q.id]=a;if(q.tag){if(a==='yes'&&!state.findings.includes(q.tag))state.findings.push(q.tag);if(a==='no')state.findings=state.findings.filter(t=>t!==q.tag)}let id=q.id;rebuild();let pos=state.visible.findIndex(x=>x.id===id);state.i=pos+1;if(state.i>=state.visible.length)finish();else render()}function back(){if(state.i<=0)return;state.i--;render()}function finish(){let list=$('priorityList');list.innerHTML='';let found=state.findings.filter(t=>PLANS[t]);if(!found.length)list.innerHTML='<p class="muted">Nenhum item específico foi identificado nos ramos investigados.</p>';found.forEach(t=>{let d=document.createElement('div');d.className='check';d.innerHTML='<span><b>'+PLANS[t].label+'</b><small><strong>Comando sugerido:</strong> '+PLANS[t].command+'</small></span>';list.appendChild(d)});show('priorityView')}function esc(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function report(){state.initial=+$('initialIntensity').value;state.final=+$('finalIntensity').value;let found=state.findings.filter(t=>PLANS[t]);$('reportTitle').textContent=DATA[state.mode].title+' — plano de tratamento';$('reportMeta').textContent=found.length+' itens identificados • medição '+state.initial+'% → '+state.final+'%';let body=$('reportBody');body.innerHTML='<div class="card metric"><div><span class="muted">Antes</span><strong>'+state.initial+'%</strong></div><div><span class="muted">Depois</span><strong>'+state.final+'%</strong></div></div>';let c=document.createElement('section');c.className='card reportSection';c.innerHTML='<h3>Itens a tratar e comandos sugeridos</h3>';if(!found.length)c.innerHTML+='<p class="muted">Nenhum item específico identificado.</p>';else{let ul=document.createElement('ul');found.forEach(t=>{let li=document.createElement('li');li.innerHTML='<b>'+PLANS[t].label+'</b><br><span class="muted">'+PLANS[t].command+'</span>';ul.appendChild(li)});c.appendChild(ul)}body.appendChild(c);if($('methods').value||$('notes').value){let r=document.createElement('section');r.className='card reportSection';r.innerHTML='<h3>Registro da sessão</h3>'+($('methods').value?'<p><b>Método/gráfico:</b> '+esc($('methods').value)+'</p>':'')+($('notes').value?'<p><b>Observações:</b> '+esc($('notes').value)+'</p>':'');body.appendChild(r)}save(found);show('reportView')}function save(found){try{let h=JSON.parse(localStorage.getItem('rt_sessions_v2')||'[]');h.unshift({date:new Date().toISOString(),mode:state.mode,title:DATA[state.mode].title,initial:state.initial,final:state.final,findings:found,answers:state.answers,methods:$('methods').value,notes:$('notes').value});localStorage.setItem('rt_sessions_v2',JSON.stringify(h.slice(0,50)))}catch(e){}}function history(){let box=$('historyList'),h=[];box.innerHTML='';try{h=JSON.parse(localStorage.getItem('rt_sessions_v2')||'[]')}catch(e){}if(!h.length)box.innerHTML='<p class="muted">Nenhuma sessão salva ainda.</p>';h.forEach(s=>{let d=document.createElement('div');d.className='historyItem';d.innerHTML='<b>'+s.title+'</b><div class="muted">'+new Date(s.date).toLocaleString('pt-BR')+' • '+s.findings.length+' itens • '+s.initial+'% → '+s.final+'%</div>';box.appendChild(d)});show('historyView')}document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));document.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>answer(b.dataset.answer));$('initialIntensity').oninput=function(){$('initialOut').textContent=this.value+'%'};$('finalIntensity').oninput=function(){$('finalOut').textContent=this.value+'%'};$('startBtn').onclick=()=>{state.answers={};state.findings=[];state.i=0;rebuild();show('questionView');render()};$('backBtn').onclick=back;$('finishEarlyBtn').onclick=finish;$('toTreatmentBtn').onclick=()=>show('treatmentView');$('makeReportBtn').onclick=report;$('newBtn').onclick=()=>{reset();sync();show('startView')};$('historyBtn').onclick=history;$('closeHistory').onclick=()=>show('startView');$('copyBtn').onclick=()=>{if(navigator.clipboard)navigator.clipboard.writeText($('reportView').innerText).then(()=>{$('copyBtn').textContent='Copiado';setTimeout(()=>$('copyBtn').textContent='Copiar relatório',1200)})};sync()})();
