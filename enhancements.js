@@ -1,22 +1,26 @@
 (function(){
 'use strict';
-let treatmentRecords={};
-function planFor(tag){return (window.MARRIAGE_PLANS&&window.MARRIAGE_PLANS[tag])||(typeof PLANS!=='undefined'&&PLANS[tag])||{label:tag,command:''}}
-function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function renderTreatmentItems(){
- const host=document.getElementById('treatmentItems'); if(!host||typeof state==='undefined')return; host.innerHTML=''; treatmentRecords={};
- const tags=(state.findings||[]).filter((t,i,a)=>a.indexOf(t)===i);
- if(!tags.length){host.innerHTML='<section class="card"><p class="muted">Nenhum item específico foi identificado.</p></section>';return}
- tags.forEach((tag,idx)=>{const p=planFor(tag); treatmentRecords[tag]=[{graph:'',time:''}]; const card=document.createElement('section');card.className='card treatmentCard';card.dataset.tag=tag;card.innerHTML=`<span class="pill">Item ${idx+1}</span><h3>${esc(p.label)}</h3><p><b>Comando sugerido</b></p><p class="command">${esc(p.command)}</p><div class="graphs" data-tag="${esc(tag)}"></div><button type="button" class="ghost addGraph" data-tag="${esc(tag)}">+ Adicionar gráfico</button><div class="field"><label>Observações deste item</label><textarea class="itemNotes" data-tag="${esc(tag)}" placeholder="Resposta, validação, percepção..."></textarea></div>`;host.appendChild(card);addGraphRow(tag,card.querySelector('.graphs'),0)});
- host.querySelectorAll('.addGraph').forEach(b=>b.onclick=()=>{const tag=b.dataset.tag;const box=b.closest('.treatmentCard').querySelector('.graphs');treatmentRecords[tag].push({graph:'',time:''});addGraphRow(tag,box,treatmentRecords[tag].length-1)});
-}
-function addGraphRow(tag,box,i){const row=document.createElement('div');row.className='graphRow';row.innerHTML=`<div class="field"><label>Gráfico ${i+1}</label><input class="graphName" data-tag="${esc(tag)}" data-i="${i}" placeholder="Nome do gráfico"></div><div class="field"><label>Tempo</label><input class="graphTime" data-tag="${esc(tag)}" data-i="${i}" placeholder="Ex.: 10 min"></div>`;box.appendChild(row)}
-function collect(){document.querySelectorAll('.graphName').forEach(x=>{if(treatmentRecords[x.dataset.tag]?.[+x.dataset.i])treatmentRecords[x.dataset.tag][+x.dataset.i].graph=x.value});document.querySelectorAll('.graphTime').forEach(x=>{if(treatmentRecords[x.dataset.tag]?.[+x.dataset.i])treatmentRecords[x.dataset.tag][+x.dataset.i].time=x.value});const notes={};document.querySelectorAll('.itemNotes').forEach(x=>notes[x.dataset.tag]=x.value);return notes}
-function appendTreatmentToReport(){if(typeof state==='undefined')return;const notes=collect(),body=document.getElementById('reportBody');if(!body)return;const tags=(state.findings||[]).filter((t,i,a)=>a.indexOf(t)===i);const sec=document.createElement('section');sec.className='card reportSection';sec.innerHTML='<h3>Tratamento realizado por item</h3>';tags.forEach(tag=>{const p=planFor(tag),d=document.createElement('div');d.className='reportTreatment';let gs=(treatmentRecords[tag]||[]).filter(g=>g.graph||g.time);d.innerHTML=`<h4>${esc(p.label)}</h4><p><b>Comando:</b> ${esc(p.command)}</p>`+(gs.length?'<ul>'+gs.map(g=>`<li><b>Gráfico:</b> ${esc(g.graph||'—')} &nbsp; <b>Tempo:</b> ${esc(g.time||'—')}</li>`).join('')+'</ul>':'<p class="muted">Nenhum gráfico registrado.</p>')+(notes[tag]?`<p><b>Observações:</b> ${esc(notes[tag])}</p>`:'');sec.appendChild(d)});body.appendChild(sec)}
+let records=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function hideHome(){const h=$('homeView');if(h)h.classList.add('hidden')}
+function goHome(){['startView','questionView','priorityView','treatmentView','reportView','historyView'].forEach(id=>$(id)?.classList.add('hidden'));$('homeView')?.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
+function openProtocol(mode){hideHome();const tab=document.querySelector('.tab[data-mode="'+mode+'"]');if(tab)tab.click();$('startView')?.classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
+function findingsFromResult(){return Array.from(document.querySelectorAll('#priorityList .check')).map((el,i)=>{const b=el.querySelector('b');const small=el.querySelector('small');let cmd=small?small.textContent.trim():'';cmd=cmd.replace(/^Comando sugerido:\s*/i,'');return{id:'item_'+i,label:b?b.textContent.trim():'Item '+(i+1),command:cmd,graphs:[{name:'',time:''}],notes:''}})}
+function addGraphRow(rec,box,index){const row=document.createElement('div');row.className='graphRow';row.innerHTML=`<div class="field"><label>Gráfico ${index+1}</label><input class="graphName" placeholder="Nome do gráfico" value="${esc(rec.graphs[index].name)}"></div><div class="field"><label>Tempo</label><input class="graphTime" placeholder="Ex.: 10 min" value="${esc(rec.graphs[index].time)}"></div>`;row.querySelector('.graphName').addEventListener('input',e=>rec.graphs[index].name=e.target.value);row.querySelector('.graphTime').addEventListener('input',e=>rec.graphs[index].time=e.target.value);box.appendChild(row)}
+function renderTreatment(){const host=$('treatmentItems');if(!host)return;records=findingsFromResult();host.innerHTML='';if(!records.length){host.innerHTML='<section class="card"><p class="muted">Nenhum item específico foi identificado para tratamento.</p></section>';return}records.forEach((rec,i)=>{const card=document.createElement('section');card.className='card treatmentCard';card.innerHTML=`<span class="pill">Item ${i+1}</span><h3>${esc(rec.label)}</h3><p class="fieldTitle">Comando sugerido</p><p class="command">${esc(rec.command)}</p><div class="graphs"></div><button type="button" class="ghost addGraph">+ Adicionar outro gráfico</button><div class="field"><label>Observações deste item</label><textarea class="itemNotes" placeholder="Percepções, validações ou ajustes do comando..."></textarea></div>`;const box=card.querySelector('.graphs');addGraphRow(rec,box,0);card.querySelector('.addGraph').onclick=()=>{rec.graphs.push({name:'',time:''});addGraphRow(rec,box,rec.graphs.length-1)};card.querySelector('.itemNotes').addEventListener('input',e=>rec.notes=e.target.value);host.appendChild(card)})}
+function syncLegacyMethods(){const m=$('methods');if(m)m.value=records.map(r=>r.label+': '+r.graphs.filter(g=>g.name||g.time).map(g=>(g.name||'Gráfico')+' — '+(g.time||'tempo não registrado')).join('; ')).join('\n')}
+function appendDetails(){const body=$('reportBody');if(!body||!records.length)return;body.querySelector('.treatmentDetails')?.remove();const sec=document.createElement('section');sec.className='card reportSection treatmentDetails';sec.innerHTML='<h3>Tratamento realizado por item</h3>';records.forEach(r=>{const d=document.createElement('div');d.className='reportTreatment';const gs=r.graphs.filter(g=>g.name||g.time);d.innerHTML=`<h4>${esc(r.label)}</h4><p><b>Comando sugerido:</b> ${esc(r.command)}</p>`+(gs.length?'<ul>'+gs.map(g=>`<li><b>Gráfico:</b> ${esc(g.name||'—')} &nbsp; <b>Tempo:</b> ${esc(g.time||'—')}</li>`).join('')+'</ul>':'<p class="muted">Nenhum gráfico registrado.</p>')+(r.notes?`<p><b>Observações:</b> ${esc(r.notes)}</p>`:'');sec.appendChild(d)});body.appendChild(sec)}
 function install(){
- const btn=document.getElementById('toTreatmentBtn');if(btn)btn.addEventListener('click',()=>setTimeout(renderTreatmentItems,0));
- const report=document.getElementById('makeReportBtn');if(report)report.addEventListener('click',()=>setTimeout(appendTreatmentToReport,0));
- const print=document.getElementById('printBtn');if(print)print.onclick=()=>window.print();
+ $('startView')?.classList.add('hidden');$('homeView')?.classList.remove('hidden');
+ document.querySelectorAll('[data-open-mode]').forEach(b=>b.onclick=()=>openProtocol(b.dataset.openMode));
+ document.querySelectorAll('.backHome').forEach(b=>b.onclick=goHome);
+ $('toTreatmentBtn')?.addEventListener('click',()=>setTimeout(renderTreatment,0));
+ $('makeReportBtn')?.addEventListener('click',()=>{syncLegacyMethods();setTimeout(appendDetails,20)});
+ $('printBtn')?.addEventListener('click',()=>window.print());
+ $('historyBtn')?.addEventListener('click',hideHome);
+ $('closeHistory')?.addEventListener('click',goHome);
+ $('newBtn')?.addEventListener('click',goHome);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
