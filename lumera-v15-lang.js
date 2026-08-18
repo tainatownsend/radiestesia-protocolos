@@ -1,0 +1,1 @@
+(function(){'use strict';function pulse(){['historyView','reportView'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.classList.toggle('v15LangPulse');requestAnimationFrame(()=>el.classList.toggle('v15LangPulse'))})}const o=new MutationObserver(pulse);o.observe(document.documentElement,{attributes:true,attributeFilter:['lang']});})();
