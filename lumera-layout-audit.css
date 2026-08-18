@@ -1,0 +1,69 @@
+/* Lumera layout QA overrides — loaded last on purpose. */
+html,body{max-width:100%;overflow-x:hidden}
+.shell,main,#homeView,#assessmentView,#reevalView,#divorceView,#reportView,#historyView{min-width:0}
+.card,.assessmentCard,.divorceCard,.sessionDashboard,.protocolCard,.quickCard,.measureCard,.chakraCard,.suggestionCard,.historyCard{max-width:100%;min-width:0}
+.protocolText,.protocolText strong,.protocolText small,.dashboardFact,.dashboardFact strong,.assessmentHeader,.divorceHeader,.reportTreatment,.historyFinding{min-width:0;overflow-wrap:anywhere;word-break:normal}
+button,input,select,textarea{max-width:100%}
+input,select,textarea{font-size:16px}
+button{min-height:44px}
+.homeIntro{max-width:720px}
+.homeIntro p{max-width:660px}
+.homeTools,.howItWorks,.sessionLauncher,.divorceLauncher{max-width:100%}
+.protocolGrid.deepGrid,.quickGrid{align-items:stretch}
+.protocolCard,.quickCard{height:100%}
+.protocolCard .chevron,.quickCard .chevron{align-self:center}
+.sessionPath,.divorceSteps,.sessionTimeline{-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
+.sessionPath span,.divorceSteps span,.sessionStage{scroll-snap-align:start}
+.sessionPath,.divorceSteps,.sessionTimeline{scroll-snap-type:x proximity}
+.questionTop{min-width:0}.questionTop .pill{max-width:75%;white-space:normal;line-height:1.25}.questionTop .muted{flex:0 0 auto}
+#question{overflow-wrap:anywhere}
+.answerGrid .answer{min-width:0}
+.questionActions{align-items:center}
+.graphRow>*{min-width:0}.durationControls>*{min-width:0}
+.assessmentGrid>*,.assessmentSummaryGrid>*,.measureCardTop>*,.chakraVisual>*,.chakraQuestion>*,.lifeAreaHead>*,.participantRow>*{min-width:0}
+.pctStepper{width:100%}.pctStepper output{min-width:0}
+.chakraCard{overflow:hidden}.chakraVisual p{overflow-wrap:anywhere}.choiceRow,.binaryRow{min-width:0}.choiceBtn{flex:0 1 auto}
+.auraMeters>*{min-width:0}
+.repeatItem>*{min-width:0}
+.suggestionCard>*{min-width:0}
+.reevalTable,.assessmentComparison{max-width:100%}
+.divorceTop>*{min-width:0}.divorceAreaTop>*{min-width:0}.divorcePerson>*{min-width:0}.divorceDuration>*{min-width:0}
+.reportActions button,.assessmentActions button,.divorceActions button,.practitionerActions button{white-space:normal}
+.historyCard summary{min-width:0}.historyCard summary>span:first-child{min-width:0}.historyCard small{overflow-wrap:anywhere}
+.practitionerView{-webkit-overflow-scrolling:touch}.practitionerPanel{width:min(720px,100%)}
+.practiceCheck{cursor:pointer}.practiceCheck span{min-width:0;overflow-wrap:anywhere}
+footer{max-width:720px}
+@media(max-width:700px){
+ .shell{width:100%;max-width:100%;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+ .appHeader{gap:10px}.brandButton{min-width:0}.compactBtn{flex:0 0 auto}
+ .homeIntro h1{font-size:clamp(32px,10vw,44px)}
+ .howItWorks{padding:14px 15px}
+ .protocolCard,.quickCard{grid-template-columns:44px minmax(0,1fr) 18px;gap:11px}
+ .questionActions{gap:12px}.questionActions .textAction{font-size:13px}
+ .assessmentCard,.divorceCard,.card{padding-left:18px;padding-right:18px}
+ .measureCardTop{display:grid;gap:12px}.measureCardTop .binaryRow{justify-content:flex-start}
+ .chakraVisual{grid-template-columns:44px minmax(0,1fr)}
+ .lifeAreaHead{display:grid;gap:7px}
+ .repeatItem{grid-template-columns:minmax(0,1fr) 76px 44px}
+ .participantRow{grid-template-columns:minmax(0,1fr) 44px}
+ .divorcePerson{grid-template-columns:minmax(0,1fr) 44px}
+ .historyHead{gap:8px}
+}
+@media(max-width:420px){
+ .appHeader{padding-top:9px;padding-bottom:9px}.brandButton{font-size:20px}.brandButton::before{width:27px;height:27px}
+ .homeIntro h1{font-size:34px}
+ .protocolCard,.quickCard{padding:14px 12px}.protocolIcon{width:42px;height:42px}
+ .answerGrid{gap:9px}.answer{min-height:56px}
+ .questionActions{display:grid;grid-template-columns:1fr}.questionActions .textAction{text-align:center!important}
+ .assessmentActions,.divorceActions{gap:8px}
+ .pctStepper{grid-template-columns:46px minmax(64px,1fr) 46px}
+ .choiceBtn{min-height:44px;padding:8px 10px}
+ .repeatItem{grid-template-columns:minmax(0,1fr) 44px}.repeatItem .assessmentField:nth-child(2){grid-column:1/2}.repeatRemove{grid-column:2;grid-row:1/3;align-self:end}
+ .reevalTable{font-size:13px}
+ .practitionerView{padding-left:8px;padding-right:8px}.practitionerPanel{border-radius:16px}.practitionerHeader h2{font-size:27px}
+}
+@media(min-width:900px){
+ .shell{max-width:940px}
+ .protocolGrid.deepGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media print{html,body{overflow:visible}.reportSection,.reportTreatment,.assessmentReport,.divorceReport{overflow:visible;max-width:none}}
