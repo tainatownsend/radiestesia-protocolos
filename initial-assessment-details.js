@@ -2,7 +2,7 @@
 'use strict';
 const STORE='rt_assessments_v1';
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[m]));
 const FIELD={mental:'Mental',emotional:'Emocional',spiritual:'Espiritual',physical:'Físico'};
 const LIFE={family:'Familiar',affective:'Relacionamento afetivo',professional:'Profissional',financial:'Financeiro',mission:'Missão de vida'};
 function clamp5(v){return Math.round(Math.max(0,Math.min(100,Number(v)||0))/5)*5}
@@ -19,12 +19,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 (function loadDivorceEnergyModule(){
  if(document.querySelector('script[data-lumera-divorce]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-7';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-7';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
+ const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-9';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-9';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
 })();
 
 (function loadLumeraWorkspace(){
  if(document.querySelector('script[data-lumera-workspace]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-workspace.css?v=20260818-8';css.dataset.lumeraWorkspace='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-workspace.js?v=20260818-8';js.dataset.lumeraWorkspace='1';js.defer=true;document.body.appendChild(js);
+ const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-workspace.css?v=20260818-9';css.dataset.lumeraWorkspace='1';document.head.appendChild(css);
+ const audit=document.createElement('link');audit.rel='stylesheet';audit.href='lumera-layout-audit.css?v=20260818-9';audit.dataset.lumeraLayoutAudit='1';document.head.appendChild(audit);
+ const js=document.createElement('script');js.src='lumera-workspace.js?v=20260818-9';js.dataset.lumeraWorkspace='1';js.defer=true;document.body.appendChild(js);
 })();
