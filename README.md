@@ -9,13 +9,25 @@ Aplicação web estática, mobile/iPad-first, para condução e registro de inve
 
 A V1 consolidou o fluxo: investigação condicional Sim/Não → achados → validação causal → ordem de tratamento → gráficos + duração estruturada → validação pós-tratamento → relatório/PDF → histórico local.
 
-## V1.1 — expansão em andamento
+## V1.1 — expansão
 ### Core
 - Autoestima, Amor-próprio e Merecimento
 - Relacionamentos Familiares
 - Protocolo Mestre de Causa Raiz
 
-Os protocolos V1.1 reutilizam o mesmo controlador e a mesma arquitetura de sessão da V1; a expansão de conteúdo fica isolada em arquivos de dados para reduzir risco de regressão.
+### Protocolos profundos adicionais
+- Prosperidade e Abundância
+- Propósito e Caminho de Vida
+- Casa e Ambiente
+- Relacionamento com o Próprio Corpo
+- Criatividade e Projetos
+- Vida Social e Pertencimento
+- Parentalidade
+- Padrões Repetitivos
+
+Os protocolos V1.1 reutilizam o mesmo controlador e a mesma arquitetura de sessão da V1. As expansões de conteúdo ficam isoladas em arquivos de dados (`protocols-v11-core.js` e `protocols-v11-expansion.js`) para reduzir risco de regressão e evitar múltiplos controladores disputando os mesmos eventos de interface.
+
+O protocolo de Relacionamento com o Próprio Corpo é reflexivo e não diagnóstico. Questões físicas, sintomas, condições de saúde e efeitos de medicamentos são direcionados para avaliação profissional adequada quando necessário.
 
 ## Recursos
 - perguntas Sim/Não com abertura condicional de ramos;
