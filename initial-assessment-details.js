@@ -22,4 +22,8 @@ js('lumera-v22-library.js?v=20260818-22','lumera-v22-library');
 /* Unified Session journey + robust protocol resume + mobile navigation. */
 css('lumera-v23-session.css?v=20260818-23','lumera-v23-session-css');
 js('lumera-v23-session.js?v=20260818-23','lumera-v23-session');
+
+/* Treatment continuity + validation guard. Event-driven; no global DOM observer. */
+css('lumera-v24-treatment.css?v=20260818-24','lumera-v24-treatment-css');
+js('lumera-v24-treatment.js?v=20260818-24','lumera-v24-treatment');
 })();
