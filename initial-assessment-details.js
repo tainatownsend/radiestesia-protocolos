@@ -11,9 +11,9 @@ css('lumera-layout-audit.css?v=20260818-21','lumera-layout-audit');
 js('lumera-workspace.js?v=20260818-21','lumera-workspace');
 css('lumera-v13.css?v=20260818-21','lumera-v13-css');
 
-/* Single stabilization/UX layer loaded last. */
-css('lumera-v21-stable.css?v=20260818-21','lumera-v21-css');
-js('lumera-v21-stable.js?v=20260818-21','lumera-v21');
+/* v21 is now intentionally narrow: compact practitioner state only, with no competing global observers. */
+css('lumera-v21-stable.css?v=20260819-26','lumera-v21-css');
+js('lumera-v21-stable.js?v=20260819-26','lumera-v21');
 
 /* Dedicated protocol library. Event-driven only: no MutationObserver or polling. */
 css('lumera-v22-library.css?v=20260818-22','lumera-v22-library-css');
@@ -30,4 +30,8 @@ js('lumera-v24-treatment.js?v=20260818-24','lumera-v24-treatment');
 /* Navigable client records/history. Preserves legacy stores and links assessments to sessions conservatively. */
 css('lumera-v22-records.css?v=20260818-25','lumera-v22-records-css');
 js('lumera-v22-records.js?v=20260818-25','lumera-v22-records');
+
+/* Final design system and event-driven QA. Loaded last so it can normalize all modules without taking ownership of their business logic. */
+css('lumera-v26-final.css?v=20260819-26','lumera-v26-final-css');
+js('lumera-v26-final.js?v=20260819-26','lumera-v26-final');
 })();
