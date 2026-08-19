@@ -1,0 +1,51 @@
+/* Lumera v1.8 — mobile UX consolidation */
+#homeView.v16Home{display:block}
+#homeView.v16Home>*:not(#v16Dashboard):not(#v18PractitionerCompact){display:none!important}
+#v16Dashboard{display:block!important}
+.v16Dashboard{gap:14px;margin:0 0 14px}
+.v16Head{padding:0 2px}.v16Head>span{margin-bottom:5px}.v16Head h1{margin-bottom:8px}.v16Head p{max-width:620px}
+.v16Actions{gap:10px}.v16Secondary{gap:8px;margin-top:0}.v16Secondary button{flex:1}
+.v18PractitionerCompact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:0 0 20px;padding:15px 16px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow)}
+.v18PractitionerCompact h2{font-size:17px;margin:0 0 3px}.v18PractitionerCompact p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}.v18PractitionerActions{display:flex;gap:8px}.v18PractitionerActions button{min-height:44px;padding:8px 12px;border-radius:12px;white-space:nowrap}
+.v18PractitionerActions .v18Prepare{background:var(--accent);border:1px solid var(--accent);color:#fff;font-weight:800}.v18PractitionerActions .v18CloseDay{background:#fff;border:1px solid var(--line);color:var(--text);font-weight:750}
+
+/* Header: keep brand, history and language in one compact row on phones. */
+@media(max-width:620px){
+ .appHeader{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;margin-bottom:20px!important;padding-top:8px!important;padding-bottom:8px!important}
+ .brandButton{min-width:0;font-size:21px!important}
+ .headerTools{grid-column:auto!important;width:auto!important;margin-left:auto!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important}
+ .headerTools #historyBtn{flex:0 0 auto!important;width:auto!important;min-height:42px!important;padding:0 12px!important;font-size:14px!important}
+ .languageToggle{min-height:40px!important;padding:2px!important}
+ .languageToggle button{min-width:38px!important;padding:6px 7px!important;font-size:14px!important}
+}
+
+/* Assessment: prevent iOS controls overflowing the card and tighten vertical rhythm. */
+.assessmentCard,.assessmentCard *{box-sizing:border-box}
+.assessmentCard{overflow:hidden}
+.assessmentGrid,.assessmentField,.participantRow,.collectivePanel{min-width:0}
+.assessmentField input,.assessmentField select,.assessmentField textarea{display:block;max-width:100%;min-width:0;width:100%}
+.assessmentField input[type=date]{-webkit-appearance:none;appearance:none}
+.assessmentHeader{margin-bottom:16px}.assessmentHeader h2{margin-top:8px}.assessmentHeader p{line-height:1.42}
+.assessmentGrid{gap:10px}.assessmentField{gap:6px}.assessmentActions{margin-top:18px}
+.sessionPath{margin-bottom:10px;padding-bottom:8px}.sessionPath span{padding:6px 9px;font-size:11px}
+.assessmentStepMeta+.progress{margin-top:12px;margin-bottom:22px}
+@media(max-width:620px){
+ .assessmentCard{padding:20px 18px!important}
+ .assessmentGrid{grid-template-columns:1fr!important}
+ .assessmentField+ .assessmentField{margin-top:4px}
+ .assessmentField input,.assessmentField select{min-height:48px!important}
+ .assessmentField textarea{min-height:96px!important}
+ .assessmentActions{gap:8px!important}
+}
+
+/* The floating focus control must never obscure Home or Assessment controls. */
+body.v18HomeOpen .v16SessionToggle,body.v18AssessmentOpen .v16SessionToggle,body.v18HomeOpen #v14FocusToggle,body.v18AssessmentOpen #v14FocusToggle{display:none!important}
+
+/* History density on phone */
+@media(max-width:620px){
+ .v15HistoryTools{gap:10px;margin-top:12px}.v15RecordFilters,.v15ViewTabs{gap:6px}
+ .v15ViewTabs button,.v15RecordFilters button{min-height:40px;padding:7px 11px}
+ .v15Record,.v15Client{padding:13px;border-radius:16px}
+}
+
+footer{margin-top:20px!important;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
