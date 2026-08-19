@@ -26,4 +26,8 @@ js('lumera-v23-session.js?v=20260818-23','lumera-v23-session');
 /* Treatment continuity + validation guard. Event-driven; no global DOM observer. */
 css('lumera-v24-treatment.css?v=20260818-24','lumera-v24-treatment-css');
 js('lumera-v24-treatment.js?v=20260818-24','lumera-v24-treatment');
+
+/* Navigable client records/history. Preserves legacy stores and links assessments to sessions conservatively. */
+css('lumera-v22-records.css?v=20260818-25','lumera-v22-records-css');
+js('lumera-v22-records.js?v=20260818-25','lumera-v22-records');
 })();
