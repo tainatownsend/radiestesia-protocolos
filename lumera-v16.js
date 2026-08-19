@@ -1,31 +1,37 @@
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
 function dashboardHTML(){
   return `<section class="v16Dashboard" aria-labelledby="v16Title">
     <div class="v16Head">
       <span class="v16Eyebrow">Início</span>
-      <h1 id="v16Title">O que você quer fazer agora?</h1>
-      <p>Escolha uma opção. O app conduz o restante do fluxo passo a passo.</p>
+      <h1 id="v16Title">Como você quer começar?</h1>
+      <p>Comece uma sessão completa ou vá direto a uma ferramenta específica.</p>
     </div>
-    <div class="v16Actions">
+
+    <div class="v16PrimaryArea">
       <button type="button" data-v16-action="assessment" class="v16Action v16Primary v16Featured">
         <span aria-hidden="true">＋</span>
-        <strong>Iniciar nova sessão</strong>
-        <small>Avaliação inicial, investigação, tratamento e resultado</small>
+        <span class="v16ActionText"><strong>Nova sessão completa</strong><small>Avaliação inicial → investigação → tratamento → resultado</small></span>
+        <b class="v16Chevron" aria-hidden="true">›</b>
       </button>
-      <button type="button" data-v16-action="library" class="v16Action">
-        <span aria-hidden="true">◎</span>
-        <strong>Abrir protocolos</strong>
-        <small>Quando você já sabe o que quer investigar</small>
-      </button>
-      <button type="button" data-v16-action="divorce" class="v16Action">
-        <span aria-hidden="true">↯</span>
-        <strong>Divórcio Energético</strong>
-        <small>Fluxo específico individual ou coletivo</small>
-      </button>
+    </div>
+
+    <div class="v16Direct">
+      <span class="v16DirectLabel">Ou vá direto</span>
+      <div class="v16DirectGrid">
+        <button type="button" data-v16-action="library" class="v16Action v16CompactAction">
+          <span aria-hidden="true">◎</span>
+          <span class="v16ActionText"><strong>Protocolos</strong><small>Já sabe o que quer investigar?</small></span>
+          <b class="v16Chevron" aria-hidden="true">›</b>
+        </button>
+        <button type="button" data-v16-action="divorce" class="v16Action v16CompactAction">
+          <span aria-hidden="true">↯</span>
+          <span class="v16ActionText"><strong>Divórcio Energético</strong><small>Fluxo individual ou coletivo</small></span>
+          <b class="v16Chevron" aria-hidden="true">›</b>
+        </button>
+      </div>
     </div>
   </section>`;
 }
