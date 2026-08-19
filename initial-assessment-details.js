@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 function css(href,key){if(document.querySelector(`link[data-${key}]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.setAttribute(`data-${key}`,'1');document.head.appendChild(l)}
-function js(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
+function js(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.async=false;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
 
 /* Core complementary modules only. Previous V1.4–V2.0 patch layers were intentionally retired here because multiple observers/event layers were competing for the same DOM and could freeze interaction on iOS Safari. */
 css('divorce-energy.css?v=20260818-21','lumera-divorce-css');
