@@ -6,12 +6,13 @@
 .v23Stepper{display:flex;gap:6px;overflow-x:auto;margin:-2px 0 16px;padding:2px 0 4px;scrollbar-width:none}.v23Stepper::-webkit-scrollbar{display:none}.v23Stepper span{flex:0 0 auto;padding:7px 10px;border-radius:999px;background:#f3f0ed;color:var(--muted);font-size:12px;font-weight:800}.v23Stepper span.done{background:#edf4ef;color:#37615d}.v23Stepper span.active{background:var(--accent);color:#fff}
 .v23BottomNav{display:none}
 @media(max-width:760px){
-  body{padding-bottom:calc(98px + env(safe-area-inset-bottom))!important}
-  .shell{padding-bottom:28px!important}
-  footer{margin-bottom:0!important;padding-bottom:10px}
-  .v23BottomNav{position:fixed;z-index:2200;left:12px;right:12px;bottom:calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:6px;border:1px solid var(--line);border-radius:18px;background:rgba(255,253,249,.98);box-shadow:0 10px 30px rgba(42,30,43,.12);backdrop-filter:blur(14px)}
+  body{padding-bottom:calc(78px + env(safe-area-inset-bottom))!important}
+  .shell{padding-bottom:30px!important}
+  .appHeader{margin-bottom:20px!important}
+  footer{margin:32px 2px 0!important;padding:18px 0 8px;border-top:1px solid var(--line);max-width:58ch}
+  .v23BottomNav{position:fixed;z-index:2200;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:6px 10px max(7px,env(safe-area-inset-bottom));border:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;background:rgba(255,253,249,.985);box-shadow:0 -6px 24px rgba(42,30,43,.08);backdrop-filter:blur(16px)}
   .v23BottomNav.hidden{display:none}
-  .v23BottomNav button{min-width:0;min-height:50px;display:grid;place-items:center;gap:1px;padding:4px 2px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:11px;font-weight:800}
+  .v23BottomNav button{min-width:0;min-height:48px;display:grid;place-items:center;gap:1px;padding:4px 2px;border:0;border-radius:11px;background:transparent;color:var(--muted);font-size:11px;font-weight:800}
   .v23BottomNav button[data-v23="session"]{display:none!important}
   .v23BottomNav button span{display:block;font-size:18px;line-height:1}
   .v23BottomNav button.active{background:var(--soft);color:var(--accent-dark)}
