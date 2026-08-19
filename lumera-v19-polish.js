@@ -26,6 +26,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 (function loadLumeraV20QA(){
  if(document.querySelector('script[data-lumera-v20-qa]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v20-qa.css?v=20260818-20';css.dataset.lumeraV20Qa='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v20-qa.js?v=20260818-20';js.dataset.lumeraV20Qa='1';js.defer=true;document.body.appendChild(js);
+ const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v20-qa.css?v=20260818-20b';css.dataset.lumeraV20Qa='1';document.head.appendChild(css);
+ const js=document.createElement('script');js.src='lumera-v20-qa2.js?v=20260818-20b';js.dataset.lumeraV20Qa='1';js.defer=true;document.body.appendChild(js);
 })();
