@@ -1,8 +1,6 @@
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
-const LANG='lumera_language_v13';
-const t=(pt,en)=>localStorage.getItem(LANG)==='en'?en:pt;
 const visible=id=>{const e=$(id);return !!(e&&!e.classList.contains('hidden'))};
 const VIEW_IDS=['homeView','startView','questionView','priorityView','causalView','treatmentView','reportView','historyView','assessmentView','reevalView','divorceView'];
 let refreshTimer=null;
@@ -27,26 +25,6 @@ function hardenControls(root=document){
   root.querySelectorAll('details>summary').forEach(s=>{if(!s.hasAttribute('tabindex'))s.tabIndex=0});
 }
 
-function cleanupLegacy(){
-  /* These surfaces were superseded by dedicated v22/v24 modules. Removing any
-     stale instances avoids double overlays and duplicate focus traps after cache/refresh. */
-  ['v21Library','v21RecordSheet','v20RecordSheet'].forEach(id=>$(id)?.remove());
-  document.body.classList.remove('v21ModalOpen','v20ModalOpen','v16ModalOpen');
-  if($('v22Library')?.classList.contains('open')||$('v22Sheet')?.classList.contains('open'))document.body.classList.add('v22ModalOpen');
-}
-
-function practitionerState(){
-  const card=$('v21Practitioner');if(!card)return;
-  let flows=[];try{flows=JSON.parse(localStorage.getItem('lumera_practitioner_flows_v1')||'[]')}catch(e){}
-  const today=new Date().toISOString().slice(0,10);
-  const prep=flows.find(x=>x?.type==='prepare'&&x.date===today),close=flows.find(x=>x?.type==='close'&&x.date===today);
-  const title=card.querySelector('b'),copy=card.querySelector('span');
-  if(close){if(title)title.textContent=t('Jornada encerrada hoje','Workday closed');if(copy)copy.textContent=t('Se iniciar outro atendimento, prepare um novo período de trabalho.','If you start another appointment, prepare a new work period.');return}
-  if(prep){if(title)title.textContent=t('Dia preparado ✓','Day prepared ✓');if(copy)copy.textContent=t('Você pode seguir com suas sessões e encerrar quando terminar o dia.','You can continue with sessions and close when you finish the day.');return}
-  if(title)title.textContent=t('Jornada do terapeuta','Practitioner journey');
-  if(copy)copy.textContent=t('Prepare uma vez no início do período e encerre quando terminar o dia.','Prepare once at the start of the work period and close when you finish the day.');
-}
-
 function activeView(){return VIEW_IDS.find(visible)||null}
 function syncNav(){
   const nav=$('v23BottomNav');if(!nav)return;
@@ -59,15 +37,8 @@ function syncNav(){
   });
 }
 
-function headingForView(){
-  const v=activeView();if(!v)return null;
-  return $(v)?.querySelector('h1,h2,[role="heading"]')||null;
-}
-function prepareHeadingFocus(){
-  const h=headingForView();if(!h)return;
-  h.classList.add('v26FocusTarget');
-  if(!h.hasAttribute('tabindex'))h.tabIndex=-1;
-}
+function headingForView(){const v=activeView();return v?$(v)?.querySelector('h1,h2,[role="heading"]')||null:null}
+function prepareHeadingFocus(){const h=headingForView();if(!h)return;h.classList.add('v26FocusTarget');if(!h.hasAttribute('tabindex'))h.tabIndex=-1}
 
 function auditOverflow(){
   const width=document.documentElement.clientWidth;
@@ -76,32 +47,29 @@ function auditOverflow(){
     const r=el.getBoundingClientRect();return r.width>width+2||r.right>width+2||r.left<-2;
   }).slice(0,8);
   offenders.forEach(el=>el.classList.add('v26OverflowGuard'));
-  if(offenders.length)console.warn('Lumera QA: horizontal overflow clamped',offenders);
+  if(offenders.length)console.warn('QA: overflow horizontal corrigido',offenders);
 }
 
 function emptyStateAudit(){
-  if(visible('treatmentView')){
-    const findings=(()=>{try{return JSON.parse(localStorage.getItem('lumera_treatment_findings_v24')||'[]')}catch(e){return[]}})();
-    const cards=document.querySelectorAll('#treatmentItems .treatmentCard').length;
-    if(findings.length&&!cards&&!$('v24Validation'))announce(t('Há achados identificados. Revise a seleção antes de concluir.','There are identified findings. Review the selection before finishing.'));
-  }
+  if(!visible('treatmentView'))return;
+  const findings=(()=>{try{return JSON.parse(localStorage.getItem('lumera_treatment_findings_v24')||'[]')}catch(e){return[]}})();
+  const cards=document.querySelectorAll('#treatmentItems .treatmentCard').length;
+  if(findings.length&&!cards&&!$('v24Validation'))announce('Há achados identificados. Revise a seleção antes de concluir.');
 }
 
 function smokeAudit(){
   const required=['homeView','historyView','historyBtn','headerHomeBtn','startBtn','toTreatmentBtn','makeReportBtn'];
   const missing=required.filter(id=>!$(id));
-  if(missing.length)console.error('Lumera QA: elementos essenciais ausentes',missing);
-  const duplicateIds=[...document.querySelectorAll('[id]')].reduce((m,e)=>(m[e.id]=(m[e.id]||0)+1,m),{});
-  const dup=Object.entries(duplicateIds).filter(([,n])=>n>1).map(([id])=>id);
-  if(dup.length)console.warn('Lumera QA: IDs duplicados',dup);
+  if(missing.length)console.error('QA: elementos essenciais ausentes',missing);
+  const counts=[...document.querySelectorAll('[id]')].reduce((m,e)=>(m[e.id]=(m[e.id]||0)+1,m),{});
+  const duplicateIds=Object.entries(counts).filter(([,n])=>n>1).map(([id])=>id);
+  if(duplicateIds.length)console.warn('QA: IDs duplicados',duplicateIds);
 }
 
 function refresh({focus=false}={}){
   clearTimeout(refreshTimer);
   refreshTimer=setTimeout(()=>{
-    cleanupLegacy();
     hardenControls();
-    practitionerState();
     syncNav();
     prepareHeadingFocus();
     emptyStateAudit();
@@ -112,31 +80,18 @@ function refresh({focus=false}={}){
 }
 
 function install(){
-  live();
-  smokeAudit();
-  refresh();
-
-  /* Event-driven refresh only. No MutationObserver/polling: this is deliberate
-     to keep iOS Safari stable and prevent render/layout feedback loops. */
+  live();smokeAudit();refresh();
   window.addEventListener('click',e=>{
     const b=e.target.closest?.('button,[role="button"]');if(!b)return;
-    const navigation=!!b.closest('#v23BottomNav')||b.id==='historyBtn'||b.id==='closeHistory'||b.id==='headerHomeBtn'||b.id==='newBtn'||b.classList.contains('backHome')||b.hasAttribute('data-open-mode')||b.hasAttribute('data-resume')||b.hasAttribute('data-open');
-    const practitioner=b.id==='v21Prepare'||b.id==='v21CloseDay'||b.id==='prepareSessionBtn'||b.id==='closeSessionBtn';
-    if(practitioner)setTimeout(()=>refresh(),120);
-    else refresh({focus:navigation});
+    const navigation=!!b.closest('#v23BottomNav')||b.id==='historyBtn'||b.id==='closeHistory'||b.id==='headerHomeBtn'||b.id==='newBtn'||b.classList.contains('backHome')||b.hasAttribute('data-open-mode')||b.hasAttribute('data-resume')||b.hasAttribute('data-open')||b.id==='openDivorceBtn';
+    refresh({focus:navigation});
   },false);
-
-  window.addEventListener('input',e=>{
-    if(e.target.matches('input,textarea,select'))setTimeout(auditOverflow,0);
-  },false);
+  window.addEventListener('input',e=>{if(e.target.matches('input,textarea,select'))setTimeout(auditOverflow,0)},false);
   window.addEventListener('resize',()=>refresh(),{passive:true});
   window.addEventListener('orientationchange',()=>refresh());
   window.addEventListener('pageshow',()=>refresh());
-  window.addEventListener('lumera:languagechange',()=>refresh());
   window.addEventListener('storage',()=>refresh());
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape')refresh({focus:true});
-  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')refresh({focus:true})});
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
