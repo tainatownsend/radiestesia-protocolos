@@ -6,20 +6,20 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#78876c">
   <title>Radiestesia Terapêutica</title>
-  <link rel="stylesheet" href="style.css?v=20260819-4">
-  <link rel="stylesheet" href="history.css?v=20260819-4">
-  <link rel="stylesheet" href="causal-review.css?v=20260819-4">
-  <link rel="stylesheet" href="controller-v3.css?v=20260819-4">
-  <link rel="stylesheet" href="v11-navigation.css?v=20260819-4">
-  <link rel="stylesheet" href="initial-assessment.css?v=20260819-4">
-  <link rel="stylesheet" href="divorce-energy.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-block1.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-v16.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-v22-library.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-v22-records.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-v23-session.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-v24-treatment.css?v=20260819-4">
-  <link rel="stylesheet" href="lumera-v26-final.css?v=20260819-4">
+  <link rel="stylesheet" href="style.css?v=20260819-5">
+  <link rel="stylesheet" href="history.css?v=20260819-5">
+  <link rel="stylesheet" href="causal-review.css?v=20260819-5">
+  <link rel="stylesheet" href="controller-v3.css?v=20260819-5">
+  <link rel="stylesheet" href="v11-navigation.css?v=20260819-5">
+  <link rel="stylesheet" href="initial-assessment.css?v=20260819-5">
+  <link rel="stylesheet" href="divorce-energy.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-block1.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-v16.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-v22-library.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-v22-records.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-v23-session.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-v24-treatment.css?v=20260819-5">
+  <link rel="stylesheet" href="lumera-v26-final.css?v=20260819-5">
 </head>
 <body>
 <div class="shell">
@@ -29,48 +29,13 @@
   </header>
 
   <nav class="tabs hidden" aria-hidden="true">
-    <button class="tab active" data-mode="finance">Vida Financeira</button>
-    <button class="tab" data-mode="career">Carreira / Profissional</button>
-    <button class="tab" data-mode="marriage">Casamento / Relacionamento</button>
-    <button class="tab" data-mode="selfworth">Autoestima, Amor-próprio e Merecimento</button>
-    <button class="tab" data-mode="family">Relacionamentos Familiares</button>
-    <button class="tab" data-mode="master">Protocolo Mestre de Causa Raiz</button>
-    <button class="tab" data-mode="prosperity">Prosperidade e Abundância</button>
-    <button class="tab" data-mode="purpose">Propósito e Caminho de Vida</button>
-    <button class="tab" data-mode="homeenv">Casa e Ambiente</button>
-    <button class="tab" data-mode="bodyrelation">Relacionamento com o Próprio Corpo</button>
-    <button class="tab" data-mode="creativity">Criatividade e Projetos</button>
-    <button class="tab" data-mode="social">Vida Social e Pertencimento</button>
-    <button class="tab" data-mode="parenting">Parentalidade</button>
-    <button class="tab" data-mode="repeating">Padrões Repetitivos</button>
-    <button class="tab" data-mode="quick_balance">Limpeza e Reequilíbrio</button>
-    <button class="tab" data-mode="quick_hardday">Reequilíbrio após um Dia Difícil</button>
-    <button class="tab" data-mode="quick_decision">Preparação para uma Decisão Importante</button>
-    <button class="tab" data-mode="quick_cycle">Encerramento de Ciclo</button>
-    <button class="tab" data-mode="quick_conflict">Reequilíbrio após Conflito</button>
+    <button class="tab active" data-mode="finance">Vida Financeira</button><button class="tab" data-mode="career">Carreira / Profissional</button><button class="tab" data-mode="marriage">Casamento / Relacionamento</button><button class="tab" data-mode="selfworth">Autoestima, Amor-próprio e Merecimento</button><button class="tab" data-mode="family">Relacionamentos Familiares</button><button class="tab" data-mode="master">Protocolo Mestre de Causa Raiz</button><button class="tab" data-mode="prosperity">Prosperidade e Abundância</button><button class="tab" data-mode="purpose">Propósito e Caminho de Vida</button><button class="tab" data-mode="homeenv">Casa e Ambiente</button><button class="tab" data-mode="bodyrelation">Relacionamento com o Próprio Corpo</button><button class="tab" data-mode="creativity">Criatividade e Projetos</button><button class="tab" data-mode="social">Vida Social e Pertencimento</button><button class="tab" data-mode="parenting">Parentalidade</button><button class="tab" data-mode="repeating">Padrões Repetitivos</button><button class="tab" data-mode="quick_balance">Limpeza e Reequilíbrio</button><button class="tab" data-mode="quick_hardday">Reequilíbrio após um Dia Difícil</button><button class="tab" data-mode="quick_decision">Preparação para uma Decisão Importante</button><button class="tab" data-mode="quick_cycle">Encerramento de Ciclo</button><button class="tab" data-mode="quick_conflict">Reequilíbrio após Conflito</button>
   </nav>
 
   <div id="protocolLaunchers" class="hidden" aria-hidden="true">
+    <button id="startAssessmentBtn" type="button" tabindex="-1">Começar avaliação inicial</button>
     <button id="openDivorceBtn" type="button" tabindex="-1">Divórcio Energético</button>
-    <button data-open-mode="master"><strong>Protocolo Mestre de Causa Raiz</strong><small>Para quando a origem ainda não está clara.</small></button>
-    <button data-open-mode="finance"><strong>Vida Financeira</strong><small>Fluxo financeiro, crenças, padrões e influências.</small></button>
-    <button data-open-mode="prosperity"><strong>Prosperidade e Abundância</strong><small>Receber, expandir e sustentar crescimento.</small></button>
-    <button data-open-mode="career"><strong>Carreira / Profissional</strong><small>Direção, crescimento, bloqueios e contexto profissional.</small></button>
-    <button data-open-mode="creativity"><strong>Criatividade e Projetos</strong><small>Bloqueios, execução, exposição e conclusão.</small></button>
-    <button data-open-mode="marriage"><strong>Casamento / Relacionamento</strong><small>Conexão, comunicação, confiança e padrões do casal.</small></button>
-    <button data-open-mode="family"><strong>Relacionamentos Familiares</strong><small>Papéis, limites, conflitos e padrões transgeracionais.</small></button>
-    <button data-open-mode="social"><strong>Vida Social e Pertencimento</strong><small>Conexão, confiança, rejeição, limites e vínculos.</small></button>
-    <button data-open-mode="parenting"><strong>Parentalidade</strong><small>Culpa, medo, expectativas, reparação e padrões herdados.</small></button>
-    <button data-open-mode="selfworth"><strong>Autoestima, Amor-próprio e Merecimento</strong><small>Autovalor, aprovação, rejeição, limites e pertencimento.</small></button>
-    <button data-open-mode="bodyrelation"><strong>Relacionamento com o Próprio Corpo</strong><small>Autoimagem, vergonha, comparação e cuidado.</small></button>
-    <button data-open-mode="purpose"><strong>Propósito e Caminho de Vida</strong><small>Direção, valores, identidade, mudanças e escolhas.</small></button>
-    <button data-open-mode="repeating"><strong>Padrões Repetitivos</strong><small>Gatilhos, funções, crenças e ciclos recorrentes.</small></button>
-    <button data-open-mode="homeenv"><strong>Casa e Ambiente</strong><small>Bem-estar, organização, segurança, memórias e convivência.</small></button>
-    <button data-open-mode="quick_balance"><strong>Limpeza e Reequilíbrio</strong><small>Para reduzir carga e recuperar centramento.</small></button>
-    <button data-open-mode="quick_hardday"><strong>Após um Dia Difícil</strong><small>Para encerrar o impacto de um dia intenso.</small></button>
-    <button data-open-mode="quick_decision"><strong>Antes de uma Decisão</strong><small>Para reduzir ruído e recuperar clareza.</small></button>
-    <button data-open-mode="quick_cycle"><strong>Encerramento de Ciclo</strong><small>Para apoiar fechamento e transição.</small></button>
-    <button data-open-mode="quick_conflict"><strong>Após um Conflito</strong><small>Para regular o impacto antes do próximo passo.</small></button>
+    <button data-open-mode="master"><strong>Protocolo Mestre de Causa Raiz</strong><small>Para quando a origem ainda não está clara.</small></button><button data-open-mode="finance"><strong>Vida Financeira</strong><small>Fluxo financeiro, crenças, padrões e influências.</small></button><button data-open-mode="prosperity"><strong>Prosperidade e Abundância</strong><small>Receber, expandir e sustentar crescimento.</small></button><button data-open-mode="career"><strong>Carreira / Profissional</strong><small>Direção, crescimento, bloqueios e contexto profissional.</small></button><button data-open-mode="creativity"><strong>Criatividade e Projetos</strong><small>Bloqueios, execução, exposição e conclusão.</small></button><button data-open-mode="marriage"><strong>Casamento / Relacionamento</strong><small>Conexão, comunicação, confiança e padrões do casal.</small></button><button data-open-mode="family"><strong>Relacionamentos Familiares</strong><small>Papéis, limites, conflitos e padrões transgeracionais.</small></button><button data-open-mode="social"><strong>Vida Social e Pertencimento</strong><small>Conexão, confiança, rejeição, limites e vínculos.</small></button><button data-open-mode="parenting"><strong>Parentalidade</strong><small>Culpa, medo, expectativas, reparação e padrões herdados.</small></button><button data-open-mode="selfworth"><strong>Autoestima, Amor-próprio e Merecimento</strong><small>Autovalor, aprovação, rejeição, limites e pertencimento.</small></button><button data-open-mode="bodyrelation"><strong>Relacionamento com o Próprio Corpo</strong><small>Autoimagem, vergonha, comparação e cuidado.</small></button><button data-open-mode="purpose"><strong>Propósito e Caminho de Vida</strong><small>Direção, valores, identidade, mudanças e escolhas.</small></button><button data-open-mode="repeating"><strong>Padrões Repetitivos</strong><small>Gatilhos, funções, crenças e ciclos recorrentes.</small></button><button data-open-mode="homeenv"><strong>Casa e Ambiente</strong><small>Bem-estar, organização, segurança, memórias e convivência.</small></button><button data-open-mode="quick_balance"><strong>Limpeza e Reequilíbrio</strong><small>Para reduzir carga e recuperar centramento.</small></button><button data-open-mode="quick_hardday"><strong>Após um Dia Difícil</strong><small>Para encerrar o impacto de um dia intenso.</small></button><button data-open-mode="quick_decision"><strong>Antes de uma Decisão</strong><small>Para reduzir ruído e recuperar clareza.</small></button><button data-open-mode="quick_cycle"><strong>Encerramento de Ciclo</strong><small>Para apoiar fechamento e transição.</small></button><button data-open-mode="quick_conflict"><strong>Após um Conflito</strong><small>Para regular o impacto antes do próximo passo.</small></button>
   </div>
 
   <main>
@@ -86,23 +51,6 @@
 </div>
 
 <script>try{localStorage.removeItem('lumera_language_v13')}catch(e){};document.documentElement.lang='pt-BR';</script>
-<script src="app.js?v=20260819-4"></script>
-<script src="marriage.js?v=20260819-4"></script>
-<script src="deep-tree.js?v=20260819-4"></script>
-<script src="deep-tree-2.js?v=20260819-4"></script>
-<script src="protocols-v11-core.js?v=20260819-4"></script>
-<script src="protocols-v11-expansion.js?v=20260819-4"></script>
-<script src="protocols-v11-quick.js?v=20260819-4"></script>
-<script src="controller-v4.js?v=20260819-4"></script>
-<script src="initial-assessment.js?v=20260819-4"></script>
-<script src="initial-assessment-guard.js?v=20260819-4"></script>
-<script src="lumera-v16.js?v=20260819-4"></script>
-<script src="initial-assessment-details.js?v=20260819-4"></script>
-<script src="divorce-energy.js?v=20260819-4"></script>
-<script src="lumera-v22-library.js?v=20260819-4"></script>
-<script src="lumera-v22-records.js?v=20260819-4"></script>
-<script src="lumera-v23-session.js?v=20260819-4"></script>
-<script src="lumera-v24-treatment.js?v=20260819-4"></script>
-<script src="lumera-v26-final.js?v=20260819-4"></script>
+<script src="app.js?v=20260819-5"></script><script src="marriage.js?v=20260819-5"></script><script src="deep-tree.js?v=20260819-5"></script><script src="deep-tree-2.js?v=20260819-5"></script><script src="protocols-v11-core.js?v=20260819-5"></script><script src="protocols-v11-expansion.js?v=20260819-5"></script><script src="protocols-v11-quick.js?v=20260819-5"></script><script src="controller-v4.js?v=20260819-5"></script><script src="initial-assessment.js?v=20260819-5"></script><script src="initial-assessment-guard.js?v=20260819-5"></script><script src="lumera-v16.js?v=20260819-5"></script><script src="initial-assessment-details.js?v=20260819-5"></script><script src="divorce-energy.js?v=20260819-5"></script><script src="lumera-v22-library.js?v=20260819-5"></script><script src="lumera-v22-records.js?v=20260819-5"></script><script src="lumera-v23-session.js?v=20260819-5"></script><script src="lumera-v24-treatment.js?v=20260819-5"></script><script src="lumera-v26-final.js?v=20260819-5"></script>
 </body>
 </html>
