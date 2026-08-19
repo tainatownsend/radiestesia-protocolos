@@ -14,4 +14,8 @@ css('lumera-v13.css?v=20260818-21','lumera-v13-css');
 /* Single stabilization/UX layer loaded last. */
 css('lumera-v21-stable.css?v=20260818-21','lumera-v21-css');
 js('lumera-v21-stable.js?v=20260818-21','lumera-v21');
+
+/* Dedicated protocol library. Event-driven only: no MutationObserver or polling. */
+css('lumera-v22-library.css?v=20260818-22','lumera-v22-library-css');
+js('lumera-v22-library.js?v=20260818-22','lumera-v22-library');
 })();
