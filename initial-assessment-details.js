@@ -1,69 +1,17 @@
 (function(){
 'use strict';
-const STORE='rt_assessments_v1';
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[m]));
-const FIELD={mental:'Mental',emotional:'Emocional',spiritual:'Espiritual',physical:'Físico'};
-const LIFE={family:'Familiar',affective:'Relacionamento afetivo',professional:'Profissional',financial:'Financeiro',mission:'Missão de vida'};
-function clamp5(v){return Math.round(Math.max(0,Math.min(100,Number(v)||0))/5)*5}
-function lifeClass(v){const n=clamp5(v);return n<=15?'Excelente':n<=35?'Ótimo':n<=55?'Bom':n<=75?'Ruim':'Péssimo'}
-function load(){try{return JSON.parse(localStorage.getItem(STORE)||'[]')}catch(e){return[]}}
-function sessions(){try{return JSON.parse(localStorage.getItem('rt_sessions_v4')||'[]')}catch(e){return[]}}
-function identity(a){if(a.identity?.sessionType==='collective'){const ps=(a.identity.participants||[]).filter(p=>p.name);return 'Sessão coletiva'+(ps.length?' — '+ps.length+' participantes':'')}return a.identity?.name||'Não registrado'}
-function detailHTML(a){const fields=Object.entries(a.fields||{}).filter(([,v])=>v.active===true).map(([k,v])=>FIELD[k]+': '+clamp5(v.percent)+'%');const chakras=Object.entries(a.chakras||{}).filter(([,v])=>v.active).map(([k,v])=>k+': '+clamp5(v.percent)+'%'+(v.activity?' • '+v.activity:'')+(v.affectsPhysical?' • corpo físico: '+v.affectsPhysical:''));const systems=(a.physicalHealth?.systems||[]).filter(x=>x.name).map(x=>x.name+' — '+clamp5(x.percent)+'%');const organs=(a.physicalHealth?.organs||[]).filter(x=>x.name).map(x=>x.name+' — '+clamp5(x.percent)+'%');const life=Object.entries(a.lifeAreas||{}).filter(([,v])=>v!==''&&v!==null&&v!==undefined).map(([k,v])=>(LIFE[k]||k)+': '+clamp5(v)+'% • '+lifeClass(v));const blocks=[];blocks.push('<p><b>Sessão:</b> '+esc(identity(a))+'</p>');if(a.identity?.sessionType==='collective'&&(a.identity.participants||[]).length)blocks.push('<p><b>Participantes:</b> '+a.identity.participants.filter(p=>p.name).map(p=>esc(p.name)+(p.birthDate?' ('+esc(p.birthDate)+')':'')).join(' • ')+'</p>');if(a.vibration?.hz)blocks.push('<p><b>Frequência vibracional:</b> '+esc(a.vibration.hz)+' Hz'+(a.vibration.label?' • '+esc(a.vibration.label):'')+'</p>');if(fields.length)blocks.push('<p><b>Campos energéticos:</b> '+fields.map(esc).join(' • ')+'</p>');if(chakras.length)blocks.push('<p><b>Chakras:</b> '+chakras.map(esc).join(' • ')+'</p>');const pp=a.aura?.protectionPercent,sp=a.aura?.sizePercent;blocks.push('<p><b>Aura:</b> proteção '+(pp!==undefined?esc(clamp5(pp))+'% • ':'')+esc(a.aura?.protection||'não registrada')+' • tamanho '+(sp!==undefined?esc(clamp5(sp))+'% • ':'')+esc(a.aura?.size||'não registrado')+(a.aura?.missing?.length?' • cores em falta: '+a.aura.missing.map(esc).join(', '):'')+(a.aura?.excess?.length?' • cores em excesso: '+a.aura.excess.map(esc).join(', '):'')+'</p>');if(a.aura?.comment)blocks.push('<p><b>Comentário da aura:</b> '+esc(a.aura.comment)+'</p>');if(systems.length)blocks.push('<p><b>Sistemas corporais aferidos:</b> '+systems.map(esc).join(' • ')+'</p>');if(organs.length)blocks.push('<p><b>Órgãos/glândulas aferidos:</b> '+organs.map(esc).join(' • ')+'</p>');if(a.physicalHealth?.notes)blocks.push('<p><b>Observações de saúde física:</b> '+esc(a.physicalHealth.notes)+'</p>');if(a.healthEnergy?.value!=='')blocks.push('<p><b>Energia de saúde — Régua Bovis:</b> '+esc(a.healthEnergy.value)+' UB'+(a.healthEnergy.classification?' • '+esc(a.healthEnergy.classification):'')+(a.healthEnergy.reference?' • referência registrada: '+esc(a.healthEnergy.reference)+' UB':'')+'</p>');if(a.healthEnergy?.comment)blocks.push('<p><b>Comentário da energia de saúde:</b> '+esc(a.healthEnergy.comment)+'</p>');if(life.length)blocks.push('<p><b>Áreas da vida:</b> '+life.map(esc).join(' • ')+'</p>');return blocks.join('')}
-function decorateReport(){setTimeout(()=>{const body=$('reportBody');if(!body)return;const ses=sessions()[0];if(!ses)return;const a=load().find(x=>String(x.linkedSessionId)===String(ses.id));if(!a)return;const sec=body.querySelector('.assessmentReport');if(!sec||sec.querySelector('.assessmentFullDetails'))return;const d=document.createElement('div');d.className='reportTreatment assessmentFullDetails';d.innerHTML='<h4>Detalhes da avaliação</h4>'+detailHTML(a)+'<p class="muted"><small>Aferições energéticas e de saúde são registros da prática radiestésica e não equivalem a diagnóstico clínico.</small></p>';sec.insertBefore(d,sec.querySelector('h3:nth-of-type(2)'))},100)}
-function decorateHistory(){setTimeout(()=>{const box=$('historyList');if(!box)return;const arr=load(),ses=sessions(),cards=Array.from(box.querySelectorAll('.historyCard:not(.legacy):not(.assessmentStandalone)'));cards.forEach((card,i)=>{const s=ses[i],a=s&&arr.find(x=>String(x.linkedSessionId)===String(s.id));const target=card.querySelector('.historyAssessmentBody');if(a&&target&&!target.querySelector('.assessmentFullDetails')){const d=document.createElement('div');d.className='assessmentFullDetails';d.innerHTML=detailHTML(a);target.appendChild(d)}});box.querySelectorAll('.assessmentStandalone').forEach(card=>{const id=card.querySelector('[data-resume]')?.dataset.resume,a=arr.find(x=>String(x.id)===String(id)),target=card.querySelector('.historyDetails');if(a&&target&&!target.querySelector('.assessmentFullDetails')){const d=document.createElement('div');d.className='assessmentFullDetails';d.innerHTML=detailHTML(a);target.insertBefore(d,target.querySelector('[data-resume]'))}})},140)}
-function install(){const o=new MutationObserver(()=>{if($('reportView')&&!$('reportView').classList.contains('hidden'))decorateReport();if($('historyView')&&!$('historyView').classList.contains('hidden'))decorateHistory()});['reportView','historyView'].forEach(id=>{const el=$(id);if(el)o.observe(el,{attributes:true,attributeFilter:['class']})})}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
-})();
+function css(href,key){if(document.querySelector(`link[data-${key}]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.setAttribute(`data-${key}`,'1');document.head.appendChild(l)}
+function js(src,key){if(document.querySelector(`script[data-${key}]`))return;const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(`data-${key}`,'1');document.body.appendChild(s)}
 
-(function loadDivorceEnergyModule(){
- if(document.querySelector('script[data-lumera-divorce]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='divorce-energy.css?v=20260818-10';css.dataset.lumeraDivorce='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='divorce-energy.js?v=20260818-10';js.dataset.lumeraDivorce='1';js.defer=true;document.body.appendChild(js);
-})();
+/* Core complementary modules only. Previous V1.4–V2.0 patch layers were intentionally retired here because multiple observers/event layers were competing for the same DOM and could freeze interaction on iOS Safari. */
+css('divorce-energy.css?v=20260818-21','lumera-divorce-css');
+js('divorce-energy.js?v=20260818-21','lumera-divorce');
+css('lumera-workspace.css?v=20260818-21','lumera-workspace-css');
+css('lumera-layout-audit.css?v=20260818-21','lumera-layout-audit');
+js('lumera-workspace.js?v=20260818-21','lumera-workspace');
+css('lumera-v13.css?v=20260818-21','lumera-v13-css');
 
-(function loadLumeraWorkspace(){
- if(document.querySelector('script[data-lumera-workspace]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-workspace.css?v=20260818-10';css.dataset.lumeraWorkspace='1';document.head.appendChild(css);
- const audit=document.createElement('link');audit.rel='stylesheet';audit.href='lumera-layout-audit.css?v=20260818-10';audit.dataset.lumeraLayoutAudit='1';document.head.appendChild(audit);
- const js=document.createElement('script');js.src='lumera-workspace.js?v=20260818-10';js.dataset.lumeraWorkspace='1';js.defer=true;document.body.appendChild(js);
-})();
-
-(function loadLumeraV13(){
- if(document.querySelector('script[data-lumera-v13]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v13.css?v=20260818-10';css.dataset.lumeraV13='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v13.js?v=20260818-10';js.dataset.lumeraV13='1';js.defer=true;document.body.appendChild(js);
-})();
-
-(function loadLumeraV14(){
- if(document.querySelector('script[data-lumera-v14]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v14.css?v=20260818-14';css.dataset.lumeraV14='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v14.js?v=20260818-14';js.dataset.lumeraV14='1';js.defer=true;document.body.appendChild(js);
- const drafts=document.createElement('script');drafts.src='lumera-v14-drafts.js?v=20260818-14';drafts.dataset.lumeraV14Drafts='1';drafts.defer=true;document.body.appendChild(drafts);
-})();
-
-(function loadLumeraV15(){
- if(document.querySelector('script[data-lumera-v15]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v15.css?v=20260818-15b';css.dataset.lumeraV15='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v15.js?v=20260818-15b';js.dataset.lumeraV15='1';js.defer=true;document.body.appendChild(js);
- const lang=document.createElement('script');lang.src='lumera-v15-lang.js?v=20260818-15b';lang.dataset.lumeraV15Lang='1';lang.defer=true;document.body.appendChild(lang);
-})();
-
-(function loadLumeraV17DraftFix(){
- if(document.querySelector('script[data-lumera-v17-drafts]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v17-drafts.css?v=20260818-17';css.dataset.lumeraV17Drafts='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v17-drafts.js?v=20260818-17';js.dataset.lumeraV17Drafts='1';js.defer=true;document.body.appendChild(js);
-})();
-
-(function loadLumeraV18UX(){
- if(document.querySelector('script[data-lumera-v18-ux]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v18-ux.css?v=20260818-18';css.dataset.lumeraV18Ux='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v18-ux.js?v=20260818-18';js.dataset.lumeraV18Ux='1';js.defer=true;document.body.appendChild(js);
-})();
-
-(function loadLumeraV19Polish(){
- if(document.querySelector('script[data-lumera-v19-polish]'))return;
- const css=document.createElement('link');css.rel='stylesheet';css.href='lumera-v19-polish.css?v=20260818-19';css.dataset.lumeraV19Polish='1';document.head.appendChild(css);
- const js=document.createElement('script');js.src='lumera-v19-polish.js?v=20260818-19';js.dataset.lumeraV19Polish='1';js.defer=true;document.body.appendChild(js);
+/* Single stabilization/UX layer loaded last. */
+css('lumera-v21-stable.css?v=20260818-21','lumera-v21-css');
+js('lumera-v21-stable.js?v=20260818-21','lumera-v21');
 })();
