@@ -19,7 +19,7 @@
 .v22Search input{width:100%;min-height:50px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:11px 13px;font-size:16px;color:var(--text);outline:none}
 .v22Search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,58,99,.1)}
 .v22Filters{display:flex;gap:7px;overflow-x:auto;padding:4px 18px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.v22Filters::-webkit-scrollbar{display:none}
-.v22Filters button{flex:0 0 auto;min-height:38px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 11px;color:var(--muted);font-size:13px;font-weight:800;white-space:nowrap}
+.v22Filters button{flex:0 0 auto;min-height:44px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;color:var(--muted);font-size:13px;font-weight:800;white-space:nowrap}
 .v22Filters button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .v22ResultsHead{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:5px 18px 9px}.v22ResultsHead strong{font-size:14px;color:var(--text)}.v22ResultsHead span{font-size:12px;color:var(--muted)}
 .v22List{display:grid;gap:7px;padding:0 18px}
@@ -28,7 +28,7 @@
 .v22Icon{width:40px;height:40px;border-radius:12px;background:#f3eee9;color:var(--accent-dark);display:grid;place-items:center;font-size:18px}
 .v22ProtocolText{min-width:0}.v22ProtocolText strong{display:block;font-size:15px;line-height:1.25}.v22ProtocolText small{display:block;margin-top:3px;color:var(--muted);font-size:12px;line-height:1.35}.v22ProtocolText em{display:block;margin-top:5px;color:#8a7359;font-style:normal;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
 .v22Chevron{color:var(--accent-dark);font-size:23px}
-.v22Empty{padding:24px 16px;text-align:center;border:1px dashed var(--line);border-radius:14px;background:#fff}.v22Empty b{display:block}.v22Empty p{margin:6px 0 12px;color:var(--muted)}.v22Empty button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 12px;font-weight:800;color:var(--accent-dark)}
+.v22Empty{padding:24px 16px;text-align:center;border:1px dashed var(--line);border-radius:14px;background:#fff}.v22Empty b{display:block}.v22Empty p{margin:6px 0 12px;color:var(--muted)}.v22Empty button{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 12px;font-weight:800;color:var(--accent-dark)}
 
 @media(max-width:620px){
  .v22Overlay{padding-left:0;padding-right:0;padding-bottom:0;background:rgba(31,25,34,.3)}
