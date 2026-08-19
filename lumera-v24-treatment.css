@@ -1,0 +1,10 @@
+/* Lumera v2.4 — investigation → treatment continuity + validation */
+.v24Info,.v24TreatmentSummary,.v24Validation{border:1px solid var(--line);border-radius:16px;background:var(--soft);padding:14px 16px;margin:0 0 14px}
+.v24Info{display:grid;gap:4px}.v24Info b,.v24TreatmentSummary b,.v24Validation>b{color:var(--accent-dark)}.v24Info span,.v24TreatmentSummary span{color:var(--muted);font-size:13px;line-height:1.45}
+.v24InlineNote{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+.v24PlanSummary{margin-bottom:14px!important}
+.v24TreatmentSummary>div{display:flex;justify-content:space-between;align-items:center;gap:12px}.v24TreatmentSummary details{margin-top:12px}.v24TreatmentSummary summary{cursor:pointer;font-weight:800;color:var(--accent-dark);min-height:42px;display:flex;align-items:center}.v24TreatmentSummary details p{margin:8px 0;padding:10px 0;border-top:1px solid var(--line)}.v24TreatmentSummary details p:first-of-type{border-top:0}.v24TreatmentSummary details small{display:block;margin-top:4px;color:var(--muted);line-height:1.4}
+.v24Validation{background:#fff8f5;border-color:#e7c9bf;color:#6f342f}.v24Validation p{line-height:1.45}.v24Validation ul{margin:8px 0 0;padding-left:20px}.v24Validation li{margin:6px 0}.v24Invalid{outline:2px solid #c97d68!important;outline-offset:2px}.v24Invalid.graphRow{border-radius:12px}
+.v24ConfirmActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.v24ConfirmActions button{min-height:46px}
+.v24ReportAudit h3{margin-top:0}
+@media(max-width:620px){.v24TreatmentSummary>div{display:grid;gap:4px}.v24ConfirmActions{grid-template-columns:1fr}.v24Info,.v24TreatmentSummary,.v24Validation{padding:13px 14px}}
