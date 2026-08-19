@@ -32,6 +32,6 @@ css('lumera-v22-records.css?v=20260818-25','lumera-v22-records-css');
 js('lumera-v22-records.js?v=20260818-25','lumera-v22-records');
 
 /* Final design system and event-driven QA. Loaded last so it can normalize all modules without taking ownership of their business logic. */
-css('lumera-v26-final.css?v=20260819-26','lumera-v26-final-css');
-js('lumera-v26-final.js?v=20260819-26','lumera-v26-final');
+css('lumera-v26-final.css?v=20260819-26b','lumera-v26-final-css');
+js('lumera-v26-final.js?v=20260819-26b','lumera-v26-final');
 })();
