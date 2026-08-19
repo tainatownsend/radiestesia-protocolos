@@ -18,4 +18,8 @@ js('lumera-v21-stable.js?v=20260818-21','lumera-v21');
 /* Dedicated protocol library. Event-driven only: no MutationObserver or polling. */
 css('lumera-v22-library.css?v=20260818-22','lumera-v22-library-css');
 js('lumera-v22-library.js?v=20260818-22','lumera-v22-library');
+
+/* Unified Session journey + robust protocol resume + mobile navigation. */
+css('lumera-v23-session.css?v=20260818-23','lumera-v23-session-css');
+js('lumera-v23-session.js?v=20260818-23','lumera-v23-session');
 })();
