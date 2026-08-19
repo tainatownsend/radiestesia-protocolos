@@ -28,8 +28,8 @@ body{background:var(--l-bg);color:var(--l-text);overflow-x:hidden;min-width:0}
 img,svg,canvas,video{max-width:100%;height:auto}
 .shell,main,main>section,.card,.assessmentCard,.divorceCard,.v22Sheet,.v22Record{min-width:0;max-width:100%}
 .shell{width:min(100%,900px);padding-inline:clamp(14px,3vw,24px)}
+.v26OverflowGuard{max-width:100%!important;min-width:0!important}
 
-/* Typography: calm, compact hierarchy. */
 h1,h2,h3,h4,p{overflow-wrap:anywhere}
 h1{font-size:clamp(34px,7vw,50px);line-height:1.05;letter-spacing:-.025em}
 h2{font-size:clamp(26px,5.5vw,34px);line-height:1.12;letter-spacing:-.018em}
@@ -37,16 +37,10 @@ h3{font-size:clamp(18px,4vw,22px);line-height:1.2}
 p,.muted,small{line-height:1.48}
 .muted{color:var(--l-muted)!important}
 
-/* One consistent card language. */
-.card,.v16Action,.v21Practitioner,.v22Record,.treatmentCard,.assessmentCard,.divorceCard,.v24TreatmentSummary{
-  border-radius:var(--l-radius)!important;
-  border-color:var(--l-line)!important;
-  box-shadow:var(--l-shadow)!important;
-}
+.card,.v16Action,.v21Practitioner,.v22Record,.treatmentCard,.assessmentCard,.divorceCard,.v24TreatmentSummary{border-radius:var(--l-radius)!important;border-color:var(--l-line)!important;box-shadow:var(--l-shadow)!important}
 .card{padding:clamp(16px,3vw,22px)!important}
 .pill,.sectionLabel,.causalBadge{border-radius:999px!important;font-size:12px!important;line-height:1.2!important;letter-spacing:.01em!important}
 
-/* Buttons: three clear levels, generous touch targets. */
 button,[role="button"]{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .primary,.primaryLumera,.v16Primary{background:var(--l-accent)!important;border-color:var(--l-accent)!important;color:#fff!important;font-weight:800!important}
 .primary:hover,.primaryLumera:hover{background:var(--l-accent-strong)!important}
@@ -54,23 +48,15 @@ button,[role="button"]{min-height:44px;touch-action:manipulation;-webkit-tap-hig
 .textAction,.textBack{background:transparent!important;box-shadow:none!important;border-color:transparent!important}
 .dangerText{color:var(--l-danger)!important}
 button:disabled{opacity:.48;cursor:not-allowed}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{
-  outline:3px solid rgba(107,74,114,.34)!important;
-  outline-offset:2px!important;
-}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid rgba(107,74,114,.34)!important;outline-offset:2px!important}
 
-/* Forms: stable Safari sizing and readable controls. */
 input,textarea,select{max-width:100%;min-width:0;border-radius:var(--l-radius-sm)!important}
 input[type="text"],input[type="search"],input[type="date"],input[type="number"],textarea,select{min-height:46px;font-size:16px!important}
 textarea{min-height:100px;resize:vertical}
 input[type="date"]{-webkit-appearance:none;appearance:none;width:100%!important}
 .field,.assessmentField,.divorceField{min-width:0}
 
-/* Home: only the operational dashboard should dominate. */
-#homeView.v22CleanHome>.homeIntro,
-#homeView.v22CleanHome>.howItWorks,
-#homeView.v22CleanHome>.homeSection,
-#homeView.v22CleanHome>.homeDivider{display:none!important}
+#homeView.v22CleanHome>.homeIntro,#homeView.v22CleanHome>.howItWorks,#homeView.v22CleanHome>.homeSection,#homeView.v22CleanHome>.homeDivider{display:none!important}
 .v16Dashboard{display:grid!important;gap:var(--l-space-3)!important;margin:0!important;padding:0!important}
 .v16Head{margin:0 0 var(--l-space-1)!important;padding:0!important}
 .v16Head h1{margin:0 0 var(--l-space-2)!important}
@@ -87,7 +73,6 @@ input[type="date"]{-webkit-appearance:none;appearance:none;width:100%!important}
 .v21Practitioner button{min-height:44px!important}
 .v21HiddenWorkspace{display:none!important}
 
-/* Session progression: compact, readable, no decorative overload. */
 .v23Stepper{gap:6px!important;margin:0 0 var(--l-space-4)!important;overflow-x:auto;scrollbar-width:none}
 .v23Stepper::-webkit-scrollbar{display:none}
 .v23Stepper span{white-space:nowrap;min-height:32px;display:flex;align-items:center}
@@ -101,7 +86,6 @@ input[type="date"]{-webkit-appearance:none;appearance:none;width:100%!important}
 .treatmentCard{margin-bottom:var(--l-space-3)!important}
 .graphRow{gap:var(--l-space-2)!important}
 
-/* Protocol library: one surface, progressive disclosure through filters/search. */
 .v22Overlay{overscroll-behavior:contain}
 .v22Sheet{border-radius:var(--l-radius-lg)!important;background:var(--l-card)!important}
 .v22Head{gap:var(--l-space-3)!important}
@@ -111,7 +95,6 @@ input[type="date"]{-webkit-appearance:none;appearance:none;width:100%!important}
 .v22Protocol small{line-height:1.4!important}
 .v22Empty{border-radius:var(--l-radius)!important}
 
-/* Records/history: calm timeline and explicit actions. */
 #historyView{width:min(100%,760px)!important;margin-inline:auto!important}
 .v22Tools{gap:var(--l-space-2)!important}
 .v22Filters{gap:6px!important}
@@ -123,20 +106,14 @@ input[type="date"]{-webkit-appearance:none;appearance:none;width:100%!important}
 .v22Sheet section,.v22Sheet details{border-radius:var(--l-radius)!important}
 .v22QA{gap:var(--l-space-2)!important}
 
-/* Header + mobile navigation. */
 .appHeader{min-height:52px;align-items:center!important}
 .brandButton{white-space:nowrap}
 .v23BottomNav{padding-bottom:max(8px,env(safe-area-inset-bottom))!important;box-shadow:0 -8px 26px rgba(42,31,43,.08)!important}
 .v23BottomNav button{min-height:52px!important}
 body{padding-bottom:max(0px,env(safe-area-inset-bottom))}
-
-/* Prevent fixed controls from covering focused inputs. */
 body:has(input:focus,textarea:focus,select:focus) .v23BottomNav{display:none!important}
 
-/* Empty/error states use one visual language. */
 .v22Empty,.v24Validation,.v21Empty{background:var(--l-soft)!important;border:1px solid var(--l-line)!important;color:var(--l-muted)!important}
-
-/* Accessibility helper added by v26 JS. */
 .v26SrOnly{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .v26FocusTarget{scroll-margin-top:80px}
 
@@ -152,7 +129,7 @@ body:has(input:focus,textarea:focus,select:focus) .v23BottomNav{display:none!imp
   .answerGrid{grid-template-columns:1fr 1fr!important}
   .questionActions{display:grid!important;grid-template-columns:1fr!important}
   .v22Overlay{padding-inline:0!important;padding-bottom:0!important}
-  .v22Sheet{border-radius:22px 22px 0 0!important;max-height:calc(100dvh - env(safe-area-inset-top))!important}
+  .v22Sheet{border-radius:22px 22px 0 0!important;max-height:calc(100dvh - env(safe-area-inset-top))!important;overflow-y:auto!important;overscroll-behavior:contain}
   .v22Head{padding-inline:16px!important}
   .v22Search,.v22Filters,.v22ResultsHead,.v22List{margin-left:0!important;margin-right:0!important}
   .v22Filters{padding-inline:16px!important}
@@ -162,20 +139,6 @@ body:has(input:focus,textarea:focus,select:focus) .v23BottomNav{display:none!imp
   #historyView{padding-bottom:calc(74px + env(safe-area-inset-bottom))!important}
 }
 
-@media(max-width:390px){
-  h1{font-size:34px}
-  .brandButton{font-size:18px!important}
-  .answerGrid{gap:8px!important}
-  .v21Practitioner>div:last-child{grid-template-columns:1fr!important}
-}
-
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
-}
-
-@media print{
-  .appHeader,.v23BottomNav,.v22Overlay,.noPrint{display:none!important}
-  body{background:#fff!important;padding:0!important}
-  .shell{max-width:none!important;padding:0!important}
-  .card{box-shadow:none!important}
-}
+@media(max-width:390px){h1{font-size:34px}.brandButton{font-size:18px!important}.answerGrid{gap:8px!important}.v21Practitioner>div:last-child{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+@media print{.appHeader,.v23BottomNav,.v22Overlay,.noPrint{display:none!important}body{background:#fff!important;padding:0!important}.shell{max-width:none!important;padding:0!important}.card{box-shadow:none!important}}
