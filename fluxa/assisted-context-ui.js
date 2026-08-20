@@ -32,6 +32,7 @@ function signatureFor(button) {
   }
   if (button.dataset.generalAssessment !== undefined) return { type:'general-assessment', value:'1' };
   if (button.dataset.startBranching) return { type:'branching', value:button.dataset.startBranching };
+  if (button.dataset.startCustomProtocol) return { type:'custom-protocol', value:button.dataset.startCustomProtocol };
   return null;
 }
 
@@ -44,6 +45,7 @@ function findButton(signature) {
   if (signature.type === 'action') return document.querySelector(`[data-action="${CSS.escape(signature.value)}"]`);
   if (signature.type === 'general-assessment') return document.querySelector('[data-general-assessment]');
   if (signature.type === 'branching') return document.querySelector(`[data-start-branching="${CSS.escape(signature.value)}"]`);
+  if (signature.type === 'custom-protocol') return document.querySelector(`[data-start-custom-protocol="${CSS.escape(signature.value)}"]`);
   return null;
 }
 
@@ -155,7 +157,6 @@ store.subscribe(() => {
   });
 });
 
-// Capture before the individual feature modules so every activity gets the same assisted-context rule.
 document.addEventListener('click', (event) => {
   const button = event.target.closest('button');
   if (!button) return;
@@ -212,8 +213,6 @@ document.addEventListener('click', (event) => {
   }
 }, true);
 
-// Forms outside the session (for example retrospective/out-of-session Reiki and planning)
-// receive the same explicit message instead of relying on browser-native required-field copy.
 document.addEventListener('submit', (event) => {
   const form = event.target;
   const select = form.querySelector?.('select[name="assistedEntityId"]');
