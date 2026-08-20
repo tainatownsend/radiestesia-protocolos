@@ -1,12 +1,14 @@
 import { createStore } from './store.js';
 import { getOpenSession, latestPreparation } from './domain.js';
 import {
-  PROTOCOL_LIBRARY, startBranchingInvestigation, answerBranchingInvestigation,
+  PROTOCOL_LIBRARY, startBranchingInvestigation, resumeBranchingInvestigation, answerBranchingInvestigation,
   currentProtocolNode, confirmBranchingFindings
 } from './protocol-engine.js';
 
 const store = createStore();
 let activeId = null;
+let bypassWorkspaceChooser = false;
+let workspaceInvestigateButton = null;
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
@@ -18,6 +20,25 @@ function preparedSession() {
   if (!session) return null;
   if (latestPreparation(state, session.id)?.status !== 'COMPLETED') return null;
   return session;
+}
+
+function closeChooser() {
+  document.querySelector('#investigation-chooser-overlay')?.remove();
+}
+
+function investigationChooser() {
+  closeChooser();
+  const wrap = document.createElement('div');
+  wrap.id = 'investigation-chooser-overlay';
+  wrap.className = 'modal-backdrop';
+  wrap.innerHTML = `<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Investigar</p><h2>Qual nível de investigação faz sentido agora?</h2></div><button class="close-btn" data-close-investigation-chooser>×</button></div><p class="muted">Escolha uma ferramenta de apoio. Você pode tratar diretamente sem concluir uma investigação.</p><div class="stack"><article class="card"><p class="eyebrow">Triagem</p><h3>Triagem rápida</h3><p class="muted">Perguntas essenciais para decidir se vale aprofundar.</p><button class="btn secondary wide" data-start-quick-investigation>Iniciar triagem</button></article>${PROTOCOL_LIBRARY.map((protocol) => `<article class="card"><p class="eyebrow">${esc(protocol.category)}</p><h3>${esc(protocol.name)}</h3><p class="muted">${esc(protocol.description)} · versão ${protocol.version}</p><button class="btn secondary wide" data-start-branching="${protocol.id}">${activeBranchingForCurrentAssisted(protocol.id) ? 'Retomar protocolo' : 'Iniciar protocolo'}</button></article>`).join('')}</div></section>`;
+  document.body.appendChild(wrap);
+}
+
+function activeBranchingForCurrentAssisted(protocolId) {
+  const state = store.getState();
+  const session = getOpenSession(state);
+  return state.investigations.find((item) => item.kind === 'BRANCHING' && item.status === 'IN_PROGRESS' && item.assistedEntityId === session?.currentAssistedEntityId && item.protocolId === protocolId) || null;
 }
 
 function ensureLibraryCards() {
@@ -56,9 +77,31 @@ const observer = new MutationObserver(ensureLibraryCards);
 observer.observe(document.querySelector('#app'), { childList:true, subtree:true });
 queueMicrotask(ensureLibraryCards);
 
+// Intercept the workspace action before app.js defaults to the quick triage.
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-action="investigate"]');
+  if (!button || bypassWorkspaceChooser) {
+    if (button && bypassWorkspaceChooser) bypassWorkspaceChooser = false;
+    return;
+  }
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  workspaceInvestigateButton = button;
+  investigationChooser();
+}, true);
+
 document.addEventListener('click', (event) => {
   const button = event.target.closest('button');
   if (!button) return;
+  if (button.dataset.closeInvestigationChooser !== undefined) { closeChooser(); return; }
+  if (button.dataset.startQuickInvestigation !== undefined) {
+    closeChooser();
+    if (workspaceInvestigateButton) {
+      bypassWorkspaceChooser = true;
+      workspaceInvestigateButton.click();
+    }
+    return;
+  }
   if (button.dataset.closeProtocol !== undefined) {
     document.querySelector('#protocol-overlay')?.remove();
     activeId = null;
@@ -76,8 +119,15 @@ document.addEventListener('click', (event) => {
       document.querySelector('[data-route="today"]')?.click();
       return;
     }
-    const investigation = startBranchingInvestigation(store, session.id, session.currentAssistedEntityId, button.dataset.startBranching);
-    activeId = investigation.id;
+    closeChooser();
+    const existing = activeBranchingForCurrentAssisted(button.dataset.startBranching);
+    if (existing) {
+      resumeBranchingInvestigation(store, existing.id, session.id);
+      activeId = existing.id;
+    } else {
+      const investigation = startBranchingInvestigation(store, session.id, session.currentAssistedEntityId, button.dataset.startBranching);
+      activeId = investigation.id;
+    }
     renderDialog();
     return;
   }
