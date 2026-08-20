@@ -15,7 +15,6 @@ function parse(raw) { if (!raw) return null; try { return JSON.parse(raw); } cat
 function errorMessage(error) { return String(error?.message || error || 'Falha desconhecida de armazenamento.'); }
 function read(key) { try { return { value:localStorage.getItem(key), error:null }; } catch (error) { return { value:null, error }; } }
 function write(key,value) { try { localStorage.setItem(key,value); return null; } catch (error) { return error; } }
-function remove(key) { try { localStorage.removeItem(key); return null; } catch (error) { return error; } }
 function storageAccessError(operation,error) {
   const wrapped=new Error(`Não foi possível ${operation} porque o navegador bloqueou o armazenamento local do Fluxa.`);
   try { wrapped.cause=error; } catch (_) {}
@@ -114,7 +113,8 @@ export function exportLocalDataFile() {
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;a.download=`fluxa-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
-  URL.revokeObjectURL(url);
+  // Safari/iOS may still be starting the download when click() returns.
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
   // A successful file export should not be invalidated solely because this convenience timestamp cannot be stored.
   write(LAST_EXPORT_KEY,new Date().toISOString());
 }
