@@ -4,10 +4,7 @@ import { requirePreparedSessionState } from './session-rules.js';
 
 const store = createStore();
 
-function currentOpenSession(state) {
-  return (state.sessions || []).find((item) => item.status === 'OPEN') || null;
-}
-
+function currentOpenSession(state) { return (state.sessions || []).find((item) => item.status === 'OPEN') || null; }
 function requirePreparedCurrentSession(message) {
   const state = store.getState();
   const session = currentOpenSession(state);
@@ -17,10 +14,20 @@ function requirePreparedCurrentSession(message) {
 
 function suppressLegacyCompletedAssessmentActions() {
   document.querySelectorAll('[data-backlog-final-assessment]').forEach((button) => {
-    button.hidden = true;
-    button.disabled = true;
-    button.setAttribute('aria-hidden','true');
-    button.tabIndex = -1;
+    button.hidden = true; button.disabled = true; button.setAttribute('aria-hidden','true'); button.tabIndex = -1;
+  });
+}
+
+function repairFinalCycleIdentity() {
+  const state = store.getState();
+  document.querySelectorAll('.treatment-card[data-treatment-id]').forEach((card) => {
+    const treatmentId = card.dataset.treatmentId;
+    const treatment = state.treatments.find((item) => item.id === treatmentId);
+    if (!treatment) return;
+    const button = card.querySelector('[data-final-cycle]');
+    const ready = treatment.status === 'IN_PROGRESS' && treatmentComponentResolution(state, treatmentId).readyForFinalAssessment;
+    if (button && !ready) { button.remove(); return; }
+    if (button && ready) button.dataset.finalCycle = treatmentId;
   });
 }
 
@@ -38,36 +45,22 @@ function disableEarlyComponentReviews() {
   });
 }
 
-function enhance() {
-  suppressLegacyCompletedAssessmentActions();
-  disableEarlyComponentReviews();
-}
+function enhance() { suppressLegacyCompletedAssessmentActions(); repairFinalCycleIdentity(); disableEarlyComponentReviews(); }
 new MutationObserver(enhance).observe(document.body, { childList:true, subtree:true });
 queueMicrotask(enhance);
 
 document.addEventListener('click', (event) => {
   const target = event.target.closest('[data-action="investigate"],[data-action="resume-latest-investigation"],[data-action="treat-direct"],[data-answer]');
   if (!target) return;
-  try {
-    requirePreparedCurrentSession('Conclua a preparação da sessão antes de investigar ou iniciar um tratamento.');
-  } catch (error) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    alert(error.message);
-  }
+  try { requirePreparedCurrentSession('Conclua a preparação da sessão antes de investigar ou iniciar um tratamento.'); }
+  catch (error) { event.preventDefault(); event.stopImmediatePropagation(); alert(error.message); }
 }, true);
 
 document.addEventListener('submit', (event) => {
   const form = event.target;
   if (['treatment-form','findings-form','review-form'].includes(form.id)) {
-    try {
-      requirePreparedCurrentSession('Conclua a preparação da sessão antes de continuar este trabalho.');
-    } catch (error) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      alert(error.message);
-      return;
-    }
+    try { requirePreparedCurrentSession('Conclua a preparação da sessão antes de continuar este trabalho.'); }
+    catch (error) { event.preventDefault(); event.stopImmediatePropagation(); alert(error.message); return; }
   }
 
   if (!['final-assessment-form','final-cycle-form'].includes(form.id)) return;
@@ -77,12 +70,6 @@ document.addEventListener('submit', (event) => {
     requirePreparedSessionState(state, form.dataset.session, 'Conclua a preparação da sessão antes da avaliação final.');
     const treatment = state.treatments.find((item) => item.id === treatmentId);
     if (!treatment || treatment.status !== 'IN_PROGRESS') throw new Error('A avaliação final só pode ser registrada enquanto o tratamento está em andamento.');
-    if (!treatmentComponentResolution(state, treatmentId).readyForFinalAssessment) {
-      throw new Error('Resolva todos os componentes antes de registrar a avaliação final.');
-    }
-  } catch (error) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    alert(error.message);
-  }
+    if (!treatmentComponentResolution(state, treatmentId).readyForFinalAssessment) throw new Error('Resolva todos os componentes antes de registrar a avaliação final.');
+  } catch (error) { event.preventDefault(); event.stopImmediatePropagation(); alert(error.message); }
 }, true);
