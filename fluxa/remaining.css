@@ -1,0 +1,40 @@
+.storage-warning {
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+.storage-warning h2 { margin-bottom: 6px; }
+.storage-warning p { margin: 0; }
+.local-backup-action { margin-top: 26px; width: 100%; }
+.assisted-detail-actions { margin-bottom: 12px; }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 380px) {
+  .button-row > .btn { flex: 1 1 100%; }
+  .assisted-detail-actions > .btn { min-height: 48px; }
+}
+
+@media (forced-colors: active) {
+  .status-pill,
+  .session-indicator,
+  .notice,
+  .storage-warning,
+  .action-card,
+  .card,
+  .sheet { border: 1px solid CanvasText; }
+}
+
+@media (prefers-contrast: more) {
+  :root { --border: #7E8B89; --muted: #465354; }
+  .btn.secondary, .action-card, .field input, .field textarea, .field select { border-width: 2px; }
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
