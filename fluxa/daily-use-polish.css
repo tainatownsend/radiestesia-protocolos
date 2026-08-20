@@ -1,0 +1,58 @@
+.treatment-objective {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--secondary);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb,var(--surface-2) 72%,transparent);
+  color: var(--text);
+  line-height: 1.45;
+}
+.treatment-objective span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.bulk-source-grid {
+  display: grid;
+  gap: 12px;
+}
+.bulk-source-grid textarea {
+  min-height: 150px;
+  font-family: ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.bulk-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.bulk-or::before,.bulk-or::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+}
+
+@media (min-width:700px) {
+  .bulk-source-grid {
+    grid-template-columns: minmax(210px,.7fr) 32px minmax(0,1.3fr);
+    align-items: center;
+  }
+  .bulk-source-grid > .btn:last-child {
+    grid-column: 3;
+  }
+  .bulk-source-grid .field { margin: 0; }
+  .bulk-or { align-self: stretch; flex-direction: column; justify-content: center; }
+  .bulk-or::before,.bulk-or::after { width: 1px; height: auto; min-height: 35px; flex: 1; }
+}
