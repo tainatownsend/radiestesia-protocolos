@@ -1,0 +1,152 @@
+import { EventType } from './domain.js';
+
+function addEvent(store, draft, input) {
+  draft.events.push({
+    id: store.makeId('evt'), eventType: input.eventType, entityType: input.entityType, entityId: input.entityId,
+    sessionId: input.sessionId || null, assistedEntityId: input.assistedEntityId || null,
+    occurredAt: input.occurredAt || store.nowIso(), createdAt: store.nowIso(), metadata: input.metadata || {}
+  });
+}
+
+function requireOpenSession(state, sessionId) {
+  const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
+  if (!session) throw new Error('Esta investigação exige uma sessão aberta.');
+  return session;
+}
+
+export const PROTOCOL_LIBRARY = Object.freeze([
+  Object.freeze({
+    id: 'investigacao_inicial', versionId: 'investigacao_inicial_v1', version: 1, name: 'Investigação inicial', category: 'Investigação',
+    description: 'Mapeia prioridade e direção antes de aprofundar.', startNodeId: 'q1',
+    nodes: Object.freeze({
+      q1: { id:'q1', type:'QUESTION', text:'Existe um tema prioritário para investigar agora?', yes:'q2', no:'end_clear' },
+      q2: { id:'q2', type:'QUESTION', text:'É apropriado aprofundar a origem deste tema nesta sessão?', yes:'q3', no:'end_treat' },
+      q3: { id:'q3', type:'QUESTION', text:'Há um fator principal sustentando o desequilíbrio?', yes:'end_find', no:'end_expand' },
+      end_clear: { id:'end_clear', type:'END', title:'Sem prioridade identificada', summary:'Nenhum tema prioritário foi identificado neste momento.' },
+      end_treat: { id:'end_treat', type:'END', title:'Seguir sem aprofundar', summary:'O tema pode seguir para tratamento ou registro sem aprofundamento nesta investigação.' },
+      end_find: { id:'end_find', type:'END', title:'Fator principal identificado', summary:'Revise as respostas positivas e confirme somente os achados relevantes.' },
+      end_expand: { id:'end_expand', type:'END', title:'Aprofundamento indicado', summary:'Considere uma investigação de causa raiz para ampliar a busca.' }
+    })
+  }),
+  Object.freeze({
+    id: 'causa_raiz', versionId: 'causa_raiz_v1', version: 1, name: 'Causa raiz', category: 'Investigação profunda',
+    description: 'Aprofunda a origem sem transformar toda resposta positiva em causa.', startNodeId: 'q1',
+    nodes: Object.freeze({
+      q1: { id:'q1', type:'QUESTION', text:'Existe uma causa raiz prioritária acessível para investigação agora?', yes:'q2', no:'end_none' },
+      q2: { id:'q2', type:'QUESTION', text:'Essa origem é predominantemente interna ao assistido?', yes:'q3', no:'q4' },
+      q3: { id:'q3', type:'QUESTION', text:'Há uma crença, padrão ou memória relevante sustentando o tema?', yes:'end_internal', no:'q5' },
+      q4: { id:'q4', type:'QUESTION', text:'Há um fator relacional, ambiental ou contextual relevante?', yes:'end_external', no:'q5' },
+      q5: { id:'q5', type:'QUESTION', text:'É necessário aprofundar por outro protocolo específico?', yes:'end_specific', no:'end_factor' },
+      end_none: { id:'end_none', type:'END', title:'Sem causa raiz acessível', summary:'Não foi indicada uma causa raiz acessível neste momento.' },
+      end_internal: { id:'end_internal', type:'END', title:'Fator interno relevante', summary:'Classifique o resultado como causa, mantenedor, associação ou fator relevante antes de tratar.' },
+      end_external: { id:'end_external', type:'END', title:'Fator contextual relevante', summary:'Revise o contexto identificado antes de definir tratamento.' },
+      end_specific: { id:'end_specific', type:'END', title:'Protocolo específico indicado', summary:'A investigação aponta para um aprofundamento específico.' },
+      end_factor: { id:'end_factor', type:'END', title:'Fator relevante identificado', summary:'Registre o que foi encontrado sem forçar a classificação como causa.' }
+    })
+  })
+]);
+
+export function protocolById(protocolId) {
+  return PROTOCOL_LIBRARY.find((item) => item.id === protocolId) || null;
+}
+
+export function currentProtocolNode(investigation) {
+  return investigation?.protocolSnapshot?.nodes?.[investigation.currentNodeId] || null;
+}
+
+export function startBranchingInvestigation(store, sessionId, assistedEntityId, protocolId) {
+  const state = store.getState();
+  requireOpenSession(state, sessionId);
+  const protocol = protocolById(protocolId);
+  if (!protocol) throw new Error('Protocolo não encontrado.');
+  const investigation = {
+    id: store.makeId('inv'), kind:'BRANCHING', originSessionId:sessionId, currentSessionId:sessionId, assistedEntityId,
+    protocolId:protocol.id, protocolVersionId:protocol.versionId, protocolSnapshot:structuredClone(protocol),
+    status:'IN_PROGRESS', currentNodeId:protocol.startNodeId, answers:[], path:[protocol.startNodeId], startedAt:store.nowIso(), completedAt:null, endNodeId:null, updatedAt:store.nowIso()
+  };
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    draft.investigations.push(investigation);
+    addEvent(store, draft, { eventType:EventType.INVESTIGATION_STARTED, entityType:'Investigation', entityId:investigation.id,
+      sessionId, assistedEntityId, metadata:{ protocolName:protocol.name, protocolVersionId:protocol.versionId, branching:true } });
+    return draft;
+  });
+  return investigation;
+}
+
+export function answerBranchingInvestigation(store, investigationId, answer) {
+  if (!['YES','NO'].includes(answer)) throw new Error('Resposta inválida.');
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const investigation = draft.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'IN_PROGRESS');
+    if (!investigation) return draft;
+    requireOpenSession(draft, investigation.currentSessionId);
+    const node = currentProtocolNode(investigation);
+    if (!node || node.type !== 'QUESTION') return draft;
+    const nextId = answer === 'YES' ? node.yes : node.no;
+    const existing = investigation.answers.find((item) => item.nodeId === node.id);
+    const payload = { nodeId:node.id, questionTextSnapshot:node.text, answer, answeredAt:store.nowIso() };
+    if (existing) Object.assign(existing, payload); else investigation.answers.push(payload);
+    investigation.currentNodeId = nextId;
+    investigation.path.push(nextId);
+    const next = currentProtocolNode(investigation);
+    if (!next) throw new Error('O protocolo contém um caminho inválido.');
+    if (next.type === 'END') {
+      investigation.status = 'COMPLETED';
+      investigation.completedAt = store.nowIso();
+      investigation.endNodeId = next.id;
+      addEvent(store, draft, { eventType:EventType.INVESTIGATION_COMPLETED, entityType:'Investigation', entityId:investigation.id,
+        sessionId:investigation.currentSessionId, assistedEntityId:investigation.assistedEntityId,
+        metadata:{ protocolName:investigation.protocolSnapshot.name, endTitle:next.title, branching:true } });
+    }
+    investigation.updatedAt = store.nowIso();
+    return draft;
+  });
+}
+
+export function resumeBranchingInvestigation(store, investigationId, sessionId) {
+  const state = store.getState();
+  requireOpenSession(state, sessionId);
+  const investigation = state.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'IN_PROGRESS');
+  if (!investigation) throw new Error('Investigação não disponível para retomada.');
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const target = draft.investigations.find((item) => item.id === investigationId);
+    if (target.currentSessionId !== sessionId) {
+      target.currentSessionId = sessionId;
+      target.updatedAt = store.nowIso();
+      addEvent(store, draft, { eventType:EventType.INVESTIGATION_RESUMED, entityType:'Investigation', entityId:target.id,
+        sessionId, assistedEntityId:target.assistedEntityId, metadata:{ originSessionId:target.originSessionId, branching:true } });
+    }
+    const session = draft.sessions.find((item) => item.id === sessionId);
+    if (session) session.currentAssistedEntityId = target.assistedEntityId;
+    return draft;
+  });
+}
+
+export function confirmBranchingFindings(store, investigationId, nodeIds, classification = 'FACTOR_RELEVANT') {
+  const created = [];
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const investigation = draft.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'COMPLETED');
+    if (!investigation) return draft;
+    requireOpenSession(draft, investigation.currentSessionId);
+    for (const nodeId of nodeIds) {
+      const answer = investigation.answers.find((item) => item.nodeId === nodeId && item.answer === 'YES');
+      if (!answer) continue;
+      const duplicate = draft.findings.find((item) => item.investigationId === investigationId && item.sourceQuestionId === nodeId && item.status !== 'DISMISSED');
+      if (duplicate) { created.push(duplicate); continue; }
+      const finding = {
+        id:store.makeId('find'), assistedEntityId:investigation.assistedEntityId, investigationId,
+        sourceQuestionId:nodeId, classification, title:answer.questionTextSnapshot, status:'IDENTIFIED', createdAt:store.nowIso()
+      };
+      draft.findings.push(finding);
+      created.push(finding);
+      addEvent(store, draft, { eventType:EventType.FINDING_IDENTIFIED, entityType:'Finding', entityId:finding.id,
+        sessionId:investigation.currentSessionId, assistedEntityId:investigation.assistedEntityId,
+        metadata:{ title:finding.title, classification } });
+    }
+    return draft;
+  });
+  return created;
+}
