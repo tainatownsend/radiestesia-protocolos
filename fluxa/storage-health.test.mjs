@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { inspectStorageHealth, recoverLocalData, importLocalDataText } from './storage-health.js';
+import { inspectStorageHealth, recoverLocalData, importLocalDataText, validateImportPayload } from './storage-health.js';
 
 class MemoryStorage {
   constructor() { this.map = new Map(); }
@@ -10,6 +10,14 @@ class MemoryStorage {
 
 globalThis.localStorage = new MemoryStorage();
 
+function payload(overrides={}) {
+  return {
+    version:4,
+    sessions:[], assistedEntities:[], events:[], treatments:[], reikiApplications:[],
+    ...overrides
+  };
+}
+
 {
   const health = inspectStorageHealth();
   assert.equal(health.status, 'OK');
@@ -18,25 +26,41 @@ globalThis.localStorage = new MemoryStorage();
 
 {
   localStorage.setItem('fluxa.mvp.v1', '{invalid');
-  localStorage.setItem('fluxa.mvp.v1.backup', JSON.stringify({ version:2, sessions:[{ id:'s1' }] }));
+  localStorage.setItem('fluxa.mvp.v1.backup', JSON.stringify(payload({ sessions:[{ id:'s1' }] })));
   const health = inspectStorageHealth();
   assert.equal(health.status, 'PRIMARY_CORRUPT');
   assert.equal(health.canRecover, true);
   recoverLocalData();
-  assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1')).sessions[0].id, 's1');
+  const restored=JSON.parse(localStorage.getItem('fluxa.mvp.v1'));
+  assert.equal(restored.sessions[0].id, 's1');
+  assert.equal(restored.version,5);
+  assert.ok(Array.isArray(restored.componentReviews));
+  assert.ok(Array.isArray(restored.tools));
 }
 
 {
-  localStorage.setItem('fluxa.mvp.v1', JSON.stringify({ sessions:[{ id:'old' }], assistedEntities:[], events:[], treatments:[] }));
-  const imported = JSON.stringify({ sessions:[{ id:'new' }], assistedEntities:[{ id:'a1' }], events:[], treatments:[] });
+  localStorage.map.clear();
+  localStorage.setItem('fluxa.mvp.v1', JSON.stringify(payload({ sessions:[{ id:'old' }] })));
+  const imported = JSON.stringify(payload({ sessions:[{ id:'new' }], assistedEntities:[{ id:'a1' }] }));
   importLocalDataText(imported);
-  assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1')).sessions[0].id, 'new');
+  const current=JSON.parse(localStorage.getItem('fluxa.mvp.v1'));
+  assert.equal(current.sessions[0].id, 'new');
+  assert.equal(current.version,5);
+  assert.ok(Array.isArray(current.componentReviews));
   assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1.backup')).sessions[0].id, 'old');
   assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1.recovery')).assistedEntities[0].id, 'a1');
 }
 
 {
+  localStorage.map.clear();
+  localStorage.setItem('fluxa.mvp.v1', JSON.stringify({ hello:'world' }));
+  const health=inspectStorageHealth();
+  assert.equal(health.status,'PRIMARY_CORRUPT','unrelated JSON is not a valid Fluxa primary');
+}
+
+{
   assert.throws(() => importLocalDataText(JSON.stringify({ hello:'world' })), /não parece ser uma cópia válida/i);
+  assert.throws(() => validateImportPayload(payload({ tools:{} })), /não parece ser uma cópia válida/i);
 }
 
 console.log('storage-health.test.mjs: ok');
