@@ -1,0 +1,56 @@
+.search-launch {
+  display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:0 10px;
+  border:1px solid color-mix(in srgb,var(--border) 75%,transparent); border-radius:999px;
+  background:color-mix(in srgb,var(--surface) 78%,transparent); color:var(--primary); font-weight:750;
+}
+.search-launch > span:first-child { font-size:20px; line-height:1; }
+.search-sheet { min-height:min(640px,88dvh); }
+.search-results { display:grid; gap:8px; }
+.search-result {
+  width:100%; min-height:62px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  border:1px solid var(--border); border-radius:14px; background:var(--surface); color:var(--text); text-align:left;
+}
+.search-result strong,.search-result small { display:block; }
+.search-result strong { color:var(--primary-strong); font-size:15px; }
+.search-result small { margin-top:3px; color:var(--muted); font-size:12px; }
+.search-result b { color:var(--secondary); font-size:22px; }
+.search-highlight { animation:fluxa-search-highlight 1.6s ease; }
+@keyframes fluxa-search-highlight { 0%,45%{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 32%,transparent)} 100%{box-shadow:var(--shadow-soft)} }
+
+.insight-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.imbalance-trend { height:180px; display:flex; align-items:end; gap:9px; padding:16px 8px 4px; border:1px solid var(--border); border-radius:16px; background:var(--surface); }
+.trend-point { min-width:0; flex:1; display:grid; grid-template-rows:1fr auto auto; gap:4px; align-items:end; text-align:center; }
+.trend-bar-track { height:110px; display:flex; align-items:end; justify-content:center; border-radius:8px; background:color-mix(in srgb,var(--surface-2) 70%,transparent); overflow:hidden; }
+.trend-bar-track span { display:block; width:100%; min-height:6px; background:linear-gradient(to top,var(--primary),var(--secondary)); border-radius:7px 7px 3px 3px; }
+.trend-point strong { color:var(--primary-strong); font-size:13px; }
+.trend-point small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:9px; }
+
+.native-tool-select-enhanced { position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important; pointer-events:none !important; }
+.searchable-tool-launch { justify-content:flex-start; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tool-picker-list { display:grid; gap:8px; margin-top:14px; }
+.tool-picker-row { display:grid; grid-template-columns:44px 1fr; align-items:stretch; border:1px solid var(--border); border-radius:14px; background:var(--surface); overflow:hidden; }
+.tool-favorite { border:0; border-right:1px solid var(--border); background:var(--surface-2); color:color-mix(in srgb,var(--muted) 55%,transparent); font-size:20px; }
+.tool-favorite.active { color:var(--accent); }
+.tool-pick-main { min-height:62px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:0; background:transparent; color:var(--text); text-align:left; }
+.tool-pick-main strong,.tool-pick-main small { display:block; }
+.tool-pick-main strong { color:var(--primary-strong); }
+.tool-pick-main small { margin-top:3px; color:var(--muted); font-size:12px; }
+.tool-pick-main b { flex:0 0 auto; padding:4px 7px; border-radius:999px; background:var(--surface-2); color:var(--primary); font-size:11px; }
+.checklist-search { width:100%; min-height:46px; margin:8px 0 10px; padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:#fff; color:var(--text); }
+
+@media (max-width:560px) {
+  .search-launch > span:last-child { display:none; }
+  .search-launch { width:40px; min-height:40px; justify-content:center; padding:0; }
+  .insight-grid { grid-template-columns:1fr; }
+  .imbalance-trend { height:160px; gap:6px; }
+  .trend-bar-track { height:95px; }
+}
+
+@media (min-width:700px) {
+  .search-sheet { width:min(760px,calc(100% - 48px)); }
+  .tool-picker-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .search-highlight { animation:none; box-shadow:0 0 0 3px var(--accent); }
+}
