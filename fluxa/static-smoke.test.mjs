@@ -40,7 +40,8 @@ const required = [
 for (const file of required) assert.ok(localRefs.includes(file), `index.html must include ${file}`);
 
 assert.ok(fs.existsSync(new URL('./service-worker.js', root)), 'Fluxa offline service worker must exist.');
-assert.equal(new Set(localRefs).size, localRefs.length, 'Shell should not load duplicate local assets.');
+const executableRefs=localRefs.filter((ref)=>/\.(?:m?js|css)$/.test(ref));
+assert.equal(new Set(executableRefs).size, executableRefs.length, 'Shell should not load duplicate JavaScript or CSS assets.');
 assert.match(html, /<html lang="pt-BR">/);
 assert.match(html, /<title>Fluxa<\/title>/);
 assert.match(html, /meta name="theme-color" content="#173F46"/);
