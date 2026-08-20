@@ -7,6 +7,7 @@ export const ToolType = Object.freeze({
 export const ActivityLibraryEventType = Object.freeze({
   ASSESSMENT_RECORDED: 'ASSESSMENT_RECORDED',
   TOOL_CREATED: 'TOOL_CREATED',
+  TOOL_UPDATED: 'TOOL_UPDATED',
   TOOL_ARCHIVED: 'TOOL_ARCHIVED'
 });
 
@@ -108,6 +109,35 @@ export function createTool(store, input) {
     return draft;
   });
   return tool;
+}
+
+export function updateTool(store, toolId, input) {
+  const state = store.getState();
+  const existing = state.tools.find((item) => item.id === toolId && !item.archivedAt);
+  if (!existing) throw new Error('Recurso não encontrado.');
+  const name = input.name?.trim();
+  if (!name) throw new Error('Nome do recurso é obrigatório.');
+  const type = Object.values(ToolType).includes(input.type) ? input.type : existing.type;
+  const before = { type: existing.type, name: existing.name, purpose: existing.purpose, notes: existing.notes };
+  let updated;
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const tool = draft.tools.find((item) => item.id === toolId);
+    tool.type = type;
+    tool.name = name;
+    tool.purpose = input.purpose?.trim() || null;
+    tool.notes = input.notes?.trim() || null;
+    tool.updatedAt = store.nowIso();
+    updated = structuredClone(tool);
+    addEvent(store, draft, {
+      eventType: ActivityLibraryEventType.TOOL_UPDATED,
+      entityType: 'Tool',
+      entityId: tool.id,
+      metadata: { before, after: { type: tool.type, name: tool.name, purpose: tool.purpose, notes: tool.notes } }
+    });
+    return draft;
+  });
+  return updated;
 }
 
 export function archiveTool(store, toolId) {
