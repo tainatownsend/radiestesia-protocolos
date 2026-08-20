@@ -10,10 +10,7 @@ const COLLECTIONS = [
 ];
 const REQUIRED_COLLECTIONS = ['sessions','assistedEntities','events','treatments','reikiApplications'];
 
-function parse(raw) {
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch (_) { return null; }
-}
+function parse(raw) { if (!raw) return null; try { return JSON.parse(raw); } catch (_) { return null; } }
 
 function looksLikeFluxaData(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -23,31 +20,20 @@ function looksLikeFluxaData(value) {
   return true;
 }
 
-function validCandidate(raw) {
-  const value = parse(raw);
-  return looksLikeFluxaData(value) ? value : null;
-}
+function validCandidate(raw) { const value = parse(raw); return looksLikeFluxaData(value) ? value : null; }
 
 function canonicalize(value) {
   const next = { ...value, version: CURRENT_VERSION };
   for (const key of COLLECTIONS) next[key] = Array.isArray(value[key]) ? value[key] : [];
-  next.meta = {
-    ...(value.meta && typeof value.meta === 'object' ? value.meta : {}),
-    importedAt: new Date().toISOString()
-  };
+  next.meta = { ...(value.meta && typeof value.meta === 'object' ? value.meta : {}), importedAt: new Date().toISOString() };
   return next;
 }
 
 export function inspectStorageHealth() {
   let writable = true;
   let writeError = null;
-  try {
-    localStorage.setItem(TEST_KEY, '1');
-    localStorage.removeItem(TEST_KEY);
-  } catch (error) {
-    writable = false;
-    writeError = error?.name || 'StorageError';
-  }
+  try { localStorage.setItem(TEST_KEY, '1'); localStorage.removeItem(TEST_KEY); }
+  catch (error) { writable = false; writeError = error?.name || 'StorageError'; }
 
   const primaryRaw = localStorage.getItem(STORAGE_KEY);
   const backupRaw = localStorage.getItem(BACKUP_KEY);
@@ -57,21 +43,18 @@ export function inspectStorageHealth() {
   const recovery = validCandidate(recoveryRaw);
 
   return {
-    writable,
-    writeError,
-    hasPrimary: Boolean(primaryRaw),
-    primaryValid: !primaryRaw || Boolean(primary),
-    backupValid: Boolean(backup),
-    recoveryValid: Boolean(recovery),
-    canRecover: Boolean(backup || recovery),
+    writable, writeError, hasPrimary:Boolean(primaryRaw), primaryValid:!primaryRaw || Boolean(primary),
+    backupValid:Boolean(backup), recoveryValid:Boolean(recovery), canRecover:Boolean(backup || recovery),
+    preferredRecoverySource: recovery ? 'RECOVERY' : (backup ? 'BACKUP' : null),
     status: !writable ? 'WRITE_ERROR' : (primaryRaw && !primary ? 'PRIMARY_CORRUPT' : 'OK')
   };
 }
 
 export function recoverLocalData() {
-  const backupRaw = localStorage.getItem(BACKUP_KEY);
   const recoveryRaw = localStorage.getItem(RECOVERY_KEY);
-  const sourceRaw = validCandidate(backupRaw) ? backupRaw : (validCandidate(recoveryRaw) ? recoveryRaw : null);
+  const backupRaw = localStorage.getItem(BACKUP_KEY);
+  // RECOVERY is written before PRIMARY on each save and is therefore normally the newest recoverable state.
+  const sourceRaw = validCandidate(recoveryRaw) ? recoveryRaw : (validCandidate(backupRaw) ? backupRaw : null);
   if (!sourceRaw) throw new Error('Nenhuma cópia local válida do Fluxa foi encontrada para recuperação.');
   const source = canonicalize(JSON.parse(sourceRaw));
   const serialized = JSON.stringify(source);
