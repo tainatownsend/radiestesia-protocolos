@@ -10,6 +10,14 @@ assert.equal(parsed.items[0].purpose,'Limpeza');
 const semicolon=parseLibraryBulkText('Nome;Tipo;Finalidade\nCampo X;Gráfico;Proteção');
 assert.equal(semicolon.items[0].name,'Campo X');
 
+const pasted=parseLibraryBulkText('Gráfico A\nGráfico B\nGráfico C');
+assert.deepEqual(pasted.items.map((item)=>item.name),['Gráfico A','Gráfico B','Gráfico C']);
+assert.ok(pasted.items.every((item)=>item.type==='GRAPH'));
+
+const tabbed=parseLibraryBulkText('Nome\tTipo\tFinalidade\nEscala Z\tBiômetro\tMedição');
+assert.equal(tabbed.items[0].name,'Escala Z');
+assert.equal(tabbed.items[0].type,'BIOMETER');
+
 const prepared=prepareLibraryBulkImport({tools:[{name:'Desimpregnador',archivedAt:null}]},[...parsed.items,{name:'Escala A',type:'BIOMETER'}]);
 assert.equal(prepared.ready.length,1);
 assert.equal(prepared.ready[0].name,'Escala A');
