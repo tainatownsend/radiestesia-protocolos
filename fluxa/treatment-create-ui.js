@@ -11,7 +11,7 @@ function componentFields(index) {
     <div class="form-grid">
       <div class="field"><label>Nome do componente</label><input name="componentName" required placeholder="Nome do recurso"></div>
       <div class="field"><label>Comando / orientação</label><textarea name="instructions" placeholder="Comando associado ao componente"></textarea></div>
-      <div class="duration-grid"><div class="field"><label>Duração</label><input name="durationValue" type="number" min="1" required inputmode="numeric"></div><div class="field"><label>Unidade</label><select name="durationUnit"><option value="MINUTE">minuto(s)</option><option value="HOUR">hora(s)</option><option value="DAY">dia(s)</option><option value="WEEK">semana(s)</option><option value="MONTH">mês(es)</option></select></div></div>
+      <div class="duration-grid"><div class="field"><label>Duração <span class="muted">(opcional)</span></label><input name="durationValue" type="number" min="1" inputmode="numeric" placeholder="Sem prazo"></div><div class="field"><label>Unidade</label><select name="durationUnit"><option value="MINUTE">minuto(s)</option><option value="HOUR">hora(s)</option><option value="DAY">dia(s)</option><option value="WEEK">semana(s)</option><option value="MONTH">mês(es)</option></select></div></div>
     </div>
   </section>`;
 }
@@ -49,6 +49,11 @@ function enhanceTreatmentForm() {
   const durationValue = form.querySelector('[name="durationValue"]');
   const durationUnit = form.querySelector('[name="durationUnit"]');
   if (!componentName || !instructions || !durationValue || !durationUnit) return;
+  durationValue.required = false;
+  durationValue.removeAttribute('required');
+  durationValue.placeholder = 'Sem prazo';
+  const durationLabel = durationValue.closest('.field')?.querySelector('label');
+  if (durationLabel && !durationLabel.querySelector('.muted')) durationLabel.insertAdjacentHTML('beforeend',' <span class="muted">(opcional)</span>');
 
   const componentStart = componentName.closest('.field');
   const instructionsField = instructions.closest('.field');
@@ -84,13 +89,22 @@ queueMicrotask(enhance);
 document.addEventListener('click', (event) => {
   const review = event.target.closest('[data-review-treatment]');
   if (review) {
-    const manage = review.closest('.treatment-card')?.querySelector('[data-backlog-manage-components]');
-    if (manage) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      manage.click();
-      return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const card = review.closest('.treatment-card');
+    let manage = card?.querySelector('[data-backlog-manage-components]');
+    let temporary = false;
+    if (!manage && card) {
+      manage = document.createElement('button');
+      manage.type = 'button';
+      manage.hidden = true;
+      manage.dataset.backlogManageComponents = review.dataset.reviewTreatment;
+      card.appendChild(manage);
+      temporary = true;
     }
+    manage?.click();
+    if (temporary) manage.remove();
+    return;
   }
 
   const add = event.target.closest('[data-add-treatment-component-draft]');
