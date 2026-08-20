@@ -1,11 +1,21 @@
+let dialogIdCounter = 0;
+let lastActive = null;
+
+function nextDialogTitleId() {
+  dialogIdCounter += 1;
+  return `fluxa-dialog-title-${dialogIdCounter}`;
+}
+
 function enhanceAccessibility() {
   document.querySelectorAll('.sheet').forEach((sheet) => {
     sheet.setAttribute('role', 'dialog');
     sheet.setAttribute('aria-modal', 'true');
     const heading = sheet.querySelector('h1,h2,h3');
     if (heading) {
-      if (!heading.id) heading.id = `dialog-title-${Math.random().toString(36).slice(2,8)}`;
+      if (!heading.id) heading.id = nextDialogTitleId();
       sheet.setAttribute('aria-labelledby', heading.id);
+    } else if (!sheet.getAttribute('aria-label')) {
+      sheet.setAttribute('aria-label', 'Janela do Fluxa');
     }
   });
 
@@ -14,7 +24,7 @@ function enhanceAccessibility() {
     button.setAttribute('type', 'button');
   });
 
-  document.querySelectorAll('[data-live-timer]').forEach((timer) => {
+  document.querySelectorAll('[data-live-timer],[data-reiki-outside-timer]').forEach((timer) => {
     timer.setAttribute('role', 'timer');
     timer.setAttribute('aria-live', 'off');
     timer.setAttribute('aria-label', 'Tempo da aplicação de Reiki');
@@ -33,18 +43,30 @@ function enhanceAccessibility() {
   });
 }
 
-function focusNewestDialog() {
-  const dialogs = [...document.querySelectorAll('.sheet[role="dialog"]')];
-  const dialog = dialogs.at(-1);
-  if (!dialog || dialog.dataset.focusInitialized) return;
-  dialog.dataset.focusInitialized = 'true';
-  const target = dialog.querySelector('input:not([type="hidden"]), textarea, select, button');
-  target?.focus({ preventScroll:true });
+function focusableElements(dialog) {
+  return [...dialog.querySelectorAll('button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter((node) => !node.hidden && node.getAttribute('aria-hidden') !== 'true');
 }
 
-let lastActive = null;
+function newestDialog() {
+  return [...document.querySelectorAll('.sheet[role="dialog"]')].at(-1) || null;
+}
+
+function focusNewestDialog() {
+  const dialog = newestDialog();
+  if (!dialog || dialog.dataset.focusInitialized) return;
+  dialog.dataset.focusInitialized = 'true';
+  const target = focusableElements(dialog)[0];
+  if (target) target.focus({ preventScroll:true });
+  else {
+    dialog.tabIndex = -1;
+    dialog.focus({ preventScroll:true });
+  }
+}
+
 document.addEventListener('click', (event) => {
-  if (event.target.closest('button')) lastActive = event.target.closest('button');
+  const trigger = event.target.closest('button,[href]');
+  if (trigger && !trigger.closest('.sheet')) lastActive = trigger;
   queueMicrotask(() => {
     enhanceAccessibility();
     focusNewestDialog();
@@ -52,13 +74,32 @@ document.addEventListener('click', (event) => {
 }, true);
 
 document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape') return;
-  const overlay = document.querySelector('#remaining-overlay, #backlog-overlay, .modal-backdrop');
-  const close = overlay?.querySelector('[data-remaining-close],[data-backlog-close],[data-action="dismiss-sheet"],.close-btn');
+  const dialog = newestDialog();
+  if (event.key === 'Tab' && dialog) {
+    const focusables = focusableElements(dialog);
+    if (!focusables.length) {
+      event.preventDefault();
+      dialog.focus({ preventScroll:true });
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus({ preventScroll:true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus({ preventScroll:true });
+    }
+    return;
+  }
+
+  if (event.key !== 'Escape' || !dialog) return;
+  const close = dialog.querySelector('[data-remaining-close],[data-backlog-close],[data-action="dismiss-sheet"],[data-reiki-outside-close],[data-history-close],[data-close-protocol],[data-close-investigation-chooser],.close-btn');
   if (close) {
     event.preventDefault();
     close.click();
-    queueMicrotask(() => lastActive?.focus?.({ preventScroll:true }));
+    queueMicrotask(() => lastActive?.isConnected && lastActive.focus?.({ preventScroll:true }));
   }
 });
 
@@ -67,4 +108,7 @@ const observer = new MutationObserver(() => {
   focusNewestDialog();
 });
 observer.observe(document.body, { childList:true, subtree:true });
-queueMicrotask(enhanceAccessibility);
+queueMicrotask(() => {
+  enhanceAccessibility();
+  focusNewestDialog();
+});
