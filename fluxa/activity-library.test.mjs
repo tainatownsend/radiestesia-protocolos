@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
 import { AssistedType, createAssistedEntity, selectAssistedForSession, startSession } from './domain.js';
-import { ActivityLibraryEventType, ToolType, activeTools, archiveTool, createTool, recordGeneralAssessment } from './activity-library.js';
+import { ActivityLibraryEventType, ToolType, activeTools, archiveTool, createTool, updateTool, recordGeneralAssessment } from './activity-library.js';
 
 class MemoryStorage {
   constructor() { this.map = new Map(); }
@@ -35,6 +35,12 @@ globalThis.localStorage = new MemoryStorage();
   const graph = createTool(store, { type:ToolType.GRAPH, name:'Gráfico teste', purpose:'Teste' });
   const meter = createTool(store, { type:ToolType.BIOMETER, name:'Biômetro teste' });
   assert.deepEqual(activeTools(store.getState()).map((item) => item.id).sort(), [graph.id, meter.id].sort());
+
+  const updated = updateTool(store, graph.id, { type:ToolType.GRAPH, name:'Gráfico atualizado', purpose:'Nova finalidade', notes:'Preservar snapshots antigos' });
+  assert.equal(updated.name, 'Gráfico atualizado');
+  assert.equal(store.getState().events.at(-1).eventType, ActivityLibraryEventType.TOOL_UPDATED);
+  assert.equal(store.getState().events.at(-1).metadata.before.name, 'Gráfico teste');
+
   archiveTool(store, graph.id);
   assert.deepEqual(activeTools(store.getState()).map((item) => item.id), [meter.id]);
   assert.ok(store.getState().tools.find((item) => item.id === graph.id).archivedAt);
