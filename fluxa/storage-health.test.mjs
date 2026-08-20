@@ -7,6 +7,11 @@ class MemoryStorage {
   setItem(key, value) { this.map.set(key, String(value)); }
   removeItem(key) { this.map.delete(key); }
 }
+class ThrowingStorage {
+  getItem(){throw new Error('blocked storage read');}
+  setItem(){throw new Error('blocked storage write');}
+  removeItem(){throw new Error('blocked storage remove');}
+}
 
 globalThis.localStorage = new MemoryStorage();
 
@@ -84,6 +89,16 @@ function payload(overrides={}) { return { version:4, sessions:[], assistedEntiti
   assert.throws(() => importLocalDataText(JSON.stringify({ hello:'world' })), /não parece ser uma cópia válida/i);
   assert.throws(() => validateImportPayload(payload({ tools:{} })), /não parece ser uma cópia válida/i);
   assert.throws(() => validateImportPayload(payload({ customProtocols:{} })), /não parece ser uma cópia válida/i);
+}
+
+{
+  globalThis.localStorage=new ThrowingStorage();
+  const health=inspectStorageHealth();
+  assert.equal(health.status,'READ_ERROR');
+  assert.equal(health.writable,false);
+  assert.match(health.readError,/blocked storage read/);
+  assert.throws(()=>recoverLocalData(),/navegador bloqueou o armazenamento local/i);
+  assert.throws(()=>importLocalDataText(JSON.stringify(payload())),/navegador bloqueou o armazenamento local/i);
 }
 
 console.log('storage-health.test.mjs: ok');
