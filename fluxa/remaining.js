@@ -1,5 +1,6 @@
 import { EventType, TreatmentStatus } from './domain.js';
 import { validateAssistedInput } from './backlog.js';
+import { requirePreparedSessionState } from './session-rules.js';
 
 export const RemainingEventType = Object.freeze({
   COMPONENT_REVIEWED: 'COMPONENT_REVIEWED',
@@ -24,27 +25,23 @@ function addEvent(store, draft, input) {
   return event;
 }
 
-function requireOpenSession(state, sessionId) {
-  const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
-  if (!session) throw new Error('Esta ação exige uma sessão aberta.');
-  return session;
-}
-
 export function componentReviewAvailable(component, now = Date.now()) {
   return Boolean(
     component &&
     component.status === TreatmentStatus.IN_PROGRESS &&
-    component.expectedEndAt &&
-    new Date(component.expectedEndAt).getTime() <= now
+    (!component.expectedEndAt || new Date(component.expectedEndAt).getTime() <= now)
   );
 }
 
 export function recordComponentDismantlingReview(store, input) {
   const state = store.getState();
-  requireOpenSession(state, input.sessionId);
+  requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de revisar um componente.');
   const component = state.treatmentComponents.find((item) => item.id === input.componentId);
   if (!component) throw new Error('Componente não encontrado.');
   if (component.status !== TreatmentStatus.IN_PROGRESS) throw new Error('Este componente não está disponível para revisão.');
+  if (component.expectedEndAt && new Date(component.expectedEndAt).getTime() > Date.now()) {
+    throw new Error('Este componente ainda não chegou ao momento previsto de revisão.');
+  }
   const treatment = state.treatments.find((item) => item.id === component.treatmentId);
   if (!treatment || treatment.status !== TreatmentStatus.IN_PROGRESS) throw new Error('O tratamento não está em andamento.');
 
@@ -105,7 +102,7 @@ export function recordComponentDismantlingReview(store, input) {
 
 export function treatmentComponentResolution(state, treatmentId) {
   const components = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId);
-  const unresolved = components.filter((item) => [TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(item.status));
+  const unresolved = components.filter((item) => [TreatmentStatus.PLANNED, TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(item.status));
   const resolved = components.filter((item) => ['COMPLETED', 'STOPPED', 'REPLACED'].includes(item.status));
   return {
     total: components.length,
@@ -116,10 +113,11 @@ export function treatmentComponentResolution(state, treatmentId) {
 }
 
 export function updateAssistedEntity(store, assistedEntityId, input) {
-  validateAssistedInput(input);
   const state = store.getState();
   const existing = state.assistedEntities.find((item) => item.id === assistedEntityId && !item.archivedAt);
   if (!existing) throw new Error('Assistido não encontrado.');
+  if (input.type !== existing.type) throw new Error('O tipo do assistido não pode ser alterado no MVP.');
+  validateAssistedInput(input);
   const now = store.nowIso();
 
   store.setState((current) => {
@@ -131,14 +129,15 @@ export function updateAssistedEntity(store, assistedEntityId, input) {
       birthDate: target.birthDate || null,
       address: target.address || null,
       identifier: target.identifier || null,
+      relatedPerson: target.relatedPerson || null,
       details: target.details || null,
       members: structuredClone(target.members || [])
     };
-    target.type = input.type;
     target.displayName = input.displayName.trim();
     target.birthDate = input.birthDate || null;
     target.address = input.address?.trim() || null;
     target.identifier = input.identifier?.trim() || null;
+    target.relatedPerson = input.relatedPerson?.trim() || null;
     target.details = input.details?.trim() || null;
     target.members = Array.isArray(input.members) ? structuredClone(input.members) : [];
     target.updatedAt = now;
@@ -189,7 +188,7 @@ export function canRunFinalAssessment(state, treatmentId) {
 
 export function completeTreatmentAfterFinalAssessment(store, treatmentId, sessionId) {
   const state = store.getState();
-  requireOpenSession(state, sessionId);
+  requirePreparedSessionState(state, sessionId, 'Conclua a preparação da sessão antes de concluir a avaliação do tratamento.');
   const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
   if (!treatment) throw new Error('Tratamento não disponível para conclusão.');
   const resolution = treatmentComponentResolution(state, treatmentId);
