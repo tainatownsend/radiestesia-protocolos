@@ -1,0 +1,155 @@
+import { createStore } from './store.js';
+import { getOpenSession, latestPreparation } from './domain.js';
+import { ToolType, activeTools, archiveTool, createTool, recordGeneralAssessment } from './activity-library.js';
+
+const store = createStore();
+let enhancing = false;
+
+const toolLabels = {
+  [ToolType.GRAPH]: 'Gráfico',
+  [ToolType.BIOMETER]: 'Biômetro',
+  [ToolType.OTHER]: 'Outro recurso'
+};
+
+function esc(value = '') {
+  return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
+}
+
+function dialog(html) {
+  document.querySelector('#activity-library-overlay')?.remove();
+  const wrap = document.createElement('div');
+  wrap.id = 'activity-library-overlay';
+  wrap.className = 'modal-backdrop';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+}
+
+function closeDialog() {
+  document.querySelector('#activity-library-overlay')?.remove();
+}
+
+function ensureAssessmentAction() {
+  const grid = document.querySelector('.action-grid');
+  if (!grid || grid.querySelector('[data-general-assessment]')) return;
+  const note = grid.querySelector('[data-action="add-note"]');
+  const button = document.createElement('button');
+  button.className = 'action-card';
+  button.dataset.generalAssessment = 'true';
+  button.innerHTML = '<strong>Avaliar</strong><span>Medição ou resultado</span>';
+  if (note) grid.insertBefore(button, note);
+  else grid.appendChild(button);
+}
+
+function ensureLibrarySection() {
+  const main = document.querySelector('main');
+  if (!main || main.querySelector('[data-basic-tool-library]')) return;
+  if (main.querySelector('.eyebrow')?.textContent?.trim() !== 'Biblioteca') return;
+
+  const tools = activeTools(store.getState());
+  const section = document.createElement('section');
+  section.className = 'section';
+  section.dataset.basicToolLibrary = 'true';
+  section.innerHTML = `<div class="section-head"><div><p class="eyebrow">Recursos</p><h2>Gráficos e ferramentas</h2></div><button class="btn primary small" data-new-library-tool>Novo recurso</button></div>
+    <p class="muted">Cadastre recursos reutilizáveis. Protocolos continuam versionados separadamente.</p>
+    <div class="stack">${tools.length ? tools.map((tool) => `<article class="card"><div class="section-head"><div><p class="eyebrow">${esc(toolLabels[tool.type] || toolLabels.OTHER)}</p><h3>${esc(tool.name)}</h3></div><button class="btn ghost small" data-archive-library-tool="${tool.id}">Arquivar</button></div>${tool.purpose ? `<p>${esc(tool.purpose)}</p>` : ''}${tool.notes ? `<p class="muted">${esc(tool.notes)}</p>` : ''}</article>`).join('') : '<div class="empty">Nenhum gráfico ou ferramenta cadastrado ainda.</div>'}</div>`;
+  main.appendChild(section);
+}
+
+function ensureToolSelectors() {
+  const tools = activeTools(store.getState());
+  document.querySelectorAll('[data-treatment-component-draft]').forEach((section) => {
+    if (section.querySelector('[data-library-tool-picker]')) return;
+    const fields = section.querySelector('.form-grid');
+    const nameInput = section.querySelector('[name="componentName"]');
+    if (!fields || !nameInput) return;
+    const field = document.createElement('div');
+    field.className = 'field';
+    field.dataset.libraryToolPicker = 'true';
+    field.innerHTML = `<label>Usar recurso da Biblioteca <span class="muted">(opcional)</span></label><select name="toolId"><option value="">Digitar manualmente</option>${tools.map((tool) => `<option value="${tool.id}" data-tool-name="${esc(tool.name)}">${esc(tool.name)} · ${esc(toolLabels[tool.type] || toolLabels.OTHER)}</option>`).join('')}</select>`;
+    fields.insertBefore(field, fields.firstChild);
+  });
+}
+
+function translateAssessmentEvents() {
+  document.querySelectorAll('.timeline-item').forEach((item) => {
+    const title = item.querySelector('.timeline-copy strong');
+    if (title?.textContent === 'ASSESSMENT_RECORDED') title.textContent = 'Avaliação registrada';
+  });
+}
+
+function enhance() {
+  if (enhancing) return;
+  enhancing = true;
+  try {
+    ensureAssessmentAction();
+    ensureLibrarySection();
+    ensureToolSelectors();
+    translateAssessmentEvents();
+  } finally {
+    enhancing = false;
+  }
+}
+
+new MutationObserver(enhance).observe(document.body, { childList:true, subtree:true });
+queueMicrotask(enhance);
+
+function assessmentDialog() {
+  const state = store.getState();
+  const session = getOpenSession(state);
+  if (!session?.currentAssistedEntityId) return alert('Selecione um assistido antes de registrar uma avaliação.');
+  if (latestPreparation(state, session.id)?.status !== 'COMPLETED') return alert('Conclua a preparação da sessão antes de fazer uma medição.');
+  const assisted = state.assistedEntities.find((item) => item.id === session.currentAssistedEntityId);
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Avaliar</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-activity-close>×</button></div><p class="muted">Use para registrar uma medição ou avaliação pontual. O registro ficará ligado a esta sessão e ao histórico do assistido.</p><form id="general-assessment-form" data-session="${session.id}" data-assisted="${session.currentAssistedEntityId}" class="form-grid"><div class="field"><label>O que está sendo avaliado?</label><input name="subject" required placeholder="Ex.: frequência vibracional, nível de equilíbrio"></div><div class="field"><label>Resultado</label><input name="result" required placeholder="Ex.: 8.500, 65%, adequado"></div><div class="field"><label>Escala / unidade</label><input name="scale" placeholder="Opcional"></div><div class="field"><label>Observações</label><textarea name="notes" placeholder="Opcional"></textarea></div><button class="btn primary wide" type="submit">Registrar avaliação</button></form></section>`);
+}
+
+function newToolDialog() {
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Biblioteca</p><h2>Novo gráfico ou ferramenta</h2></div><button class="close-btn" data-activity-close>×</button></div><form id="library-tool-form" class="form-grid"><div class="field"><label>Tipo</label><select name="type"><option value="GRAPH">Gráfico</option><option value="BIOMETER">Biômetro</option><option value="OTHER">Outro recurso</option></select></div><div class="field"><label>Nome</label><input name="name" required></div><div class="field"><label>Finalidade</label><textarea name="purpose" placeholder="Para que costuma ser utilizado"></textarea></div><div class="field"><label>Observações</label><textarea name="notes" placeholder="Cuidados, variações ou lembretes"></textarea></div><button class="btn primary wide" type="submit">Adicionar à Biblioteca</button></form></section>`);
+}
+
+document.addEventListener('change', (event) => {
+  const select = event.target.closest('[data-library-tool-picker] select[name="toolId"]');
+  if (!select) return;
+  const section = select.closest('[data-treatment-component-draft]');
+  const input = section?.querySelector('[name="componentName"]');
+  const option = select.selectedOptions[0];
+  if (input && select.value && option?.dataset.toolName) input.value = option.dataset.toolName;
+}, true);
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  if (button.dataset.generalAssessment !== undefined) { assessmentDialog(); return; }
+  if (button.dataset.newLibraryTool !== undefined) { newToolDialog(); return; }
+  if (button.dataset.activityClose !== undefined) { closeDialog(); return; }
+  if (button.dataset.archiveLibraryTool) {
+    if (!confirm('Arquivar este recurso da Biblioteca? Tratamentos antigos continuarão preservados.')) return;
+    try { archiveTool(store, button.dataset.archiveLibraryTool); } catch (error) { alert(error.message); }
+  }
+}, true);
+
+document.addEventListener('submit', (event) => {
+  const form = event.target;
+  if (form.id === 'general-assessment-form') {
+    event.preventDefault();
+    const data = new FormData(form);
+    try {
+      recordGeneralAssessment(store, {
+        sessionId: form.dataset.session,
+        assistedEntityId: form.dataset.assisted,
+        subject: data.get('subject'),
+        result: data.get('result'),
+        scale: data.get('scale'),
+        notes: data.get('notes')
+      });
+      closeDialog();
+    } catch (error) { alert(error.message); }
+  }
+  if (form.id === 'library-tool-form') {
+    event.preventDefault();
+    const data = new FormData(form);
+    try {
+      createTool(store, { type:data.get('type'), name:data.get('name'), purpose:data.get('purpose'), notes:data.get('notes') });
+      closeDialog();
+    } catch (error) { alert(error.message); }
+  }
+}, true);
