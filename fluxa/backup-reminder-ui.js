@@ -9,7 +9,10 @@ function ensure(){
   const days=last?Math.floor((Date.now()-new Date(last).getTime())/86400000):null;
   let section=main.querySelector('[data-backup-reminder]');
   if(days!==null&&days<7){section?.remove();return;}
+  const signature=last?`old:${last}`:'never';
+  if(section?.dataset.backupSignature===signature)return;
   if(!section){section=document.createElement('section');section.className='section notice-card';section.dataset.backupReminder='true';main.appendChild(section);}
+  section.dataset.backupSignature=signature;
   section.innerHTML=`<div><p class="eyebrow">Segurança dos dados</p><h2>${last?'Sua última cópia local já tem alguns dias.':'Você ainda não exportou uma cópia local.'}</h2><p>${last?`Última exportação confirmada: ${fmt(last)}.`:'O histórico está somente neste dispositivo. Exporte uma cópia periodicamente.'}</p></div><button class="btn secondary" data-trigger-backup-export>Exportar agora</button>`;
 }
 new MutationObserver(ensure).observe(document.body,{childList:true,subtree:true});
