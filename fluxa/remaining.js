@@ -186,3 +186,38 @@ export function archiveAssistedEntity(store, assistedEntityId, reason = '') {
 export function canRunFinalAssessment(state, treatmentId) {
   return treatmentComponentResolution(state, treatmentId).readyForFinalAssessment;
 }
+
+export function completeTreatmentAfterFinalAssessment(store, treatmentId, sessionId) {
+  const state = store.getState();
+  requireOpenSession(state, sessionId);
+  const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
+  if (!treatment) throw new Error('Tratamento não disponível para conclusão.');
+  const resolution = treatmentComponentResolution(state, treatmentId);
+  if (!resolution.readyForFinalAssessment) throw new Error('Resolva todos os componentes antes de concluir o tratamento.');
+  const assessments = Array.isArray(state.assessments) ? state.assessments : [];
+  const assessment = [...assessments].filter((item) => item.treatmentId === treatmentId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  if (!assessment) throw new Error('Registre a avaliação final antes de concluir o tratamento.');
+
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const target = draft.treatments.find((item) => item.id === treatmentId);
+    const now = store.nowIso();
+    target.status = TreatmentStatus.COMPLETED;
+    target.completedAt = now;
+    target.updatedAt = now;
+    addEvent(store, draft, {
+      eventType: EventType.TREATMENT_COMPLETED,
+      entityType: 'Treatment',
+      entityId: target.id,
+      sessionId,
+      assistedEntityId: target.assistedEntityId,
+      metadata: {
+        finalAssessmentId: assessment.id,
+        imbalancePercent: assessment.imbalancePercent,
+        needsNewTreatment: assessment.needsNewTreatment,
+        nextTreatmentWhen: assessment.nextTreatmentWhen || null
+      }
+    });
+    return draft;
+  });
+}
