@@ -32,7 +32,10 @@ store.setState((current)=>{
   const draft=structuredClone(current);
   draft.sessions.push({id:'new',status:'OPEN'});
   draft.customProtocols.push({id:'cp1',protocolKey:'mine',version:1,questions:[]});
-  draft.settings={preparationLabels:{breathing:'Aterramento e respiração'}};
+  draft.settings={
+    preparationLabels:{breathing:'Aterramento e respiração'},
+    sessionTemplates:[{id:'template_1',name:'Acompanhamento',steps:['ASSESS','INVESTIGATE','TREAT']}]
+  };
   return draft;
 });
 const persisted=JSON.parse(localStorage.getItem('fluxa.mvp.v1'));
@@ -41,5 +44,11 @@ assert.equal(persisted.sessions[0].id,'new');
 assert.ok(Array.isArray(persisted.componentReviews));
 assert.equal(persisted.customProtocols[0].protocolKey,'mine');
 assert.equal(persisted.settings.preparationLabels.breathing,'Aterramento e respiração');
+assert.equal(persisted.settings.sessionTemplates[0].name,'Acompanhamento');
+assert.deepEqual(persisted.settings.sessionTemplates[0].steps,['ASSESS','INVESTIGATE','TREAT']);
+
+const reloaded=loadState();
+assert.equal(reloaded.settings.sessionTemplates[0].id,'template_1');
+assert.deepEqual(reloaded.settings.sessionTemplates[0].steps,['ASSESS','INVESTIGATE','TREAT']);
 
 console.log('store.test.mjs: ok');
