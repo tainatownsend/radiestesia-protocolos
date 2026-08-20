@@ -1,0 +1,25 @@
+name: Fluxa domain checks
+
+on:
+  push:
+    branches:
+      - fluxa-mvp-foundation
+    paths:
+      - 'fluxa/**'
+      - '.github/workflows/fluxa-domain.yml'
+  pull_request:
+    paths:
+      - 'fluxa/**'
+      - '.github/workflows/fluxa-domain.yml'
+  workflow_dispatch:
+
+jobs:
+  domain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run domain regression tests
+        run: node fluxa/domain.test.mjs
