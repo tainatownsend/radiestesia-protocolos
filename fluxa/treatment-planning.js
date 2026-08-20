@@ -20,16 +20,8 @@ function addDuration(startIso, value, unit) {
   const numeric = Number(value);
   if (!startIso || !numeric || numeric <= 0 || !unit) return null;
   const date = new Date(startIso);
-  const multipliers = {
-    MINUTE: 60 * 1000,
-    HOUR: 60 * 60 * 1000,
-    DAY: 24 * 60 * 60 * 1000,
-    WEEK: 7 * 24 * 60 * 60 * 1000
-  };
-  if (unit === 'MONTH') {
-    date.setMonth(date.getMonth() + numeric);
-    return date.toISOString();
-  }
+  const multipliers = { MINUTE:60*1000, HOUR:60*60*1000, DAY:24*60*60*1000, WEEK:7*24*60*60*1000 };
+  if (unit === 'MONTH') { date.setMonth(date.getMonth() + numeric); return date.toISOString(); }
   const multiplier = multipliers[unit];
   return multiplier ? new Date(date.getTime() + numeric * multiplier).toISOString() : null;
 }
@@ -41,25 +33,24 @@ function normalizePlannedComponent(store, treatmentId, input = {}) {
   const tool = input.toolId ? (store.getState().tools || []).find((item) => item.id === input.toolId && !item.archivedAt) : null;
   if (input.toolId && !tool) throw new Error('O recurso selecionado da Biblioteca não está disponível.');
   return {
-    id: store.makeId('cmp'),
-    treatmentId,
+    id: store.makeId('cmp'), treatmentId,
     toolId: tool?.id || null,
     toolSnapshot: tool ? { id:tool.id, type:tool.type, name:tool.name } : null,
-    type: input.type || 'TOOL',
-    name,
-    instructions: input.instructions?.trim() || null,
-    status: TreatmentStatus.PLANNED,
-    startedAt: null,
+    type: input.type || 'TOOL', name, instructions: input.instructions?.trim() || null,
+    status: TreatmentStatus.PLANNED, startedAt: null,
     durationValue: Number(input.durationValue) > 0 ? Number(input.durationValue) : null,
     durationUnit: Number(input.durationValue) > 0 ? (input.durationUnit || null) : null,
-    expectedEndAt: null,
-    completedAt: null,
-    interruptedAt: null,
-    stoppedAt: null,
-    replacedByComponentId: null,
-    createdAt: now,
-    updatedAt: now
+    expectedEndAt: null, completedAt: null, interruptedAt: null, stoppedAt: null, replacedByComponentId: null,
+    createdAt: now, updatedAt: now
   };
+}
+
+function recordPlannedComponentEvent(store, draft, component, assistedEntityId) {
+  addEvent(store, draft, {
+    eventType: 'COMPONENT_PLANNED', entityType: 'TreatmentComponent', entityId: component.id,
+    assistedEntityId,
+    metadata: { treatmentId: component.treatmentId, name: component.name, toolId: component.toolId, toolName: component.toolSnapshot?.name || null }
+  });
 }
 
 export function createPlannedTreatment(store, input) {
@@ -68,25 +59,12 @@ export function createPlannedTreatment(store, input) {
   if (!assisted) throw new Error('Selecione um assistido válido.');
   const title = input.title?.trim();
   if (!title) throw new Error('Informe o objetivo ou nome do tratamento.');
-  if (!Array.isArray(input.components) || input.components.length === 0) {
-    throw new Error('Adicione pelo menos um componente ao tratamento planejado.');
-  }
+  if (!Array.isArray(input.components) || input.components.length === 0) throw new Error('Adicione pelo menos um componente ao tratamento planejado.');
   const now = store.nowIso();
   const treatment = {
-    id: store.makeId('trt'),
-    assistedEntityId: assisted.id,
-    originSessionId: null,
-    findingIds: [],
-    title,
-    status: TreatmentStatus.PLANNED,
-    planningNotes: input.notes?.trim() || null,
-    plannedAt: now,
-    startedAt: null,
-    completedAt: null,
-    interruptedAt: null,
-    resumedAt: null,
-    createdAt: now,
-    updatedAt: now
+    id: store.makeId('trt'), assistedEntityId: assisted.id, originSessionId: null, findingIds: [], title,
+    status: TreatmentStatus.PLANNED, planningNotes: input.notes?.trim() || null, plannedAt: now,
+    startedAt: null, completedAt: null, interruptedAt: null, resumedAt: null, createdAt: now, updatedAt: now
   };
   const components = input.components.map((component) => normalizePlannedComponent(store, treatment.id, component));
 
@@ -95,24 +73,31 @@ export function createPlannedTreatment(store, input) {
     draft.treatments.push(treatment);
     draft.treatmentComponents.push(...components);
     addEvent(store, draft, {
-      eventType: EventType.TREATMENT_CREATED,
-      entityType: 'Treatment',
-      entityId: treatment.id,
-      assistedEntityId: assisted.id,
-      metadata: { title: treatment.title, planned: true, componentCount: components.length }
+      eventType: EventType.TREATMENT_CREATED, entityType: 'Treatment', entityId: treatment.id,
+      assistedEntityId: assisted.id, metadata: { title: treatment.title, planned: true, componentCount: components.length }
     });
-    for (const component of components) {
-      addEvent(store, draft, {
-        eventType: 'COMPONENT_PLANNED',
-        entityType: 'TreatmentComponent',
-        entityId: component.id,
-        assistedEntityId: assisted.id,
-        metadata: { treatmentId: treatment.id, name: component.name, toolId: component.toolId, toolName: component.toolSnapshot?.name || null }
-      });
-    }
+    for (const component of components) recordPlannedComponentEvent(store, draft, component, assisted.id);
     return draft;
   });
   return treatment;
+}
+
+export function addPlannedTreatmentComponent(store, treatmentId, input) {
+  const state = store.getState();
+  const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.PLANNED);
+  if (!treatment) throw new Error('Tratamento planejado não encontrado.');
+  const assisted = state.assistedEntities.find((item) => item.id === treatment.assistedEntityId && !item.archivedAt);
+  if (!assisted) throw new Error('O assistido deste tratamento não está disponível.');
+  const component = normalizePlannedComponent(store, treatment.id, input);
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    draft.treatmentComponents.push(component);
+    const target = draft.treatments.find((item) => item.id === treatmentId);
+    target.updatedAt = store.nowIso();
+    recordPlannedComponentEvent(store, draft, component, treatment.assistedEntityId);
+    return draft;
+  });
+  return component;
 }
 
 export function startPlannedTreatment(store, treatmentId, sessionId) {
@@ -145,21 +130,15 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
       component.expectedEndAt = addDuration(now, component.durationValue, component.durationUnit);
       component.updatedAt = now;
       addEvent(store, draft, {
-        eventType: EventType.COMPONENT_STARTED,
-        entityType: 'TreatmentComponent',
-        entityId: component.id,
-        sessionId,
-        assistedEntityId: target.assistedEntityId,
+        eventType: EventType.COMPONENT_STARTED, entityType: 'TreatmentComponent', entityId: component.id,
+        sessionId, assistedEntityId: target.assistedEntityId,
         metadata: { treatmentId: target.id, name: component.name, expectedEndAt: component.expectedEndAt, toolId: component.toolId, toolName: component.toolSnapshot?.name || null, fromPlanned: true }
       });
     }
 
     addEvent(store, draft, {
-      eventType: EventType.TREATMENT_STARTED,
-      entityType: 'Treatment',
-      entityId: target.id,
-      sessionId,
-      assistedEntityId: target.assistedEntityId,
+      eventType: EventType.TREATMENT_STARTED, entityType: 'Treatment', entityId: target.id,
+      sessionId, assistedEntityId: target.assistedEntityId,
       metadata: { title: target.title, fromPlanned: true, componentCount: components.length }
     });
     return draft;
