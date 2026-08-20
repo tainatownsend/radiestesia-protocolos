@@ -11,9 +11,15 @@ const STEPS = [
   { id:'REIKI', label:'Reiki', hint:'Abrir aplicação / timer' },
   { id:'NOTE', label:'Anotar', hint:'Adicionar registro rápido' }
 ];
+const VALID_STEPS=new Set(STEPS.map((step)=>step.id));
 
 function esc(value='') { return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c])); }
-function templates(state=store.getState()) { return Array.isArray(state.settings?.sessionTemplates) ? state.settings.sessionTemplates : []; }
+function templates(state=store.getState()) {
+  const raw=Array.isArray(state.settings?.sessionTemplates)?state.settings.sessionTemplates:[];
+  return raw.filter((item)=>item&&typeof item==='object'&&item.id&&String(item.name||'').trim()&&Array.isArray(item.steps))
+    .map((item)=>({...item,name:String(item.name).trim(),steps:item.steps.filter((step)=>VALID_STEPS.has(step))}))
+    .filter((item)=>item.steps.length);
+}
 function stepById(id) { return STEPS.find((step)=>step.id===id); }
 function close(id) { document.querySelector(id)?.remove(); }
 function overlay(id,html) { close(`#${id}`);const wrap=document.createElement('div');wrap.id=id;wrap.className='modal-backdrop';wrap.innerHTML=html;document.body.appendChild(wrap); }
@@ -44,7 +50,7 @@ function editor(existing=null) {
 
 function chooser() {
   const state=store.getState();const items=templates(state);const session=getOpenSession(state);
-  if(!session||latestPreparation(state,session.id)?.status!=='COMPLETED')return;
+  if(!session||latestPreparation(state,session.id)?.status!=='COMPLETED'||!items.length)return;
   overlay('session-template-picker-overlay',`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Atalhos da sessão</p><h2>Escolha um roteiro</h2></div><button class="close-btn" data-session-template-close>×</button></div><p class="muted">Cada etapa continua sendo iniciada e confirmada por você.</p><div class="stack">${items.map((item)=>`<article class="card"><h3>${esc(item.name)}</h3><p class="muted">${item.steps.map((id)=>stepById(id)?.label).filter(Boolean).map(esc).join(' → ')}</p><button class="btn primary wide" data-use-session-template="${item.id}">Usar este roteiro</button></article>`).join('')}</div></section>`);
 }
 
@@ -54,16 +60,16 @@ function runner(templateId) {
 }
 
 function saveTemplate(form) {
-  const data=new FormData(form);const name=String(data.get('name')||'').trim();const steps=data.getAll('step');
+  const data=new FormData(form);const name=String(data.get('name')||'').trim();const steps=data.getAll('step').filter((step)=>VALID_STEPS.has(step));
   if(!name)throw new Error('Informe o nome do roteiro.');
   if(!steps.length)throw new Error('Escolha pelo menos um atalho para o roteiro.');
   const id=form.dataset.template||store.makeId('session_template');const now=store.nowIso();
-  store.setState((state)=>{const draft=structuredClone(state);draft.settings={...(draft.settings||{})};const list=Array.isArray(draft.settings.sessionTemplates)?draft.settings.sessionTemplates:[];const existing=list.find((item)=>item.id===id);if(existing){existing.name=name;existing.steps=steps;existing.updatedAt=now;}else list.push({id,name,steps,createdAt:now,updatedAt:now});draft.settings.sessionTemplates=list;return draft;});
+  store.setState((state)=>{const draft=structuredClone(state);draft.settings={...(draft.settings||{})};const list=Array.isArray(draft.settings.sessionTemplates)?draft.settings.sessionTemplates:[];const existing=list.find((item)=>item?.id===id);if(existing){existing.name=name;existing.steps=steps;existing.updatedAt=now;}else list.push({id,name,steps,createdAt:now,updatedAt:now});draft.settings.sessionTemplates=list;return draft;});
   close('#session-template-editor-overlay');
 }
 
 function deleteTemplate(id) {
-  store.setState((state)=>{const draft=structuredClone(state);draft.settings={...(draft.settings||{})};draft.settings.sessionTemplates=(draft.settings.sessionTemplates||[]).filter((item)=>item.id!==id);return draft;});
+  store.setState((state)=>{const draft=structuredClone(state);draft.settings={...(draft.settings||{})};draft.settings.sessionTemplates=(Array.isArray(draft.settings.sessionTemplates)?draft.settings.sessionTemplates:[]).filter((item)=>item?.id!==id);return draft;});
 }
 
 function launchStep(step) {
@@ -84,7 +90,7 @@ new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true
 document.addEventListener('click',(event)=>{
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.newSessionTemplate!==undefined){editor();return;}
-  if(button.dataset.editSessionTemplate){editor(templates().find((item)=>item.id===button.dataset.editSessionTemplate));return;}
+  if(button.dataset.editSessionTemplate){const item=templates().find((entry)=>entry.id===button.dataset.editSessionTemplate);if(item)editor(item);return;}
   if(button.dataset.deleteSessionTemplate){if(confirm('Excluir este roteiro de sessão?'))deleteTemplate(button.dataset.deleteSessionTemplate);return;}
   if(button.dataset.openSessionTemplates!==undefined){chooser();return;}
   if(button.dataset.useSessionTemplate){runner(button.dataset.useSessionTemplate);return;}
