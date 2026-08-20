@@ -10,8 +10,9 @@ function fakeStore() {
   return { getState:()=>state, setState(updater){ state = typeof updater === 'function' ? updater(state) : updater; return state; }, makeId(prefix='id'){ return `${prefix}_${++seq}`; }, nowIso(){ return new Date(now).toISOString(); }, advance(ms){ now += ms; } };
 }
 
-assert.ok(PROTOCOL_LIBRARY.length >= 3);
+assert.ok(PROTOCOL_LIBRARY.length >= 4);
 assert.ok(PROTOCOL_LIBRARY.some((p) => p.id === 'investigacao_completa'));
+assert.ok(PROTOCOL_LIBRARY.some((p) => p.id === 'protocolo_especifico'));
 assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LIBRARY.length);
 
 {
@@ -59,6 +60,20 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   assert.equal(completed.status, 'COMPLETED');
   assert.equal(completed.protocolVersionId, 'investigacao_completa_v1');
   assert.equal(currentProtocolNode(completed).type, 'END');
+}
+
+{
+  const store = fakeStore();
+  const session = startSession(store);
+  const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Específico', birthDate:'1991-01-01' });
+  const inv = startBranchingInvestigation(store, session.id, assisted.id, 'protocolo_especifico');
+  answerBranchingInvestigation(store, inv.id, 'YES');
+  answerBranchingInvestigation(store, inv.id, 'YES');
+  answerBranchingInvestigation(store, inv.id, 'NO');
+  const completed = store.getState().investigations.find((item) => item.id === inv.id);
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(completed.protocolVersionId, 'protocolo_especifico_v1');
+  assert.equal(completed.endNodeId, 'end_without_finding');
 }
 
 {
