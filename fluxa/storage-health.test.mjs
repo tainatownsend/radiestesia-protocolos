@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { inspectStorageHealth, recoverLocalData } from './storage-health.js';
+import { inspectStorageHealth, recoverLocalData, importLocalDataText } from './storage-health.js';
 
 class MemoryStorage {
   constructor() { this.map = new Map(); }
@@ -24,6 +24,19 @@ globalThis.localStorage = new MemoryStorage();
   assert.equal(health.canRecover, true);
   recoverLocalData();
   assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1')).sessions[0].id, 's1');
+}
+
+{
+  localStorage.setItem('fluxa.mvp.v1', JSON.stringify({ sessions:[{ id:'old' }], assistedEntities:[], events:[], treatments:[] }));
+  const imported = JSON.stringify({ sessions:[{ id:'new' }], assistedEntities:[{ id:'a1' }], events:[], treatments:[] });
+  importLocalDataText(imported);
+  assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1')).sessions[0].id, 'new');
+  assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1.backup')).sessions[0].id, 'old');
+  assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1.recovery')).assistedEntities[0].id, 'a1');
+}
+
+{
+  assert.throws(() => importLocalDataText(JSON.stringify({ hello:'world' })), /não parece ser uma cópia válida/i);
 }
 
 console.log('storage-health.test.mjs: ok');
