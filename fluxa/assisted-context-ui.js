@@ -4,6 +4,7 @@ import { getOpenSession, selectAssistedForSession } from './domain.js';
 const store = createStore();
 let pendingAction = null;
 let bypassSignature = null;
+let waitingForNewAssisted = false;
 let enhancing = false;
 
 const GUARDED_ACTIONS = new Set([
@@ -51,9 +52,9 @@ function closeGuard() {
 }
 
 function openNewAssisted() {
+  waitingForNewAssisted = Boolean(pendingAction && getOpenSession(store.getState()));
   closeGuard();
-  const assistedRoute = document.querySelector('[data-route="assisted"]');
-  assistedRoute?.click();
+  document.querySelector('[data-route="assisted"]')?.click();
   queueMicrotask(() => {
     document.querySelectorAll('body > .modal-backdrop').forEach((overlay) => overlay.remove());
     document.querySelector('[data-action="new-assisted"]')?.click();
@@ -77,17 +78,23 @@ function guardDialog(signature) {
   document.body.appendChild(wrap);
 }
 
-function replayPending() {
+function replayPending(attempt = 0) {
   const signature = pendingAction;
   if (!signature) return;
-  pendingAction = null;
   closeGuard();
   bypassSignature = signatureKey(signature);
-  queueMicrotask(() => {
-    const button = findButton(signature);
-    if (button) button.click();
-    else bypassSignature = null;
-  });
+  const button = findButton(signature);
+  if (button) {
+    pendingAction = null;
+    button.click();
+    return;
+  }
+  if (attempt < 3) {
+    requestAnimationFrame(() => replayPending(attempt + 1));
+  } else {
+    bypassSignature = null;
+    pendingAction = null;
+  }
 }
 
 function ensureGuardedButtonsClickable() {
@@ -98,7 +105,6 @@ function ensureGuardedButtonsClickable() {
     if (!GUARDED_ACTIONS.has(button.dataset.action)) return;
     button.disabled = false;
     button.removeAttribute('disabled');
-    button.setAttribute('aria-describedby', '');
   });
 }
 
@@ -138,6 +144,17 @@ function enhance() {
 new MutationObserver(enhance).observe(document.body, { childList:true, subtree:true });
 queueMicrotask(enhance);
 
+store.subscribe(() => {
+  if (!waitingForNewAssisted || !pendingAction) return;
+  const session = getOpenSession(store.getState());
+  if (!session?.currentAssistedEntityId) return;
+  waitingForNewAssisted = false;
+  queueMicrotask(() => {
+    document.querySelector('[data-route="today"]')?.click();
+    requestAnimationFrame(() => replayPending());
+  });
+});
+
 // Capture before the individual feature modules so every activity gets the same assisted-context rule.
 document.addEventListener('click', (event) => {
   const button = event.target.closest('button');
@@ -147,6 +164,7 @@ document.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopImmediatePropagation();
     pendingAction = null;
+    waitingForNewAssisted = false;
     closeGuard();
     return;
   }
@@ -187,7 +205,6 @@ document.addEventListener('click', (event) => {
 
   const state = store.getState();
   const session = getOpenSession(state);
-  // Activities that already have a session context must never proceed without an assisted entity.
   if (session && !session.currentAssistedEntityId) {
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -201,8 +218,7 @@ document.addEventListener('submit', (event) => {
   const form = event.target;
   const select = form.querySelector?.('select[name="assistedEntityId"]');
   if (!select) return;
-  const state = store.getState();
-  const items = activeAssisted(state);
+  const items = activeAssisted(store.getState());
   if (!items.length || !select.value) {
     event.preventDefault();
     event.stopImmediatePropagation();
