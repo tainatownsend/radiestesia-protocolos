@@ -30,4 +30,6 @@ jobs:
           node fluxa/activity-library.test.mjs
           node fluxa/treatment-planning.test.mjs
           node fluxa/administrative-treatment.test.mjs
+          node fluxa/reiki-flex.test.mjs
+          node fluxa/follow-up-treatment.test.mjs
           node fluxa/static-smoke.test.mjs
