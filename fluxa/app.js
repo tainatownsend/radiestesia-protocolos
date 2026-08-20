@@ -11,7 +11,9 @@ import {
 
 const store = createStore();
 const root = document.querySelector('#app');
-let route = 'today';
+const validRoutes = new Set(['today', 'treatments', 'assisted', 'library']);
+const persistedRoute = sessionStorage.getItem('fluxa.activeRoute');
+let route = validRoutes.has(persistedRoute) ? persistedRoute : 'today';
 let sheet = null;
 let saveMessage = '';
 let timerTick = null;
@@ -21,7 +23,7 @@ const treatmentLabels = { PLANNED:'Planejado', IN_PROGRESS:'Em andamento', COMPL
 const durationLabels = { MINUTE:'minuto(s)', HOUR:'hora(s)', DAY:'dia(s)', WEEK:'semana(s)', MONTH:'mês(es)' };
 
 function esc(value = '') {
-  return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
+  return String(value).replace(/[&<>'\"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '\"':'&quot;' }[c]));
 }
 function formatTime(iso) { return iso ? new Intl.DateTimeFormat('pt-BR', { hour:'2-digit', minute:'2-digit' }).format(new Date(iso)) : ''; }
 function formatDate(iso) { return iso ? new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric' }).format(new Date(iso)) : ''; }
@@ -244,6 +246,7 @@ function renderSheet(state) {
 }
 
 function render() {
+  sessionStorage.setItem('fluxa.activeRoute', route);
   const state = store.getState();
   if (timerTick) { clearInterval(timerTick); timerTick = null; }
   const views = { today: todayView, treatments: treatmentsView, assisted: assistedView, library: libraryView };
