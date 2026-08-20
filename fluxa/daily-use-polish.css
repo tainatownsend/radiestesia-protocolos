@@ -80,6 +80,25 @@
   background: var(--border);
 }
 
+.offline-banner {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 100;
+  max-width: calc(100% - 24px);
+  padding: 8px 12px;
+  transform: translateX(-50%);
+  border: 1px solid color-mix(in srgb,var(--secondary) 42%,transparent);
+  border-radius: 999px;
+  background: var(--primary-strong);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(16,47,53,.22);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .fluxa-keyboard-open .bottom-nav {
   opacity: 0;
   pointer-events: none;
@@ -101,6 +120,7 @@
   .assisted-row:has(.assisted-favorite-toggle) { grid-template-columns: 42px minmax(0,1fr); }
   .assisted-row:has(.assisted-favorite-toggle) > .btn:not(.assisted-favorite-toggle) { grid-column: 1 / -1; width: 100%; }
   .fluxa-keyboard-open .sheet { border-radius: 20px 20px 0 0; }
+  .offline-banner { top: max(6px, env(safe-area-inset-top)); font-size: 11px; }
 }
 
 @media (min-width:700px) {
