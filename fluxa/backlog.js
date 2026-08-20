@@ -206,7 +206,10 @@ export function validateAssistedInput(input) {
   if (!name) throw new Error('Nome ou identificação é obrigatório.');
   if (type === 'PERSON' && !input.birthDate) throw new Error('Data de nascimento é obrigatória para pessoa.');
   if (type === 'ENVIRONMENT' && !input.address?.trim()) throw new Error('Endereço completo é obrigatório para ambiente/propriedade.');
-  if (type === 'SITUATION' && !input.identifier?.trim()) throw new Error('Número/identificação do processo é obrigatório.');
+  if (type === 'SITUATION') {
+    if (!input.identifier?.trim()) throw new Error('Número/identificação do processo é obrigatório.');
+    if (!input.relatedPerson?.trim()) throw new Error('Pessoa envolvida/solicitante é obrigatória para situação/processo.');
+  }
   if (type === 'GROUP') {
     const members = Array.isArray(input.members) ? input.members : [];
     if (!members.length) throw new Error('Adicione pelo menos uma pessoa ao grupo.');
