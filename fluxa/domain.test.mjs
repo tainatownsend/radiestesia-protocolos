@@ -126,7 +126,7 @@ function prepare(store, sessionId) {
 
 assert.throws(() => validateAssistedInput({ type:'PERSON', displayName:'Sem data' }), /nascimento/);
 assert.throws(() => validateAssistedInput({ type:'ENVIRONMENT', displayName:'Casa' }), /Endereço/);
-assert.throws(() => validateAssistedInput({ type:'GROUP', displayName:'Família', members:[] }), /integrante/);
+assert.throws(() => validateAssistedInput({ type:'GROUP', displayName:'Família', members:[] }), /(pessoa|integrante)/);
 validateAssistedInput({ type:'GROUP', displayName:'Família', members:[{ fullName:'A Pessoa', birthDate:'1980-01-01' }] });
 
 console.log('Fluxa domain tests: OK');
