@@ -2,6 +2,8 @@ const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
 const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
 const storeInstances = new Set();
+const crossTabSubscribers = new Set();
+let storageListenerInstalled = false;
 
 function nowIso() {
   return new Date().toISOString();
@@ -66,6 +68,17 @@ function parseCandidate(raw) {
   try { return normalize(JSON.parse(raw)); } catch (_) { return null; }
 }
 
+function ensureStorageListener() {
+  if (storageListenerInstalled || typeof globalThis.addEventListener !== 'function') return;
+  storageListenerInstalled = true;
+  globalThis.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY || !event.newValue) return;
+    const next = parseCandidate(event.newValue);
+    if (!next) return;
+    crossTabSubscribers.forEach((subscriber) => subscriber(next));
+  });
+}
+
 export function loadState() {
   const primary = parseCandidate(localStorage.getItem(STORAGE_KEY));
   if (primary) return primary;
@@ -109,6 +122,8 @@ export function createStore() {
   }
 
   storeInstances.add(syncFromPeer);
+  crossTabSubscribers.add(syncFromPeer);
+  ensureStorageListener();
 
   return {
     getState() {
