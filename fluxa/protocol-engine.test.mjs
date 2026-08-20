@@ -10,7 +10,8 @@ function fakeStore() {
   return { getState:()=>state, setState(updater){ state = typeof updater === 'function' ? updater(state) : updater; return state; }, makeId(prefix='id'){ return `${prefix}_${++seq}`; }, nowIso(){ return new Date(now).toISOString(); }, advance(ms){ now += ms; } };
 }
 
-assert.ok(PROTOCOL_LIBRARY.length >= 2);
+assert.ok(PROTOCOL_LIBRARY.length >= 3);
+assert.ok(PROTOCOL_LIBRARY.some((p) => p.id === 'investigacao_completa'));
 assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LIBRARY.length);
 
 {
@@ -43,6 +44,21 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   assert.equal(completed.status, 'COMPLETED');
   assert.equal(completed.endNodeId, 'end_clear');
   assert.equal(completed.answers.length, 1);
+}
+
+{
+  const store = fakeStore();
+  const session = startSession(store);
+  const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Completa', birthDate:'1992-02-02' });
+  const inv = startBranchingInvestigation(store, session.id, assisted.id, 'investigacao_completa');
+  for (const answer of ['YES','YES','YES','YES','NO','NO']) {
+    answerBranchingInvestigation(store, inv.id, answer);
+    if (store.getState().investigations.find((i)=>i.id===inv.id).status === 'COMPLETED') break;
+  }
+  const completed = store.getState().investigations.find((item) => item.id === inv.id);
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(completed.protocolVersionId, 'investigacao_completa_v1');
+  assert.equal(currentProtocolNode(completed).type, 'END');
 }
 
 {
