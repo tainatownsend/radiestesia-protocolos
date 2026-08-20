@@ -17,7 +17,7 @@ function emptyState() {
     meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
     sessions: [], assistedEntities: [], events: [], preparationRuns: [], closingRuns: [],
     investigations: [], findings: [], treatments: [], treatmentComponents: [], componentReviews: [],
-    treatmentReviews: [], assessments: [], reikiApplications: [], tools: []
+    treatmentReviews: [], assessments: [], reikiApplications: [], tools: [], customProtocols: [], settings: {}
   };
 }
 
@@ -31,12 +31,12 @@ function hasFluxaShape(value) {
 function normalize(parsed) {
   const base = emptyState();
   return {
-    ...base, ...parsed, version: 5, meta: { ...base.meta, ...(parsed?.meta || {}) },
+    ...base, ...parsed, version: 5, meta: { ...base.meta, ...(parsed?.meta || {}) }, settings: { ...base.settings, ...(parsed?.settings || {}) },
     sessions:list(parsed?.sessions), assistedEntities:list(parsed?.assistedEntities), events:list(parsed?.events),
     preparationRuns:list(parsed?.preparationRuns), closingRuns:list(parsed?.closingRuns), investigations:list(parsed?.investigations),
     findings:list(parsed?.findings), treatments:list(parsed?.treatments), treatmentComponents:list(parsed?.treatmentComponents),
     componentReviews:list(parsed?.componentReviews), treatmentReviews:list(parsed?.treatmentReviews), assessments:list(parsed?.assessments),
-    reikiApplications:list(parsed?.reikiApplications), tools:list(parsed?.tools)
+    reikiApplications:list(parsed?.reikiApplications), tools:list(parsed?.tools), customProtocols:list(parsed?.customProtocols)
   };
 }
 
