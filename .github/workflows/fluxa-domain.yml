@@ -29,4 +29,5 @@ jobs:
           node fluxa/storage-health.test.mjs
           node fluxa/activity-library.test.mjs
           node fluxa/treatment-planning.test.mjs
+          node fluxa/administrative-treatment.test.mjs
           node fluxa/static-smoke.test.mjs
