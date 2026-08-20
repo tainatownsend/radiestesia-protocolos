@@ -31,6 +31,16 @@
 .repeat-component-box span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; }
 .repeat-component-box strong { margin-top: 2px; color: var(--primary-strong); font-size: 12px; }
 
+.continuity-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 84px;
+}
+.continuity-card p { margin: 4px 0 0; }
+.continuity-card .btn { flex: 0 0 auto; }
+
 .library-card-favorite,
 .assisted-favorite-toggle {
   flex: 0 0 42px;
@@ -117,6 +127,8 @@
 @media (max-width:560px) {
   .repeat-component-box { align-items: stretch; flex-direction: column; }
   .repeat-component-box .btn { width: 100%; }
+  .continuity-card { align-items: stretch; flex-direction: column; }
+  .continuity-card .btn { width: 100%; }
   .assisted-row:has(.assisted-favorite-toggle) { grid-template-columns: 42px minmax(0,1fr); }
   .assisted-row:has(.assisted-favorite-toggle) > .btn:not(.assisted-favorite-toggle) { grid-column: 1 / -1; width: 100%; }
   .fluxa-keyboard-open .sheet { border-radius: 20px 20px 0 0; }
