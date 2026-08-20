@@ -12,18 +12,24 @@ function makeId(prefix = 'id') {
 
 function emptyState() {
   return {
-    version: 1,
+    version: 2,
     meta: { createdAt: nowIso(), updatedAt: nowIso() },
     sessions: [],
     assistedEntities: [],
     events: [],
     preparationRuns: [],
+    closingRuns: [],
     investigations: [],
     findings: [],
     treatments: [],
     treatmentComponents: [],
+    treatmentReviews: [],
     reikiApplications: []
   };
+}
+
+function list(value) {
+  return Array.isArray(value) ? value : [];
 }
 
 function normalize(parsed) {
@@ -31,16 +37,19 @@ function normalize(parsed) {
   return {
     ...base,
     ...parsed,
+    version: 2,
     meta: { ...base.meta, ...(parsed?.meta || {}) },
-    sessions: Array.isArray(parsed?.sessions) ? parsed.sessions : [],
-    assistedEntities: Array.isArray(parsed?.assistedEntities) ? parsed.assistedEntities : [],
-    events: Array.isArray(parsed?.events) ? parsed.events : [],
-    preparationRuns: Array.isArray(parsed?.preparationRuns) ? parsed.preparationRuns : [],
-    investigations: Array.isArray(parsed?.investigations) ? parsed.investigations : [],
-    findings: Array.isArray(parsed?.findings) ? parsed.findings : [],
-    treatments: Array.isArray(parsed?.treatments) ? parsed.treatments : [],
-    treatmentComponents: Array.isArray(parsed?.treatmentComponents) ? parsed.treatmentComponents : [],
-    reikiApplications: Array.isArray(parsed?.reikiApplications) ? parsed.reikiApplications : []
+    sessions: list(parsed?.sessions),
+    assistedEntities: list(parsed?.assistedEntities),
+    events: list(parsed?.events),
+    preparationRuns: list(parsed?.preparationRuns),
+    closingRuns: list(parsed?.closingRuns),
+    investigations: list(parsed?.investigations),
+    findings: list(parsed?.findings),
+    treatments: list(parsed?.treatments),
+    treatmentComponents: list(parsed?.treatmentComponents),
+    treatmentReviews: list(parsed?.treatmentReviews),
+    reikiApplications: list(parsed?.reikiApplications)
   };
 }
 
