@@ -33,6 +33,8 @@ assert.equal(nextComponents[0].status,TreatmentStatus.PLANNED);
 assert.equal(nextComponents[0].name,'Novo gráfico');
 assert.equal(store.getState().treatments.find((t)=>t.id==='trt_old').status,TreatmentStatus.COMPLETED);
 assert.equal(canPlanFollowUpTreatment(store.getState(),'trt_old'),false);
-assert.throws(()=>createFollowUpTreatment(store,'trt_old',{components:[{name:'Outro'}]}),/Já existe/);
+assert.throws(()=>createFollowUpTreatment(store,'trt_old',{components:[{name:'Outro'}]}),/já originou/i);
+store.setState((state)=>{const draft=structuredClone(state);draft.treatments.find((item)=>item.id===next.id).status=TreatmentStatus.COMPLETED;return draft;});
+assert.equal(canPlanFollowUpTreatment(store.getState(),'trt_old'),false,'the same assessment cannot branch into another later cycle');
 
 console.log('follow-up-treatment.test.mjs: ok');
