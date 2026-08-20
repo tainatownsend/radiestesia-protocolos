@@ -1,5 +1,5 @@
 import { createStore } from './store.js';
-import { parseLibraryBulkText, prepareLibraryBulkImport, importLibraryItems } from './bulk-library.js';
+import { parseLibraryBulkText, prepareLibraryBulkImport, importLibraryItems, libraryItemsToCsv } from './bulk-library.js';
 
 const store=createStore();
 let preview=null;
@@ -9,7 +9,6 @@ const typeLabel={GRAPH:'Gráfico',BIOMETER:'Biômetro',OTHER:'Outro recurso'};
 function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
 function close(){document.querySelector('#bulk-library-overlay')?.remove();preview=null;}
 function overlay(html){close();const wrap=document.createElement('div');wrap.id='bulk-library-overlay';wrap.className='modal-backdrop';wrap.innerHTML=html;document.body.appendChild(wrap);}
-function csvCell(value=''){const text=String(value??'');return /[",\n\r;]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
 function downloadBlob(text,type,name){const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}
 
 function ensureAction(){
@@ -42,11 +41,10 @@ function downloadTemplate(){
 }
 
 function exportLibrary(){
-  const tools=(store.getState().tools||[]).filter((tool)=>!tool.archivedAt).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  const tools=(store.getState().tools||[]).filter((tool)=>!tool.archivedAt);
   if(!tools.length){alert('A Biblioteca ainda não possui recursos ativos para exportar.');return;}
-  const rows=['Nome,Tipo,Finalidade,Observações',...tools.map((tool)=>[tool.name,typeLabel[tool.type]||'Outro recurso',tool.purpose||'',tool.notes||''].map(csvCell).join(','))];
   const date=new Date().toISOString().slice(0,10);
-  downloadBlob(`\uFEFF${rows.join('\n')}\n`,'text/csv;charset=utf-8',`fluxa-biblioteca-${date}.csv`);
+  downloadBlob(libraryItemsToCsv(tools),'text/csv;charset=utf-8',`fluxa-biblioteca-${date}.csv`);
 }
 
 function previewDialog(fileName, parsed, prepared){
