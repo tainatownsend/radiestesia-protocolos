@@ -17,6 +17,20 @@
   letter-spacing: .07em;
 }
 
+.repeat-component-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb,var(--secondary) 32%,var(--border));
+  border-radius: 13px;
+  background: color-mix(in srgb,var(--surface-2) 72%,var(--surface));
+}
+.repeat-component-box span,.repeat-component-box strong { display: block; }
+.repeat-component-box span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; }
+.repeat-component-box strong { margin-top: 2px; color: var(--primary-strong); font-size: 12px; }
+
 .bulk-source-grid {
   display: grid;
   gap: 12px;
@@ -42,6 +56,11 @@
   height: 1px;
   flex: 1;
   background: var(--border);
+}
+
+@media (max-width:560px) {
+  .repeat-component-box { align-items: stretch; flex-direction: column; }
+  .repeat-component-box .btn { width: 100%; }
 }
 
 @media (min-width:700px) {
