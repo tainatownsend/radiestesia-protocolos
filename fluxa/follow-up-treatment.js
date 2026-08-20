@@ -1,4 +1,5 @@
 import { TreatmentStatus } from './domain.js';
+import { createPlannedTreatment } from './treatment-planning.js';
 
 function addEvent(store, draft, input) {
   draft.events.push({
@@ -35,32 +36,23 @@ export function createFollowUpTreatment(store, treatmentId, input = {}) {
   const assessment = latestTreatmentAssessment(state, treatmentId);
   if (!assessment?.needsNewTreatment) throw new Error('A avaliação final não indicou um novo tratamento.');
   if (!canPlanFollowUpTreatment(state, treatmentId)) throw new Error('Já existe um próximo ciclo ativo ou planejado para este tratamento.');
+  if (!Array.isArray(input.components) || !input.components.length) throw new Error('Defina ao menos um componente para o próximo ciclo.');
 
-  const now = store.nowIso();
   const title = input.title?.trim() || `${previous.title} · próximo ciclo`;
-  const treatment = {
-    id: store.makeId('trt'),
+  const planned = createPlannedTreatment(store, {
     assistedEntityId: previous.assistedEntityId,
-    originSessionId: null,
-    previousTreatmentId: previous.id,
-    recommendedByAssessmentId: assessment.id,
-    findingIds: [],
     title,
-    status: TreatmentStatus.PLANNED,
-    planningNotes: input.notes?.trim() || assessment.nextTreatmentWhen || null,
-    plannedFor: input.plannedFor?.trim() || assessment.nextTreatmentWhen || null,
-    plannedAt: now,
-    startedAt: null,
-    completedAt: null,
-    interruptedAt: null,
-    resumedAt: null,
-    createdAt: now,
-    updatedAt: now
-  };
+    notes: input.notes?.trim() || assessment.nextTreatmentWhen || null,
+    components: input.components
+  });
 
   store.setState((current) => {
     const draft = structuredClone(current);
-    draft.treatments.push(treatment);
+    const treatment = draft.treatments.find((item) => item.id === planned.id);
+    treatment.previousTreatmentId = previous.id;
+    treatment.recommendedByAssessmentId = assessment.id;
+    treatment.plannedFor = input.plannedFor?.trim() || assessment.nextTreatmentWhen || null;
+    treatment.updatedAt = store.nowIso();
     addEvent(store, draft, {
       eventType: 'FOLLOW_UP_TREATMENT_PLANNED',
       entityType: 'Treatment',
@@ -70,10 +62,11 @@ export function createFollowUpTreatment(store, treatmentId, input = {}) {
         title: treatment.title,
         previousTreatmentId: previous.id,
         recommendedByAssessmentId: assessment.id,
-        plannedFor: treatment.plannedFor
+        plannedFor: treatment.plannedFor,
+        componentCount: input.components.length
       }
     });
     return draft;
   });
-  return treatment;
+  return store.getState().treatments.find((item) => item.id === planned.id);
 }
