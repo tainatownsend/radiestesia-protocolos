@@ -60,6 +60,7 @@
 }
 .assisted-picker-search { margin: 0 0 10px; }
 .assisted-row:has(.assisted-favorite-toggle) { display: grid; grid-template-columns: 42px minmax(0,1fr) auto; }
+.assisted-continuity { display:block; margin-top:3px; color:var(--muted); font-size:12px; line-height:1.35; }
 .favorite-filter-hidden { display: none !important; }
 .library-favorite-filter .btn.primary { background: var(--primary); color: #fff; }
 
