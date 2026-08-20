@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
-import { AssistedType, createAssistedEntity, selectAssistedForSession, startSession } from './domain.js';
+import { AssistedType, PREPARATION_STEPS, createAssistedEntity, selectAssistedForSession, startSession, startPreparation, togglePreparationStep, completePreparation } from './domain.js';
 import { ActivityLibraryEventType, ToolType, activeTools, archiveTool, createTool, updateTool, recordGeneralAssessment } from './activity-library.js';
 
 class MemoryStorage {
@@ -12,11 +12,21 @@ class MemoryStorage {
 
 globalThis.localStorage = new MemoryStorage();
 
+function prepare(store, sessionId) {
+  const run = startPreparation(store, sessionId);
+  for (const step of PREPARATION_STEPS) togglePreparationStep(store, run.id, step.key);
+  completePreparation(store, run.id);
+}
+
 {
   const store = createStore();
   const session = startSession(store);
   const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa teste', birthDate:'1990-01-01' });
   selectAssistedForSession(store, session.id, assisted.id);
+  assert.throws(() => recordGeneralAssessment(store, {
+    sessionId:session.id, assistedEntityId:assisted.id, subject:'Frequência vibracional', result:'8500'
+  }), /preparação/);
+  prepare(store, session.id);
   const assessment = recordGeneralAssessment(store, {
     sessionId: session.id,
     assistedEntityId: assisted.id,
