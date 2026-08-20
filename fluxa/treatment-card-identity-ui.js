@@ -33,3 +33,10 @@ function ensureIdentity(card){
 }
 function enhance(){if(enhancing)return;enhancing=true;try{document.querySelectorAll('.treatment-card').forEach(ensureIdentity);}finally{enhancing=false;}}
 new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
+
+// Capture before older document listeners so duplicate treatment titles can never open the wrong final assessment.
+window.addEventListener('click',(event)=>{
+  const button=event.target.closest?.('[data-final-cycle]');if(!button)return;
+  const card=button.closest('.treatment-card');const id=card?treatmentIdForCard(card):null;if(!id||button.dataset.finalCycle===id)return;
+  event.preventDefault();event.stopImmediatePropagation();button.dataset.finalCycle=id;queueMicrotask(()=>button.click());
+},true);
