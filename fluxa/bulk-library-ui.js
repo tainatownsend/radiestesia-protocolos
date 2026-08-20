@@ -9,6 +9,8 @@ const typeLabel={GRAPH:'Gráfico',BIOMETER:'Biômetro',OTHER:'Outro recurso'};
 function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
 function close(){document.querySelector('#bulk-library-overlay')?.remove();preview=null;}
 function overlay(html){close();const wrap=document.createElement('div');wrap.id='bulk-library-overlay';wrap.className='modal-backdrop';wrap.innerHTML=html;document.body.appendChild(wrap);}
+function csvCell(value=''){const text=String(value??'');return /[",\n\r;]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
+function downloadBlob(text,type,name){const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}
 
 function ensureAction(){
   const main=document.querySelector('main');if(!main||main.querySelector('[data-bulk-library-import]'))return;
@@ -17,7 +19,9 @@ function ensureAction(){
   const head=resourceHeading?.closest('.section-head');if(!head)return;
   const actions=head.querySelector('.button-row')||document.createElement('div');
   if(!actions.isConnected){actions.className='button-row';const existing=head.querySelector('button');if(existing){existing.remove();actions.appendChild(existing);}head.appendChild(actions);}
-  const button=document.createElement('button');button.className='btn secondary small';button.dataset.bulkLibraryImport='true';button.textContent='Importar em lote';actions.prepend(button);
+  const importButton=document.createElement('button');importButton.className='btn secondary small';importButton.dataset.bulkLibraryImport='true';importButton.textContent='Importar em lote';
+  const exportButton=document.createElement('button');exportButton.className='btn ghost small';exportButton.dataset.bulkLibraryExport='true';exportButton.textContent='Exportar CSV';
+  actions.prepend(exportButton);actions.prepend(importButton);
 }
 
 function templateDialog(){
@@ -34,7 +38,15 @@ function analyzeText(label,text){
 
 function downloadTemplate(){
   const csv='\uFEFFNome,Tipo,Finalidade,Observações\nDesimpregnador,Gráfico,Limpeza energética,Usar conforme protocolo\nEscala exemplo,Biômetro,Medição,\n';
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='fluxa-modelo-biblioteca.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
+  downloadBlob(csv,'text/csv;charset=utf-8','fluxa-modelo-biblioteca.csv');
+}
+
+function exportLibrary(){
+  const tools=(store.getState().tools||[]).filter((tool)=>!tool.archivedAt).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  if(!tools.length){alert('A Biblioteca ainda não possui recursos ativos para exportar.');return;}
+  const rows=['Nome,Tipo,Finalidade,Observações',...tools.map((tool)=>[tool.name,typeLabel[tool.type]||'Outro recurso',tool.purpose||'',tool.notes||''].map(csvCell).join(','))];
+  const date=new Date().toISOString().slice(0,10);
+  downloadBlob(`\uFEFF${rows.join('\n')}\n`,'text/csv;charset=utf-8',`fluxa-biblioteca-${date}.csv`);
 }
 
 function previewDialog(fileName, parsed, prepared){
@@ -58,6 +70,7 @@ new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true
 document.addEventListener('click',(event)=>{
   const button=event.target.closest('button,[data-bulk-library-import]');if(!button)return;
   if(button.dataset.bulkLibraryImport!==undefined){templateDialog();return;}
+  if(button.dataset.bulkLibraryExport!==undefined){exportLibrary();return;}
   if(button.dataset.bulkClose!==undefined){close();return;}
   if(button.dataset.bulkBack!==undefined){templateDialog();return;}
   if(button.dataset.bulkDownloadTemplate!==undefined){downloadTemplate();return;}
