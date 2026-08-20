@@ -39,7 +39,16 @@ assert.equal(manifest.theme_color, '#173F46');
 assert.equal(manifest.start_url, './');
 
 const serviceWorker = fs.readFileSync(new URL('./service-worker.js', root), 'utf8');
+assert.match(serviceWorker, /fluxa-runtime-v2/, 'Offline worker cache generation should match the complete-module precache implementation.');
+assert.match(serviceWorker, /moduleRefs\(/, 'Offline worker should discover static/dynamic local module dependencies.');
+assert.match(serviceWorker, /referencedUrls\(/, 'Offline worker should recursively inspect cached text assets.');
+assert.match(serviceWorker, /MAX_PRECACHE_ASSETS/, 'Offline recursive precache should remain bounded.');
 assert.match(serviceWorker, /fetch\(request\)/, 'Offline worker should try the network before cache fallback.');
 assert.match(serviceWorker, /caches\.match\(request\)/, 'Offline worker should use cached fallback when network fails.');
+
+const draftUi = fs.readFileSync(new URL('./form-draft-ui.js', root), 'utf8');
+assert.match(draftUi, /version:2/, 'Form drafts should preserve repeated fields using the contextual v2 format.');
+assert.match(draftUi, /MAX_AGE_MS/, 'Form drafts should expire rather than restoring stale work indefinitely.');
+assert.match(draftUi, /assistedContext\(/, 'Form drafts should be isolated by assisted context when relevant.');
 
 console.log('static-smoke.test.mjs: ok');
