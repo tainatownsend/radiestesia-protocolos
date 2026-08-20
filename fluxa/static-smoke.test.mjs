@@ -14,6 +14,33 @@ for (const ref of localRefs) {
   assert.ok(fs.existsSync(filePath), `Missing shell dependency: ${ref}`);
 }
 
+function localModuleRefs(source) {
+  const refs=[];
+  const patterns=[
+    /(?:import|export)\s+(?:[^'";]*?\s+from\s*)?["']([^"']+)["']/g,
+    /import\s*\(\s*["']([^"']+)["']\s*\)/g
+  ];
+  for (const pattern of patterns) for (const match of source.matchAll(pattern)) if (match[1].startsWith('.')) refs.push(match[1]);
+  return refs;
+}
+
+const moduleQueue=localRefs.filter((ref)=>/\.m?js$/.test(ref)).map((ref)=>new URL(ref,root));
+const visitedModules=new Set();
+while(moduleQueue.length){
+  const moduleUrl=moduleQueue.shift();
+  const key=moduleUrl.href;if(visitedModules.has(key))continue;visitedModules.add(key);
+  const filePath=path.resolve(moduleUrl.pathname);
+  assert.ok(fs.existsSync(filePath),`Missing browser module: ${moduleUrl.pathname}`);
+  const source=fs.readFileSync(filePath,'utf8');
+  for(const ref of localModuleRefs(source)){
+    const target=new URL(ref,moduleUrl);
+    assert.ok(target.pathname.startsWith(root.pathname),`Module import escapes Fluxa scope: ${ref} from ${moduleUrl.pathname}`);
+    assert.ok(fs.existsSync(path.resolve(target.pathname)),`Missing imported browser module: ${ref} from ${moduleUrl.pathname}`);
+    moduleQueue.push(target);
+  }
+}
+assert.ok(visitedModules.size>localRefs.filter((ref)=>/\.m?js$/.test(ref)).length,'Browser module graph should include imported dependencies beyond index scripts.');
+
 const required = [
   'app.js','persistence-status-ui.js','viewport-ui.js','offline-ui.js','today-continuity-ui.js','form-draft-ui.js','assisted-context-ui.js','assisted-quick-pick-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','treatment-objective-ui.js','follow-up-treatment-ui.js',
   'protocol-ui.js','custom-protocol-ui.js','branching-resume-ui.js','finding-classification-ui.js','remaining-ui.js','treatment-card-identity-ui.js','workflow-integrity-ui.js',
