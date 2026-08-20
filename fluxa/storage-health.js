@@ -2,7 +2,7 @@ const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
 const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
 const TEST_KEY = 'fluxa.mvp.storage.test';
-const LAST_EXPORT_KEY = 'fluxa.lastExportAt';
+const LAST_EXPORT_KEY = 'fluxa.lastSuccessfulExportAt';
 const CURRENT_VERSION = 5;
 
 const COLLECTIONS = [
