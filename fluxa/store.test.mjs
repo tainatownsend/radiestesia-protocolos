@@ -7,6 +7,11 @@ class MemoryStorage {
   setItem(k,v){this.map.set(k,String(v));}
   removeItem(k){this.map.delete(k);}
 }
+class ThrowingStorage {
+  getItem(){throw new Error('storage blocked');}
+  setItem(){throw new Error('storage blocked');}
+  removeItem(){throw new Error('storage blocked');}
+}
 globalThis.localStorage=new MemoryStorage();
 
 function state(id){return {version:4,meta:{},sessions:[{id}],assistedEntities:[],events:[],treatments:[]};}
@@ -50,5 +55,13 @@ assert.deepEqual(persisted.settings.sessionTemplates[0].steps,['ASSESS','INVESTI
 const reloaded=loadState();
 assert.equal(reloaded.settings.sessionTemplates[0].id,'template_1');
 assert.deepEqual(reloaded.settings.sessionTemplates[0].steps,['ASSESS','INVESTIGATE','TREAT']);
+
+globalThis.localStorage=new ThrowingStorage();
+const unavailable=loadState();
+assert.equal(unavailable.version,5);
+assert.equal(unavailable.sessions.length,0);
+assert.match(unavailable.meta.lastPersistenceError,/storage blocked/,'read failure should surface in state metadata without crashing startup');
+const unavailableStore=createStore();
+assert.throws(()=>unavailableStore.setState((current)=>({...current,settings:{test:true}})),/Não foi possível salvar neste dispositivo/,'write failure should use a clear product-level error');
 
 console.log('store.test.mjs: ok');
