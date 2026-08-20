@@ -25,6 +25,20 @@ function renumber(form) {
   });
 }
 
+function linkComponentToTool(componentId, toolId) {
+  if (!toolId) return;
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const component = draft.treatmentComponents.find((item) => item.id === componentId);
+    const tool = draft.tools.find((item) => item.id === toolId && !item.archivedAt);
+    if (!component || !tool) return draft;
+    component.toolId = tool.id;
+    component.toolSnapshot = { id: tool.id, type: tool.type, name: tool.name };
+    component.updatedAt = store.nowIso();
+    return draft;
+  });
+}
+
 function enhanceTreatmentForm() {
   const form = document.querySelector('#treatment-form');
   if (!form || form.dataset.multiComponentEnhanced) return;
@@ -109,6 +123,7 @@ document.addEventListener('submit', (event) => {
     const instructions = data.getAll('instructions');
     const durations = data.getAll('durationValue');
     const units = data.getAll('durationUnit');
+    const toolIds = data.getAll('toolId');
     if (!names.length) throw new Error('Adicione pelo menos um componente.');
 
     const created = createTreatment(store, {
@@ -121,9 +136,10 @@ document.addEventListener('submit', (event) => {
       durationValue: durations[0],
       durationUnit: units[0]
     });
+    linkComponentToTool(created.component.id, toolIds[0]);
 
     for (let i = 1; i < names.length; i += 1) {
-      addTreatmentComponent(store, {
+      const component = addTreatmentComponent(store, {
         sessionId: session.id,
         treatmentId: created.treatment.id,
         name: names[i],
@@ -131,6 +147,7 @@ document.addEventListener('submit', (event) => {
         durationValue: durations[i],
         durationUnit: units[i]
       });
+      linkComponentToTool(component.id, toolIds[i]);
     }
 
     document.querySelector('[data-action="dismiss-sheet"]')?.click();
