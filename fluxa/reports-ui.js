@@ -8,6 +8,7 @@ const reikiModeLabels={PRESENTIAL:'Presencial',DISTANCE:'À distância',SELF:'Au
 function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
 function fmt(iso){return iso?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(iso)):'—';}
 function labelStatus(value){return statusLabels[value]||value||'';}
+function objectiveOf(treatment){return treatment?.objective||treatment?.therapeuticObjective||'';}
 function protocolName(inv){return inv?.protocolSnapshot?.name||inv?.protocolName||inv?.protocolId||'Investigação';}
 function assistedName(state,id){return state.assistedEntities.find((a)=>a.id===id)?.displayName||'Assistido';}
 function sessionInvestigations(state,sessionId){return state.investigations.filter((i)=>i.originSessionId===sessionId||i.currentSessionId===sessionId||i.sessionId===sessionId);}
@@ -33,7 +34,7 @@ function assistedReportBody(state,sessionId,assistedId){
   return [
     section('Avaliações',list(d.assessments,(a)=>`<li><strong>${esc(a.subject||'Avaliação')}</strong>: ${esc(a.result??a.frequency??'')}${a.scale?` ${esc(a.scale)}`:''}${a.imbalancePercent!=null?` · desequilíbrio ${esc(a.imbalancePercent)}%`:''}${a.notes?`<br><span class="muted">${esc(a.notes)}</span>`:''}</li>`,'Nenhuma avaliação registrada.')),
     section('Investigações',list(d.investigations,(i)=>`<li><strong>${esc(protocolName(i))}</strong> · ${esc(labelStatus(i.status))} · ${i.answers?.length||0} resposta(s)${i.protocolSnapshot?.version?` · versão ${esc(i.protocolSnapshot.version)}`:''}</li>`,'Nenhuma investigação registrada.') + (d.findings.length?`<h3>Achados confirmados</h3>${list(d.findings,(f)=>`<li>${esc(f.title||f.questionTextSnapshot||f.sourceQuestionText||'Achado')} · ${esc(findingLabels[f.classification]||f.classification||'Fator relevante')}</li>`,'')}`:'')),
-    section('Tratamentos',d.treatments.length?d.treatments.map((t)=>`<article><h3>${esc(t.title)}</h3>${t.therapeuticObjective?`<p><strong>Objetivo terapêutico:</strong> ${esc(t.therapeuticObjective)}</p>`:''}<p>${esc(labelStatus(t.status))}</p>${list(components(t.id),(c)=>`<li><strong>${esc(c.name)}</strong> · ${esc(labelStatus(c.status))}${c.instructions?`<br><span class="muted">${esc(c.instructions)}</span>`:''}${c.expectedEndAt?`<br><span class="muted">Revisão prevista: ${fmt(c.expectedEndAt)}</span>`:''}</li>`,'Nenhum componente.')}</article>`).join(''):'<p class="muted">Nenhum tratamento registrado nesta sessão.</p>'),
+    section('Tratamentos',d.treatments.length?d.treatments.map((t)=>{const objective=objectiveOf(t);return `<article><h3>${esc(t.title)}</h3>${objective?`<p><strong>Objetivo terapêutico:</strong> ${esc(objective)}</p>`:''}<p>${esc(labelStatus(t.status))}</p>${list(components(t.id),(c)=>`<li><strong>${esc(c.name)}</strong> · ${esc(labelStatus(c.status))}${c.instructions?`<br><span class="muted">${esc(c.instructions)}</span>`:''}${c.expectedEndAt?`<br><span class="muted">Revisão prevista: ${fmt(c.expectedEndAt)}</span>`:''}</li>`,'Nenhum componente.')}</article>`;}).join(''):'<p class="muted">Nenhum tratamento registrado nesta sessão.</p>'),
     section('Reiki',list(d.reiki,(r)=>{const treatment=state.treatments.find((t)=>t.id===r.treatmentId);return `<li><strong>${esc(reikiModeLabels[r.mode]||r.mode||'Aplicação')}</strong> · ${esc(labelStatus(r.status))}${r.durationSeconds!=null?` · ${Math.round(r.durationSeconds/60)} min`:''}${treatment?` · vinculado a ${esc(treatment.title)}`:''}${r.notes?`<br><span class="muted">${esc(r.notes)}</span>`:''}</li>`;},'Nenhuma aplicação registrada.')),
     section('Anotações da sessão',list(d.notes,(e)=>`<li>${esc(e.metadata?.body||e.metadata?.notes||'Anotação')}</li>`,'Nenhuma anotação registrada para este assistido.'))
   ].join('');
@@ -56,7 +57,6 @@ function openReport(sessionId,assistedId=null){
   win.document.open();win.document.write(html);win.document.close();
 }
 
-// Window capture runs before the older document-level handler and becomes the canonical report action.
 window.addEventListener('click',(event)=>{
   const button=event.target.closest?.('[data-session-report]');if(!button)return;
   event.preventDefault();event.stopImmediatePropagation();
