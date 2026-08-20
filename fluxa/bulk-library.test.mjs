@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parseLibraryBulkText, prepareLibraryBulkImport, importLibraryItems } from './bulk-library.js';
+import { parseLibraryBulkText, prepareLibraryBulkImport, importLibraryItems, libraryItemsToCsv } from './bulk-library.js';
 
 const parsed=parseLibraryBulkText('Nome,Tipo,Finalidade,Observações\nDesimpregnador,Gráfico,Limpeza,Teste\nEscala A,Biômetro,Medição,');
 assert.equal(parsed.items.length,2);
@@ -33,4 +33,16 @@ const created=importLibraryItems(store,[{name:'Gráfico 1',type:'GRAPH',purpose:
 assert.equal(created.length,1);
 assert.equal(state.tools.length,1);
 assert.equal(state.events[0].metadata.bulkImport,true);
+
+const csv=libraryItemsToCsv([
+  {name:'Campo, especial',type:'GRAPH',purpose:'Proteção',notes:'Usar "duas" vezes',archivedAt:null},
+  {name:'Escala B',type:'BIOMETER',purpose:'Medição',notes:null,archivedAt:null},
+  {name:'Antigo',type:'OTHER',archivedAt:'2026-08-01T00:00:00Z'}
+]);
+const roundTrip=parseLibraryBulkText(csv);
+assert.equal(roundTrip.items.length,2);
+assert.equal(roundTrip.items.find((item)=>item.name==='Campo, especial')?.notes,'Usar "duas" vezes');
+assert.equal(roundTrip.items.find((item)=>item.name==='Escala B')?.type,'BIOMETER');
+assert.ok(!roundTrip.items.some((item)=>item.name==='Antigo'));
+
 console.log('bulk-library.test.mjs: ok');
