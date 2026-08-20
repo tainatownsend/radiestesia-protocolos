@@ -38,10 +38,12 @@ function normalizePlannedComponent(store, treatmentId, input = {}) {
   const name = input.name?.trim();
   if (!name) throw new Error('Informe o nome de cada componente planejado.');
   const now = store.nowIso();
+  const tool = input.toolId ? (store.getState().tools || []).find((item) => item.id === input.toolId) : null;
   return {
     id: store.makeId('cmp'),
     treatmentId,
     toolId: input.toolId || null,
+    toolSnapshot: tool ? { id:tool.id, type:tool.type, name:tool.name } : null,
     type: input.type || 'TOOL',
     name,
     instructions: input.instructions?.trim() || null,
@@ -101,7 +103,7 @@ export function createPlannedTreatment(store, input) {
         entityType: 'TreatmentComponent',
         entityId: component.id,
         assistedEntityId: assisted.id,
-        metadata: { treatmentId: treatment.id, name: component.name, toolId: component.toolId }
+        metadata: { treatmentId: treatment.id, name: component.name, toolId: component.toolId, toolName: component.toolSnapshot?.name || null }
       });
     }
     return draft;
@@ -142,7 +144,7 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
         entityId: component.id,
         sessionId,
         assistedEntityId: target.assistedEntityId,
-        metadata: { treatmentId: target.id, name: component.name, expectedEndAt: component.expectedEndAt, toolId: component.toolId, fromPlanned: true }
+        metadata: { treatmentId: target.id, name: component.name, expectedEndAt: component.expectedEndAt, toolId: component.toolId, toolName: component.toolSnapshot?.name || null, fromPlanned: true }
       });
     }
 
