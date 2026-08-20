@@ -1,6 +1,7 @@
 const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
 const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
+const storeInstances = new Set();
 
 function nowIso() {
   return new Date().toISOString();
@@ -99,6 +100,13 @@ export function createStore() {
     listeners.forEach((listener) => listener(state));
   }
 
+  function syncFromPeer(nextState) {
+    state = normalize(structuredClone(nextState));
+    notify();
+  }
+
+  storeInstances.add(syncFromPeer);
+
   return {
     getState() {
       return state;
@@ -106,6 +114,9 @@ export function createStore() {
     setState(updater) {
       const proposed = typeof updater === 'function' ? updater(state) : updater;
       state = saveState(proposed);
+      for (const sync of storeInstances) {
+        if (sync !== syncFromPeer) sync(state);
+      }
       notify();
       return state;
     },
