@@ -15,7 +15,7 @@ for (const ref of localRefs) {
 }
 
 const required = [
-  'app.js','viewport-ui.js','offline-ui.js','today-continuity-ui.js','form-draft-ui.js','assisted-context-ui.js','assisted-quick-pick-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','treatment-objective-ui.js','follow-up-treatment-ui.js',
+  'app.js','persistence-status-ui.js','viewport-ui.js','offline-ui.js','today-continuity-ui.js','form-draft-ui.js','assisted-context-ui.js','assisted-quick-pick-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','treatment-objective-ui.js','follow-up-treatment-ui.js',
   'protocol-ui.js','custom-protocol-ui.js','branching-resume-ui.js','finding-classification-ui.js','remaining-ui.js','treatment-card-identity-ui.js','workflow-integrity-ui.js',
   'activity-library-ui.js','library-refinement-ui.js','library-favorites-ui.js','bulk-library-ui.js','tool-picker-search-ui.js','session-template-ui.js','therapist-experience-ui.js','session-fast-flow-ui.js','quick-input-ui.js','quick-percentage-ui.js','repeat-component-ui.js','recent-choice-ui.js','touch-select-ui.js','longitudinal-insights-ui.js','reports-ui.js','client-report-ui.js','therapist-language-ui.js','universal-search-ui.js','traceability-ui.js','history-ui.js','session-report-history-ui.js','reiki-outside-ui.js','reiki-lifecycle-ui.js','structured-preparation-ui.js','preparation-repeat-ui.js','guided-preparation-ui.js',
   'import-ui.js','backup-reminder-ui.js','validation-ui.js','a11y.js','styles.css','remaining.css','visual-polish.css','interaction-polish.css','daily-use-polish.css','manifest.webmanifest','icon.svg'
@@ -46,9 +46,17 @@ assert.match(serviceWorker, /MAX_PRECACHE_ASSETS/, 'Offline recursive precache s
 assert.match(serviceWorker, /fetch\(request\)/, 'Offline worker should try the network before cache fallback.');
 assert.match(serviceWorker, /caches\.match\(request\)/, 'Offline worker should use cached fallback when network fails.');
 
+const offlineUi = fs.readFileSync(new URL('./offline-ui.js', root), 'utf8');
+assert.match(offlineUi, /controllerchange/, 'App updates should be detected without automatic reload.');
+assert.match(offlineUi, /data-apply-app-update/, 'App update should require an explicit therapist action.');
+
 const draftUi = fs.readFileSync(new URL('./form-draft-ui.js', root), 'utf8');
 assert.match(draftUi, /version:2/, 'Form drafts should preserve repeated fields using the contextual v2 format.');
 assert.match(draftUi, /MAX_AGE_MS/, 'Form drafts should expire rather than restoring stale work indefinitely.');
 assert.match(draftUi, /assistedContext\(/, 'Form drafts should be isolated by assisted context when relevant.');
+
+const persistenceUi = fs.readFileSync(new URL('./persistence-status-ui.js', root), 'utf8');
+assert.match(persistenceUi, /fluxa:persistence-error/, 'Persistence failures should surface visibly in the app shell.');
+assert.match(persistenceUi, /role','alert'/, 'Persistence warning should use alert semantics.');
 
 console.log('static-smoke.test.mjs: ok');
