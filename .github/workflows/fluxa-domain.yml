@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fluxa-mvp-foundation
+      - fluxa-assisted-selection-guard
     paths:
       - 'fluxa/**'
       - '.github/workflows/fluxa-domain.yml'
@@ -21,6 +22,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check Fluxa JavaScript syntax
+        run: |
+          for file in fluxa/*.js fluxa/*.mjs; do
+            node --check "$file"
+          done
       - name: Run Fluxa regression tests
         run: |
           node fluxa/domain.test.mjs
