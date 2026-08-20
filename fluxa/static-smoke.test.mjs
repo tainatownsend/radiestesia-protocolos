@@ -86,4 +86,9 @@ const persistenceUi = fs.readFileSync(new URL('./persistence-status-ui.js', root
 assert.match(persistenceUi, /fluxa:persistence-error/, 'Persistence failures should surface visibly in the app shell.');
 assert.match(persistenceUi, /role','alert'/, 'Persistence warning should use alert semantics.');
 
+const clientReportUi = fs.readFileSync(new URL('./client-report-ui.js', root), 'utf8');
+assert.doesNotMatch(clientReportUi, /\.instructions/, 'Shareable report must not expose internal component commands.');
+assert.doesNotMatch(clientReportUi, /NOTE_CREATED/, 'Shareable report must not expose internal session notes by default.');
+assert.match(clientReportUi, /histórico técnico do Fluxa/, 'Shareable report should explain that technical detail remains internal.');
+
 console.log('static-smoke.test.mjs: ok');
