@@ -13,9 +13,11 @@ import {
 
 const store = createStore();
 let enhancing = false;
+const FORGOTTEN_DISMISS_PREFIX = 'fluxa.forgotten.dismissed.';
+const QA_FORGOTTEN_PREFIX = 'fluxa.qa.forgotten.';
 
 function esc(value = '') {
-  return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
+  return String(value).replace(/[&<>'\"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '\"':'&quot;' }[c]));
 }
 
 function localDateTime(iso = new Date().toISOString()) {
@@ -36,11 +38,20 @@ function closeDialog() {
   document.querySelector('#backlog-overlay')?.remove();
 }
 
+function forgottenDismissKey(sessionId) { return `${FORGOTTEN_DISMISS_PREFIX}${sessionId}`; }
+function qaForgottenKey(sessionId) { return `${QA_FORGOTTEN_PREFIX}${sessionId}`; }
+
+function shouldShowForgottenBanner(session) {
+  if (!session) return false;
+  if (sessionStorage.getItem(forgottenDismissKey(session.id)) === '1') return false;
+  return isPossiblyForgottenOpenSession(session) || sessionStorage.getItem(qaForgottenKey(session.id)) === '1';
+}
+
 function ensureForgottenSessionBanner() {
   const state = store.getState();
   const session = getOpenSession(state);
   const main = document.querySelector('main');
-  if (!main || !session || !isPossiblyForgottenOpenSession(session)) {
+  if (!main || !session || !shouldShowForgottenBanner(session)) {
     document.querySelector('[data-forgotten-session]')?.remove();
     return;
   }
@@ -48,7 +59,7 @@ function ensureForgottenSessionBanner() {
   const banner = document.createElement('section');
   banner.dataset.forgottenSession = session.id;
   banner.className = 'section notice-card forgotten-session-card';
-  banner.innerHTML = `<div><p class="eyebrow">Sessão ainda aberta</p><h2>Esta sessão começou anteriormente.</h2><p>Você pode continuar normalmente ou corrigir o horário em que ela realmente terminou. O Fluxa nunca fecha uma sessão automaticamente.</p></div><div class="button-row"><button class="btn secondary" data-backlog-continue>Continuar sessão</button><button class="btn primary" data-backlog-correct-session="${session.id}">Corrigir encerramento</button></div>`;
+  banner.innerHTML = `<div><p class="eyebrow">Sessão ainda aberta</p><h2>Esta sessão começou anteriormente.</h2><p>Você pode continuar normalmente ou corrigir o horário em que ela realmente terminou. O Fluxa nunca fecha uma sessão automaticamente.</p></div><div class="button-row"><button class="btn secondary" data-backlog-continue="${session.id}">Continuar sessão</button><button class="btn primary" data-backlog-correct-session="${session.id}">Corrigir encerramento</button></div>`;
   main.insertBefore(banner, main.children[3] || null);
 }
 
@@ -152,7 +163,13 @@ function finalAssessmentDialog(treatmentId) {
 document.addEventListener('click', (event) => {
   const button = event.target.closest('button');
   if (!button) return;
-  if (button.dataset.backlogContinue !== undefined) { button.closest('[data-forgotten-session]')?.remove(); return; }
+  if (button.dataset.backlogContinue) {
+    const sessionId = button.dataset.backlogContinue;
+    sessionStorage.setItem(forgottenDismissKey(sessionId), '1');
+    sessionStorage.removeItem(qaForgottenKey(sessionId));
+    button.closest('[data-forgotten-session]')?.remove();
+    return;
+  }
   if (button.dataset.backlogCorrectSession) { correctionDialog(button.dataset.backlogCorrectSession); return; }
   if (button.dataset.backlogClose !== undefined) { closeDialog(); return; }
   if (button.dataset.backlogManageComponents) { componentsDialog(button.dataset.backlogManageComponents); return; }
@@ -219,6 +236,8 @@ document.addEventListener('submit', (event) => {
     const data = new FormData(form);
     try {
       correctForgottenSessionClose(store, form.dataset.session, new Date(data.get('endedAt')).toISOString());
+      sessionStorage.removeItem(qaForgottenKey(form.dataset.session));
+      sessionStorage.removeItem(forgottenDismissKey(form.dataset.session));
       location.reload();
     } catch (error) { alert(error.message); }
   }
