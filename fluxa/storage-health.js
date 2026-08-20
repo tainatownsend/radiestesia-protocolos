@@ -2,6 +2,7 @@ const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
 const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
 const TEST_KEY = 'fluxa.mvp.storage.test';
+const LAST_EXPORT_KEY = 'fluxa.lastExportAt';
 const CURRENT_VERSION = 5;
 
 const COLLECTIONS = [
@@ -46,6 +47,7 @@ export function inspectStorageHealth() {
     writable, writeError, hasPrimary:Boolean(primaryRaw), primaryValid:!primaryRaw || Boolean(primary),
     backupValid:Boolean(backup), recoveryValid:Boolean(recovery), canRecover:Boolean(backup || recovery),
     preferredRecoverySource: recovery ? 'RECOVERY' : (backup ? 'BACKUP' : null),
+    lastExportAt: localStorage.getItem(LAST_EXPORT_KEY),
     status: !writable ? 'WRITE_ERROR' : (primaryRaw && !primary ? 'PRIMARY_CORRUPT' : 'OK')
   };
 }
@@ -53,7 +55,6 @@ export function inspectStorageHealth() {
 export function recoverLocalData() {
   const recoveryRaw = localStorage.getItem(RECOVERY_KEY);
   const backupRaw = localStorage.getItem(BACKUP_KEY);
-  // RECOVERY is written before PRIMARY on each save and is therefore normally the newest recoverable state.
   const sourceRaw = validCandidate(recoveryRaw) ? recoveryRaw : (validCandidate(backupRaw) ? backupRaw : null);
   if (!sourceRaw) throw new Error('Nenhuma cópia local válida do Fluxa foi encontrada para recuperação.');
   const source = canonicalize(JSON.parse(sourceRaw));
@@ -89,4 +90,5 @@ export function exportLocalDataFile() {
   a.download = `fluxa-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  localStorage.setItem(LAST_EXPORT_KEY, new Date().toISOString());
 }
