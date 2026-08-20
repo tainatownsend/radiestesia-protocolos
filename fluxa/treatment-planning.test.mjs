@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
 import { AssistedType, TreatmentStatus, PREPARATION_STEPS, createAssistedEntity, startSession, startPreparation, togglePreparationStep, completePreparation } from './domain.js';
-import { createPlannedTreatment, startPlannedTreatment } from './treatment-planning.js';
+import { createPlannedTreatment, addPlannedTreatmentComponent, startPlannedTreatment } from './treatment-planning.js';
 
 class MemoryStorage {
   constructor() { this.map = new Map(); }
@@ -22,6 +22,12 @@ function prepare(store, sessionId) {
   const store = createStore();
   const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa teste', birthDate:'1990-01-01' });
   assert.throws(() => createPlannedTreatment(store, { assistedEntityId:assisted.id, title:'Sem componente', components:[] }), /componente/);
+
+  // Compatibility with planned treatments created by earlier branch revisions.
+  store.setState((state)=>{const draft=structuredClone(state);draft.treatments.push({id:'legacy_planned',assistedEntityId:assisted.id,title:'Planejado antigo',status:TreatmentStatus.PLANNED,createdAt:store.nowIso(),updatedAt:store.nowIso()});return draft;});
+  const recoveredComponent=addPlannedTreatmentComponent(store,'legacy_planned',{name:'Componente recuperado'});
+  assert.equal(recoveredComponent.status,TreatmentStatus.PLANNED);
+  assert.equal(store.getState().treatmentComponents.filter((item)=>item.treatmentId==='legacy_planned').length,1);
 
   store.setState((state) => {
     const draft = structuredClone(state);
