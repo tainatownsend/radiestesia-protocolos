@@ -80,11 +80,27 @@
   background: var(--border);
 }
 
+.fluxa-keyboard-open .bottom-nav {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(100% + 24px));
+}
+.fluxa-keyboard-open .app-shell { padding-bottom: 16px; }
+.fluxa-keyboard-open .modal-backdrop {
+  min-height: var(--fluxa-visual-height, 100dvh);
+  height: var(--fluxa-visual-height, 100dvh);
+}
+.fluxa-keyboard-open .sheet {
+  max-height: calc(var(--fluxa-visual-height, 100dvh) - 8px);
+  scroll-padding-bottom: 24px;
+}
+
 @media (max-width:560px) {
   .repeat-component-box { align-items: stretch; flex-direction: column; }
   .repeat-component-box .btn { width: 100%; }
   .assisted-row:has(.assisted-favorite-toggle) { grid-template-columns: 42px minmax(0,1fr); }
   .assisted-row:has(.assisted-favorite-toggle) > .btn:not(.assisted-favorite-toggle) { grid-column: 1 / -1; width: 100%; }
+  .fluxa-keyboard-open .sheet { border-radius: 20px 20px 0 0; }
 }
 
 @media (min-width:700px) {
