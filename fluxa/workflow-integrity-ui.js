@@ -15,8 +15,13 @@ function requirePreparedCurrentSession(message) {
   return requirePreparedSessionState(state, session.id, message);
 }
 
-function removeLegacyCompletedAssessmentActions() {
-  document.querySelectorAll('[data-backlog-final-assessment]').forEach((button) => button.remove());
+function suppressLegacyCompletedAssessmentActions() {
+  document.querySelectorAll('[data-backlog-final-assessment]').forEach((button) => {
+    button.hidden = true;
+    button.disabled = true;
+    button.setAttribute('aria-hidden','true');
+    button.tabIndex = -1;
+  });
 }
 
 function disableEarlyComponentReviews() {
@@ -34,13 +39,12 @@ function disableEarlyComponentReviews() {
 }
 
 function enhance() {
-  removeLegacyCompletedAssessmentActions();
+  suppressLegacyCompletedAssessmentActions();
   disableEarlyComponentReviews();
 }
 new MutationObserver(enhance).observe(document.body, { childList:true, subtree:true });
 queueMicrotask(enhance);
 
-// Legacy/simple investigation and direct-treatment paths must obey the same prepared-session invariant as branching protocols.
 document.addEventListener('click', (event) => {
   const target = event.target.closest('[data-action="investigate"],[data-action="resume-latest-investigation"],[data-action="treat-direct"],[data-answer]');
   if (!target) return;
