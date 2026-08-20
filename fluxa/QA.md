@@ -27,6 +27,10 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 - Environment/property requires full address.
 - Situation/process requires process identifier and captures involved/requesting person.
 - PET accepts open descriptive details.
+- Editing an assisted entity records `ASSISTED_UPDATED` without rewriting historical events.
+- Assisted type is kept stable during MVP editing to avoid changing historical meaning.
+- Archiving preserves history and removes the assisted entity from future-work lists.
+- Archiving is blocked while treatment, investigation or Reiki work remains active.
 
 ## Investigation continuity
 
@@ -58,9 +62,13 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 - Adding a second/third component does not alter existing components.
 - Stopping a component preserves it with STOPPED state and event history.
 - Replacing a component creates a new component, preserves the original as REPLACED and records the replacement link.
-- A review that uses a new measurement requires an OPEN session.
-- Completing a review can complete components and treatment while retaining previous events/reviews.
+- Each active component can be reviewed individually with the two pendulum decisions: 100% complete and permission to dismantle.
+- A component is marked COMPLETED/dismantled only when both component-review decisions are positive.
+- A negative/incomplete component review is retained without completing the component.
+- Final assessment is unavailable until every component is COMPLETED, STOPPED or REPLACED.
 - Final post-treatment assessment records frequency, imbalance %, need for a new treatment and when indicated.
+- After component resolution + final assessment, the current Treatment becomes COMPLETED even when another future treatment is recommended.
+- A new recommended cycle does not overwrite or reopen the completed treatment.
 
 ## Reiki
 
@@ -74,11 +82,15 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 
 ## Local persistence
 
-- Reload retains sessions, assistidos, investigations, findings, treatments, reviews, assessments and Reiki.
+- Reload retains sessions, assistidos, investigations, findings, treatments, reviews, component reviews, assessments and Reiki.
 - A failed primary JSON parse falls back to backup/recovery data when available.
 - Recovery snapshot is written before the primary record on normal saves.
 - Separate store instances in the same tab receive synchronized state updates.
 - Autosave does not create logical duplicates on ordinary repeated UI actions.
+- Storage health check detects inability to write to localStorage.
+- Corrupt primary data with a valid backup exposes a recovery action.
+- Recovery copies the valid backup/recovery candidate back to the primary record.
+- User can export the current valid local dataset as JSON from Hoje.
 
 ## Mobile / one hand
 
@@ -86,17 +98,38 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 - Sim and Não remain at the bottom of the focused investigation screen.
 - Reiki pause/resume/complete are reachable without precision tapping.
 - Treatment component actions remain usable on narrow screens.
+- Button rows stack on very narrow screens instead of overflowing.
 - Bottom navigation remains stable outside focused sheets.
 - No horizontal overflow at 320px CSS width.
+
+## Accessibility
+
 - Focus indication is visible for keyboard users.
+- Focus is moved into newly opened dialogs.
+- Escape closes the active dialog when a close action is available.
+- Dialogs expose `role=dialog`, `aria-modal=true`, and an accessible title.
+- Close buttons expose an accessible name instead of only “×”.
+- Form fields receive labels/accessible names.
+- Reiki live timer exposes timer semantics without announcing every second.
 - Status is never communicated only by color.
+- Forced-colors/high-contrast modes retain visible boundaries.
 - Reduced-motion preference disables nonessential transition behavior.
 
 ## Automated regression
 
-- `node fluxa/domain.test.mjs` passes.
-- `node fluxa/protocol-engine.test.mjs` passes.
-- GitHub Actions workflow `Fluxa domain checks` runs both tests for Fluxa branch changes/PRs.
+- `node fluxa/domain.test.mjs` passes in CI.
+- `node fluxa/protocol-engine.test.mjs` passes in CI.
+- `node fluxa/remaining.test.mjs` covers component dismantling, assisted editing/archive and treatment completion rules.
+- `node fluxa/storage-health.test.mjs` covers primary corruption and local recovery.
+- GitHub Actions workflow `Fluxa domain checks` runs all four test files for Fluxa branch changes/PRs.
+
+## Manual validation still required before merge
+
+- Test Safari on iPhone with keyboard open/closed and repeated background/foreground transitions.
+- Test iPad portrait/landscape.
+- Test localStorage quota/private-mode behavior on actual target browsers.
+- Test screen reader navigation on at least VoiceOver/iOS.
+- Confirm visual hierarchy against the approved Deep Teal mockups after all functional states are populated.
 
 ## Legacy isolation
 
