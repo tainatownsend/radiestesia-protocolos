@@ -21,13 +21,18 @@ store.setState((state)=>{
 });
 
 assert.equal(canPlanFollowUpTreatment(store.getState(),'trt_old'),true);
-const next=createFollowUpTreatment(store,'trt_old');
+assert.throws(()=>createFollowUpTreatment(store,'trt_old',{components:[]}),/componente/);
+const next=createFollowUpTreatment(store,'trt_old',{components:[{name:'Novo gráfico',durationValue:7,durationUnit:'DAY'}]});
 assert.equal(next.status,TreatmentStatus.PLANNED);
 assert.equal(next.previousTreatmentId,'trt_old');
 assert.equal(next.recommendedByAssessmentId,'assess_old');
 assert.equal(next.plannedFor,'em 7 dias');
+const nextComponents=store.getState().treatmentComponents.filter((item)=>item.treatmentId===next.id);
+assert.equal(nextComponents.length,1);
+assert.equal(nextComponents[0].status,TreatmentStatus.PLANNED);
+assert.equal(nextComponents[0].name,'Novo gráfico');
 assert.equal(store.getState().treatments.find((t)=>t.id==='trt_old').status,TreatmentStatus.COMPLETED);
 assert.equal(canPlanFollowUpTreatment(store.getState(),'trt_old'),false);
-assert.throws(()=>createFollowUpTreatment(store,'trt_old'),/Já existe/);
+assert.throws(()=>createFollowUpTreatment(store,'trt_old',{components:[{name:'Outro'}]}),/Já existe/);
 
 console.log('follow-up-treatment.test.mjs: ok');
