@@ -46,6 +46,19 @@ export const PROTOCOL_LIBRARY = Object.freeze([
     })
   }),
   Object.freeze({
+    id: 'protocolo_especifico', versionId: 'protocolo_especifico_v1', version: 1, name: 'Protocolo específico', category: 'Aprofundamento específico',
+    description: 'Estrutura neutra para registrar um aprofundamento específico sem editar protocolos no MVP.', startNodeId: 'q1',
+    nodes: Object.freeze({
+      q1: { id:'q1', type:'QUESTION', text:'Existe indicação para aplicar um protocolo específico a este tema agora?', yes:'q2', no:'end_not_indicated' },
+      q2: { id:'q2', type:'QUESTION', text:'O foco específico está suficientemente definido para seguir?', yes:'q3', no:'end_define_focus' },
+      q3: { id:'q3', type:'QUESTION', text:'Há algum achado relevante neste protocolo que deve orientar o tratamento?', yes:'end_findings', no:'end_without_finding' },
+      end_not_indicated: { id:'end_not_indicated', type:'END', title:'Protocolo específico não indicado', summary:'Não há indicação para este aprofundamento específico neste momento.' },
+      end_define_focus: { id:'end_define_focus', type:'END', title:'Definir melhor o foco', summary:'O aprofundamento específico deve aguardar até que o foco esteja suficientemente claro.' },
+      end_findings: { id:'end_findings', type:'END', title:'Achados específicos a consolidar', summary:'Revise e classifique somente os achados que realmente devem orientar o tratamento.' },
+      end_without_finding: { id:'end_without_finding', type:'END', title:'Protocolo concluído sem novo achado', summary:'A execução foi concluída sem necessidade de registrar um novo achado.' }
+    })
+  }),
+  Object.freeze({
     id: 'causa_raiz', versionId: 'causa_raiz_v1', version: 1, name: 'Causa raiz', category: 'Investigação profunda',
     description: 'Aprofunda a origem sem transformar toda resposta positiva em causa.', startNodeId: 'q1',
     nodes: Object.freeze({
