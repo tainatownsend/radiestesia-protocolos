@@ -49,8 +49,8 @@ export function startFlexibleReiki(store, input) {
     const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
     if (!session) throw new Error('A sessão informada não está aberta.');
   }
-  const existing = state.reikiApplications.find((item) => item.status === 'RUNNING');
-  if (existing) throw new Error('Já existe uma aplicação de Reiki em andamento.');
+  const existing = state.reikiApplications.find((item) => ['RUNNING','PAUSED'].includes(item.status));
+  if (existing) throw new Error('Já existe uma aplicação de Reiki ativa. Conclua ou retome a aplicação atual antes de iniciar outra.');
   const now = store.nowIso();
   const mode = Object.values(ReikiMode).includes(input.mode) ? input.mode : ReikiMode.OTHER;
   const application = {
