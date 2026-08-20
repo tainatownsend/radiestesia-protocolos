@@ -4,6 +4,7 @@ import { ToolType, activeTools, archiveTool, createTool, recordGeneralAssessment
 
 const store = createStore();
 let enhancing = false;
+let pendingExistingComponentLink = null;
 
 const toolLabels = {
   [ToolType.GRAPH]: 'Gráfico',
@@ -13,6 +14,24 @@ const toolLabels = {
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
+}
+
+function toolOptions(tools) {
+  return `<option value="">Digitar manualmente</option>${tools.map((tool) => `<option value="${tool.id}" data-tool-name="${esc(tool.name)}">${esc(tool.name)} · ${esc(toolLabels[tool.type] || toolLabels.OTHER)}</option>`).join('')}`;
+}
+
+function linkComponentToTool(componentId, toolId) {
+  if (!toolId) return;
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const component = draft.treatmentComponents.find((item) => item.id === componentId);
+    const tool = draft.tools.find((item) => item.id === toolId && !item.archivedAt);
+    if (!component || !tool) return draft;
+    component.toolId = tool.id;
+    component.toolSnapshot = { id:tool.id, type:tool.type, name:tool.name };
+    component.updatedAt = store.nowIso();
+    return draft;
+  });
 }
 
 function dialog(html) {
@@ -65,9 +84,21 @@ function ensureToolSelectors() {
     const field = document.createElement('div');
     field.className = 'field';
     field.dataset.libraryToolPicker = 'true';
-    field.innerHTML = `<label>Usar recurso da Biblioteca <span class="muted">(opcional)</span></label><select name="toolId"><option value="">Digitar manualmente</option>${tools.map((tool) => `<option value="${tool.id}" data-tool-name="${esc(tool.name)}">${esc(tool.name)} · ${esc(toolLabels[tool.type] || toolLabels.OTHER)}</option>`).join('')}</select>`;
+    field.innerHTML = `<label>Usar recurso da Biblioteca <span class="muted">(opcional)</span></label><select name="toolId">${toolOptions(tools)}</select>`;
     fields.insertBefore(field, fields.firstChild);
   });
+
+  const existingForm = document.querySelector('#component-form');
+  if (existingForm && !existingForm.querySelector('[data-library-tool-picker]')) {
+    const nameField = existingForm.querySelector('[name="name"]')?.closest('.field');
+    if (nameField) {
+      const field = document.createElement('div');
+      field.className = 'field';
+      field.dataset.libraryToolPicker = 'true';
+      field.innerHTML = `<label>Usar recurso da Biblioteca <span class="muted">(opcional)</span></label><select name="toolId">${toolOptions(tools)}</select>`;
+      existingForm.insertBefore(field, nameField);
+    }
+  }
 }
 
 function translateAssessmentEvents() {
@@ -109,10 +140,24 @@ function newToolDialog() {
 document.addEventListener('change', (event) => {
   const select = event.target.closest('[data-library-tool-picker] select[name="toolId"]');
   if (!select) return;
+  const form = select.closest('form');
   const section = select.closest('[data-treatment-component-draft]');
-  const input = section?.querySelector('[name="componentName"]');
+  const input = section?.querySelector('[name="componentName"]') || form?.querySelector('[name="name"]');
   const option = select.selectedOptions[0];
   if (input && select.value && option?.dataset.toolName) input.value = option.dataset.toolName;
+}, true);
+
+document.addEventListener('submit', (event) => {
+  const form = event.target;
+  if (form.id !== 'component-form') return;
+  const data = new FormData(form);
+  const toolId = data.get('toolId');
+  if (!toolId) return;
+  pendingExistingComponentLink = {
+    treatmentId: form.dataset.treatment,
+    toolId,
+    beforeIds: new Set(store.getState().treatmentComponents.filter((item) => item.treatmentId === form.dataset.treatment).map((item) => item.id))
+  };
 }, true);
 
 document.addEventListener('click', (event) => {
@@ -129,6 +174,16 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('submit', (event) => {
   const form = event.target;
+  if (form.id === 'component-form' && pendingExistingComponentLink) {
+    queueMicrotask(() => {
+      const pending = pendingExistingComponentLink;
+      pendingExistingComponentLink = null;
+      const created = store.getState().treatmentComponents
+        .filter((item) => item.treatmentId === pending.treatmentId && !pending.beforeIds.has(item.id))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+      if (created) linkComponentToTool(created.id, pending.toolId);
+    });
+  }
   if (form.id === 'general-assessment-form') {
     event.preventDefault();
     const data = new FormData(form);
@@ -152,4 +207,4 @@ document.addEventListener('submit', (event) => {
       closeDialog();
     } catch (error) { alert(error.message); }
   }
-}, true);
+});
