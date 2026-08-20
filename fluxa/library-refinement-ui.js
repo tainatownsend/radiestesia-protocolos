@@ -1,38 +1,10 @@
 import { createStore } from './store.js';
 
-const store=createStore();
-let query='';
-let type='ALL';
-
-function ensureFilters(){
-  const section=document.querySelector('[data-basic-tool-library]');
-  if(!section||section.querySelector('[data-library-filters]'))return;
-  const controls=document.createElement('div');controls.className='form-grid';controls.dataset.libraryFilters='true';
-  controls.innerHTML=`<div class="field"><label for="library-search">Buscar recurso</label><input id="library-search" type="search" data-library-search placeholder="Nome ou finalidade"></div><div class="field"><label for="library-type">Tipo</label><select id="library-type" data-library-type><option value="ALL">Todos</option><option value="GRAPH">Gráfico</option><option value="BIOMETER">Biômetro</option><option value="OTHER">Outro recurso</option></select></div>`;
-  const stack=section.querySelector('.stack');stack?.before(controls);
-}
-
-function decorateCards(){
-  const state=store.getState();
-  document.querySelectorAll('[data-basic-tool-library] [data-library-tool-id]').forEach((card)=>{
-    const tool=state.tools.find((item)=>item.id===card.dataset.libraryToolId&&!item.archivedAt);if(!tool)return;
-    if(!card.querySelector('[data-tool-usage]')){
-      const usage=state.treatmentComponents.filter((component)=>component.toolId===tool.id).length;
-      const note=document.createElement('p');note.className='muted';note.dataset.toolUsage='true';note.textContent=usage?`Usado em ${usage} ${usage===1?'componente':'componentes'} de tratamento.`:'Ainda não utilizado em tratamentos.';
-      card.appendChild(note);
-    }
-  });
-}
-
-function apply(){
-  const state=store.getState();
-  document.querySelectorAll('[data-library-tool-id]').forEach((card)=>{
-    const tool=state.tools.find((item)=>item.id===card.dataset.libraryToolId&&!item.archivedAt);if(!tool){card.hidden=true;return;}
-    const text=`${tool.name||''} ${tool.purpose||''} ${tool.notes||''}`.toLocaleLowerCase('pt-BR');
-    const visible=(!query||text.includes(query.toLocaleLowerCase('pt-BR')))&&(type==='ALL'||tool.type===type);
-    card.hidden=!visible;
-  });
-}
+const store=createStore();let query='';let type='ALL';
+function norm(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function ensureFilters(){const section=document.querySelector('[data-basic-tool-library]');if(!section||section.querySelector('[data-library-filters]'))return;const controls=document.createElement('div');controls.className='form-grid';controls.dataset.libraryFilters='true';controls.innerHTML=`<div class="field"><label for="library-search">Buscar recurso</label><input id="library-search" type="search" data-library-search placeholder="Nome, finalidade ou tag"></div><div class="field"><label for="library-type">Tipo</label><select id="library-type" data-library-type><option value="ALL">Todos</option><option value="GRAPH">Gráfico</option><option value="BIOMETER">Biômetro</option><option value="OTHER">Outro recurso</option></select></div>`;section.querySelector('.stack')?.before(controls);}
+function decorateCards(){const state=store.getState();document.querySelectorAll('[data-basic-tool-library] [data-library-tool-id]').forEach((card)=>{const tool=state.tools.find((item)=>item.id===card.dataset.libraryToolId&&!item.archivedAt);if(!tool)return;if(!card.querySelector('[data-tool-usage]')){const usage=state.treatmentComponents.filter((component)=>component.toolId===tool.id).length;const note=document.createElement('p');note.className='muted';note.dataset.toolUsage='true';note.textContent=usage?`Usado em ${usage} ${usage===1?'componente':'componentes'} de tratamento.`:'Ainda não utilizado em tratamentos.';card.appendChild(note);}});}
+function apply(){const state=store.getState(),q=norm(query);document.querySelectorAll('[data-library-tool-id]').forEach((card)=>{const tool=state.tools.find((item)=>item.id===card.dataset.libraryToolId&&!item.archivedAt);if(!tool){card.hidden=true;return;}const text=norm(`${tool.name||''} ${tool.purpose||''} ${tool.notes||''} ${(tool.tags||[]).join(' ')}`);card.hidden=!((!q||text.includes(q))&&(type==='ALL'||tool.type===type));});}
 function enhance(){ensureFilters();decorateCards();apply();}
 new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
 document.addEventListener('input',(event)=>{if(!event.target.matches('[data-library-search]'))return;query=event.target.value;apply();},true);
