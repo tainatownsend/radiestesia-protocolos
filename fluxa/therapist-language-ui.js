@@ -1,3 +1,4 @@
+function setText(node,value){if(node&&node.textContent!==value)node.textContent=value;}
 function polishTherapistLanguage() {
   const main=document.querySelector('main');
   if(!main)return;
@@ -5,22 +6,18 @@ function polishTherapistLanguage() {
   const choose=main.querySelector('[data-action="choose-assisted"]');
   if(choose){
     const heading=choose.closest('.card')?.querySelector('h2')?.textContent?.trim();
-    choose.textContent=heading==='Escolha um assistido'?'Escolher quem será atendido':'Trocar assistido';
+    setText(choose,heading==='Escolha um assistido'?'Escolher quem será atendido':'Trocar assistido');
   }
 
   const grid=main.querySelector('.action-grid');
   if(grid){
     const heading=grid.closest('.section')?.querySelector('.section-head h2');
-    if(heading)heading.textContent='O que você deseja fazer agora?';
+    setText(heading,'O que você deseja fazer agora?');
   }
 
-  const close=main.querySelector('[data-action="close-session"]');
-  if(close)close.textContent='Revisar e encerrar';
-
-  const resume=main.querySelector('[data-action="resume-latest-investigation"]');
-  if(resume)resume.textContent='Retomar investigação';
-
-  document.querySelectorAll('[data-general-assessment] strong').forEach((node)=>node.textContent='Avaliar');
+  setText(main.querySelector('[data-action="close-session"]'),'Revisar e encerrar');
+  setText(main.querySelector('[data-action="resume-latest-investigation"]'),'Retomar investigação');
+  document.querySelectorAll('[data-general-assessment] strong').forEach((node)=>setText(node,'Avaliar'));
 }
 
 new MutationObserver(polishTherapistLanguage).observe(document.body,{childList:true,subtree:true});
