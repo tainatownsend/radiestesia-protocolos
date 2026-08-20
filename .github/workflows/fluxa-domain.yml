@@ -25,6 +25,7 @@ jobs:
         run: |
           node fluxa/domain.test.mjs
           node fluxa/session-rules.test.mjs
+          node fluxa/store.test.mjs
           node fluxa/protocol-engine.test.mjs
           node fluxa/remaining.test.mjs
           node fluxa/storage-health.test.mjs
