@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
-import { startSession, createAssistedEntity } from './domain.js';
-import { PROTOCOL_LIBRARY, startBranchingInvestigation, answerBranchingInvestigation, currentProtocolNode, confirmBranchingFindings } from './protocol-engine.js';
+import { startSession, closeSession, createAssistedEntity } from './domain.js';
+import { PROTOCOL_LIBRARY, startBranchingInvestigation, resumeBranchingInvestigation, answerBranchingInvestigation, currentProtocolNode, confirmBranchingFindings } from './protocol-engine.js';
 
 function makeState() {
-  return { version:3, meta:{}, sessions:[], assistedEntities:[], events:[], preparationRuns:[], closingRuns:[], investigations:[], findings:[], treatments:[], treatmentComponents:[], treatmentReviews:[], assessments:[], reikiApplications:[] };
+  return { version:4, meta:{}, sessions:[], assistedEntities:[], events:[], preparationRuns:[], closingRuns:[], investigations:[], findings:[], treatments:[], treatmentComponents:[], treatmentReviews:[], assessments:[], reikiApplications:[], tools:[] };
 }
 function fakeStore() {
   let state = makeState(); let seq = 0; let now = Date.parse('2026-08-19T10:00:00Z');
-  return { getState:()=>state, setState(updater){ state = typeof updater === 'function' ? updater(state) : updater; return state; }, makeId(prefix='id'){ return `${prefix}_${++seq}`; }, nowIso(){ return new Date(now).toISOString(); } };
+  return { getState:()=>state, setState(updater){ state = typeof updater === 'function' ? updater(state) : updater; return state; }, makeId(prefix='id'){ return `${prefix}_${++seq}`; }, nowIso(){ return new Date(now).toISOString(); }, advance(ms){ now += ms; } };
 }
 
 assert.ok(PROTOCOL_LIBRARY.length >= 2);
@@ -43,6 +43,25 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   assert.equal(completed.status, 'COMPLETED');
   assert.equal(completed.endNodeId, 'end_clear');
   assert.equal(completed.answers.length, 1);
+}
+
+{
+  const store = fakeStore();
+  const first = startSession(store);
+  const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Continuidade', birthDate:'1985-05-05' });
+  const inv = startBranchingInvestigation(store, first.id, assisted.id, 'causa_raiz');
+  answerBranchingInvestigation(store, inv.id, 'YES');
+  const nodeBefore = currentProtocolNode(store.getState().investigations.find((i) => i.id === inv.id)).id;
+  closeSession(store, first.id, { endedAt:store.nowIso() });
+  store.advance(60 * 60 * 1000);
+  const second = startSession(store);
+  resumeBranchingInvestigation(store, inv.id, second.id);
+  const resumed = store.getState().investigations.find((i) => i.id === inv.id);
+  assert.equal(resumed.originSessionId, first.id);
+  assert.equal(resumed.currentSessionId, second.id);
+  assert.equal(currentProtocolNode(resumed).id, nodeBefore, 'resume must preserve the exact current node');
+  assert.equal(store.getState().sessions.find((s) => s.id === second.id).currentAssistedEntityId, assisted.id);
+  assert.ok(store.getState().events.some((e) => e.eventType === 'INVESTIGATION_RESUMED' && e.sessionId === second.id));
 }
 
 console.log('Fluxa protocol engine tests: OK');
