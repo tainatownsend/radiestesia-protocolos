@@ -38,11 +38,12 @@ function normalizePlannedComponent(store, treatmentId, input = {}) {
   const name = input.name?.trim();
   if (!name) throw new Error('Informe o nome de cada componente planejado.');
   const now = store.nowIso();
-  const tool = input.toolId ? (store.getState().tools || []).find((item) => item.id === input.toolId) : null;
+  const tool = input.toolId ? (store.getState().tools || []).find((item) => item.id === input.toolId && !item.archivedAt) : null;
+  if (input.toolId && !tool) throw new Error('O recurso selecionado da Biblioteca não está disponível.');
   return {
     id: store.makeId('cmp'),
     treatmentId,
-    toolId: input.toolId || null,
+    toolId: tool?.id || null,
     toolSnapshot: tool ? { id:tool.id, type:tool.type, name:tool.name } : null,
     type: input.type || 'TOOL',
     name,
@@ -67,6 +68,9 @@ export function createPlannedTreatment(store, input) {
   if (!assisted) throw new Error('Selecione um assistido válido.');
   const title = input.title?.trim();
   if (!title) throw new Error('Informe o objetivo ou nome do tratamento.');
+  if (!Array.isArray(input.components) || input.components.length === 0) {
+    throw new Error('Adicione pelo menos um componente ao tratamento planejado.');
+  }
   const now = store.nowIso();
   const treatment = {
     id: store.makeId('trt'),
@@ -84,7 +88,7 @@ export function createPlannedTreatment(store, input) {
     createdAt: now,
     updatedAt: now
   };
-  const components = (input.components || []).map((component) => normalizePlannedComponent(store, treatment.id, component));
+  const components = input.components.map((component) => normalizePlannedComponent(store, treatment.id, component));
 
   store.setState((current) => {
     const draft = structuredClone(current);
@@ -119,6 +123,8 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
   if (!prepared) throw new Error('Conclua a preparação da sessão antes de iniciar o tratamento planejado.');
   const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.PLANNED);
   if (!treatment) throw new Error('Tratamento planejado não encontrado.');
+  const plannedComponents = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.PLANNED);
+  if (!plannedComponents.length) throw new Error('Adicione ao menos um componente antes de iniciar o tratamento planejado.');
   const now = store.nowIso();
 
   store.setState((current) => {
