@@ -1,6 +1,7 @@
 import { createStore } from './store.js';
 
 const store=createStore();
+const FAVORITES_KEY='fluxa.toolFavorites';
 let targetSelect=null;
 let pickerCounter=0;
 let enhancing=false;
@@ -8,6 +9,8 @@ let enhancing=false;
 function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
 function norm(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function activeTools(){return (store.getState().tools||[]).filter((t)=>!t.archivedAt);}
+function favoriteIds(){try{return new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]'));}catch(_){return new Set();}}
+function saveFavoriteIds(ids){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...ids]));}catch(_){} }
 function usage(toolId,state=store.getState()){
   let n=(state.treatmentComponents||[]).filter((c)=>c.toolId===toolId).length;
   n+=(state.preparationRuns||[]).filter((p)=>(p.protection?.toolIds||[]).includes(toolId)).length;
@@ -15,14 +18,14 @@ function usage(toolId,state=store.getState()){
   return n;
 }
 function sortedTools(){
-  const state=store.getState();
-  return activeTools().map((t)=>({...t,_usage:usage(t.id,state)})).sort((a,b)=>Number(Boolean(b.favorite))-Number(Boolean(a.favorite))||b._usage-a._usage||a.name.localeCompare(b.name,'pt-BR'));
+  const state=store.getState();const favorites=favoriteIds();
+  return activeTools().map((t)=>({...t,_usage:usage(t.id,state),_favorite:favorites.has(t.id)})).sort((a,b)=>Number(b._favorite)-Number(a._favorite)||b._usage-a._usage||a.name.localeCompare(b.name,'pt-BR'));
 }
 function typeLabel(type){return ({GRAPH:'Gráfico',BIOMETER:'Biômetro',OTHER:'Outro'})[type]||'Recurso';}
 function close(){document.querySelector('#tool-picker-overlay')?.remove();targetSelect=null;}
 function pickerHtml(query=''){
   const tools=sortedTools();const q=norm(query).trim();const filtered=q?tools.filter((t)=>norm(`${t.name} ${t.purpose||''} ${t.notes||''}`).includes(q)):tools;
-  return `<div class="tool-picker-list">${filtered.length?filtered.map((t)=>`<article class="tool-picker-row" data-tool-search-text="${esc(norm(`${t.name} ${t.purpose||''}`))}"><button class="tool-favorite ${t.favorite?'active':''}" data-toggle-tool-favorite="${t.id}" aria-label="${t.favorite?'Remover dos favoritos':'Adicionar aos favoritos'}">★</button><button class="tool-pick-main" data-pick-tool="${t.id}"><span><strong>${esc(t.name)}</strong><small>${esc(typeLabel(t.type))}${t.purpose?` · ${esc(t.purpose)}`:''}</small></span>${t._usage?`<b>${t._usage}×</b>`:''}</button></article>`).join(''):'<div class="empty">Nenhum recurso encontrado.</div>'}</div>`;
+  return `<div class="tool-picker-list">${filtered.length?filtered.map((t)=>`<article class="tool-picker-row" data-tool-search-text="${esc(norm(`${t.name} ${t.purpose||''}`))}"><button class="tool-favorite ${t._favorite?'active':''}" data-toggle-tool-favorite="${t.id}" aria-label="${t._favorite?'Remover dos favoritos':'Adicionar aos favoritos'}">★</button><button class="tool-pick-main" data-pick-tool="${t.id}"><span><strong>${esc(t.name)}</strong><small>${esc(typeLabel(t.type))}${t.purpose?` · ${esc(t.purpose)}`:''}</small></span>${t._usage?`<b>${t._usage}×</b>`:''}</button></article>`).join(''):'<div class="empty">Nenhum recurso encontrado.</div>'}</div>`;
 }
 function openPicker(select){
   targetSelect=select;document.querySelector('#tool-picker-overlay')?.remove();
@@ -54,10 +57,6 @@ function enhance(){
 }
 new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
 
-store.subscribe(()=>{
-  if(document.querySelector('#tool-picker-overlay')&&targetSelect){const input=document.querySelector('[data-tool-picker-search]');const results=document.querySelector('[data-tool-picker-results]');if(results)results.innerHTML=pickerHtml(input?.value||'');}
-});
-
 document.addEventListener('input',(event)=>{
   if(event.target.matches('[data-tool-picker-search]')){const results=document.querySelector('[data-tool-picker-results]');if(results)results.innerHTML=pickerHtml(event.target.value);return;}
   if(event.target.matches('[data-tool-checklist-search]')){const q=norm(event.target.value);const fieldset=event.target.closest('fieldset');fieldset?.querySelectorAll('.check-row').forEach((row)=>row.hidden=Boolean(q&&!norm(row.textContent).includes(q)));}
@@ -67,6 +66,9 @@ document.addEventListener('click',(event)=>{
   const b=event.target.closest('button');if(!b)return;
   if(b.dataset.openToolPicker){const select=document.querySelector(`select[data-searchable-tool-picker="${CSS.escape(b.dataset.openToolPicker)}"]`);if(select)openPicker(select);return;}
   if(b.dataset.toolPickerClose!==undefined){close();return;}
-  if(b.dataset.toggleToolFavorite){const id=b.dataset.toggleToolFavorite;store.setState((state)=>{const draft=structuredClone(state);const tool=draft.tools.find((t)=>t.id===id);if(tool){tool.favorite=!tool.favorite;tool.updatedAt=store.nowIso();}return draft;});return;}
+  if(b.dataset.toggleToolFavorite){
+    const favorites=favoriteIds();const id=b.dataset.toggleToolFavorite;favorites.has(id)?favorites.delete(id):favorites.add(id);saveFavoriteIds(favorites);
+    const input=document.querySelector('[data-tool-picker-search]');const results=document.querySelector('[data-tool-picker-results]');if(results)results.innerHTML=pickerHtml(input?.value||'');return;
+  }
   if(b.dataset.pickTool!==undefined&&targetSelect){const id=b.dataset.pickTool;targetSelect.value=id;targetSelect.dispatchEvent(new Event('change',{bubbles:true}));const launch=targetSelect.previousElementSibling;if(launch?.matches('[data-open-tool-picker]')){const option=targetSelect.selectedOptions?.[0];launch.textContent=id&&option?option.textContent:'Digitar manualmente';}close();}
 },true);
