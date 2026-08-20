@@ -1,132 +1,162 @@
 # Fluxa MVP foundation
 
-Fluxa is being built as a new, local-only product inside an isolated `/fluxa` directory so the existing application can remain untouched during validation.
+Fluxa is a new local-only product being built inside the isolated `/fluxa` directory. The legacy root application remains untouched during validation.
 
-## Implemented in this branch
+## Product boundary
 
-### Foundation
-- Deep Teal mobile-first shell with four destinations: Hoje, Tratamentos, Assistidos, Biblioteca.
-- Local persistence with stable client-side IDs, backup and a separate recovery snapshot.
-- Multiple in-tab store instances synchronize so the base UI and backlog modules cannot overwrite one another with stale state.
-- One open `Session` at a time.
-- Event-derived timelines.
-- No login, backend, cloud synchronization or legacy-data migration in the MVP.
+- Mobile-first Deep Teal shell.
+- Exactly four main destinations: Hoje, Tratamentos, Assistidos, Biblioteca.
+- One open therapist `Session` at a time.
+- No login, backend, cloud sync, multi-device conflict handling or legacy-data migration in the MVP.
+- Session timestamps, activity timestamps and record-creation timestamps remain distinct.
 
-### Session / workspace
-- Session preparation with autosaved steps.
-- `AssistedEntity` creation and explicit session context.
-- Autosaved quick notes.
-- Safe closing confirmation that does not close longitudinal treatments.
-- Closing is blocked while an active/paused Reiki timer still belongs to the session.
-- Unfinished investigations may remain open after session closure.
-- A possibly forgotten open session is never auto-closed: the UI offers Continue or Correct closing.
-- Corrected closing preserves the actual `endedAt` separately from `closedRecordedAt` and creates a correction event.
+## Session / workspace
 
-### Assisted entities
-- Person requires full identification and date of birth.
-- Group remains a persistent assisted entity and captures members with full names and birth dates.
-- Environment/property requires a descriptive name and full address.
+- Session preparation is autosaved and belongs to the session.
+- Preparation records breathing, vibrational-frequency measurement, protection resources/notes and protection/permission completion.
+- Library resources used for protection are preserved as snapshots so later library edits do not rewrite historical sessions.
+- Multiple assisted entities can be worked with during one therapist session by switching explicit context.
+- Quick notes are linked to both session and assisted entity.
+- Closing a session never completes longitudinal treatments automatically.
+- Active/paused Reiki linked to the session blocks closure.
+- Forgotten sessions are never auto-closed; Continue and Correct closing are explicit choices.
+- Corrected closing stores actual `endedAt` separately from `closedRecordedAt`.
+- Session history exposes preparation details and event timeline contextually without adding a fifth navigation destination.
+
+## Assisted entities
+
+Supported types: Person, PET, Environment, Group, Situation/Process and Other.
+
+- Person requires date of birth.
+- Group requires at least one member; every member requires full name and birth date.
+- Environment requires full address.
 - PET supports open descriptive details.
-- Situation/process captures process identification and involved/requesting person details.
-- Longitudinal assisted detail projects history from events.
-- Assisted entities can be edited without rewriting prior events.
-- Assisted type stays fixed during MVP edits to preserve historical meaning.
-- Assisted entities can be archived while retaining all history; active work blocks archival.
+- Situation/Process requires identifier plus a structured involved/requesting person field.
+- Assisted entities have longitudinal history, contextual summaries and search/type filtering.
+- Editing preserves previous events instead of rewriting them.
+- Type remains fixed during MVP editing.
+- Archiving is soft, preserves history and is blocked while active work exists.
+- Archived assisted entities remain consultable in a read-only contextual view.
 
-### Investigation / protocol library
-- Versioned sample protocol (`Triagem rápida`).
-- Investigation with large Sim/Não controls and immediate persistence.
-- Investigation stores a frozen protocol snapshot/version.
-- Unfinished investigation can be resumed in a later open session while preserving its origin session.
-- Resume creates an `INVESTIGATION_RESUMED` event in the new session.
-- Explicit consolidation step: positive answers do not automatically become findings.
-- Findings preserve traceability to investigation/question snapshots.
-- Generic branching protocol engine added with immutable version snapshots and node-based yes/no routing.
-- Initial branching library includes `Investigação inicial` v1 and `Causa raiz` v1.
-- Branching results support explicit finding classification: cause, maintainer, consequence, association, relevant factor or item to deepen.
+## Investigations / findings
 
-### Treatment
-- Longitudinal `Treatment` separated from `Session`.
-- Direct treatment creation is allowed without a preceding investigation.
-- Treatment components have their own duration and calculated expected end.
-- Derived “Revisão disponível” condition when an active component reaches its expected end.
-- Treatments remain active after session closure.
-- Treatment interruption preserves history and components.
-- Interrupted treatment can be resumed without creating a new treatment.
-- By default, time spent interrupted does not consume the component's prescribed duration: active component `expectedEndAt` is shifted by the interruption period and the reschedule is recorded.
-- Multiple treatment components can be added independently.
-- Components can be stopped or replaced without overwriting prior records; replacements retain a link to the original component.
-- Each component has its own dismantling review: 100% complete + permission to dismantle.
-- Component reviews are stored independently; only two positive answers complete/dismantle the component.
-- Final assessment is unlocked only when every component is resolved (completed, stopped or replaced).
-- Structured final assessment captures vibrational-frequency text/value, imbalance percentage, whether a new treatment is needed and when.
-- After component resolution and final assessment, the current treatment is completed even if a future treatment cycle is recommended.
+- Answers are persisted immediately.
+- Incomplete investigations can resume in later sessions while preserving `originSessionId` and exact current position/node.
+- Every protocol execution stores an immutable protocol snapshot/version.
+- Positive answers never become findings automatically.
+- Findings are explicitly confirmed and individually classified.
+- Finding classifications: Cause, Maintainer, Consequence, Association, Relevant factor, Item to deepen.
+- Findings keep traceability back to investigation/question snapshot and can be linked to treatment origin.
 
-### Reiki
-- MVP Reiki is timer + application record only; there are no guided positions/steps.
-- Active timer uses timestamp intervals rather than a volatile in-memory counter.
-- Pause and resume are supported.
-- Reload can reconstruct elapsed time from saved intervals.
-- Completing Reiki stores total duration and optional notes without closing the session.
-- Retrospective completed Reiki applications can be registered outside a session.
+### MVP protocol set
 
-### Local recovery / privacy-oriented handling
-- Primary, backup and recovery local snapshots are validated independently.
-- Visible storage warning appears when writes cannot be confirmed or primary data is corrupt.
-- Valid backup/recovery data can be restored to the primary record.
-- User can export the current valid local dataset as JSON from Hoje.
-- No cloud/account data path exists in the MVP.
+- Triagem rápida v1.
+- Investigação inicial v1.
+- Investigação completa v1.
+- Causa raiz v1.
+- Protocolo específico v1 as a neutral specific-deepening flow.
 
-### Accessibility / mobile hardening
-- Dialog semantics and accessible titles are applied across the layered UI.
-- Close buttons receive accessible names.
-- Focus moves into newly opened dialogs and Escape can close the active dialog.
-- Reiki timer uses timer semantics without announcing every second.
-- Form controls receive accessible names where the base markup lacks explicit linkage.
-- Focus-visible, high-contrast/forced-colors and reduced-motion handling are included.
-- Narrow action rows stack instead of relying on precision tapping.
+`Meus protocolos` / full protocol authoring remains later work.
+
+## Treatments
+
+- Treatment is longitudinal and independent from Session lifetime.
+- Direct treatment creation is supported without a prior investigation.
+- Planned treatments can be created outside a session and started only inside an open prepared session.
+- Planned treatments support multiple components; duration starts only when the planned treatment is activated.
+- Treatment components may have independent durations or no defined deadline.
+- Multiple components can be created initially or added later.
+- Library resources can be linked to components with immutable snapshots.
+- Components can be stopped or replaced without overwriting historical records.
+- Treatment interruption is immutable history; resumption does not create a new treatment.
+- By default, interruption time shifts active component `expectedEndAt` so prescribed active duration is preserved.
+- Component dismantling review requires both: 100% complete and permission to dismantle.
+- Negative/incomplete reviews are retained without completing the component.
+- Final assessment unlocks only after all components are resolved.
+- Final assessment requires vibrational frequency and imbalance percentage and records whether another cycle is needed.
+- The completed treatment remains closed even when a new future cycle is recommended.
+- A recommended next cycle can be created as a separate `PLANNED` treatment linked to the previous treatment/assessment.
+- Administrative completion is allowed outside session only when all components are resolved and no new measurement is being performed.
+- Treatment list includes contextual status filters and detailed treatment history.
+
+## Reiki
+
+- MVP scope is timer + application record only; there are no guided positions/steps.
+- Modes: Presential, Distance, Self-application and Other.
+- Reiki may run inside a session or independently outside a session when no radiesthesia measurement is involved.
+- Only one active/paused Reiki application is allowed at a time.
+- Timer duration is reconstructed from timestamp intervals and survives reload/background.
+- Pause/resume create persisted intervals.
+- Completion stores total duration and notes.
+- Retrospective completed Reiki recording is supported outside session.
+
+## Activity library / assessments
+
+- Biblioteca stores reusable Graph, Biometer and Other resource entries.
+- Resources can be created, edited, archived, searched and filtered.
+- Historical treatment/session records preserve resource snapshots rather than depending on current library names.
+- Library UI shows contextual usage count in treatment components.
+- `Avaliar` records a general measurement/result linked to the current prepared session and assisted entity.
+
+## Local persistence / recovery
+
+- Primary, backup and recovery snapshots are validated independently.
+- Saves write a recovery snapshot before replacing the primary record.
+- In-tab store instances synchronize to prevent stale layered UI modules from overwriting newer state.
+- Visible health warning appears for corrupt/unwritable storage.
+- Valid backup/recovery data can be restored explicitly.
+- JSON export and validated import are available locally.
+- Import preserves the previous valid primary dataset as backup before replacement.
+
+## Accessibility / mobile hardening
+
+- Dialog semantics and accessible titles.
+- Focus moves into opened dialogs; Escape closes when a close action exists.
+- Accessible names for close buttons and form controls.
+- Timer semantics without announcing every second.
+- Visible focus, forced-colors/high-contrast handling and reduced-motion support.
+- Large touch targets and narrow-screen stacking.
+- Sim/Não remains a focused large-control pattern.
 
 ## Core data contracts
 
 - `Session`: therapist work window.
+- `PreparationRun`: session preparation, including structured frequency/protection data.
 - `AssistedEntity`: person/group/pet/environment/process/other receiving the work.
 - `Event`: immutable timeline/audit projection source.
-- `Investigation`: protocol execution tied to a frozen protocol version snapshot and able to continue across sessions.
-- `Finding`: confirmed result of an investigation, separate from raw answers.
+- `Investigation`: frozen protocol execution able to continue across sessions.
+- `Finding`: explicitly confirmed/classified investigation result.
 - `Treatment`: longitudinal process independent from session lifetime.
-- `TreatmentComponent`: concrete graph/tool/component with its own timing and lifecycle.
+- `TreatmentComponent`: concrete resource/component with independent lifecycle/timing.
 - `TreatmentComponentReview`: component-specific completion/permission verification.
-- `TreatmentReview`: treatment-level measurement/review event.
-- `Assessment`: final post-treatment measurement/decision record.
-- `ReikiApplication`: timer/application record with persisted intervals.
-
-## Local-only MVP
-
-There is intentionally no login, account, backend, cloud synchronization, migration from the legacy app, or multi-device conflict handling in this branch.
+- `Assessment`: general or final post-treatment measurement/decision record.
+- `ReikiApplication`: timer/application record with persisted intervals and mode.
+- `Tool`: reusable local Library resource.
 
 ## Automated checks
 
-- `domain.test.mjs` covers session behavior, cross-session investigation resume, corrected closing, treatment interruption/resume timing, multi-component replacement, final assessment, Reiki elapsed time and minimum assisted fields.
-- `protocol-engine.test.mjs` covers branching paths, protocol version identity and explicit finding confirmation/classification.
-- `remaining.test.mjs` covers component dismantling, assisted edit/archive safety and treatment completion after final assessment.
-- `storage-health.test.mjs` covers corrupt-primary detection and local recovery.
-- `.github/workflows/fluxa-domain.yml` runs all four suites on branch changes and pull requests.
+GitHub Actions runs regression suites for core domain behavior, branching protocols, treatment lifecycle, storage recovery/import, activity library, treatment planning, administrative completion, Reiki, follow-up cycles, structured preparation, final-assessment rules and static shell integrity.
 
-## Remaining work before product validation
+## Remaining before merge/product validation
 
-The core MVP backlog is now largely implemented. Remaining work is primarily validation/refinement rather than missing domain architecture:
+The remaining MVP work is primarily validation/refinement rather than missing core domain architecture:
 
-1. Run end-to-end mobile QA on real Safari/iPhone and iPad, including background/foreground and keyboard states.
-2. Run VoiceOver/accessibility regression and fix issues found on-device.
-3. Validate localStorage quota/private-mode failure behavior on target browsers.
-4. Perform a final visual pass against the approved Deep Teal mockups with populated real-world states.
-5. Expand protocol content/version authoring only after the representative engine is validated.
-6. Reports/PDF remain phase 2 unless intentionally pulled forward.
+1. Real Safari/iPhone QA, including keyboard and repeated background/foreground transitions.
+2. iPad portrait/landscape QA.
+3. VoiceOver/iOS accessibility pass and fixes.
+4. Real target-browser localStorage private-mode/quota behavior.
+5. Export → clear/import → restore validation on real iOS browser.
+6. Screen-by-screen visual hierarchy pass against approved Deep Teal mockups using populated states.
+7. Consolidate layered UI modules after MVP validation if long-term maintainability becomes the next priority.
 
-## QA
+## Explicitly later / phase 2
 
-See `QA.md` for the detailed regression checklist.
+- Authentication and cloud sync.
+- Legacy migration.
+- Agenda/CRM/billing/client portal.
+- Reports/PDF advanced outputs.
+- Full custom protocol editor / `Meus protocolos`.
 
 ## Validation principle
 
-This branch should stay isolated until the core workflow is visually and functionally validated. Do not replace the legacy root `index.html` yet.
+Keep this branch isolated until the core workflow is visually and functionally validated. Do not replace the legacy root `index.html` yet.
