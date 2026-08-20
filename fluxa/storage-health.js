@@ -8,6 +8,16 @@ function parse(raw) {
   try { return JSON.parse(raw); } catch (_) { return null; }
 }
 
+function looksLikeFluxaData(value) {
+  return Boolean(
+    value && typeof value === 'object' &&
+    Array.isArray(value.sessions) &&
+    Array.isArray(value.assistedEntities) &&
+    Array.isArray(value.events) &&
+    Array.isArray(value.treatments)
+  );
+}
+
 export function inspectStorageHealth() {
   let writable = true;
   let writeError = null;
@@ -44,6 +54,16 @@ export function recoverLocalData() {
   const source = parse(backupRaw) ? backupRaw : (parse(recoveryRaw) ? recoveryRaw : null);
   if (!source) throw new Error('Nenhuma cópia local válida foi encontrada para recuperação.');
   localStorage.setItem(STORAGE_KEY, source);
+  return true;
+}
+
+export function importLocalDataText(text) {
+  const parsed = parse(text);
+  if (!looksLikeFluxaData(parsed)) throw new Error('Este arquivo não parece ser uma cópia válida do Fluxa.');
+  const current = localStorage.getItem(STORAGE_KEY);
+  if (current && parse(current)) localStorage.setItem(BACKUP_KEY, current);
+  localStorage.setItem(RECOVERY_KEY, text);
+  localStorage.setItem(STORAGE_KEY, text);
   return true;
 }
 
