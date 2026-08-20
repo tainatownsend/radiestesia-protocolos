@@ -14,7 +14,7 @@ function makeId(prefix = 'id') {
 
 function emptyState() {
   return {
-    version: 4,
+    version: 5,
     meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
     sessions: [],
     assistedEntities: [],
@@ -25,6 +25,7 @@ function emptyState() {
     findings: [],
     treatments: [],
     treatmentComponents: [],
+    componentReviews: [],
     treatmentReviews: [],
     assessments: [],
     reikiApplications: [],
@@ -41,7 +42,7 @@ function normalize(parsed) {
   return {
     ...base,
     ...parsed,
-    version: 4,
+    version: 5,
     meta: { ...base.meta, ...(parsed?.meta || {}) },
     sessions: list(parsed?.sessions),
     assistedEntities: list(parsed?.assistedEntities),
@@ -52,6 +53,7 @@ function normalize(parsed) {
     findings: list(parsed?.findings),
     treatments: list(parsed?.treatments),
     treatmentComponents: list(parsed?.treatmentComponents),
+    componentReviews: list(parsed?.componentReviews),
     treatmentReviews: list(parsed?.treatmentReviews),
     assessments: list(parsed?.assessments),
     reikiApplications: list(parsed?.reikiApplications),
