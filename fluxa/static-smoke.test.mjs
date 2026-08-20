@@ -17,7 +17,7 @@ for (const ref of localRefs) {
 const required = [
   'app.js','assisted-context-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','follow-up-treatment-ui.js',
   'protocol-ui.js','custom-protocol-ui.js','branching-resume-ui.js','finding-classification-ui.js','remaining-ui.js','workflow-integrity-ui.js',
-  'activity-library-ui.js','therapist-experience-ui.js','therapist-language-ui.js','history-ui.js','session-report-history-ui.js','reiki-outside-ui.js','reiki-lifecycle-ui.js','structured-preparation-ui.js',
+  'activity-library-ui.js','therapist-experience-ui.js','therapist-language-ui.js','traceability-ui.js','history-ui.js','session-report-history-ui.js','reiki-outside-ui.js','reiki-lifecycle-ui.js','structured-preparation-ui.js','guided-preparation-ui.js',
   'import-ui.js','backup-reminder-ui.js','validation-ui.js','a11y.js','styles.css','remaining.css'
 ];
 for (const file of required) assert.ok(localRefs.includes(file), `index.html must include ${file}`);
