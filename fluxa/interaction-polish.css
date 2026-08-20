@@ -38,12 +38,21 @@
 .tool-pick-main b { flex:0 0 auto; padding:4px 7px; border-radius:999px; background:var(--surface-2); color:var(--primary); font-size:11px; }
 .checklist-search { width:100%; min-height:46px; margin:8px 0 10px; padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:#fff; color:var(--text); }
 
+.native-chip-select { position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important; pointer-events:none !important; }
+.touch-chip-group { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.touch-chip { min-height:44px; padding:0 13px; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--primary); font-weight:750; }
+.touch-chip.active { border-color:var(--primary); background:var(--primary); color:#fff; box-shadow:0 5px 14px rgba(23,63,70,.13); }
+.classification-chip-group .touch-chip { flex:1 1 145px; border-radius:13px; }
+.reiki-chip-group .touch-chip { flex:1 1 120px; }
+
 @media (max-width:560px) {
   .search-launch > span:last-child { display:none; }
   .search-launch { width:40px; min-height:40px; justify-content:center; padding:0; }
   .insight-grid { grid-template-columns:1fr; }
   .imbalance-trend { height:160px; gap:6px; }
   .trend-bar-track { height:95px; }
+  .classification-chip-group .touch-chip { flex:1 1 calc(50% - 8px); min-height:50px; }
+  .reiki-chip-group .touch-chip { flex:1 1 calc(50% - 8px); min-height:50px; }
 }
 
 @media (min-width:700px) {
