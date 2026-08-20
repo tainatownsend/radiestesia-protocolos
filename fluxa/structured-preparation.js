@@ -8,6 +8,10 @@ export function updatePreparationDetails(store, runId, input = {}) {
   const protectionToolIds = Array.isArray(input.protectionToolIds) ? [...new Set(input.protectionToolIds.filter(Boolean))] : [];
   const protectionNotes = String(input.protectionNotes ?? '').trim();
   const permissionNotes = String(input.permissionNotes ?? '').trim();
+  const protectionToolSnapshots = protectionToolIds.map((toolId) => {
+    const tool = (state.tools || []).find((item) => item.id === toolId);
+    return tool ? { id:tool.id, type:tool.type, name:tool.name } : { id:toolId, type:null, name:'Recurso não disponível' };
+  });
 
   store.setState((current) => {
     const draft = structuredClone(current);
@@ -19,6 +23,7 @@ export function updatePreparationDetails(store, runId, input = {}) {
     } : null;
     target.protection = {
       toolIds: protectionToolIds,
+      toolSnapshots: protectionToolSnapshots,
       notes: protectionNotes || null
     };
     target.permissionNotes = permissionNotes || null;
