@@ -59,13 +59,15 @@ The current PR adds an explicit fast-use layer intended for phone/iPad operation
 - optional `Modo atendimento` to reduce nonessential context during the active session;
 - persistent `Atendimento atual` context with quick assisted switching;
 - large Sim/Não and touch-chip controls for finding classifications and Reiki mode;
+- quick imbalance choices at 0/25/50/75/100%, while arbitrary 0–100 values remain available;
 - duration presets (`30 min`, `1 h`, `1 dia`, `7 dias`, `Sem prazo`);
 - recent treatment-title suggestions for the selected assisted entity;
 - optional treatment objective stored separately from the treatment title;
 - `Repetir última configuração` for a previously used Library resource, copying only the previous command/duration fields into the current draft;
 - universal search across assisted entities, treatments, Library resources and protocols;
 - longitudinal assisted summary with current work, latest assessment and simple imbalance evolution;
-- searchable Library picker with favorites and usage context rather than long mobile selects.
+- searchable Library picker with favorites and usage context rather than long mobile selects;
+- virtual-keyboard adaptation using the visible iOS/iPad viewport so sheets and controls remain reachable while typing.
 
 ### Safe closing and reports
 
@@ -84,7 +86,7 @@ The therapist can generate:
 - one separate report per assisted entity, so information from different people is never mixed;
 - a shorter `Resumo para compartilhar` layer for client-facing sharing when appropriate.
 
-Reports contain session timing, assessments, investigations, confirmed findings, treatments/components and Reiki records. They open as printable documents and can be printed or saved as PDF by the browser. Reports can also be regenerated later from Session history.
+Reports contain session timing, assessments, investigations, confirmed findings, treatments/components, optional therapeutic objective and Reiki records. They open as printable documents and can be printed or saved as PDF by the browser. Reports can also be regenerated later from Session history.
 
 ## Assisted entities and longitudinal history
 
@@ -175,6 +177,7 @@ Traceability is visible in both directions:
 - Bulk import accepts CSV, TSV, TXT, pasted spreadsheet data or one-resource-per-line lists.
 - Bulk import previews the new resources and ignores duplicate active names before saving.
 - A downloadable CSV template is available from the import sheet.
+- Active Library resources can also be exported back to CSV for spreadsheet maintenance / round-trip editing.
 - Library resources can be favorited; favorites are shown first in the Library and in searchable treatment/resource pickers.
 - Searchable pickers show usage context so a ~150-resource Library remains practical on phone/tablet.
 - Historical snapshots protect earlier records from later Library edits.
@@ -196,6 +199,15 @@ Traceability is visible in both directions:
 UI-only favorites are local convenience preferences and do not alter or rewrite therapeutic history.
 
 This remains device-local protection, not cloud backup. Losing/clearing the device can still lose data that was never exported.
+
+## Installable / offline daily use
+
+- Fluxa exposes a web-app manifest with the Deep Teal theme and Fluxa home-screen icon.
+- On supported browsers it can be added to the device Home Screen and opened in standalone app mode.
+- A scoped service worker uses a network-first strategy: while online, current files are requested from the network; cached files are fallback only when the network is unavailable.
+- The currently loaded Fluxa shell/assets are cached for offline fallback after service-worker installation.
+- When the browser reports offline state, Fluxa shows `Sem conexão · trabalhando com a cópia local do Fluxa`.
+- Offline capability does not replace local-data export/backup and does not introduce cloud sync.
 
 ## Accessibility/mobile hardening
 
@@ -221,13 +233,13 @@ GitHub Actions runs:
 - treatment lifecycle and planning;
 - storage import/recovery;
 - Library/assessment behavior;
-- bulk Library parser/import regression;
+- bulk Library parser/import/export round-trip regression;
 - administrative completion;
 - Reiki lifecycle;
 - follow-up treatment cycles;
 - structured preparation;
 - final-assessment rules;
-- static shell dependency/branding checks, including the daily-use modules and Deep Teal theme metadata.
+- static shell dependency/branding/install/offline checks, including daily-use modules and Deep Teal theme metadata.
 
 ## Manual validation still required
 
@@ -237,15 +249,17 @@ GitHub Actions runs:
 4. Custom protocol creation, branching, versioning and resource snapshots.
 5. Session safety review and per-assisted reports with realistic populated data.
 6. Internal vs shareable report behavior and print/save-to-PDF on iPhone/iPad.
-7. Bulk Library import with a real large spreadsheet/list and searchable/favorite resource picking.
+7. Bulk Library import/export with a real large spreadsheet/list and searchable/favorite resource picking.
 8. Preparation reuse shortcut confirms that only scale/protection preferences are copied and no step/current frequency is auto-completed.
 9. Safari/iPhone keyboard open/closed, reload and repeated background/foreground transitions.
 10. Reiki timer background/foreground on a real device.
 11. iPad portrait/landscape and Modo atendimento.
-12. VoiceOver/iOS.
-13. Actual private-mode/localStorage quota/failure behavior.
-14. Export → clear/import → restore on the target browser.
-15. Full Deep Teal visual hierarchy pass with populated real-world states.
+12. Add Fluxa to the Home Screen on the target device and confirm standalone launch.
+13. Load once online, switch to airplane/offline mode and confirm an offline reload uses the cached Fluxa shell and shows the offline status banner.
+14. VoiceOver/iOS.
+15. Actual private-mode/localStorage quota/failure behavior.
+16. Export → clear/import → restore on the target browser.
+17. Full Deep Teal visual hierarchy pass with populated real-world states.
 
 ## Explicitly later
 
