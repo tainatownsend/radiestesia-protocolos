@@ -91,6 +91,9 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 - Corrupt primary data with a valid backup exposes a recovery action.
 - Recovery copies the valid backup/recovery candidate back to the primary record.
 - User can export the current valid local dataset as JSON from Hoje.
+- User can import a valid Fluxa JSON backup from Hoje.
+- Import rejects unrelated/invalid JSON before touching current data.
+- Import preserves the current valid primary dataset as backup before replacement.
 
 ## Mobile / one hand
 
@@ -117,17 +120,19 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 
 ## Automated regression
 
-- `node fluxa/domain.test.mjs` passes in CI.
-- `node fluxa/protocol-engine.test.mjs` passes in CI.
-- `node fluxa/remaining.test.mjs` covers component dismantling, assisted editing/archive and treatment completion rules.
-- `node fluxa/storage-health.test.mjs` covers primary corruption and local recovery.
-- GitHub Actions workflow `Fluxa domain checks` runs all four test files for Fluxa branch changes/PRs.
+- `node fluxa/domain.test.mjs` covers core session/investigation/treatment/Reiki rules.
+- `node fluxa/protocol-engine.test.mjs` covers branching and immutable protocol execution.
+- `node fluxa/remaining.test.mjs` covers dismantling, assisted edit/archive and treatment completion.
+- `node fluxa/storage-health.test.mjs` covers corruption recovery plus validated export/import behavior.
+- `node fluxa/static-smoke.test.mjs` verifies that every local script/style referenced by `fluxa/index.html` exists and that the Fluxa shell does not regress to legacy branding.
+- GitHub Actions workflow `Fluxa domain checks` runs all five test files for Fluxa branch changes/PRs.
 
 ## Manual validation still required before merge
 
 - Test Safari on iPhone with keyboard open/closed and repeated background/foreground transitions.
 - Test iPad portrait/landscape.
 - Test localStorage quota/private-mode behavior on actual target browsers.
+- Test export → clear/import → restore on a real iOS browser.
 - Test screen reader navigation on at least VoiceOver/iOS.
 - Confirm visual hierarchy against the approved Deep Teal mockups after all functional states are populated.
 
