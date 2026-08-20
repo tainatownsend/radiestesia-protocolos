@@ -4,7 +4,6 @@ import path from 'node:path';
 
 const root = new URL('.', import.meta.url);
 const html = fs.readFileSync(new URL('./index.html', root), 'utf8');
-
 const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
 const localRefs = refs.filter((ref) => !/^(https?:|data:|#)/.test(ref));
 assert.ok(localRefs.length >= 2, 'Fluxa shell should load local scripts/styles.');
@@ -32,7 +31,7 @@ while(moduleQueue.length){
 assert.ok(visitedModules.size>localRefs.filter((ref)=>/\.m?js$/.test(ref)).length,'Browser module graph should include imported dependencies beyond index scripts.');
 
 const required = [
-  'app.js','persistence-status-ui.js','viewport-ui.js','offline-ui.js','today-continuity-ui.js','form-draft-ui.js','assisted-context-ui.js','assisted-quick-pick-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','treatment-objective-ui.js','follow-up-treatment-ui.js',
+  'app.js','persistence-status-ui.js','viewport-ui.js','offline-ui.js','today-continuity-ui.js','continuity-resume-ui.js','form-draft-ui.js','assisted-context-ui.js','assisted-quick-pick-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','treatment-objective-ui.js','follow-up-treatment-ui.js',
   'protocol-ui.js','custom-protocol-ui.js','branching-resume-ui.js','finding-classification-ui.js','remaining-ui.js','treatment-card-identity-ui.js','workflow-integrity-ui.js',
   'activity-library-ui.js','library-refinement-ui.js','library-favorites-ui.js','bulk-library-ui.js','tool-picker-search-ui.js','session-template-ui.js','therapist-experience-ui.js','session-fast-flow-ui.js','quick-input-ui.js','quick-percentage-ui.js','repeat-component-ui.js','recent-choice-ui.js','touch-select-ui.js','longitudinal-insights-ui.js','reports-ui.js','client-report-ui.js','therapist-language-ui.js','universal-search-ui.js','traceability-ui.js','history-ui.js','session-report-history-ui.js','reiki-outside-ui.js','reiki-lifecycle-ui.js','structured-preparation-ui.js','preparation-repeat-ui.js','guided-preparation-ui.js',
   'import-ui.js','backup-reminder-ui.js','validation-ui.js','a11y.js','styles.css','remaining.css','visual-polish.css','interaction-polish.css','daily-use-polish.css','manifest.webmanifest','icon.svg'
@@ -71,12 +70,18 @@ assert.match(serviceWorker, /fetch\(request\)/);
 assert.match(serviceWorker, /caches\.match\(request\)/);
 
 const appUi=fs.readFileSync(new URL('./app.js',root),'utf8');
-assert.match(appUi,/function readRoutePreference\(\).*try/,'Route preference should tolerate blocked sessionStorage.');
-assert.match(appUi,/function saveRoutePreference\(value\).*try/,'Route writes should tolerate blocked sessionStorage.');
+assert.match(appUi,/function readRoutePreference\(\).*try/);
+assert.match(appUi,/function saveRoutePreference\(value\).*try/);
 
 const offlineUi = fs.readFileSync(new URL('./offline-ui.js', root), 'utf8');
 assert.match(offlineUi, /controllerchange/);
 assert.match(offlineUi, /data-apply-app-update/);
+
+const continuityUi=fs.readFileSync(new URL('./continuity-resume-ui.js',root),'utf8');
+assert.match(continuityUi,/resumeInvestigation\(/,'Quick investigations should resume the selected investigation ID.');
+assert.match(continuityUi,/resumeBranchingInvestigation\(/,'Built-in branching investigations should resume by selected ID.');
+assert.match(continuityUi,/data-start-custom-protocol/,'Custom investigations should reopen the matching custom protocol after preparation.');
+assert.match(continuityUi,/pendingInvestigationResume/,'Continuity intent should survive the preparation transition in session storage.');
 
 const draftUi = fs.readFileSync(new URL('./form-draft-ui.js', root), 'utf8');
 assert.match(draftUi, /version:2/);
@@ -94,7 +99,7 @@ assert.match(clientReportUi, /histórico técnico do Fluxa/);
 
 const libraryUi=fs.readFileSync(new URL('./activity-library-ui.js',root),'utf8');
 const libraryRefinement=fs.readFileSync(new URL('./library-refinement-ui.js',root),'utf8');
-assert.match(libraryUi,/data-library-tool-id=\\?"\$\{tool\.id\}/,'Library cards should be born with stable tool IDs.');
-assert.doesNotMatch(libraryRefinement,/activeTools\s*\(/,'Library refinement must not remap cards by active-tools array position.');
+assert.match(libraryUi,/data-library-tool-id=\\?"\$\{tool\.id\}/);
+assert.doesNotMatch(libraryRefinement,/activeTools\s*\(/);
 
 console.log('static-smoke.test.mjs: ok');
