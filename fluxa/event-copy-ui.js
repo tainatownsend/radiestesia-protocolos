@@ -15,6 +15,7 @@ const labels = Object.freeze({
   TREATMENT_RESUMED: 'Tratamento retomado',
   TREATMENT_REVIEWED: 'Tratamento revisado',
   TREATMENT_COMPLETED: 'Tratamento concluído',
+  FOLLOW_UP_TREATMENT_PLANNED: 'Próximo ciclo planejado',
   COMPONENT_PLANNED: 'Componente planejado',
   COMPONENT_STARTED: 'Componente iniciado',
   COMPONENT_COMPLETED: 'Componente concluído',
