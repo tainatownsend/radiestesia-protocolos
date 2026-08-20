@@ -8,29 +8,19 @@ const html = fs.readFileSync(new URL('./index.html', root), 'utf8');
 const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
 const localRefs = refs.filter((ref) => !/^(https?:|data:|#)/.test(ref));
 assert.ok(localRefs.length >= 2, 'Fluxa shell should load local scripts/styles.');
-
-for (const ref of localRefs) {
-  const filePath = path.resolve(new URL(ref, root).pathname);
-  assert.ok(fs.existsSync(filePath), `Missing shell dependency: ${ref}`);
-}
+for (const ref of localRefs) assert.ok(fs.existsSync(path.resolve(new URL(ref, root).pathname)), `Missing shell dependency: ${ref}`);
 
 function localModuleRefs(source) {
   const refs=[];
-  const patterns=[
-    /(?:import|export)\s+(?:[^'";]*?\s+from\s*)?["']([^"']+)["']/g,
-    /import\s*\(\s*["']([^"']+)["']\s*\)/g
-  ];
+  const patterns=[/(?:import|export)\s+(?:[^'";]*?\s+from\s*)?["']([^"']+)["']/g,/import\s*\(\s*["']([^"']+)["']\s*\)/g];
   for (const pattern of patterns) for (const match of source.matchAll(pattern)) if (match[1].startsWith('.')) refs.push(match[1]);
   return refs;
 }
-
 const moduleQueue=localRefs.filter((ref)=>/\.m?js$/.test(ref)).map((ref)=>new URL(ref,root));
 const visitedModules=new Set();
 while(moduleQueue.length){
-  const moduleUrl=moduleQueue.shift();
-  const key=moduleUrl.href;if(visitedModules.has(key))continue;visitedModules.add(key);
-  const filePath=path.resolve(moduleUrl.pathname);
-  assert.ok(fs.existsSync(filePath),`Missing browser module: ${moduleUrl.pathname}`);
+  const moduleUrl=moduleQueue.shift();const key=moduleUrl.href;if(visitedModules.has(key))continue;visitedModules.add(key);
+  const filePath=path.resolve(moduleUrl.pathname);assert.ok(fs.existsSync(filePath),`Missing browser module: ${moduleUrl.pathname}`);
   const source=fs.readFileSync(filePath,'utf8');
   for(const ref of localModuleRefs(source)){
     const target=new URL(ref,moduleUrl);
@@ -54,41 +44,56 @@ assert.equal(new Set(localRefs).size, localRefs.length, 'Shell should not load d
 assert.match(html, /<html lang="pt-BR">/);
 assert.match(html, /<title>Fluxa<\/title>/);
 assert.match(html, /meta name="theme-color" content="#173F46"/);
+assert.match(html, /meta name="mobile-web-app-capable" content="yes"/);
 assert.match(html, /meta name="apple-mobile-web-app-title" content="Fluxa"/);
+assert.match(html, /rel="apple-touch-icon" href="icon\.svg"/);
 assert.match(html, /rel="manifest" href="manifest\.webmanifest"/);
 assert.doesNotMatch(html, /Radiestesia Terapêutica|Radiestesia & Reiki|Lumera/);
 assert.equal((html.match(/data-route=/g)||[]).length,0,'navigation is rendered by app.js, not duplicated in the shell');
 
 const manifest = JSON.parse(fs.readFileSync(new URL('./manifest.webmanifest', root), 'utf8'));
+assert.equal(manifest.id, './');
 assert.equal(manifest.name, 'Fluxa');
+assert.equal(manifest.lang, 'pt-BR');
 assert.equal(manifest.display, 'standalone');
 assert.equal(manifest.theme_color, '#173F46');
+assert.equal(manifest.background_color, '#EFF1EF');
 assert.equal(manifest.start_url, './');
+assert.equal(manifest.scope, './');
 
 const serviceWorker = fs.readFileSync(new URL('./service-worker.js', root), 'utf8');
-assert.match(serviceWorker, /fluxa-runtime-v2/, 'Offline worker cache generation should match the complete-module precache implementation.');
-assert.match(serviceWorker, /moduleRefs\(/, 'Offline worker should discover static/dynamic local module dependencies.');
-assert.match(serviceWorker, /referencedUrls\(/, 'Offline worker should recursively inspect cached text assets.');
-assert.match(serviceWorker, /MAX_PRECACHE_ASSETS/, 'Offline recursive precache should remain bounded.');
-assert.match(serviceWorker, /fetch\(request\)/, 'Offline worker should try the network before cache fallback.');
-assert.match(serviceWorker, /caches\.match\(request\)/, 'Offline worker should use cached fallback when network fails.');
+assert.match(serviceWorker, /fluxa-runtime-v2/);
+assert.match(serviceWorker, /moduleRefs\(/);
+assert.match(serviceWorker, /referencedUrls\(/);
+assert.match(serviceWorker, /MAX_PRECACHE_ASSETS/);
+assert.match(serviceWorker, /fetch\(request\)/);
+assert.match(serviceWorker, /caches\.match\(request\)/);
+
+const appUi=fs.readFileSync(new URL('./app.js',root),'utf8');
+assert.match(appUi,/function readRoutePreference\(\).*try/,'Route preference should tolerate blocked sessionStorage.');
+assert.match(appUi,/function saveRoutePreference\(value\).*try/,'Route writes should tolerate blocked sessionStorage.');
 
 const offlineUi = fs.readFileSync(new URL('./offline-ui.js', root), 'utf8');
-assert.match(offlineUi, /controllerchange/, 'App updates should be detected without automatic reload.');
-assert.match(offlineUi, /data-apply-app-update/, 'App update should require an explicit therapist action.');
+assert.match(offlineUi, /controllerchange/);
+assert.match(offlineUi, /data-apply-app-update/);
 
 const draftUi = fs.readFileSync(new URL('./form-draft-ui.js', root), 'utf8');
-assert.match(draftUi, /version:2/, 'Form drafts should preserve repeated fields using the contextual v2 format.');
-assert.match(draftUi, /MAX_AGE_MS/, 'Form drafts should expire rather than restoring stale work indefinitely.');
-assert.match(draftUi, /assistedContext\(/, 'Form drafts should be isolated by assisted context when relevant.');
+assert.match(draftUi, /version:2/);
+assert.match(draftUi, /MAX_AGE_MS/);
+assert.match(draftUi, /assistedContext\(/);
 
 const persistenceUi = fs.readFileSync(new URL('./persistence-status-ui.js', root), 'utf8');
-assert.match(persistenceUi, /fluxa:persistence-error/, 'Persistence failures should surface visibly in the app shell.');
-assert.match(persistenceUi, /role','alert'/, 'Persistence warning should use alert semantics.');
+assert.match(persistenceUi, /fluxa:persistence-error/);
+assert.match(persistenceUi, /role','alert'/);
 
 const clientReportUi = fs.readFileSync(new URL('./client-report-ui.js', root), 'utf8');
-assert.doesNotMatch(clientReportUi, /\.instructions/, 'Shareable report must not expose internal component commands.');
-assert.doesNotMatch(clientReportUi, /NOTE_CREATED/, 'Shareable report must not expose internal session notes by default.');
-assert.match(clientReportUi, /histórico técnico do Fluxa/, 'Shareable report should explain that technical detail remains internal.');
+assert.doesNotMatch(clientReportUi, /\.instructions/);
+assert.doesNotMatch(clientReportUi, /NOTE_CREATED/);
+assert.match(clientReportUi, /histórico técnico do Fluxa/);
+
+const libraryUi=fs.readFileSync(new URL('./activity-library-ui.js',root),'utf8');
+const libraryRefinement=fs.readFileSync(new URL('./library-refinement-ui.js',root),'utf8');
+assert.match(libraryUi,/data-library-tool-id=\\?"\$\{tool\.id\}/,'Library cards should be born with stable tool IDs.');
+assert.doesNotMatch(libraryRefinement,/activeTools\s*\(/,'Library refinement must not remap cards by active-tools array position.');
 
 console.log('static-smoke.test.mjs: ok');
