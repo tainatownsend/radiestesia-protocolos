@@ -3,14 +3,19 @@ import { ToolType } from './activity-library.js';
 const TYPE_ALIASES = new Map([
   ['GRAPH', ToolType.GRAPH], ['GRAFICO', ToolType.GRAPH], ['GRÁFICO', ToolType.GRAPH],
   ['BIOMETER', ToolType.BIOMETER], ['BIOMETRO', ToolType.BIOMETER], ['BIÔMETRO', ToolType.BIOMETER],
-  ['OTHER', ToolType.OTHER], ['OUTRO', ToolType.OTHER], ['RECURSO', ToolType.OTHER]
+  ['OTHER', ToolType.OTHER], ['OUTRO', ToolType.OTHER], ['RECURSO', ToolType.OTHER], ['OUTRO RECURSO', ToolType.OTHER]
 ]);
+const TYPE_LABELS = Object.freeze({ GRAPH:'Gráfico', BIOMETER:'Biômetro', OTHER:'Outro recurso' });
 
 function clean(value='') { return String(value ?? '').trim(); }
 function normalizeKey(value='') { return clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
 function normalizeType(value='') {
   const raw = clean(value).toUpperCase();
   return TYPE_ALIASES.get(raw) || ToolType.GRAPH;
+}
+function csvCell(value='') {
+  const text=String(value??'');
+  return /[",\n\r;]/.test(text) ? `"${text.replace(/"/g,'""')}"` : text;
 }
 
 function splitDelimitedLine(line, delimiter) {
@@ -108,4 +113,18 @@ export function importLibraryItems(store, items) {
     return draft;
   });
   return created;
+}
+
+export function libraryItemsToCsv(tools) {
+  const active=(tools||[]).filter((tool)=>!tool.archivedAt).sort((a,b)=>clean(a.name).localeCompare(clean(b.name),'pt-BR'));
+  const rows=['Nome,Tipo,Finalidade,Observações'];
+  for (const tool of active) {
+    rows.push([
+      clean(tool.name),
+      TYPE_LABELS[tool.type] || TYPE_LABELS.OTHER,
+      clean(tool.purpose),
+      clean(tool.notes)
+    ].map(csvCell).join(','));
+  }
+  return `\uFEFF${rows.join('\n')}\n`;
 }
