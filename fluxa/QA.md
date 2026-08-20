@@ -51,6 +51,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - `30 min`, `1 h`, `1 dia`, `7 dias` and `Sem prazo` do not require manual unit correction.
 - Finding classification can be selected with large touch chips and still updates the underlying form value.
 - Reiki mode can be selected with large touch chips and still updates the underlying form value.
+- Imbalance inputs offer 0/25/50/75/100% touch choices while still accepting any valid typed value from 0–100.
 - Recent treatment-title suggestions are scoped to the current assisted entity.
 - Selecting a previous Library resource may offer `Repetir última configuração`.
 - Repeating a previous component copies command/duration into the current draft only; it never mutates the historical component.
@@ -73,7 +74,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Session close review offers `Resumo interno da sessão`.
 - It also offers one distinct report button for each assisted entity touched in the session.
 - Per-assisted reports never include another assisted entity's investigations/assessments/Reiki/treatments.
-- Reports include session timing, assessments, investigations, confirmed findings, treatments/components and Reiki.
+- Reports include session timing, assessments, investigations, confirmed findings, treatments/components, optional therapeutic objective and Reiki.
 - `Resumo para compartilhar` exposes a shorter client-facing layer without replacing the internal record.
 - Browser print works from the report window.
 - Browser Save as PDF works on supported desktop/mobile browsers.
@@ -163,7 +164,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Treatment card/history shows source Investigation → Finding where applicable.
 - Assisted detail shows Finding → linked treatment(s), or `Ainda sem tratamento vinculado`.
 - Two treatments with the same visible title retain distinct `treatmentId` actions; final assessment never targets the wrong card.
-- Optional therapeutic objective is visible on treatment cards/history when filled and absent without placeholder noise when empty.
+- Optional therapeutic objective is visible on treatment cards/reports when filled and absent without placeholder noise when empty.
 
 ## Reiki
 
@@ -193,7 +194,9 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Bulk import preview distinguishes read/new/duplicate rows before saving.
 - Duplicate active names are ignored case/diacritic-insensitively according to parser rules.
 - Downloadable CSV template opens with Nome/Tipo/Finalidade/Observações columns.
-- Bulk import stays local to the device.
+- Exportar CSV writes all active resources back to the same round-trip format and excludes archived resources.
+- CSV round-trip preserves commas/quotes in resource fields.
+- Bulk import/export stays local to the device.
 - Avaliar requires OPEN prepared session + valid assisted context.
 - General assessment appears in longitudinal history.
 - Biblioteca contains preparation wording preferences and Meus protocolos.
@@ -214,6 +217,17 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - A failed/non-executed export must not count as a confirmed backup.
 - UI-only favorites may remain device-local preferences and must never corrupt therapeutic state/imports.
 
+## Install / offline
+
+- Manifest exposes name `Fluxa`, Deep Teal theme, standalone display and the Fluxa icon.
+- Add-to-Home-Screen / standalone launch does not change the local data namespace.
+- First online load registers the scoped `/fluxa/` service worker without affecting the legacy root app.
+- Service worker uses network first while connected, then caches current successful Fluxa responses.
+- After at least one successful online load, going offline and reloading serves the cached Fluxa shell/assets.
+- Offline state shows `Sem conexão · trabalhando com a cópia local do Fluxa`.
+- Returning online removes the offline banner.
+- Offline mode never claims to be cloud sync and does not suppress backup reminders.
+
 ## Therapist-facing language
 
 - No-assistido context uses `Escolher quem será atendido` rather than a silent disabled control.
@@ -233,6 +247,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Bottom navigation stays stable outside focused overlays.
 - Deep Teal visual hierarchy remains legible in portrait/landscape.
 - Search/favorite/resource picker controls remain reachable with the iOS keyboard open.
+- When the virtual keyboard opens, bottom navigation yields space and sheets use the visible viewport height.
 - Bottom sheets respect safe-area insets.
 - Modo atendimento keeps the current context visible while reducing extra surface area.
 
@@ -247,6 +262,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Reiki timers use role=timer with aria-live=off.
 - Status is not color-only.
 - Favorites have explicit accessible labels rather than relying on the star alone.
+- Offline banner uses status semantics rather than color alone.
 - Forced-colors/high-contrast keeps boundaries visible.
 - Reduced-motion disables nonessential movement.
 
@@ -280,13 +296,15 @@ GitHub Actions runs syntax validation for every Fluxa `.js`/`.mjs` file, then:
 - Custom protocol creation/versioning/branching/resource snapshots.
 - Closing review + internal/shareable reports with realistic populated states.
 - Report print/save-PDF/share on iPhone/iPad.
-- Bulk import using a real large spreadsheet/list of resources.
+- Bulk import/export using a real large spreadsheet/list of resources.
 - Searchable Library resource picker with a realistically large Library.
 - Preparation preference reuse across two real sessions.
 - Safari/iPhone keyboard open/closed.
 - Repeated background/foreground and reload during Reiki on a real device.
 - iPad portrait/landscape and Modo atendimento.
-- VoiceOver/iOS navigation, favorites and dialogs.
+- Add to Home Screen and standalone launch on the target device.
+- Online-first load followed by airplane/offline reload and reconnect.
+- VoiceOver/iOS navigation, favorites, offline banner and dialogs.
 - Actual private-mode/localStorage quota failure behavior.
 - Export → clear/import → restore on target browser.
 - Full Deep Teal visual hierarchy pass with realistic data.
