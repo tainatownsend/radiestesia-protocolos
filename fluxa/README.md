@@ -25,6 +25,7 @@ The intended flow is now explicit:
 - Structured record includes vibrational frequency, optional scale, protection resources/snapshots, manual protection notes and permission notes.
 - Step wording can be customized from Biblioteca without changing the safety/order rules.
 - Library resources used during preparation are preserved as historical snapshots.
+- A previous completed preparation may be used only as a safe shortcut for reusable preferences such as scale and still-active protection resources; no preparation step is auto-completed and the current frequency is never copied.
 
 ### Assisted context guard
 
@@ -34,6 +35,8 @@ Any activity that requires an assisted entity uses the same rule:
 - if assisted entities exist but none is selected, Fluxa asks the therapist to select one or create another;
 - after selection/creation inside a session, the original activity is resumed automatically;
 - out-of-session forms with an `assistedEntityId` use explicit Portuguese validation instead of relying only on browser-native required-field messages.
+
+For recurring daily use, assisted pickers can be searched and favorited. Favorites and most-recently-used assisted entities are surfaced first without changing therapeutic records.
 
 ### “Nesta sessão” workspace
 
@@ -47,6 +50,22 @@ A prepared session exposes a contextual summary grouped by assisted entity:
 - quick switching back to the assisted entity currently being worked with.
 
 Multiple investigations can be reviewed from a dedicated session view, including incomplete investigations that started in a previous session.
+
+### Daily-use interaction layer
+
+The current PR adds an explicit fast-use layer intended for phone/iPad operation while the therapist is working:
+
+- Deep Teal visual hierarchy and tablet/mobile-specific sheets/navigation;
+- optional `Modo atendimento` to reduce nonessential context during the active session;
+- persistent `Atendimento atual` context with quick assisted switching;
+- large Sim/Não and touch-chip controls for finding classifications and Reiki mode;
+- duration presets (`30 min`, `1 h`, `1 dia`, `7 dias`, `Sem prazo`);
+- recent treatment-title suggestions for the selected assisted entity;
+- optional treatment objective stored separately from the treatment title;
+- `Repetir última configuração` for a previously used Library resource, copying only the previous command/duration fields into the current draft;
+- universal search across assisted entities, treatments, Library resources and protocols;
+- longitudinal assisted summary with current work, latest assessment and simple imbalance evolution;
+- searchable Library picker with favorites and usage context rather than long mobile selects.
 
 ### Safe closing and reports
 
@@ -62,7 +81,8 @@ Before the existing closing procedure, Fluxa shows a session safety review with:
 The therapist can generate:
 
 - an internal session summary;
-- one separate report per assisted entity, so information from different people is never mixed.
+- one separate report per assisted entity, so information from different people is never mixed;
+- a shorter `Resumo para compartilhar` layer for client-facing sharing when appropriate.
 
 Reports contain session timing, assessments, investigations, confirmed findings, treatments/components and Reiki records. They open as printable documents and can be printed or saved as PDF by the browser. Reports can also be regenerated later from Session history.
 
@@ -78,7 +98,8 @@ Supported types: Pessoa, PET, Ambiente, Grupo, Situação/Processo and Outro.
 - Archive is soft, preserves history and is blocked while active work exists.
 - Archived assisted entities remain consultable read-only.
 - Search/type filters are available.
-- The assisted detail includes a “Resumo para retorno”: current treatments, latest assessment, recent finding and most recent session activity.
+- The assisted detail includes a `Resumo para retorno`: current treatments, latest assessment, recent finding and most recent session activity.
+- Longitudinal insights include counts and a compact imbalance trend when enough final assessments exist.
 
 ## Investigations, findings and protocols
 
@@ -103,7 +124,7 @@ Positive answers never become findings automatically. Findings are explicitly co
 
 ### Meus protocolos
 
-Biblioteca now includes a local custom protocol editor.
+Biblioteca includes a local custom protocol editor.
 
 - Create a protocol with a name/description.
 - Add any number of Sim/Não questions.
@@ -120,6 +141,7 @@ Biblioteca now includes a local custom protocol editor.
 - Direct and planned treatments are supported.
 - Planned treatments can be created administratively outside session but activate only inside a prepared session.
 - Planned treatments require components; compatibility flow allows an earlier empty plan to receive components before activation.
+- Treatment title and optional therapeutic objective are distinct fields.
 - Components can have independent duration or no deadline.
 - Library resources are stored by immutable snapshot.
 - Components can be added, stopped or replaced without rewriting history.
@@ -128,6 +150,7 @@ Biblioteca now includes a local custom protocol editor.
 - Final assessment requires all components resolved, prepared session, vibrational frequency and imbalance 0–100%.
 - Follow-up treatment is a new PLANNED cycle linked to the previous treatment/assessment; one assessment can originate at most one next cycle.
 - Administrative completion outside a session is allowed only when components are already resolved and no new measurement is performed.
+- Treatment-card identity is anchored to `treatmentId`, not visible title text, so equal titles cannot cross-wire final-assessment actions.
 
 Traceability is visible in both directions:
 
@@ -149,6 +172,11 @@ Traceability is visible in both directions:
 
 - Reusable Gráfico, Biômetro and Outro resources.
 - Create, edit, archive, search and filter.
+- Bulk import accepts CSV, TSV, TXT, pasted spreadsheet data or one-resource-per-line lists.
+- Bulk import previews the new resources and ignores duplicate active names before saving.
+- A downloadable CSV template is available from the import sheet.
+- Library resources can be favorited; favorites are shown first in the Library and in searchable treatment/resource pickers.
+- Searchable pickers show usage context so a ~150-resource Library remains practical on phone/tablet.
 - Historical snapshots protect earlier records from later Library edits.
 - Usage counts expose treatment-component reuse.
 - `Avaliar` records a general measurement/result linked to the prepared session and selected assisted entity.
@@ -165,6 +193,8 @@ Traceability is visible in both directions:
 - A visible reminder appears when no confirmed export exists or the latest confirmed export is old.
 - The export timestamp is recorded only by the successful export function.
 
+UI-only favorites are local convenience preferences and do not alter or rewrite therapeutic history.
+
 This remains device-local protection, not cloud backup. Losing/clearing the device can still lose data that was never exported.
 
 ## Accessibility/mobile hardening
@@ -176,7 +206,8 @@ This remains device-local protection, not cloud backup. Losing/clearing the devi
 - Timer semantics avoid announcing every second.
 - Large touch targets, narrow-screen stacking, forced-colors and reduced-motion support.
 - Sim/Não remains a focused large-control pattern.
-- Therapist-facing copy favors action language such as “Escolher quem será atendido”, “O que você deseja fazer agora?” and “Revisar e encerrar”.
+- Search, picker and favorite controls are designed to stay usable with one-hand phone input and iPad layouts.
+- Therapist-facing copy favors action language such as `Escolher quem será atendido`, `O que você deseja fazer agora?` and `Revisar e encerrar`.
 
 ## Automated checks
 
@@ -190,27 +221,31 @@ GitHub Actions runs:
 - treatment lifecycle and planning;
 - storage import/recovery;
 - Library/assessment behavior;
+- bulk Library parser/import regression;
 - administrative completion;
 - Reiki lifecycle;
 - follow-up treatment cycles;
 - structured preparation;
 - final-assessment rules;
-- static shell dependency/branding checks.
+- static shell dependency/branding checks, including the daily-use modules and Deep Teal theme metadata.
 
 ## Manual validation still required
 
 1. Full end-to-end therapist flow with zero assisted entities, one assisted entity and multiple assisted entities.
-2. Multiple simultaneous/incomplete investigations and exact resume behavior.
-3. Custom protocol creation, branching, versioning and resource snapshots.
-4. Session safety review and per-assisted reports with realistic populated data.
-5. Report print/save-to-PDF behavior on iPhone/iPad.
-6. Safari/iPhone keyboard open/closed, reload and repeated background/foreground transitions.
-7. Reiki timer background/foreground on a real device.
-8. iPad portrait/landscape.
-9. VoiceOver/iOS.
-10. Actual private-mode/localStorage quota/failure behavior.
-11. Export → clear/import → restore on the target browser.
-12. Full Deep Teal visual hierarchy pass with populated real-world states.
+2. Assisted favorites/search/recent ordering with realistic lists.
+3. Multiple simultaneous/incomplete investigations and exact resume behavior.
+4. Custom protocol creation, branching, versioning and resource snapshots.
+5. Session safety review and per-assisted reports with realistic populated data.
+6. Internal vs shareable report behavior and print/save-to-PDF on iPhone/iPad.
+7. Bulk Library import with a real large spreadsheet/list and searchable/favorite resource picking.
+8. Preparation reuse shortcut confirms that only scale/protection preferences are copied and no step/current frequency is auto-completed.
+9. Safari/iPhone keyboard open/closed, reload and repeated background/foreground transitions.
+10. Reiki timer background/foreground on a real device.
+11. iPad portrait/landscape and Modo atendimento.
+12. VoiceOver/iOS.
+13. Actual private-mode/localStorage quota/failure behavior.
+14. Export → clear/import → restore on the target browser.
+15. Full Deep Teal visual hierarchy pass with populated real-world states.
 
 ## Explicitly later
 
