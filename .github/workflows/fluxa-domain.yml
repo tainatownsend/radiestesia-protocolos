@@ -25,3 +25,5 @@ jobs:
         run: |
           node fluxa/domain.test.mjs
           node fluxa/protocol-engine.test.mjs
+          node fluxa/remaining.test.mjs
+          node fluxa/storage-health.test.mjs
