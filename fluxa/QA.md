@@ -1,6 +1,6 @@
 # Fluxa MVP — regression checklist
 
-Use this checklist before merging any vertical-slice increment. The MVP is local-only and the legacy root application must remain untouched.
+Use this checklist before merging. The MVP is local-only and the legacy root application must remain untouched.
 
 ## Session and preparation
 
@@ -8,135 +8,180 @@ Use this checklist before merging any vertical-slice increment. The MVP is local
 - Repeated taps on Iniciar sessão do not create a second OPEN session.
 - Reload with an OPEN session restores the same session.
 - Preparation progress survives reload.
-- Session work actions are only presented after preparation is complete.
+- Preparation cannot conclude with checklist only: vibrational frequency must be recorded.
+- Preparation cannot conclude without at least one protection resource or manual protection description.
+- Protection resources selected from Biblioteca are preserved as snapshots for session history.
+- Session work actions are presented only after preparation is complete.
 - Closing a session leaves active treatments untouched.
-- Closing is blocked while a Reiki timer is running or paused.
+- Closing is blocked while Reiki linked to the session is running or paused.
 - An unfinished investigation may remain open when the session closes.
-- A session that appears forgotten open is never auto-closed.
+- Forgotten sessions are never auto-closed.
 - Forgotten-session UI offers Continue and Correct closing.
 - Corrected closing stores actual `endedAt` separately from `closedRecordedAt`.
-- Corrected closing cannot use a time before session start or in the future.
+- Corrected closing cannot use a time before/equal to session start or a future time.
+- Session history shows structured preparation data and the session timeline.
 
 ## Assisted context
 
-- Every investigation, treatment, Reiki application and note carries an explicit assistedEntityId.
+- Every investigation, treatment, Reiki application and note has an explicit assistedEntityId.
 - Switching assisted context never mutates records already created for another assisted entity.
-- Assisted history only contains events whose assistedEntityId matches the selected assisted entity.
 - Person requires date of birth.
-- Group requires at least one member and each member requires full name + birth date.
-- Environment/property requires full address.
-- Situation/process requires process identifier and captures involved/requesting person.
+- Group requires at least one member and every member requires full name + birth date.
+- Environment requires full address.
+- Situation/Process requires identifier and a structured involved/requesting person.
 - PET accepts open descriptive details.
-- Editing an assisted entity records `ASSISTED_UPDATED` without rewriting historical events.
-- Assisted type is kept stable during MVP editing to avoid changing historical meaning.
+- Editing records `ASSISTED_UPDATED` without rewriting prior historical events.
+- Assisted type stays stable during MVP editing.
 - Archiving preserves history and removes the assisted entity from future-work lists.
 - Archiving is blocked while treatment, investigation or Reiki work remains active.
+- Archived assisted entities remain consultable in read-only history.
+- Assistidos search and type filters work with populated lists.
 
-## Investigation continuity
+## Investigation continuity / findings
 
 - Sim/Não answer is persisted immediately.
-- Reload restores the same investigation and current question.
+- Reload restores the same investigation and current question/node.
 - Ending a session does not complete or discard an unfinished investigation.
-- Opening a later session and resuming the investigation records INVESTIGATION_RESUMED.
-- The original originSessionId remains unchanged.
-- A positive answer does not become a Finding without explicit confirmation.
-- Re-confirming findings does not duplicate an existing finding for the same investigation/question.
+- Opening a later session and resuming records INVESTIGATION_RESUMED.
+- `originSessionId` remains unchanged after resume.
+- Positive answers do not become Findings without explicit confirmation.
+- Re-confirming a finding does not create duplicates for the same investigation/source question.
+- Multiple findings from one investigation can receive different classifications.
+- Classification choices are Cause, Maintainer, Consequence, Association, Relevant factor, Item to deepen.
 
-## Branching protocol engine
+## Protocol library
 
 - Every execution stores its immutable protocol version snapshot.
-- YES and NO follow only the configured next node.
-- Invalid/missing next nodes fail explicitly instead of silently completing.
-- End nodes complete the investigation without creating findings automatically.
-- Confirmed findings preserve source node/question and selected classification.
-- `Investigação inicial` and `Causa raiz` can be started only with an open, prepared session and selected assisted entity.
+- YES/NO follow only the configured next node.
+- Invalid/missing next nodes fail explicitly.
+- End nodes complete the investigation without auto-creating findings.
+- Confirmed findings preserve source question/node and classification.
+- Triagem rápida is available as the simple investigation path.
+- Investigação inicial v1 is available.
+- Investigação completa v1 is available.
+- Causa raiz v1 is available.
+- Protocolo específico v1 is available as the neutral specific-deepening path.
+- Branching protocols require open prepared session + selected assisted entity.
+- Branching resume returns to the exact saved node, including across sessions.
 
-## Treatment lifecycle
+## Treatment planning and lifecycle
 
+- Planned treatment can be created outside a session.
+- Planned treatment can contain multiple components.
+- Planned components do not receive `startedAt`/`expectedEndAt` until activation.
+- Starting a planned treatment requires an open prepared session.
+- Direct treatment creation inside a prepared session remains available without investigation.
+- Multiple components can be created initially and added later.
+- Components can be linked to Library resources with historical snapshots.
+- Components can have duration or no defined deadline.
 - Treatment remains active after its origin session closes.
-- Component expectedEndAt is derived from startedAt + duration.
-- Passing expectedEndAt produces the derived “Revisão disponível” condition without changing Treatment.status.
-- Interrupting records TREATMENT_INTERRUPTED and preserves the treatment/components.
-- Retaking an interrupted treatment returns it to IN_PROGRESS and records TREATMENT_RESUMED.
-- By default, interruption time is added to active component expectedEndAt so prescribed active duration is preserved.
-- Adding a second/third component does not alter existing components.
-- Stopping a component preserves it with STOPPED state and event history.
-- Replacing a component creates a new component, preserves the original as REPLACED and records the replacement link.
-- Each active component can be reviewed individually with the two pendulum decisions: 100% complete and permission to dismantle.
-- A component is marked COMPLETED/dismantled only when both component-review decisions are positive.
-- A negative/incomplete component review is retained without completing the component.
-- Final assessment is unavailable until every component is COMPLETED, STOPPED or REPLACED.
-- Final post-treatment assessment records frequency, imbalance %, need for a new treatment and when indicated.
-- After component resolution + final assessment, the current Treatment becomes COMPLETED even when another future treatment is recommended.
-- A new recommended cycle does not overwrite or reopen the completed treatment.
+- Reaching `expectedEndAt` derives “Revisão disponível” without changing Treatment.status.
+- Interrupting preserves treatment/components and records TREATMENT_INTERRUPTED.
+- Resuming preserves the same treatment and records TREATMENT_RESUMED.
+- Interruption time shifts active component expectedEndAt by default.
+- Stopping preserves the component as STOPPED.
+- Replacing creates a new component and preserves the original as REPLACED with replacement link.
+- Component review is individual.
+- Component becomes COMPLETED/dismantled only with both 100% complete + permission to dismantle.
+- Negative/incomplete component review is retained without completion.
+- Final assessment is unavailable until all components are COMPLETED, STOPPED or REPLACED.
+- Final assessment requires vibrational frequency and imbalance percentage.
+- Final assessment records whether another treatment is needed and optional timing/notes.
+- Current treatment becomes COMPLETED after final resolution/assessment.
+- A recommended next cycle is a separate PLANNED treatment linked to the previous treatment/assessment.
+- The previous completed treatment is never reopened or overwritten.
+- Administrative completion outside a session requires resolved components and explicit confirmation that no new measurement is occurring.
+- Treatment filters Ativos / Para revisão / Planejados / Concluídos / Todos work.
+- Treatment history shows component lifecycle, assessments and timeline.
 
 ## Reiki
 
-- Starting Reiki requires an OPEN session in the active timer flow.
-- Timer duration is calculated from timestamps/intervals rather than an in-memory counter.
+- Reiki can run inside a session or outside a session when no radiesthesia measurement is involved.
+- Modes: Presencial, À distância, Autoaplicação and Outro.
+- Only one RUNNING or PAUSED Reiki application may exist at a time.
+- Timer duration is calculated from timestamp intervals.
 - Pause stops elapsed-time accumulation.
 - Resume creates a new interval.
-- Reload reconstructs the current elapsed duration.
-- Completing Reiki records duration and notes and does not close the session.
-- A completed Reiki application can be registered retrospectively without an open session.
+- Reload/background reconstructs elapsed duration correctly.
+- Completing stores duration, mode and notes without closing the session.
+- Retrospective completed Reiki can be registered without an open session.
 
-## Local persistence
+## Biblioteca / Avaliar
 
-- Reload retains sessions, assistidos, investigations, findings, treatments, reviews, component reviews, assessments and Reiki.
-- A failed primary JSON parse falls back to backup/recovery data when available.
-- Recovery snapshot is written before the primary record on normal saves.
-- Separate store instances in the same tab receive synchronized state updates.
-- Autosave does not create logical duplicates on ordinary repeated UI actions.
-- Storage health check detects inability to write to localStorage.
-- Corrupt primary data with a valid backup exposes a recovery action.
-- Recovery copies the valid backup/recovery candidate back to the primary record.
-- User can export the current valid local dataset as JSON from Hoje.
-- User can import a valid Fluxa JSON backup from Hoje.
-- Import rejects unrelated/invalid JSON before touching current data.
-- Import preserves the current valid primary dataset as backup before replacement.
+- Resources can be created as Graph, Biometer or Other.
+- Resources can be edited without rewriting historical treatment/session snapshots.
+- Resources can be archived while historical use remains visible.
+- Search and type filters work.
+- Usage count reflects linked treatment components.
+- Library resource can be selected during initial treatment creation, planning, add-component and replacement flows.
+- Avaliar requires an open prepared session and selected assisted entity.
+- General assessment appears in longitudinal assisted history.
+
+## Local persistence / recovery
+
+- Reload retains sessions, preparation data, assistidos, investigations, findings, treatments, reviews, assessments, Reiki and tools.
+- Failed primary JSON parse falls back to valid backup/recovery.
+- Recovery snapshot is written before primary replacement on save.
+- Separate store instances in the same tab synchronize.
+- Autosave does not create logical duplicates on repeated ordinary actions.
+- Storage-health check detects inability to write localStorage.
+- Corrupt primary with valid backup exposes recovery.
+- Recovery copies valid candidate back to primary.
+- Export produces current valid local JSON.
+- Import accepts valid Fluxa JSON and rejects unrelated/invalid JSON before replacement.
+- Import preserves previous valid primary as backup.
 
 ## Mobile / one hand
 
 - Primary controls have comfortable touch targets.
-- Sim and Não remain at the bottom of the focused investigation screen.
-- Reiki pause/resume/complete are reachable without precision tapping.
-- Treatment component actions remain usable on narrow screens.
-- Button rows stack on very narrow screens instead of overflowing.
+- Sim and Não remain large/stable on focused investigation screens.
+- Reiki pause/resume/complete remain reachable without precision tapping.
+- Treatment component actions work on narrow screens.
+- Button rows stack instead of overflowing.
 - Bottom navigation remains stable outside focused sheets.
 - No horizontal overflow at 320px CSS width.
 
 ## Accessibility
 
-- Focus indication is visible for keyboard users.
-- Focus is moved into newly opened dialogs.
-- Escape closes the active dialog when a close action is available.
-- Dialogs expose `role=dialog`, `aria-modal=true`, and an accessible title.
-- Close buttons expose an accessible name instead of only “×”.
-- Form fields receive labels/accessible names.
-- Reiki live timer exposes timer semantics without announcing every second.
-- Status is never communicated only by color.
-- Forced-colors/high-contrast modes retain visible boundaries.
-- Reduced-motion preference disables nonessential transition behavior.
+- Visible keyboard focus.
+- Focus enters newly opened dialogs.
+- Escape closes active closable dialogs.
+- Dialogs expose role=dialog, aria-modal=true and accessible title.
+- Close buttons have accessible names.
+- Form controls have labels/accessible names.
+- Reiki timer exposes timer semantics without announcing every second.
+- Status is not communicated only by color.
+- Forced-colors/high-contrast keeps boundaries visible.
+- Reduced-motion disables nonessential movement.
 
 ## Automated regression
 
-- `node fluxa/domain.test.mjs` covers core session/investigation/treatment/Reiki rules.
-- `node fluxa/protocol-engine.test.mjs` covers branching and immutable protocol execution.
-- `node fluxa/remaining.test.mjs` covers dismantling, assisted edit/archive and treatment completion.
-- `node fluxa/storage-health.test.mjs` covers corruption recovery plus validated export/import behavior.
-- `node fluxa/static-smoke.test.mjs` verifies that every local script/style referenced by `fluxa/index.html` exists and that the Fluxa shell does not regress to legacy branding.
-- GitHub Actions workflow `Fluxa domain checks` runs all five test files for Fluxa branch changes/PRs.
+GitHub Actions runs:
+
+- `domain.test.mjs`
+- `protocol-engine.test.mjs`
+- `remaining.test.mjs`
+- `storage-health.test.mjs`
+- `activity-library.test.mjs`
+- `treatment-planning.test.mjs`
+- `administrative-treatment.test.mjs`
+- `reiki-flex.test.mjs`
+- `follow-up-treatment.test.mjs`
+- `structured-preparation.test.mjs`
+- `final-assessment-rules.test.mjs`
+- `static-smoke.test.mjs`
 
 ## Manual validation still required before merge
 
-- Test Safari on iPhone with keyboard open/closed and repeated background/foreground transitions.
-- Test iPad portrait/landscape.
-- Test localStorage quota/private-mode behavior on actual target browsers.
-- Test export → clear/import → restore on a real iOS browser.
-- Test screen reader navigation on at least VoiceOver/iOS.
-- Confirm visual hierarchy against the approved Deep Teal mockups after all functional states are populated.
+- Safari/iPhone with keyboard open/closed and repeated background/foreground transitions.
+- Reiki timer background/foreground on a real device.
+- iPad portrait/landscape.
+- localStorage quota/private-mode behavior on actual target browsers.
+- Export → clear/import → restore on real iOS browser.
+- VoiceOver/iOS navigation and dialogs.
+- Full Deep Teal visual hierarchy pass with populated real-world states.
 
 ## Legacy isolation
 
-- `/index.html` at repository root is not modified by Fluxa MVP work.
-- New implementation remains under `/fluxa` until validation and an explicit decision to replace the legacy entry point.
+- Root `/index.html` remains untouched by Fluxa MVP work.
+- Fluxa remains under `/fluxa` until explicit validation/publication decision.
