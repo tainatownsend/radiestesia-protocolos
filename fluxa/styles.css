@@ -22,6 +22,7 @@ html { background: var(--bg); }
 body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
 
 .app-shell { min-height: 100vh; padding: env(safe-area-inset-top) 0 calc(88px + env(safe-area-inset-bottom)); }
 .topbar { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px max(16px, env(safe-area-inset-left)); background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent); }
@@ -55,6 +56,7 @@ p { line-height: 1.55; }
 .btn.danger { background: transparent; color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, var(--border)); }
 .btn.wide { width: 100%; }
 .btn.small { min-height: 40px; padding: 0 13px; border-radius: 11px; font-size: 14px; }
+.btn:disabled { opacity: .45; }
 
 .action-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
 .action-card { min-height: 108px; text-align: left; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
@@ -68,6 +70,7 @@ p { line-height: 1.55; }
 .field textarea { min-height: 90px; resize: vertical; }
 .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent); }
 .form-grid { display: grid; gap: 14px; }
+.duration-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 10px; }
 
 .checklist { display: grid; gap: 10px; margin-top: 16px; }
 .check-row { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: center; min-height: 58px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
@@ -97,8 +100,15 @@ p { line-height: 1.55; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: end; justify-content: center; padding: 24px 12px max(12px, env(safe-area-inset-bottom)); background: rgba(16,47,53,.34); }
 .sheet { width: min(100%, 620px); max-height: 88vh; overflow: auto; padding: 18px; border-radius: 24px 24px 18px 18px; background: var(--surface); box-shadow: 0 18px 60px rgba(16,47,53,.2); }
+.focus-sheet { min-height: min(680px, 88vh); display: flex; flex-direction: column; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.close-btn { width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 50%; background: transparent; color: var(--primary); }
+.close-btn { flex: 0 0 auto; width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 50%; background: transparent; color: var(--primary); }
+
+.question-panel { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 270px; padding: 28px 4px; text-align: center; }
+.question-panel h1 { font-size: clamp(28px, 8vw, 38px); }
+.binary-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; position: sticky; bottom: 0; padding-top: 14px; background: linear-gradient(to top, var(--surface) 75%, transparent); }
+.binary-btn { min-height: 74px; border-radius: 18px; border: 1px solid var(--border); background: var(--surface-2); color: var(--primary-strong); font-size: 22px; font-weight: 900; }
+.binary-btn:active { background: var(--primary); color: white; }
 
 .empty { padding: 28px 18px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--muted); }
 
