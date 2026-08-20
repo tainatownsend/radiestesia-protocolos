@@ -21,11 +21,18 @@ function prepare(store, sessionId) {
 {
   const store = createStore();
   const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa teste', birthDate:'1990-01-01' });
+  assert.throws(() => createPlannedTreatment(store, { assistedEntityId:assisted.id, title:'Sem componente', components:[] }), /componente/);
+
   store.setState((state) => {
     const draft = structuredClone(state);
     draft.tools.push({ id:'tool_1', type:'GRAPH', name:'Gráfico A original', archivedAt:null, createdAt:store.nowIso(), updatedAt:store.nowIso() });
+    draft.tools.push({ id:'tool_archived', type:'GRAPH', name:'Arquivado', archivedAt:store.nowIso(), createdAt:store.nowIso(), updatedAt:store.nowIso() });
     return draft;
   });
+  assert.throws(() => createPlannedTreatment(store, {
+    assistedEntityId:assisted.id, title:'Com recurso arquivado', components:[{name:'Arquivado',toolId:'tool_archived'}]
+  }), /Biblioteca/);
+
   const planned = createPlannedTreatment(store, {
     assistedEntityId:assisted.id,
     title:'Ciclo futuro',
