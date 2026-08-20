@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
+const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
 
 function nowIso() {
   return new Date().toISOString();
@@ -12,8 +13,8 @@ function makeId(prefix = 'id') {
 
 function emptyState() {
   return {
-    version: 2,
-    meta: { createdAt: nowIso(), updatedAt: nowIso() },
+    version: 3,
+    meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
     sessions: [],
     assistedEntities: [],
     events: [],
@@ -24,6 +25,7 @@ function emptyState() {
     treatments: [],
     treatmentComponents: [],
     treatmentReviews: [],
+    assessments: [],
     reikiApplications: []
   };
 }
@@ -37,7 +39,7 @@ function normalize(parsed) {
   return {
     ...base,
     ...parsed,
-    version: 2,
+    version: 3,
     meta: { ...base.meta, ...(parsed?.meta || {}) },
     sessions: list(parsed?.sessions),
     assistedEntities: list(parsed?.assistedEntities),
@@ -49,36 +51,42 @@ function normalize(parsed) {
     treatments: list(parsed?.treatments),
     treatmentComponents: list(parsed?.treatmentComponents),
     treatmentReviews: list(parsed?.treatmentReviews),
+    assessments: list(parsed?.assessments),
     reikiApplications: list(parsed?.reikiApplications)
   };
 }
 
+function parseCandidate(raw) {
+  if (!raw) return null;
+  try { return normalize(JSON.parse(raw)); } catch (_) { return null; }
+}
+
 export function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return emptyState();
-  try {
-    return normalize(JSON.parse(raw));
-  } catch (error) {
-    const backup = localStorage.getItem(BACKUP_KEY);
-    if (backup) {
-      try {
-        return normalize(JSON.parse(backup));
-      } catch (_) {}
-    }
-    console.error('Fluxa: falha ao carregar dados locais', error);
-    return emptyState();
-  }
+  const primary = parseCandidate(localStorage.getItem(STORAGE_KEY));
+  if (primary) return primary;
+  const backup = parseCandidate(localStorage.getItem(BACKUP_KEY));
+  if (backup) return backup;
+  const recovery = parseCandidate(localStorage.getItem(RECOVERY_KEY));
+  if (recovery) return recovery;
+  return emptyState();
 }
 
 export function saveState(state) {
-  const next = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso() } });
+  const next = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso(), lastPersistenceError: null } });
   const current = localStorage.getItem(STORAGE_KEY);
+  const serialized = JSON.stringify(next);
   try {
+    // Recovery is written first so an interrupted primary write still leaves a valid candidate.
+    localStorage.setItem(RECOVERY_KEY, serialized);
     if (current) localStorage.setItem(BACKUP_KEY, current);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(STORAGE_KEY, serialized);
     return next;
   } catch (error) {
     console.error('Fluxa: falha ao persistir dados locais', error);
+    try {
+      const fallback = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso(), lastPersistenceError: String(error?.message || error) } });
+      localStorage.setItem(RECOVERY_KEY, JSON.stringify(fallback));
+    } catch (_) {}
     throw error;
   }
 }
