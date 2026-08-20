@@ -22,6 +22,14 @@ function recentRank(state) {
   }
   return map;
 }
+function continuity(state, assistedId) {
+  const openInvestigations = (state.investigations || []).filter((item) => item.assistedEntityId === assistedId && item.status === 'IN_PROGRESS').length;
+  const currentTreatments = (state.treatments || []).filter((item) => item.assistedEntityId === assistedId && ['PLANNED','IN_PROGRESS','INTERRUPTED'].includes(item.status)).length;
+  const parts = [];
+  if (openInvestigations) parts.push(`${openInvestigations} ${openInvestigations === 1 ? 'investigação aberta' : 'investigações abertas'}`);
+  if (currentTreatments) parts.push(`${currentTreatments} ${currentTreatments === 1 ? 'tratamento atual' : 'tratamentos atuais'}`);
+  return parts.join(' · ');
+}
 function pickerRows(list) {
   return [...list.querySelectorAll(':scope > .assisted-row')].map((row) => {
     const select = row.querySelector('[data-assisted-guard-select],[data-select-assisted]');
@@ -46,13 +54,23 @@ function decoratePicker(list) {
   }
 
   const favorites = favoriteIds();
-  const recent = recentRank(store.getState());
+  const state = store.getState();
+  const recent = recentRank(state);
   rows.forEach((item) => {
     item.row.dataset.assistedQuickId = item.id;
     item.row.dataset.assistedQuickName = norm(item.name);
     item.row.dataset.assistedQuickRecent = recent.get(item.id) || '';
     const favorite = favorites.has(item.id);
     item.row.dataset.assistedQuickFavorite = favorite ? 'true' : 'false';
+    const meta = item.row.querySelector('.assisted-meta');
+    const summary = continuity(state, item.id);
+    if (summary && meta && !meta.querySelector('[data-assisted-continuity]')) {
+      const line = document.createElement('span');
+      line.className = 'assisted-continuity';
+      line.dataset.assistedContinuity = 'true';
+      line.textContent = summary;
+      meta.appendChild(line);
+    }
     if (!item.row.querySelector('[data-toggle-assisted-favorite]')) {
       const star = document.createElement('button');
       star.type = 'button';
