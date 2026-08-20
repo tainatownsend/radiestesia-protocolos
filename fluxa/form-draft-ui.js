@@ -108,8 +108,6 @@ document.addEventListener('input',(event)=>schedule(event.target),true);
 document.addEventListener('change',(event)=>{
   const form=event.target.closest?.('form');
   if(form&&event.target.matches?.('[name="assistedEntityId"]')){
-    const previous=form.dataset.activeDraftKey;
-    if(previous&&previous!==key(form))removeKey(previous);
     form.dataset.draftRestored='';
     queueMicrotask(()=>restore(form,{force:true}));
   }
