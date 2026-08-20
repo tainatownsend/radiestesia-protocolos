@@ -5,10 +5,7 @@ const storeInstances = new Set();
 const crossTabSubscribers = new Set();
 let storageListenerInstalled = false;
 
-function nowIso() {
-  return new Date().toISOString();
-}
-
+function nowIso() { return new Date().toISOString(); }
 function makeId(prefix = 'id') {
   if (globalThis.crypto?.randomUUID) return `${prefix}_${crypto.randomUUID()}`;
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -25,6 +22,11 @@ function emptyState() {
 }
 
 function list(value) { return Array.isArray(value) ? value : []; }
+function hasFluxaShape(value) {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value)
+    && Array.isArray(value.sessions) && Array.isArray(value.assistedEntities)
+    && Array.isArray(value.events) && Array.isArray(value.treatments));
+}
 
 function normalize(parsed) {
   const base = emptyState();
@@ -40,7 +42,10 @@ function normalize(parsed) {
 
 function parseCandidate(raw) {
   if (!raw) return null;
-  try { return normalize(JSON.parse(raw)); } catch (_) { return null; }
+  try {
+    const parsed = JSON.parse(raw);
+    return hasFluxaShape(parsed) ? normalize(parsed) : null;
+  } catch (_) { return null; }
 }
 
 function ensureStorageListener() {
@@ -57,7 +62,6 @@ function ensureStorageListener() {
 export function loadState() {
   const primary = parseCandidate(localStorage.getItem(STORAGE_KEY));
   if (primary) return primary;
-  // Recovery is written first on every save, so it is normally newer than BACKUP when PRIMARY becomes unreadable.
   const recovery = parseCandidate(localStorage.getItem(RECOVERY_KEY));
   if (recovery) return recovery;
   const backup = parseCandidate(localStorage.getItem(BACKUP_KEY));
@@ -71,7 +75,7 @@ export function saveState(state) {
   const serialized = JSON.stringify(next);
   try {
     localStorage.setItem(RECOVERY_KEY, serialized);
-    if (current) localStorage.setItem(BACKUP_KEY, current);
+    if (current && parseCandidate(current)) localStorage.setItem(BACKUP_KEY, current);
     localStorage.setItem(STORAGE_KEY, serialized);
     return next;
   } catch (error) {
