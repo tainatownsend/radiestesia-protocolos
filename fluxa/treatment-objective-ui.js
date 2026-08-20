@@ -12,13 +12,14 @@ function enhanceForm(form){
   const field=document.createElement('div');field.className='field';field.dataset.treatmentObjectiveField='true';field.innerHTML='<label>Objetivo terapêutico <span class="muted">(opcional)</span></label><textarea name="therapeuticObjective" rows="2" placeholder="Ex.: favorecer equilíbrio e estabilidade do tema trabalhado"></textarea>';
   title.closest('.field')?.after(field);
 }
+function objectiveOf(treatment){return treatment?.objective||treatment?.therapeuticObjective||'';}
 function enhanceCards(){
   const state=store.getState();
   document.querySelectorAll('.treatment-card').forEach((card)=>{
     if(card.querySelector('[data-treatment-objective]'))return;
     const id=card.dataset.treatmentId||card.querySelector('[data-review-treatment]')?.dataset.reviewTreatment||card.querySelector('[data-start-planned-treatment]')?.dataset.startPlannedTreatment;
-    const treatment=state.treatments.find((t)=>t.id===id);if(!treatment?.objective)return;
-    const p=document.createElement('p');p.className='treatment-objective';p.dataset.treatmentObjective='true';p.innerHTML=`<span>Objetivo</span>${esc(treatment.objective)}`;
+    const treatment=state.treatments.find((t)=>t.id===id);const objective=objectiveOf(treatment);if(!objective)return;
+    const p=document.createElement('p');p.className='treatment-objective';p.dataset.treatmentObjective='true';p.innerHTML=`<span>Objetivo</span>${esc(objective)}`;
     const status=card.querySelector('.status-pill')?.closest('.section-head');status?.after(p) || card.prepend(p);
   });
 }
