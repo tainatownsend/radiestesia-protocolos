@@ -11,6 +11,9 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Custom protocol start uses the same guard.
 - Out-of-session forms containing `assistedEntityId` show explicit Portuguese guidance when no assisted entity exists or no value is selected.
 - Switching assisted context never rewrites records previously created for another assisted entity.
+- With six or more assisted entities, picker search filters by name without altering records.
+- Favoriting an assisted entity changes only picker ordering; favorites appear before non-favorites.
+- Among equal favorite status, recently used assisted entities appear before older ones.
 
 ## Session and preparation
 
@@ -24,9 +27,11 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Final preparation step requires vibrational frequency and at least one protection resource/manual description.
 - Protection resources selected from Biblioteca are preserved as historical snapshots.
 - Preparation wording can be personalized from Biblioteca and the personalized labels appear without changing the required sequence.
+- `Usar preferências` from a previous completed preparation may prefill only reusable scale / still-active protection selections.
+- Reusing preparation preferences never copies the current vibrational-frequency value and never marks any base step complete.
 - Measurement/investigation/treatment-review workflows require an OPEN prepared session even through older UI paths.
 
-## “Nesta sessão” workspace
+## “Nesta sessão” workspace / fast flow
 
 - After preparation, Hoje shows a `Nesta sessão` summary.
 - Summary counts assistidos, investigations, treatments and Reiki recorded in the work window.
@@ -35,6 +40,21 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - As new work is recorded, the session summary updates.
 - The `Investigações` action lists relevant completed/in-progress investigations.
 - Incomplete investigation can be resumed after selecting its assisted entity.
+- `Atendimento atual` remains visible during normal session navigation.
+- `Modo atendimento` reduces nonessential context without hiding the current assisted entity or primary actions.
+- Multiple assisted entities touched in the same session can be switched with quick chips.
+- Active investigation / Reiki / reviewable treatment shortcuts open the expected current work.
+
+## Quick input / one-touch workflow
+
+- Duration presets write the canonical units `MINUTE`, `HOUR`, `DAY` or empty for `Sem prazo`.
+- `30 min`, `1 h`, `1 dia`, `7 dias` and `Sem prazo` do not require manual unit correction.
+- Finding classification can be selected with large touch chips and still updates the underlying form value.
+- Reiki mode can be selected with large touch chips and still updates the underlying form value.
+- Recent treatment-title suggestions are scoped to the current assisted entity.
+- Selecting a previous Library resource may offer `Repetir última configuração`.
+- Repeating a previous component copies command/duration into the current draft only; it never mutates the historical component.
+- Optional therapeutic objective is stored separately from the treatment title and remains optional.
 
 ## Safe closing
 
@@ -54,8 +74,10 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - It also offers one distinct report button for each assisted entity touched in the session.
 - Per-assisted reports never include another assisted entity's investigations/assessments/Reiki/treatments.
 - Reports include session timing, assessments, investigations, confirmed findings, treatments/components and Reiki.
+- `Resumo para compartilhar` exposes a shorter client-facing layer without replacing the internal record.
 - Browser print works from the report window.
 - Browser Save as PDF works on supported desktop/mobile browsers.
+- Web Share appears only when supported by the browser.
 - Closed Session history exposes report actions again.
 - Reopened reports are reconstructed from preserved history and remain consistent with the original session data.
 
@@ -72,6 +94,14 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Archived assistidos remain consultable read-only.
 - Search/type filters work.
 - Assisted detail shows `Resumo para retorno` with current treatments, latest assessment, recent finding and last session activity.
+- When enough final assessments exist, imbalance evolution renders with values in valid 0–100% range and chronological order.
+
+## Universal search
+
+- Search can find assisted entities, treatments, active Library resources and protocols.
+- Search does not surface archived Library resources as active choices.
+- Opening a search result navigates to the appropriate existing route/detail instead of creating duplicate data.
+- Search remains usable with one hand on phone and with keyboard on iPad.
 
 ## Investigation continuity / findings
 
@@ -132,6 +162,8 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - One final assessment can originate at most one follow-up cycle.
 - Treatment card/history shows source Investigation → Finding where applicable.
 - Assisted detail shows Finding → linked treatment(s), or `Ainda sem tratamento vinculado`.
+- Two treatments with the same visible title retain distinct `treatmentId` actions; final assessment never targets the wrong card.
+- Optional therapeutic objective is visible on treatment cards/history when filled and absent without placeholder noise when empty.
 
 ## Reiki
 
@@ -153,6 +185,15 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Resource edits never rewrite historical snapshots.
 - Usage count reflects linked treatment components.
 - Resource can be selected during treatment creation/planning/follow-up/add/replace flows.
+- Searchable Library picker remains practical with ~150 resources and prioritizes favorites / usage context.
+- Library favorites can be toggled from both the Library cards and searchable picker.
+- Favorite filtering does not modify resource records or snapshots.
+- Bulk import accepts comma, semicolon and tab-separated files.
+- Bulk import accepts pasted Excel/Numbers/Sheets data and one-resource-per-line lists.
+- Bulk import preview distinguishes read/new/duplicate rows before saving.
+- Duplicate active names are ignored case/diacritic-insensitively according to parser rules.
+- Downloadable CSV template opens with Nome/Tipo/Finalidade/Observações columns.
+- Bulk import stays local to the device.
 - Avaliar requires OPEN prepared session + valid assisted context.
 - General assessment appears in longitudinal history.
 - Biblioteca contains preparation wording preferences and Meus protocolos.
@@ -171,6 +212,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Successful export stores the confirmed export timestamp.
 - Recent confirmed export suppresses the reminder for seven days.
 - A failed/non-executed export must not count as a confirmed backup.
+- UI-only favorites may remain device-local preferences and must never corrupt therapeutic state/imports.
 
 ## Therapist-facing language
 
@@ -180,15 +222,19 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Closing action reads `Revisar e encerrar`.
 - Raw technical status/type enums do not leak into normal visible product copy.
 
-## Mobile / one hand
+## Mobile / one hand / iPad
 
 - Primary controls have comfortable touch targets.
 - Sim/Não remain large/stable.
 - Reiki pause/resume/complete/cancel remain reachable without precision tapping.
-- New session dashboard does not horizontally overflow at 320px.
+- Session dashboard does not horizontally overflow at 320px.
 - Custom protocol editor questions stack on narrow screens.
 - Closing review/report buttons stack rather than overflow.
 - Bottom navigation stays stable outside focused overlays.
+- Deep Teal visual hierarchy remains legible in portrait/landscape.
+- Search/favorite/resource picker controls remain reachable with the iOS keyboard open.
+- Bottom sheets respect safe-area insets.
+- Modo atendimento keeps the current context visible while reducing extra surface area.
 
 ## Accessibility
 
@@ -200,6 +246,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Guided preparation progress exposes status semantics.
 - Reiki timers use role=timer with aria-live=off.
 - Status is not color-only.
+- Favorites have explicit accessible labels rather than relying on the star alone.
 - Forced-colors/high-contrast keeps boundaries visible.
 - Reduced-motion disables nonessential movement.
 
@@ -214,6 +261,7 @@ GitHub Actions runs syntax validation for every Fluxa `.js`/`.mjs` file, then:
 - `remaining.test.mjs`
 - `storage-health.test.mjs`
 - `activity-library.test.mjs`
+- `bulk-library.test.mjs`
 - `treatment-planning.test.mjs`
 - `administrative-treatment.test.mjs`
 - `reiki-flex.test.mjs`
@@ -227,14 +275,18 @@ GitHub Actions runs syntax validation for every Fluxa `.js`/`.mjs` file, then:
 
 - End-to-end therapist workflow starting with zero assistidos.
 - End-to-end workflow with multiple assistidos in the same Session.
+- Assisted favorites, recent ordering and search with realistic data.
 - Multiple investigations and exact resume behavior.
 - Custom protocol creation/versioning/branching/resource snapshots.
-- Closing review + reports with realistic populated states.
-- Report print/save-PDF on iPhone/iPad.
+- Closing review + internal/shareable reports with realistic populated states.
+- Report print/save-PDF/share on iPhone/iPad.
+- Bulk import using a real large spreadsheet/list of resources.
+- Searchable Library resource picker with a realistically large Library.
+- Preparation preference reuse across two real sessions.
 - Safari/iPhone keyboard open/closed.
 - Repeated background/foreground and reload during Reiki on a real device.
-- iPad portrait/landscape.
-- VoiceOver/iOS navigation and dialogs.
+- iPad portrait/landscape and Modo atendimento.
+- VoiceOver/iOS navigation, favorites and dialogs.
 - Actual private-mode/localStorage quota failure behavior.
 - Export → clear/import → restore on target browser.
 - Full Deep Teal visual hierarchy pass with realistic data.
