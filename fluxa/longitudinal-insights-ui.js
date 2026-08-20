@@ -3,6 +3,7 @@ import { getOpenSession } from './domain.js';
 
 const store=createStore();
 let enhancing=false;
+const findingLabels={CAUSE:'Causa',MAINTAINER:'Mantenedor',CONSEQUENCE:'Consequência',ASSOCIATION:'Associação',FACTOR_RELEVANT:'Fator relevante',DEEPEN:'Item a aprofundar'};
 function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
 function fmt(iso){return iso?new Intl.DateTimeFormat('pt-BR',{dateStyle:'medium'}).format(new Date(iso)):'—';}
 function assistedSummary(state,id){
@@ -25,7 +26,7 @@ function trendHtml(items){
 function content(state,id){
   const d=assistedSummary(state,id);if(!d)return'';const latest=d.assessments[0];const recent=d.findings[0];
   return `<div class="metric-grid"><div class="metric"><strong>${d.activeTreatments.length}</strong><span>tratamentos atuais</span></div><div class="metric"><strong>${d.openInvestigations.length}</strong><span>investigações abertas</span></div><div class="metric"><strong>${d.findings.length}</strong><span>achados</span></div><div class="metric"><strong>${d.sessions.length}</strong><span>sessões</span></div></div>
-    <div class="insight-grid section"><article class="card soft"><p class="eyebrow">Última avaliação</p><h3>${latest?esc(latest.subject||'Avaliação final'):'Ainda sem avaliação'}</h3>${latest?`<p class="muted">${esc(latest.result??latest.frequency??'')}${latest.scale?` ${esc(latest.scale)}`:''}${latest.imbalancePercent!=null?` · ${esc(latest.imbalancePercent)}% de desequilíbrio`:''}</p>`:'<p class="muted">O histórico será resumido automaticamente conforme você usar o Fluxa.</p>'}</article><article class="card soft"><p class="eyebrow">Achado recente</p><h3>${recent?esc(recent.title||recent.questionTextSnapshot||'Achado'):'Nenhum achado confirmado'}</h3><p class="muted">${recent?esc(recent.classification||'Fator relevante'):d.sessions[0]?`Última sessão: ${fmt(d.sessions[0].startedAt)}`:'Sem sessões anteriores'}</p></article></div>
+    <div class="insight-grid section"><article class="card soft"><p class="eyebrow">Última avaliação</p><h3>${latest?esc(latest.subject||'Avaliação final'):'Ainda sem avaliação'}</h3>${latest?`<p class="muted">${esc(latest.result??latest.frequency??'')}${latest.scale?` ${esc(latest.scale)}`:''}${latest.imbalancePercent!=null?` · ${esc(latest.imbalancePercent)}% de desequilíbrio`:''}</p>`:'<p class="muted">O histórico será resumido automaticamente conforme você usar o Fluxa.</p>'}</article><article class="card soft"><p class="eyebrow">Achado recente</p><h3>${recent?esc(recent.title||recent.questionTextSnapshot||'Achado'):'Nenhum achado confirmado'}</h3><p class="muted">${recent?esc(findingLabels[recent.classification]||recent.classification||'Fator relevante'):d.sessions[0]?`Última sessão: ${fmt(d.sessions[0].startedAt)}`:'Sem sessões anteriores'}</p></article></div>
     <section class="section"><div class="section-head"><h3>Evolução</h3><span class="muted">últimas avaliações</span></div>${trendHtml(d.imbalance)}</section>`;
 }
 function ensureDetail(){
