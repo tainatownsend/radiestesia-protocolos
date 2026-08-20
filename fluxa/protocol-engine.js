@@ -1,4 +1,5 @@
 import { EventType } from './domain.js';
+import { requirePreparedSessionState } from './session-rules.js';
 
 function addEvent(store, draft, input) {
   draft.events.push({
@@ -6,12 +7,6 @@ function addEvent(store, draft, input) {
     sessionId: input.sessionId || null, assistedEntityId: input.assistedEntityId || null,
     occurredAt: input.occurredAt || store.nowIso(), createdAt: store.nowIso(), metadata: input.metadata || {}
   });
-}
-
-function requireOpenSession(state, sessionId) {
-  const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
-  if (!session) throw new Error('Esta investigação exige uma sessão aberta.');
-  return session;
 }
 
 export const PROTOCOL_LIBRARY = Object.freeze([
@@ -86,7 +81,9 @@ export function currentProtocolNode(investigation) {
 
 export function startBranchingInvestigation(store, sessionId, assistedEntityId, protocolId) {
   const state = store.getState();
-  requireOpenSession(state, sessionId);
+  const session = requirePreparedSessionState(state, sessionId, 'Conclua a preparação da sessão antes de iniciar uma investigação.');
+  const assisted = state.assistedEntities.find((item) => item.id === assistedEntityId && !item.archivedAt);
+  if (!assisted) throw new Error('Selecione um assistido válido.');
   const protocol = protocolById(protocolId);
   if (!protocol) throw new Error('Protocolo não encontrado.');
   const investigation = {
@@ -97,6 +94,8 @@ export function startBranchingInvestigation(store, sessionId, assistedEntityId, 
   store.setState((current) => {
     const draft = structuredClone(current);
     draft.investigations.push(investigation);
+    const activeSession = draft.sessions.find((item) => item.id === session.id);
+    if (activeSession) activeSession.currentAssistedEntityId = assistedEntityId;
     addEvent(store, draft, { eventType:EventType.INVESTIGATION_STARTED, entityType:'Investigation', entityId:investigation.id,
       sessionId, assistedEntityId, metadata:{ protocolName:protocol.name, protocolVersionId:protocol.versionId, branching:true } });
     return draft;
@@ -110,7 +109,7 @@ export function answerBranchingInvestigation(store, investigationId, answer) {
     const draft = structuredClone(state);
     const investigation = draft.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'IN_PROGRESS');
     if (!investigation) return draft;
-    requireOpenSession(draft, investigation.currentSessionId);
+    requirePreparedSessionState(draft, investigation.currentSessionId, 'Conclua a preparação da sessão antes de continuar a investigação.');
     const node = currentProtocolNode(investigation);
     if (!node || node.type !== 'QUESTION') return draft;
     const nextId = answer === 'YES' ? node.yes : node.no;
@@ -136,7 +135,7 @@ export function answerBranchingInvestigation(store, investigationId, answer) {
 
 export function resumeBranchingInvestigation(store, investigationId, sessionId) {
   const state = store.getState();
-  requireOpenSession(state, sessionId);
+  requirePreparedSessionState(state, sessionId, 'Conclua a preparação da sessão antes de retomar a investigação.');
   const investigation = state.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'IN_PROGRESS');
   if (!investigation) throw new Error('Investigação não disponível para retomada.');
   store.setState((current) => {
@@ -155,12 +154,14 @@ export function resumeBranchingInvestigation(store, investigationId, sessionId) 
 }
 
 export function confirmBranchingFindings(store, investigationId, nodeIds, classification = 'FACTOR_RELEVANT') {
+  const allowed = new Set(['CAUSE','MAINTAINER','CONSEQUENCE','ASSOCIATION','FACTOR_RELEVANT','DEEPEN']);
+  if (!allowed.has(classification)) throw new Error('Classificação de achado inválida.');
   const created = [];
   store.setState((state) => {
     const draft = structuredClone(state);
     const investigation = draft.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'COMPLETED');
     if (!investigation) return draft;
-    requireOpenSession(draft, investigation.currentSessionId);
+    requirePreparedSessionState(draft, investigation.currentSessionId, 'Conclua a preparação da sessão antes de consolidar achados.');
     for (const nodeId of nodeIds) {
       const answer = investigation.answers.find((item) => item.nodeId === nodeId && item.answer === 'YES');
       if (!answer) continue;
