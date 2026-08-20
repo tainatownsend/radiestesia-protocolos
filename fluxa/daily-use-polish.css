@@ -31,6 +31,20 @@
 .repeat-component-box span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; }
 .repeat-component-box strong { margin-top: 2px; color: var(--primary-strong); font-size: 12px; }
 
+.library-card-favorite {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: color-mix(in srgb,var(--muted) 55%,transparent);
+  font-size: 20px;
+}
+.library-card-favorite.active { color: var(--accent); background: color-mix(in srgb,var(--accent) 10%,var(--surface)); border-color: color-mix(in srgb,var(--accent) 35%,var(--border)); }
+.favorite-filter-hidden { display: none !important; }
+.library-favorite-filter .btn.primary { background: var(--primary); color: #fff; }
+
 .bulk-source-grid {
   display: grid;
   gap: 12px;
