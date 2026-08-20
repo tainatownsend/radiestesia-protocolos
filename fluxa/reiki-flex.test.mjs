@@ -20,6 +20,7 @@ assert.equal(app.status,'RUNNING');
 
 pauseFlexibleReiki(store,app.id);
 assert.equal(store.getState().reikiApplications[0].status,'PAUSED');
+assert.throws(()=>startFlexibleReiki(store,{assistedEntityId:assisted.id,mode:ReikiMode.IN_PERSON}),/aplicação de Reiki ativa/);
 resumeFlexibleReiki(store,app.id);
 assert.equal(store.getState().reikiApplications[0].status,'RUNNING');
 completeFlexibleReiki(store,app.id,'registro');
