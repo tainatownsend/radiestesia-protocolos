@@ -1,13 +1,18 @@
 {
+  "id": "./",
   "name": "Fluxa",
   "short_name": "Fluxa",
   "description": "Workspace terapêutico local-first para sessões, investigações, tratamentos e Reiki.",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#EFF1EF",
   "theme_color": "#173F46",
   "orientation": "any",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon.svg",
