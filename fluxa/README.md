@@ -29,6 +29,9 @@ Fluxa is being built as a new, local-only product inside an isolated `/fluxa` di
 - PET supports open descriptive details.
 - Situation/process captures process identification and involved/requesting person details.
 - Longitudinal assisted detail projects history from events.
+- Assisted entities can be edited without rewriting prior events.
+- Assisted type stays fixed during MVP edits to preserve historical meaning.
+- Assisted entities can be archived while retaining all history; active work blocks archival.
 
 ### Investigation / protocol library
 - Versioned sample protocol (`Triagem rápida`).
@@ -53,9 +56,11 @@ Fluxa is being built as a new, local-only product inside an isolated `/fluxa` di
 - By default, time spent interrupted does not consume the component's prescribed duration: active component `expectedEndAt` is shifted by the interruption period and the reschedule is recorded.
 - Multiple treatment components can be added independently.
 - Components can be stopped or replaced without overwriting prior records; replacements retain a link to the original component.
-- Treatment review requires an open session because it represents a new measurement.
-- Reviews are stored separately; verified completion closes components and treatment while preserving prior events.
+- Each component has its own dismantling review: 100% complete + permission to dismantle.
+- Component reviews are stored independently; only two positive answers complete/dismantle the component.
+- Final assessment is unlocked only when every component is resolved (completed, stopped or replaced).
 - Structured final assessment captures vibrational-frequency text/value, imbalance percentage, whether a new treatment is needed and when.
+- After component resolution and final assessment, the current treatment is completed even if a future treatment cycle is recommended.
 
 ### Reiki
 - MVP Reiki is timer + application record only; there are no guided positions/steps.
@@ -64,6 +69,22 @@ Fluxa is being built as a new, local-only product inside an isolated `/fluxa` di
 - Reload can reconstruct elapsed time from saved intervals.
 - Completing Reiki stores total duration and optional notes without closing the session.
 - Retrospective completed Reiki applications can be registered outside a session.
+
+### Local recovery / privacy-oriented handling
+- Primary, backup and recovery local snapshots are validated independently.
+- Visible storage warning appears when writes cannot be confirmed or primary data is corrupt.
+- Valid backup/recovery data can be restored to the primary record.
+- User can export the current valid local dataset as JSON from Hoje.
+- No cloud/account data path exists in the MVP.
+
+### Accessibility / mobile hardening
+- Dialog semantics and accessible titles are applied across the layered UI.
+- Close buttons receive accessible names.
+- Focus moves into newly opened dialogs and Escape can close the active dialog.
+- Reiki timer uses timer semantics without announcing every second.
+- Form controls receive accessible names where the base markup lacks explicit linkage.
+- Focus-visible, high-contrast/forced-colors and reduced-motion handling are included.
+- Narrow action rows stack instead of relying on precision tapping.
 
 ## Core data contracts
 
@@ -74,7 +95,8 @@ Fluxa is being built as a new, local-only product inside an isolated `/fluxa` di
 - `Finding`: confirmed result of an investigation, separate from raw answers.
 - `Treatment`: longitudinal process independent from session lifetime.
 - `TreatmentComponent`: concrete graph/tool/component with its own timing and lifecycle.
-- `TreatmentReview`: measurement/review event that can conclude a treatment.
+- `TreatmentComponentReview`: component-specific completion/permission verification.
+- `TreatmentReview`: treatment-level measurement/review event.
 - `Assessment`: final post-treatment measurement/decision record.
 - `ReikiApplication`: timer/application record with persisted intervals.
 
@@ -84,22 +106,26 @@ There is intentionally no login, account, backend, cloud synchronization, migrat
 
 ## Automated checks
 
-- `domain.test.mjs` covers one-open-session behavior, cross-session investigation resume, corrected closing, treatment interruption/resume timing, multi-component replacement, final assessment, Reiki elapsed time and minimum assisted fields.
+- `domain.test.mjs` covers session behavior, cross-session investigation resume, corrected closing, treatment interruption/resume timing, multi-component replacement, final assessment, Reiki elapsed time and minimum assisted fields.
 - `protocol-engine.test.mjs` covers branching paths, protocol version identity and explicit finding confirmation/classification.
-- `.github/workflows/fluxa-domain.yml` runs both suites on branch changes and pull requests.
+- `remaining.test.mjs` covers component dismantling, assisted edit/archive safety and treatment completion after final assessment.
+- `storage-health.test.mjs` covers corrupt-primary detection and local recovery.
+- `.github/workflows/fluxa-domain.yml` runs all four suites on branch changes and pull requests.
 
-## Remaining backlog increments
+## Remaining work before product validation
 
-1. Refine the treatment completion sequence so component-by-component dismantling can be confirmed before the overall treatment is concluded.
-2. Add richer protocol content/version management beyond the representative branching library.
-3. Add editing/archive flows for assisted entities while preserving history.
-4. Improve local-storage failure UX in the visible app (the recovery layer exists; user-facing recovery controls still need refinement).
-5. End-to-end mobile QA and accessibility regression on real browser/device sizes.
+The core MVP backlog is now largely implemented. Remaining work is primarily validation/refinement rather than missing domain architecture:
+
+1. Run end-to-end mobile QA on real Safari/iPhone and iPad, including background/foreground and keyboard states.
+2. Run VoiceOver/accessibility regression and fix issues found on-device.
+3. Validate localStorage quota/private-mode failure behavior on target browsers.
+4. Perform a final visual pass against the approved Deep Teal mockups with populated real-world states.
+5. Expand protocol content/version authoring only after the representative engine is validated.
 6. Reports/PDF remain phase 2 unless intentionally pulled forward.
 
 ## QA
 
-See `QA.md` for the regression checklist covering session continuity, assisted context, investigation resume, treatment lifecycle, branching protocols, Reiki timer, local persistence and mobile one-hand use.
+See `QA.md` for the detailed regression checklist.
 
 ## Validation principle
 
