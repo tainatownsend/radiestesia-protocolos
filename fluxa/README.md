@@ -58,6 +58,7 @@ The current PR adds an explicit fast-use layer intended for phone/iPad operation
 - Deep Teal visual hierarchy and tablet/mobile-specific sheets/navigation;
 - optional `Modo atendimento` to reduce nonessential context during the active session;
 - persistent `Atendimento atual` context with quick assisted switching;
+- `Hoje` exposes a short `Para continuar` queue for open investigations and planned/interrupted treatments when no session is open;
 - large Sim/Não and touch-chip controls for finding classifications and Reiki mode;
 - quick imbalance choices at 0/25/50/75/100%, while arbitrary 0–100 values remain available;
 - duration presets (`30 min`, `1 h`, `1 dia`, `7 dias`, `Sem prazo`);
@@ -68,6 +69,15 @@ The current PR adds an explicit fast-use layer intended for phone/iPad operation
 - longitudinal assisted summary with current work, latest assessment and simple imbalance evolution;
 - searchable Library picker with favorites and usage context rather than long mobile selects;
 - virtual-keyboard adaptation using the visible iOS/iPad viewport so sheets and controls remain reachable while typing.
+
+### Roteiros de sessão
+
+Biblioteca can store optional reusable session shortcut sequences.
+
+- A roteiro has a name and an ordered subset of Avaliar, Investigar, Tratar, Reiki and Anotar.
+- Roteiros are persisted inside Fluxa settings and survive reload/export/import with the rest of the local state.
+- In a prepared session, the `Roteiro` action exposes those steps as large shortcuts.
+- A roteiro never answers an investigation, marks preparation complete, creates treatment decisions or advances automatically; every therapeutic action still requires the therapist's explicit tap and the normal Fluxa validation.
 
 ### Safe closing and reports
 
@@ -183,12 +193,12 @@ Traceability is visible in both directions:
 - Historical snapshots protect earlier records from later Library edits.
 - Usage counts expose treatment-component reuse.
 - `Avaliar` records a general measurement/result linked to the prepared session and selected assisted entity.
-- Biblioteca also contains custom-protocol authoring and preparation wording preferences.
+- Biblioteca also contains custom-protocol authoring, preparation wording preferences and session shortcut templates.
 
 ## Local persistence, backup and recovery
 
 - Normalized local schema version 5.
-- `customProtocols` and preparation settings are part of normalized/exported state.
+- `customProtocols`, preparation settings and session shortcut templates are part of normalized/exported state through `settings`.
 - Primary, backup and recovery snapshots are validated independently.
 - Recovery is written before primary replacement and is preferred when primary becomes unreadable.
 - Same-tab modules and same-origin browser tabs synchronize local state.
@@ -228,7 +238,7 @@ GitHub Actions runs:
 - JavaScript syntax validation for all Fluxa `.js`/`.mjs` modules;
 - core session/domain tests;
 - prepared-session invariants;
-- store recovery tests;
+- store recovery and settings/template persistence tests;
 - protocol-engine tests;
 - treatment lifecycle and planning;
 - storage import/recovery;
@@ -245,21 +255,23 @@ GitHub Actions runs:
 
 1. Full end-to-end therapist flow with zero assisted entities, one assisted entity and multiple assisted entities.
 2. Assisted favorites/search/recent ordering with realistic lists.
-3. Multiple simultaneous/incomplete investigations and exact resume behavior.
-4. Custom protocol creation, branching, versioning and resource snapshots.
-5. Session safety review and per-assisted reports with realistic populated data.
-6. Internal vs shareable report behavior and print/save-to-PDF on iPhone/iPad.
-7. Bulk Library import/export with a real large spreadsheet/list and searchable/favorite resource picking.
-8. Preparation reuse shortcut confirms that only scale/protection preferences are copied and no step/current frequency is auto-completed.
-9. Safari/iPhone keyboard open/closed, reload and repeated background/foreground transitions.
-10. Reiki timer background/foreground on a real device.
-11. iPad portrait/landscape and Modo atendimento.
-12. Add Fluxa to the Home Screen on the target device and confirm standalone launch.
-13. Load once online, switch to airplane/offline mode and confirm an offline reload uses the cached Fluxa shell and shows the offline status banner.
-14. VoiceOver/iOS.
-15. Actual private-mode/localStorage quota/failure behavior.
-16. Export → clear/import → restore on the target browser.
-17. Full Deep Teal visual hierarchy pass with populated real-world states.
+3. `Para continuar` queue with open investigations and planned/interrupted treatments.
+4. Multiple simultaneous/incomplete investigations and exact resume behavior.
+5. Custom protocol creation, branching, versioning and resource snapshots.
+6. Session shortcut template creation/edit/delete/use and confirmation that it never auto-completes therapeutic work.
+7. Session safety review and per-assisted reports with realistic populated data.
+8. Internal vs shareable report behavior and print/save-to-PDF on iPhone/iPad.
+9. Bulk Library import/export with a real large spreadsheet/list and searchable/favorite resource picking.
+10. Preparation reuse shortcut confirms that only scale/protection preferences are copied and no step/current frequency is auto-completed.
+11. Safari/iPhone keyboard open/closed, reload and repeated background/foreground transitions.
+12. Reiki timer background/foreground on a real device.
+13. iPad portrait/landscape and Modo atendimento.
+14. Add Fluxa to the Home Screen on the target device and confirm standalone launch.
+15. Load once online, switch to airplane/offline mode and confirm an offline reload uses the cached Fluxa shell and shows the offline status banner.
+16. VoiceOver/iOS.
+17. Actual private-mode/localStorage quota/failure behavior.
+18. Export → clear/import → restore on the target browser.
+19. Full Deep Teal visual hierarchy pass with populated real-world states.
 
 ## Explicitly later
 
