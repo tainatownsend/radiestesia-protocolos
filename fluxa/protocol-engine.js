@@ -29,6 +29,23 @@ export const PROTOCOL_LIBRARY = Object.freeze([
     })
   }),
   Object.freeze({
+    id: 'investigacao_completa', versionId: 'investigacao_completa_v1', version: 1, name: 'Investigação completa', category: 'Investigação ampliada',
+    description: 'Percorre prioridade, origem, manutenção, contexto e necessidade de aprofundamento.', startNodeId: 'q1',
+    nodes: Object.freeze({
+      q1: { id:'q1', type:'QUESTION', text:'Existe um tema prioritário adequado para uma investigação completa agora?', yes:'q2', no:'end_none' },
+      q2: { id:'q2', type:'QUESTION', text:'A origem principal deste tema está acessível nesta sessão?', yes:'q3', no:'q6' },
+      q3: { id:'q3', type:'QUESTION', text:'Existe um fator interno relevante relacionado à origem?', yes:'q4', no:'q5' },
+      q4: { id:'q4', type:'QUESTION', text:'Esse fator interno atua como mantenedor do desequilíbrio atual?', yes:'q6', no:'q5' },
+      q5: { id:'q5', type:'QUESTION', text:'Existe um fator externo, relacional, ambiental ou contextual relevante?', yes:'q6', no:'q7' },
+      q6: { id:'q6', type:'QUESTION', text:'Há alguma consequência importante que também precisa ser considerada no tratamento?', yes:'q7', no:'q7' },
+      q7: { id:'q7', type:'QUESTION', text:'Existe outro fator relevante associado que ainda precisa ser investigado?', yes:'q8', no:'end_consolidate' },
+      q8: { id:'q8', type:'QUESTION', text:'É indicado aprofundar este tema com um protocolo específico ou causa raiz?', yes:'end_deepen', no:'end_consolidate' },
+      end_none: { id:'end_none', type:'END', title:'Sem investigação completa indicada', summary:'Não foi identificada prioridade adequada para este nível de investigação agora.' },
+      end_deepen: { id:'end_deepen', type:'END', title:'Aprofundamento adicional indicado', summary:'Revise os achados desta etapa e siga para um protocolo mais específico somente se necessário.' },
+      end_consolidate: { id:'end_consolidate', type:'END', title:'Mapa pronto para consolidação', summary:'Revise as respostas positivas, classifique os achados e decida o que realmente deve orientar o tratamento.' }
+    })
+  }),
+  Object.freeze({
     id: 'causa_raiz', versionId: 'causa_raiz_v1', version: 1, name: 'Causa raiz', category: 'Investigação profunda',
     description: 'Aprofunda a origem sem transformar toda resposta positiva em causa.', startNodeId: 'q1',
     nodes: Object.freeze({
