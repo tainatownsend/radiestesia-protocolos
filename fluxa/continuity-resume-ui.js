@@ -5,10 +5,11 @@ import { resumeBranchingInvestigation } from './protocol-engine.js';
 const store=createStore();
 const KEY='fluxa.pendingInvestigationResume';
 let processing=false;
+let memoryPending=null;
 
-function readPending(){try{return sessionStorage.getItem(KEY);}catch(_){return null;}}
-function savePending(id){try{sessionStorage.setItem(KEY,id);}catch(_){} }
-function clearPending(){try{sessionStorage.removeItem(KEY);}catch(_){} }
+function readPending(){try{return sessionStorage.getItem(KEY)||memoryPending;}catch(_){return memoryPending;}}
+function savePending(id){memoryPending=id;try{sessionStorage.setItem(KEY,id);}catch(_){} }
+function clearPending(){memoryPending=null;try{sessionStorage.removeItem(KEY);}catch(_){} }
 function preparedSession(state=store.getState()){
   const session=getOpenSession(state);if(!session)return null;
   return latestPreparation(state,session.id)?.status==='COMPLETED'?session:null;
@@ -36,9 +37,7 @@ function openExactInvestigation(inv,session){
   }
   resumeInvestigation(store,inv.id,session.id);
   document.querySelector('[data-route="today"]')?.click();
-  requestAnimationFrame(()=>{
-    document.querySelector('[data-action="resume-latest-investigation"]')?.click();
-  });
+  requestAnimationFrame(()=>document.querySelector('[data-action="resume-latest-investigation"]')?.click());
 }
 function attemptResume(){
   if(processing)return;
