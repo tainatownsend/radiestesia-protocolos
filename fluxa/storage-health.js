@@ -7,7 +7,7 @@ const CURRENT_VERSION = 5;
 
 const COLLECTIONS = [
   'sessions','assistedEntities','events','preparationRuns','closingRuns','investigations','findings',
-  'treatments','treatmentComponents','componentReviews','treatmentReviews','assessments','reikiApplications','tools'
+  'treatments','treatmentComponents','componentReviews','treatmentReviews','assessments','reikiApplications','tools','customProtocols'
 ];
 const REQUIRED_COLLECTIONS = ['sessions','assistedEntities','events','treatments','reikiApplications'];
 
@@ -26,6 +26,7 @@ function validCandidate(raw) { const value = parse(raw); return looksLikeFluxaDa
 function canonicalize(value) {
   const next = { ...value, version: CURRENT_VERSION };
   for (const key of COLLECTIONS) next[key] = Array.isArray(value[key]) ? value[key] : [];
+  next.settings = value.settings && typeof value.settings === 'object' && !Array.isArray(value.settings) ? value.settings : {};
   next.meta = { ...(value.meta && typeof value.meta === 'object' ? value.meta : {}), importedAt: new Date().toISOString() };
   return next;
 }
