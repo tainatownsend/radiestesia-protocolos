@@ -18,48 +18,23 @@ function emptyState() {
   return {
     version: 5,
     meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
-    sessions: [],
-    assistedEntities: [],
-    events: [],
-    preparationRuns: [],
-    closingRuns: [],
-    investigations: [],
-    findings: [],
-    treatments: [],
-    treatmentComponents: [],
-    componentReviews: [],
-    treatmentReviews: [],
-    assessments: [],
-    reikiApplications: [],
-    tools: []
+    sessions: [], assistedEntities: [], events: [], preparationRuns: [], closingRuns: [],
+    investigations: [], findings: [], treatments: [], treatmentComponents: [], componentReviews: [],
+    treatmentReviews: [], assessments: [], reikiApplications: [], tools: []
   };
 }
 
-function list(value) {
-  return Array.isArray(value) ? value : [];
-}
+function list(value) { return Array.isArray(value) ? value : []; }
 
 function normalize(parsed) {
   const base = emptyState();
   return {
-    ...base,
-    ...parsed,
-    version: 5,
-    meta: { ...base.meta, ...(parsed?.meta || {}) },
-    sessions: list(parsed?.sessions),
-    assistedEntities: list(parsed?.assistedEntities),
-    events: list(parsed?.events),
-    preparationRuns: list(parsed?.preparationRuns),
-    closingRuns: list(parsed?.closingRuns),
-    investigations: list(parsed?.investigations),
-    findings: list(parsed?.findings),
-    treatments: list(parsed?.treatments),
-    treatmentComponents: list(parsed?.treatmentComponents),
-    componentReviews: list(parsed?.componentReviews),
-    treatmentReviews: list(parsed?.treatmentReviews),
-    assessments: list(parsed?.assessments),
-    reikiApplications: list(parsed?.reikiApplications),
-    tools: list(parsed?.tools)
+    ...base, ...parsed, version: 5, meta: { ...base.meta, ...(parsed?.meta || {}) },
+    sessions:list(parsed?.sessions), assistedEntities:list(parsed?.assistedEntities), events:list(parsed?.events),
+    preparationRuns:list(parsed?.preparationRuns), closingRuns:list(parsed?.closingRuns), investigations:list(parsed?.investigations),
+    findings:list(parsed?.findings), treatments:list(parsed?.treatments), treatmentComponents:list(parsed?.treatmentComponents),
+    componentReviews:list(parsed?.componentReviews), treatmentReviews:list(parsed?.treatmentReviews), assessments:list(parsed?.assessments),
+    reikiApplications:list(parsed?.reikiApplications), tools:list(parsed?.tools)
   };
 }
 
@@ -82,10 +57,11 @@ function ensureStorageListener() {
 export function loadState() {
   const primary = parseCandidate(localStorage.getItem(STORAGE_KEY));
   if (primary) return primary;
-  const backup = parseCandidate(localStorage.getItem(BACKUP_KEY));
-  if (backup) return backup;
+  // Recovery is written first on every save, so it is normally newer than BACKUP when PRIMARY becomes unreadable.
   const recovery = parseCandidate(localStorage.getItem(RECOVERY_KEY));
   if (recovery) return recovery;
+  const backup = parseCandidate(localStorage.getItem(BACKUP_KEY));
+  if (backup) return backup;
   return emptyState();
 }
 
@@ -111,37 +87,21 @@ export function saveState(state) {
 export function createStore() {
   let state = loadState();
   const listeners = new Set();
-
-  function notify() {
-    listeners.forEach((listener) => listener(state));
-  }
-
-  function syncFromPeer(nextState) {
-    state = normalize(structuredClone(nextState));
-    notify();
-  }
-
+  function notify() { listeners.forEach((listener) => listener(state)); }
+  function syncFromPeer(nextState) { state = normalize(structuredClone(nextState)); notify(); }
   storeInstances.add(syncFromPeer);
   crossTabSubscribers.add(syncFromPeer);
   ensureStorageListener();
-
   return {
-    getState() {
-      return state;
-    },
+    getState() { return state; },
     setState(updater) {
       const proposed = typeof updater === 'function' ? updater(state) : updater;
       state = saveState(proposed);
-      for (const sync of storeInstances) {
-        if (sync !== syncFromPeer) sync(state);
-      }
+      for (const sync of storeInstances) if (sync !== syncFromPeer) sync(state);
       notify();
       return state;
     },
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
+    subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     makeId,
     nowIso
   };
