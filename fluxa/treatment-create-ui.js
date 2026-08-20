@@ -68,6 +68,17 @@ new MutationObserver(enhance).observe(document.querySelector('#app'), { childLis
 queueMicrotask(enhance);
 
 document.addEventListener('click', (event) => {
+  const review = event.target.closest('[data-review-treatment]');
+  if (review) {
+    const manage = review.closest('.treatment-card')?.querySelector('[data-backlog-manage-components]');
+    if (manage) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      manage.click();
+      return;
+    }
+  }
+
   const add = event.target.closest('[data-add-treatment-component-draft]');
   if (add) {
     const form = add.closest('#treatment-form');
