@@ -45,6 +45,12 @@
 .classification-chip-group .touch-chip { flex:1 1 145px; border-radius:13px; }
 .reiki-chip-group .touch-chip { flex:1 1 120px; }
 
+.recent-choice-wrap { display:grid; gap:7px; margin-top:-3px; }
+.recent-choice-wrap > span { font-size:12px; }
+.recent-choice-chips { display:flex; gap:7px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+.recent-choice-chips::-webkit-scrollbar { display:none; }
+.recent-choice-chip { flex:0 0 auto; max-width:220px; min-height:40px; padding:0 12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border:1px solid var(--border); border-radius:999px; background:var(--surface-2); color:var(--primary); font-weight:700; font-size:12px; }
+
 @media (max-width:560px) {
   .search-launch > span:last-child { display:none; }
   .search-launch { width:40px; min-height:40px; justify-content:center; padding:0; }
