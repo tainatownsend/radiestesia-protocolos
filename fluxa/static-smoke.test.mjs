@@ -15,7 +15,7 @@ for (const ref of localRefs) {
 }
 
 const required = [
-  'app.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','follow-up-treatment-ui.js',
+  'app.js','assisted-context-ui.js','backlog-ui.js','treatment-create-ui.js','treatment-planning-ui.js','follow-up-treatment-ui.js',
   'protocol-ui.js','branching-resume-ui.js','finding-classification-ui.js','remaining-ui.js','workflow-integrity-ui.js',
   'activity-library-ui.js','history-ui.js','reiki-outside-ui.js','reiki-lifecycle-ui.js','structured-preparation-ui.js',
   'import-ui.js','validation-ui.js','a11y.js','styles.css','remaining.css'
