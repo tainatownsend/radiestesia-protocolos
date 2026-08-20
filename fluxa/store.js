@@ -14,7 +14,7 @@ function makeId(prefix = 'id') {
 
 function emptyState() {
   return {
-    version: 3,
+    version: 4,
     meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
     sessions: [],
     assistedEntities: [],
@@ -27,7 +27,8 @@ function emptyState() {
     treatmentComponents: [],
     treatmentReviews: [],
     assessments: [],
-    reikiApplications: []
+    reikiApplications: [],
+    tools: []
   };
 }
 
@@ -40,7 +41,7 @@ function normalize(parsed) {
   return {
     ...base,
     ...parsed,
-    version: 3,
+    version: 4,
     meta: { ...base.meta, ...(parsed?.meta || {}) },
     sessions: list(parsed?.sessions),
     assistedEntities: list(parsed?.assistedEntities),
@@ -53,7 +54,8 @@ function normalize(parsed) {
     treatmentComponents: list(parsed?.treatmentComponents),
     treatmentReviews: list(parsed?.treatmentReviews),
     assessments: list(parsed?.assessments),
-    reikiApplications: list(parsed?.reikiApplications)
+    reikiApplications: list(parsed?.reikiApplications),
+    tools: list(parsed?.tools)
   };
 }
 
@@ -77,7 +79,6 @@ export function saveState(state) {
   const current = localStorage.getItem(STORAGE_KEY);
   const serialized = JSON.stringify(next);
   try {
-    // Recovery is written first so an interrupted primary write still leaves a valid candidate.
     localStorage.setItem(RECOVERY_KEY, serialized);
     if (current) localStorage.setItem(BACKUP_KEY, current);
     localStorage.setItem(STORAGE_KEY, serialized);
