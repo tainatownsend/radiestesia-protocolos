@@ -26,8 +26,10 @@ function applyFavoriteFilter(){
 }
 function promoteFavorites(){
   const stack=document.querySelector('[data-basic-tool-library] .stack');if(!stack)return;
-  const cards=[...stack.querySelectorAll(':scope > [data-library-tool-id]')];
-  cards.sort((a,b)=>Number(b.dataset.favoriteTool==='true')-Number(a.dataset.favoriteTool==='true')).forEach((card)=>stack.appendChild(card));
+  const cards=[...stack.children].filter((node)=>node.matches?.('[data-library-tool-id]'));
+  const desired=[...cards].sort((a,b)=>Number(b.dataset.favoriteTool==='true')-Number(a.dataset.favoriteTool==='true'));
+  if(cards.every((card,index)=>card===desired[index]))return;
+  const fragment=document.createDocumentFragment();desired.forEach((card)=>fragment.appendChild(card));stack.appendChild(fragment);
 }
 function enhance(){if(enhancing)return;enhancing=true;try{ensureFilter();decorateCards();applyFavoriteFilter();promoteFavorites();}finally{enhancing=false;}}
 new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
