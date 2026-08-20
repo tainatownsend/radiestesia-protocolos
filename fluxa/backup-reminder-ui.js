@@ -5,9 +5,10 @@ function ensure(){
   const main=document.querySelector('main');if(!main)return;
   if(main.querySelector('.eyebrow')?.textContent?.trim()!=='Hoje')return;
   const health=inspectStorageHealth();
+  let section=main.querySelector('[data-backup-reminder]');
+  if(['READ_ERROR','WRITE_ERROR'].includes(health.status)){section?.remove();return;}
   const last=health.lastExportAt;
   const days=last?Math.floor((Date.now()-new Date(last).getTime())/86400000):null;
-  let section=main.querySelector('[data-backup-reminder]');
   if(days!==null&&days<7){section?.remove();return;}
   const signature=last?`old:${last}`:'never';
   if(section?.dataset.backupSignature===signature)return;
