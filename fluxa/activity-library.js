@@ -1,3 +1,5 @@
+import { requirePreparedSessionState } from './session-rules.js';
+
 export const ToolType = Object.freeze({
   GRAPH: 'GRAPH',
   BIOMETER: 'BIOMETER',
@@ -27,12 +29,6 @@ function addEvent(store, draft, input) {
   return event;
 }
 
-function requireOpenSession(state, sessionId) {
-  const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
-  if (!session) throw new Error('Esta ação exige uma sessão aberta.');
-  return session;
-}
-
 function requireAssisted(state, assistedEntityId) {
   const assisted = state.assistedEntities.find((item) => item.id === assistedEntityId && !item.archivedAt);
   if (!assisted) throw new Error('Selecione um assistido válido.');
@@ -41,7 +37,7 @@ function requireAssisted(state, assistedEntityId) {
 
 export function recordGeneralAssessment(store, input) {
   const state = store.getState();
-  const session = requireOpenSession(state, input.sessionId);
+  const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar uma avaliação.');
   const assistedId = input.assistedEntityId || session.currentAssistedEntityId;
   requireAssisted(state, assistedId);
 
@@ -67,6 +63,7 @@ export function recordGeneralAssessment(store, input) {
 
   store.setState((current) => {
     const draft = structuredClone(current);
+    if (!Array.isArray(draft.assessments)) draft.assessments = [];
     draft.assessments.push(assessment);
     addEvent(store, draft, {
       eventType: ActivityLibraryEventType.ASSESSMENT_RECORDED,
@@ -99,6 +96,7 @@ export function createTool(store, input) {
   };
   store.setState((state) => {
     const draft = structuredClone(state);
+    if (!Array.isArray(draft.tools)) draft.tools = [];
     draft.tools.push(tool);
     addEvent(store, draft, {
       eventType: ActivityLibraryEventType.TOOL_CREATED,
@@ -113,7 +111,7 @@ export function createTool(store, input) {
 
 export function updateTool(store, toolId, input) {
   const state = store.getState();
-  const existing = state.tools.find((item) => item.id === toolId && !item.archivedAt);
+  const existing = (state.tools || []).find((item) => item.id === toolId && !item.archivedAt);
   if (!existing) throw new Error('Recurso não encontrado.');
   const name = input.name?.trim();
   if (!name) throw new Error('Nome do recurso é obrigatório.');
@@ -142,7 +140,7 @@ export function updateTool(store, toolId, input) {
 
 export function archiveTool(store, toolId) {
   const state = store.getState();
-  const existing = state.tools.find((item) => item.id === toolId && !item.archivedAt);
+  const existing = (state.tools || []).find((item) => item.id === toolId && !item.archivedAt);
   if (!existing) throw new Error('Recurso não encontrado.');
   store.setState((current) => {
     const draft = structuredClone(current);
