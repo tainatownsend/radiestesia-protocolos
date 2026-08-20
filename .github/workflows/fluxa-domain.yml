@@ -22,4 +22,6 @@ jobs:
         with:
           node-version: '22'
       - name: Run domain regression tests
-        run: node fluxa/domain.test.mjs
+        run: |
+          node fluxa/domain.test.mjs
+          node fluxa/protocol-engine.test.mjs
