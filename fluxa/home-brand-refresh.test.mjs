@@ -23,11 +23,17 @@ assert.match(home,/data-fast-session-context.*hidden/,'Legacy fast context shoul
 assert.match(home,/data-ux-next-action.*hidden/,'Previous next-action card should be hidden to avoid duplication.');
 assert.match(home,/Contexto atual/,'Original assisted context card should be detected and hidden.');
 assert.match(home,/Novo trabalho/,'Original action grid should be detected and hidden.');
-assert.match(home,/homeToggleTimeline/,'Session timeline should be collapsible instead of permanently expanded.');
+assert.match(home,/homeToggleSection/,'Session and idle activity should be collapsible instead of permanently expanded.');
 assert.match(home,/data-session-dashboard.*hidden/,'Session dashboard should stay out of the primary Home surface.');
+assert.match(home,/fluxa-home-preparing/,'Preparation should have its own reduced-distraction Home state.');
+assert.match(home,/fluxa-home-idle/,'Idle Home should have its own reduced-density state.');
+assert.match(home,/Atividade recente/,'Idle activity should be explicitly collapsed by the Home refresh.');
 
 assert.match(brand,/\.home-cockpit-next\{[^}]*background:var\(--primary-strong\)/,'Primary Home decision surface should use Deep Teal.');
 assert.match(brand,/\.home-primary-actions/,'Core actions should share one visually unified surface.');
+assert.match(brand,/fluxa-home-refreshed main>\.eyebrow[^}]*display:none/,'Prepared Home should remove redundant page-level heading chrome.');
+assert.match(brand,/fluxa-home-preparing/,'Brand layer should visually prioritize preparation.');
+assert.match(brand,/fluxa-home-idle/,'Brand layer should visually simplify the idle Home.');
 assert.doesNotMatch(brand,/purple|violet|cosmic|gold/i,'Canonical identity must not introduce mystical palette language.');
 
 console.log('home-brand-refresh.test.mjs: ok');
