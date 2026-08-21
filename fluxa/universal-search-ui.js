@@ -12,12 +12,18 @@ function ensureButton(){
   const button=document.createElement('button');button.className='search-launch';button.dataset.universalSearch='true';button.setAttribute('aria-label','Buscar no Fluxa');button.innerHTML='<span aria-hidden="true">⌕</span><span>Buscar</span>';
   const indicator=top.querySelector('.session-indicator');if(indicator)top.insertBefore(button,indicator);else top.appendChild(button);
 }
+function toolDetail(tool,query){
+  const tags=(tool.tags||[]).map((value)=>String(value||'').trim()).filter(Boolean);
+  const q=norm(query);const matched=tags.filter((value)=>norm(value).includes(q));
+  const visible=[...matched,...tags.filter((value)=>!matched.includes(value))].slice(0,3);
+  return visible.length?`Biblioteca · ${visible.map((value)=>`#${value}`).join(' · ')}`:'Biblioteca';
+}
 function allResults(query){
   const state=store.getState();const q=norm(query).trim();if(!q)return[];
   const results=[];const push=(kind,id,title,detail,scoreText='')=>{const hay=norm(`${title} ${detail} ${scoreText}`);if(hay.includes(q))results.push({kind,id,title,detail,starts:norm(title).startsWith(q)});};
   (state.assistedEntities||[]).filter((a)=>!a.archivedAt).forEach((a)=>push('assisted',a.id,a.displayName,'Assistido',a.details||''));
   (state.treatments||[]).forEach((t)=>push('treatment',t.id,t.title,'Tratamento',t.status));
-  (state.tools||[]).filter((t)=>!t.archivedAt).forEach((t)=>push('tool',t.id,t.name,'Biblioteca',`${t.purpose||''} ${t.notes||''} ${(t.tags||[]).join(' ')}`));
+  (state.tools||[]).filter((t)=>!t.archivedAt).forEach((t)=>push('tool',t.id,t.name,toolDetail(t,query),`${t.purpose||''} ${t.notes||''} ${(t.tags||[]).join(' ')}`));
   (state.customProtocols||[]).forEach((p)=>push('custom-protocol',p.protocolKey,p.name,`Meu protocolo · v${p.version}`,p.description||''));
   (PROTOCOL_LIBRARY||[]).forEach((p)=>push('protocol',p.id,p.name,'Protocolo',p.description||''));
   return results.sort((a,b)=>Number(b.starts)-Number(a.starts)||a.title.localeCompare(b.title,'pt-BR')).slice(0,30);
