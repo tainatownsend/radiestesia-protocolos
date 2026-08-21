@@ -1,22 +1,27 @@
 import { createStore } from './store.js';
 import { EventType, getOpenSession } from './domain.js';
 import { requirePreparedSessionState } from './session-rules.js';
-import { parseRootProtocols } from './root-protocol-parser.mjs';
+import { parseRootProtocols, applyRootProtocolMutations, finalizeRootProtocols } from './root-protocol-parser.mjs';
 
 const store=createStore();
 export const ROOT_PROTOCOL_SOURCES=Object.freeze([
   Object.freeze({path:'../app.js',group:'Temas essenciais'}),
+  Object.freeze({path:'../marriage.js',group:'Temas essenciais'}),
   Object.freeze({path:'../protocols-v11-core.js',group:'Investigações profundas'}),
   Object.freeze({path:'../protocols-v11-expansion.js',group:'Investigações profundas'}),
   Object.freeze({path:'../protocols-v11-quick.js',group:'Protocolos rápidos'})
 ]);
+export const ROOT_PROTOCOL_MUTATIONS=Object.freeze([
+  Object.freeze({path:'../deep-tree.js'}),
+  Object.freeze({path:'../deep-tree-2.js'})
+]);
 const catalog=[];
 let loadingPromise=null;
 
-async function loadSource(meta){
-  const response=await fetch(new URL(meta.path,import.meta.url),{cache:'no-cache'});
-  if(!response.ok)throw new Error(`Falha ao carregar ${meta.path}`);
-  return parseRootProtocols(await response.text(),meta);
+async function sourceText(path){
+  const response=await fetch(new URL(path,import.meta.url),{cache:'no-cache'});
+  if(!response.ok)throw new Error(`Falha ao carregar ${path}`);
+  return response.text();
 }
 
 export async function ensureRootProtocolCatalog(){
@@ -24,12 +29,16 @@ export async function ensureRootProtocolCatalog(){
   loadingPromise=(async()=>{
     const all=[];
     for(const source of ROOT_PROTOCOL_SOURCES){
-      try{all.push(...await loadSource(source));}
+      try{all.push(...parseRootProtocols(await sourceText(source.path),source));}
       catch(error){console.warn('Fluxa: catálogo da raiz indisponível',source.path,error);}
     }
     const unique=[];const ids=new Set();
     for(const item of all){if(ids.has(item.id))continue;ids.add(item.id);unique.push(item);}
-    catalog.splice(0,catalog.length,...unique);
+    for(const mutation of ROOT_PROTOCOL_MUTATIONS){
+      try{applyRootProtocolMutations(unique,await sourceText(mutation.path));}
+      catch(error){console.warn('Fluxa: expansão terapêutica da raiz indisponível',mutation.path,error);}
+    }
+    catalog.splice(0,catalog.length,...finalizeRootProtocols(unique));
     window.dispatchEvent(new CustomEvent('fluxa:root-protocols-ready',{detail:{count:catalog.length}}));
     return catalog;
   })();
