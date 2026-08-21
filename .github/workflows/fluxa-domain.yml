@@ -48,4 +48,5 @@ jobs:
           node fluxa/report-copy.test.mjs
           node fluxa/ui-idempotency.test.mjs
           node fluxa/ux-conduction.test.mjs
+          node fluxa/ux-post-merge-integration.test.mjs
           node fluxa/static-smoke.test.mjs
