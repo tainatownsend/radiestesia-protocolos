@@ -52,4 +52,5 @@ jobs:
           node fluxa/ux-return-validation.test.mjs
           node fluxa/daily-safety-regressions.test.mjs
           node fluxa/offline-shell.test.mjs
+          node fluxa/home-brand-refresh.test.mjs
           node fluxa/static-smoke.test.mjs
