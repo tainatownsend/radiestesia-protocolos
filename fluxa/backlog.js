@@ -1,4 +1,4 @@
-import { EventType, TreatmentStatus, createAssistedEntity } from './domain.js';
+import { EventType, TreatmentStatus, createAssistedEntity, validateAssistedEntityInput } from './domain.js';
 import { validateFinalAssessmentInput } from './final-assessment-rules.js';
 import { requirePreparedSessionState } from './session-rules.js';
 
@@ -100,25 +100,9 @@ export function recordStructuredFinalAssessment(store, input) {
 }
 
 export function validateAssistedInput(input) {
-  const type = input.type; const name = input.displayName?.trim(); if (!name) throw new Error('Nome ou identificação é obrigatório.');
-  if (type === 'PERSON' && !input.birthDate) throw new Error('Data de nascimento é obrigatória para pessoa.');
-  if (type === 'ENVIRONMENT' && !input.address?.trim()) throw new Error('Endereço completo é obrigatório para ambiente/propriedade.');
-  if (type === 'SITUATION') { if (!input.identifier?.trim()) throw new Error('Número/identificação do processo é obrigatório.'); if (!input.relatedPerson?.trim()) throw new Error('Pessoa envolvida/solicitante é obrigatória para situação/processo.'); }
-  if (type === 'GROUP') { const members = Array.isArray(input.members) ? input.members : []; if (!members.length) throw new Error('Adicione pelo menos uma pessoa ao grupo.'); if (members.some((m) => !m.fullName?.trim() || !m.birthDate)) throw new Error('Cada integrante do grupo precisa de nome completo e data de nascimento.'); }
-  return true;
+  return validateAssistedEntityInput(input);
 }
 
 export function createValidatedAssistedEntity(store, input) {
-  validateAssistedInput(input);
-  const entity = createAssistedEntity(store, input);
-  const relatedPerson = input.relatedPerson?.trim() || null;
-  if (entity.relatedPerson === relatedPerson) return entity;
-  store.setState((state) => {
-    const draft = structuredClone(state);
-    const target = draft.assistedEntities.find((item) => item.id === entity.id);
-    if (target) { target.relatedPerson = relatedPerson; target.updatedAt = store.nowIso(); }
-    return draft;
-  });
-  entity.relatedPerson = relatedPerson;
-  return entity;
+  return createAssistedEntity(store, input);
 }
