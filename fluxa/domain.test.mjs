@@ -64,6 +64,11 @@ function prepare(store, sessionId) {
   const store = fakeStore();
   const session = startSession(store);
   store.advance(2 * 60 * 60 * 1000);
+  assert.throws(
+    () => correctForgottenSessionClose(store, session.id, session.startedAt),
+    /posterior ao início/i,
+    'corrected session end must be strictly after session start'
+  );
   correctForgottenSessionClose(store, session.id, '2026-08-19T11:30:00.000Z');
   const closed = store.getState().sessions[0];
   assert.equal(closed.endedAt, '2026-08-19T11:30:00.000Z');
