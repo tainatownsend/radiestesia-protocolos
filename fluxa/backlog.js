@@ -56,7 +56,7 @@ export function correctForgottenSessionClose(store, sessionId, endedAt, confirma
   const session = requireOpenSession(state, sessionId);
   const end = new Date(endedAt);
   if (Number.isNaN(end.getTime())) throw new Error('Informe um horário de encerramento válido.');
-  if (end.getTime() < new Date(session.startedAt).getTime()) throw new Error('O encerramento não pode ser anterior ao início da sessão.');
+  if (end.getTime() <= new Date(session.startedAt).getTime()) throw new Error('O encerramento deve ser posterior ao início da sessão.');
   if (end.getTime() > Date.now()) throw new Error('O encerramento não pode estar no futuro.');
   const activeReiki = state.reikiApplications.find((item) => item.sessionId === sessionId && ['RUNNING','PAUSED'].includes(item.status));
   if (activeReiki) throw new Error('Conclua a aplicação de Reiki antes de corrigir o encerramento.');
