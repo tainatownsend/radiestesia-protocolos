@@ -1,14 +1,17 @@
 import { inspectStorageHealth } from './storage-health.js';
 
-function fmt(iso){return iso?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(iso)):'—';}
+function timestamp(value){const time=new Date(value||'').getTime();return Number.isFinite(time)?time:null;}
+function fmt(iso){const time=timestamp(iso);return time==null?'—':new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(time));}
 function ensure(){
   const main=document.querySelector('main');if(!main)return;
   if(main.querySelector('.eyebrow')?.textContent?.trim()!=='Hoje')return;
   const health=inspectStorageHealth();
   let section=main.querySelector('[data-backup-reminder]');
   if(['READ_ERROR','WRITE_ERROR'].includes(health.status)){section?.remove();return;}
-  const last=health.lastExportAt;
-  const days=last?Math.floor((Date.now()-new Date(last).getTime())/86400000):null;
+  const rawLast=health.lastExportAt;
+  const lastTime=timestamp(rawLast);
+  const last=lastTime==null?null:rawLast;
+  const days=lastTime==null?null:Math.max(0,Math.floor((Date.now()-lastTime)/86400000));
   if(days!==null&&days<7){section?.remove();return;}
   const signature=last?`old:${last}`:'never';
   if(section?.dataset.backupSignature===signature)return;
