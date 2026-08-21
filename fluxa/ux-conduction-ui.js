@@ -97,8 +97,9 @@ function enhanceReviewSheet(){
   const form=document.querySelector('#review-form');if(!form||form.dataset.uxGuidedReview)return;
   form.dataset.uxGuidedReview='true';const treatmentId=form.dataset.treatment,state=store.getState(),t=state.treatments.find((x)=>x.id===treatmentId);if(!t)return;
   const comps=(state.treatmentComponents||[]).filter((c)=>c.treatmentId===t.id);
+  const unresolved=comps.filter((c)=>['PLANNED','IN_PROGRESS','INTERRUPTED'].includes(c.status));
   const box=document.createElement('section');box.className='ux-review-context';
-  box.innerHTML=`<article class="card soft"><p class="eyebrow">Objetivo</p><strong>${esc(t.objective||t.therapeuticObjective||t.title)}</strong></article>${comps.length?`<article class="card soft"><p class="eyebrow">Componentes</p><div class="ux-review-components">${comps.map((c)=>`<div class="ux-review-component"><strong>${esc(c.name)}</strong><span>${esc(statusLabels[c.status]||'Registrado')}</span></div>`).join('')}</div></article>`:''}<p class="muted">Revise primeiro os componentes. Depois registre a nova medição para decidir continuidade ou avaliação final.</p>`;
+  box.innerHTML=`<article class="card soft"><p class="eyebrow">Objetivo</p><strong>${esc(t.objective||t.therapeuticObjective||t.title)}</strong></article>${comps.length?`<article class="card soft"><p class="eyebrow">Componentes</p><div class="ux-review-components">${comps.map((c)=>`<div class="ux-review-component"><strong>${esc(c.name)}</strong><span>${esc(statusLabels[c.status]||'Registrado')}</span></div>`).join('')}</div></article>`:''}<p class="muted">${unresolved.length?'Revise os componentes antes da nova medição. O Fluxa só libera a avaliação final quando todos estiverem resolvidos.':'Todos os componentes estão resolvidos. Registre a nova medição e siga para a avaliação final.'}</p>${unresolved.length?`<button class="btn secondary wide" data-ux-open-components="${esc(treatmentId)}">Revisar componentes</button>`:''}`;
   form.before(box);
 }
 
@@ -120,6 +121,7 @@ document.addEventListener('click',(event)=>{
   if(b.dataset.uxResumeInvestigation!==undefined){document.querySelector('[data-action="resume-latest-investigation"]')?.click();return;}
   if(b.dataset.uxOpenReiki){const target=document.querySelector(`[data-open-reiki="${CSS.escape(b.dataset.uxOpenReiki)}"]`);target?.click();return;}
   if(b.dataset.uxReviewTreatment){document.querySelector('[data-route="treatments"]')?.click();requestAnimationFrame(()=>document.querySelector(`[data-review-treatment="${CSS.escape(b.dataset.uxReviewTreatment)}"]`)?.click());return;}
+  if(b.dataset.uxOpenComponents){const id=b.dataset.uxOpenComponents;document.querySelector('[data-action="dismiss-sheet"]')?.click();requestAnimationFrame(()=>document.querySelector(`[data-backlog-manage-components="${CSS.escape(id)}"]`)?.click());return;}
   if(b.dataset.uxResumeSpecific){const session=getOpenSession(store.getState());if(!session)return;const assisted=b.dataset.uxAssisted;const chip=document.querySelector(`[data-fast-assisted="${CSS.escape(assisted)}"]`);chip?.click();requestAnimationFrame(()=>document.querySelector('[data-action="resume-latest-investigation"]')?.click());return;}
   if(b.dataset.uxPostCloseClose!==undefined){document.querySelector('#ux-post-close-overlay')?.remove();return;}
 },true);
