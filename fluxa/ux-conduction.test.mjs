@@ -5,11 +5,12 @@ const root=new URL('.',import.meta.url);
 const html=fs.readFileSync(new URL('./index.html',root),'utf8');
 const conduction=fs.readFileSync(new URL('./ux-conduction-ui.js',root),'utf8');
 const extensions=fs.readFileSync(new URL('./ux-conduction-extensions-ui.js',root),'utf8');
+const reikiContext=fs.readFileSync(new URL('./ux-reiki-context-ui.js',root),'utf8');
 const milestones=fs.readFileSync(new URL('./ux-milestone-ui.js',root),'utf8');
 const css=fs.readFileSync(new URL('./ux-conduction.css',root),'utf8');
 const extras=fs.readFileSync(new URL('./ux-conduction-extensions.css',root),'utf8');
 
-for(const file of ['ux-conduction.css','ux-conduction-extensions.css','ux-conduction-ui.js','ux-conduction-extensions-ui.js','ux-milestone-ui.js']){
+for(const file of ['ux-conduction.css','ux-conduction-extensions.css','ux-conduction-ui.js','ux-conduction-extensions-ui.js','ux-reiki-context-ui.js','ux-milestone-ui.js']){
   assert.match(html,new RegExp(file.replaceAll('.','\\.')),`index.html must load ${file}`);
 }
 assert.match(conduction,/data-ux-next-action/,'Today should expose one explicit next-action area.');
@@ -22,12 +23,16 @@ assert.match(conduction,/data-ux-open-components/,'Treatment review should route
 assert.match(extensions,/handleQuickFindings/,'Quick findings should use the guided handoff.');
 assert.match(extensions,/handleBranchFindings/,'Branching findings should use the guided handoff.');
 assert.match(extensions,/pendingFindingIds/,'Finding-to-treatment trace must survive the handoff.');
+assert.match(extensions,/dismissQuickSheet/,'Quick-investigation handoff must clear the base sheet state.');
+assert.match(extensions,/dismissBranchSheet/,'Branching handoff must clear the protocol overlay state.');
 assert.match(extensions,/data-ux-findings-treat/,'Finding handoff should offer treatment as a next action.');
 assert.match(extensions,/data-ux-findings-investigate/,'Finding handoff should offer continued investigation.');
 assert.match(extensions,/data-ux-last-session/,'Assisted details should include a return summary.');
 assert.match(extensions,/fluxa\.protocolFavorites/,'Protocol chooser should support favorites.');
 assert.match(extensions,/fluxa\.protocolRecents/,'Protocol chooser should support recent protocols.');
 assert.match(extensions,/ux-dashboard-collapsed/,'Session dashboard should be collapsible by default.');
+assert.match(reikiContext,/ReikiModeLabel/,'Reiki timer should display the therapist-facing application mode.');
+assert.match(reikiContext,/treatmentId/,'Reiki timer should display linked treatment context when available.');
 assert.match(milestones,/INVESTIGATION_COMPLETED:'Investigação concluída'/);
 assert.match(milestones,/REIKI_COMPLETED:'Reiki concluído'/);
 assert.match(css,/#session-template-editor-overlay \.check-row > span \{ display:flex; flex-direction:column/,'Session template labels and hints must not run together.');
