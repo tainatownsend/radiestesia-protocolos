@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const source=fs.readFileSync(new URL('./root-treatment-prefill-ui.js',import.meta.url),'utf8');
+const catalogFix=fs.readFileSync(new URL('./catalog-featured-fix-ui.js',import.meta.url),'utf8');
+
+assert.match(catalogFix,/import '\.\/root-treatment-prefill-ui\.js'/,'Catalog integration must load thematic treatment prefill.');
+assert.match(source,/data-root-handoff-treatment/,'Prefill must start from the root-protocol treatment handoff.');
+assert.match(source,/suggestedTreatmentTitle/,'Suggested treatment titles from root protocols must feed components.');
+assert.match(source,/suggestedTreatmentCommand/,'Suggested treatment commands from root protocols must feed instructions.');
+assert.match(source,/form\.dataset\.findings=pending\.findingIds\.join\(','\)/,'Treatment must preserve Finding → Treatment traceability.');
+assert.match(source,/while\(form\.querySelectorAll\('\[data-treatment-component-draft\]'\)\.length<pending\.components\.length\)add\.click\(\)/,'Multiple thematic findings must become multiple treatment components.');
+assert.match(source,/form\.dataset\.thematicPrefill='true'/,'The prefilled form must expose its thematic origin.');
+assert.match(source,/Sugestões do protocolo aplicadas/,'Therapist must be told that protocol suggestions were applied and remain editable.');
+
+console.log('root-treatment-prefill.test.mjs: ok');
