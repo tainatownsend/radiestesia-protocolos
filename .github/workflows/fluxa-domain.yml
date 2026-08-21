@@ -54,4 +54,5 @@ jobs:
           node fluxa/offline-shell.test.mjs
           node fluxa/home-brand-refresh.test.mjs
           node fluxa/therapeutic-catalog.test.mjs
+          node fluxa/root-protocol-parser.test.mjs
           node fluxa/static-smoke.test.mjs
