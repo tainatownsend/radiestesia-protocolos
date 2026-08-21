@@ -72,8 +72,36 @@ function requireOpenSession(state, sessionId) {
   return session;
 }
 
+function requirePreparedSession(state, sessionId) {
+  const session = requireOpenSession(state, sessionId);
+  const prepared = (state.preparationRuns || []).some((run) => run.sessionId === sessionId && run.status === 'COMPLETED');
+  if (!prepared) throw new Error('Conclua a preparação da sessão antes de continuar.');
+  return session;
+}
+
 function getAssisted(state, assistedEntityId) {
   return state.assistedEntities.find((item) => item.id === assistedEntityId && !item.archivedAt) || null;
+}
+
+export function validateAssistedEntityInput(input = {}) {
+  const type = input.type;
+  const displayName = String(input.displayName || '').trim();
+  if (!Object.values(AssistedType).includes(type)) throw new Error('Selecione um tipo de assistido válido.');
+  if (!displayName) throw new Error('Nome ou identificação é obrigatório.');
+  if (type === AssistedType.PERSON && !input.birthDate) throw new Error('Data de nascimento é obrigatória para pessoa.');
+  if (type === AssistedType.ENVIRONMENT && !String(input.address || '').trim()) throw new Error('Endereço completo é obrigatório para ambiente/propriedade.');
+  if (type === AssistedType.SITUATION) {
+    if (!String(input.identifier || '').trim()) throw new Error('Número/identificação do processo é obrigatório.');
+    if (!String(input.relatedPerson || '').trim()) throw new Error('Pessoa envolvida/solicitante é obrigatória para situação/processo.');
+  }
+  if (type === AssistedType.GROUP) {
+    const members = Array.isArray(input.members) ? input.members : [];
+    if (!members.length) throw new Error('Adicione pelo menos uma pessoa ao grupo.');
+    if (members.some((member) => !String(member?.fullName || '').trim() || !member?.birthDate)) {
+      throw new Error('Cada integrante do grupo precisa de nome completo e data de nascimento.');
+    }
+  }
+  return true;
 }
 
 export function getOpenSession(state) {
@@ -165,12 +193,13 @@ export function completePreparation(store, runId) {
 }
 
 export function createAssistedEntity(store, input) {
+  validateAssistedEntityInput(input);
   const entity = {
     id: store.makeId('ast'), type: input.type, displayName: input.displayName.trim(), birthDate: input.birthDate || null,
-    address: input.address?.trim() || null, identifier: input.identifier?.trim() || null, details: input.details?.trim() || null,
-    members: Array.isArray(input.members) ? input.members : [], createdAt: store.nowIso(), updatedAt: store.nowIso(), archivedAt: null
+    address: input.address?.trim() || null, identifier: input.identifier?.trim() || null,
+    relatedPerson: input.relatedPerson?.trim() || null, details: input.details?.trim() || null,
+    members: Array.isArray(input.members) ? structuredClone(input.members) : [], createdAt: store.nowIso(), updatedAt: store.nowIso(), archivedAt: null
   };
-  if (!entity.displayName) throw new Error('Nome do assistido é obrigatório.');
   store.setState((state) => {
     const draft = structuredClone(state);
     draft.assistedEntities.push(entity);
@@ -195,7 +224,7 @@ export function selectAssistedForSession(store, sessionId, assistedEntityId) {
 
 export function startInvestigation(store, sessionId, assistedEntityId) {
   const state = store.getState();
-  requireOpenSession(state, sessionId);
+  requirePreparedSession(state, sessionId);
   if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
   const sameSession = state.investigations.find((item) => item.currentSessionId === sessionId && item.assistedEntityId === assistedEntityId && item.status === 'IN_PROGRESS');
   if (sameSession) return sameSession;
@@ -216,7 +245,7 @@ export function startInvestigation(store, sessionId, assistedEntityId) {
 
 export function resumeInvestigation(store, investigationId, sessionId) {
   const state = store.getState();
-  requireOpenSession(state, sessionId);
+  requirePreparedSession(state, sessionId);
   const investigation = state.investigations.find((item) => item.id === investigationId && item.status === 'IN_PROGRESS');
   if (!investigation) throw new Error('Investigação não disponível para retomada.');
   store.setState((current) => {
@@ -236,11 +265,14 @@ export function resumeInvestigation(store, investigationId, sessionId) {
 
 export function answerInvestigation(store, investigationId, answer) {
   if (!['YES', 'NO'].includes(answer)) return;
-  store.setState((state) => {
-    const draft = structuredClone(state);
+  const state = store.getState();
+  const current = state.investigations.find((item) => item.id === investigationId && item.status === 'IN_PROGRESS');
+  if (!current) return;
+  requirePreparedSession(state, current.currentSessionId);
+  store.setState((source) => {
+    const draft = structuredClone(source);
     const investigation = draft.investigations.find((item) => item.id === investigationId);
     if (!investigation || investigation.status !== 'IN_PROGRESS') return draft;
-    requireOpenSession(draft, investigation.currentSessionId);
     const question = investigation.protocolSnapshot.questions[investigation.currentIndex];
     const existing = investigation.answers.find((item) => item.questionId === question.id);
     if (existing) {
@@ -263,12 +295,15 @@ export function answerInvestigation(store, investigationId, answer) {
 }
 
 export function confirmFindings(store, investigationId, questionIds) {
+  const state = store.getState();
+  const sourceInvestigation = state.investigations.find((item) => item.id === investigationId && item.status === 'COMPLETED');
+  if (!sourceInvestigation) return [];
+  requirePreparedSession(state, sourceInvestigation.currentSessionId);
   const created = [];
-  store.setState((state) => {
-    const draft = structuredClone(state);
+  store.setState((source) => {
+    const draft = structuredClone(source);
     const investigation = draft.investigations.find((item) => item.id === investigationId);
     if (!investigation || investigation.status !== 'COMPLETED') return draft;
-    requireOpenSession(draft, investigation.currentSessionId);
     for (const questionId of questionIds) {
       const answer = investigation.answers.find((item) => item.questionId === questionId && item.answer === 'YES');
       if (!answer) continue;
@@ -302,7 +337,7 @@ function addDuration(startedAt, value, unit) {
 
 export function createTreatment(store, input) {
   const state = store.getState();
-  requireOpenSession(state, input.sessionId);
+  requirePreparedSession(state, input.sessionId);
   if (!getAssisted(state, input.assistedEntityId)) throw new Error('Assistido inválido.');
   const startedAt = store.nowIso();
   const treatment = {
@@ -371,7 +406,7 @@ export function resumeTreatment(store, treatmentId) {
 
 export function reviewTreatment(store, input) {
   const state = store.getState();
-  requireOpenSession(state, input.sessionId);
+  requirePreparedSession(state, input.sessionId);
   const treatment = state.treatments.find((item) => item.id === input.treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
   if (!treatment) throw new Error('Tratamento não disponível para revisão.');
   const review = {
