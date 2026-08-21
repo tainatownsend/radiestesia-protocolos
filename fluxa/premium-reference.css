@@ -1,0 +1,116 @@
+/* Premium Fluxa reference layer: editorial, calm, precise. */
+:root{--premium-line:rgba(203,211,209,.78);--premium-soft:#F4F6F4;--premium-teal-soft:#E8EFED;--premium-accent-soft:#F5E9E4;}
+body{background:#EFF1EF;}
+.topbar{min-height:70px;padding-top:14px;padding-bottom:14px;}
+.brand{display:inline-flex;align-items:center;gap:10px;font-size:28px;font-weight:690;letter-spacing:-.05em;}
+.fluxa-brand-mark{width:27px;height:27px;display:block;color:#66898C;}
+.fluxa-brand-mark path{fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;}
+.topbar .brand-button{display:inline-flex;align-items:center;}
+.session-indicator{font-size:12px;letter-spacing:.01em;}
+
+/* Home: remove the oversized dark slab and use hierarchy through whitespace. */
+.home-cockpit{background:#F8F9F7;border-radius:20px;box-shadow:0 8px 24px rgba(16,47,53,.055);}
+.home-cockpit-context{padding:16px 18px;background:#F8F9F7;}
+.home-cockpit-context h2{font-size:18px;}
+.home-cockpit-next{padding:20px 18px;background:linear-gradient(180deg,#EEF3F1 0%,#F8F9F7 100%);color:#202729;border-bottom:1px solid var(--premium-line);}
+.home-cockpit-next .eyebrow{color:#66898C;}
+.home-cockpit-next h1{color:#102F35;font-size:23px;font-weight:640;}
+.home-cockpit-next p{color:#606B6C;margin-bottom:14px;}
+.home-cockpit-next .btn.primary{width:auto;min-width:180px;background:#173F46;color:#fff;}
+.home-primary-actions{gap:0;background:transparent;border-top:0;}
+.home-action{min-height:76px;border-right:1px solid var(--premium-line);border-bottom:1px solid var(--premium-line);background:#F8F9F7;}
+.home-action:nth-child(2n){border-right:0;}
+.home-action:nth-last-child(-n+2){border-bottom:0;}
+.home-action strong{font-size:15px;}
+.home-action span{font-size:12px;}
+body.fluxa-home-refreshed main>.section:has(.action-grid):not(.home-support-section){display:none!important;}
+body.fluxa-home-refreshed .action-grid:not(.home-primary-actions){display:none!important;}
+.home-collapsible-section{margin-top:20px;padding-top:16px;}
+.home-collapsible-section .section-head{align-items:center;}
+.home-collapsible-section .section-head h2{font-size:16px;font-weight:620;}
+
+/* Catalog */
+#investigation-chooser-overlay .sheet{max-width:760px;background:#F8F9F7;}
+.catalog-loading{min-height:280px;display:grid;place-items:center;align-content:center;gap:12px;color:#606B6C;}
+.catalog-loading span{width:28px;height:28px;border:2px solid #CBD3D1;border-top-color:#173F46;border-radius:50%;animation:fluxa-spin .8s linear infinite;}
+@keyframes fluxa-spin{to{transform:rotate(360deg)}}
+.therapeutic-witness-note{display:flex;gap:12px;padding:14px 15px;margin-bottom:18px;border:1px solid #CBD3D1;border-radius:14px;background:#F4F6F4;}
+.witness-mark{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#E8EFED;color:#173F46;font-size:20px;}
+.therapeutic-witness-note strong{display:block;color:#102F35;font-size:14px;}
+.therapeutic-witness-note p{margin:3px 0 0;color:#606B6C;font-size:12px;line-height:1.45;}
+.protocol-discovery{display:grid;gap:12px;margin-bottom:18px;}
+.protocol-discovery .field span{font-size:12px;font-weight:750;}
+.theme-chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+.theme-chips::-webkit-scrollbar{display:none;}
+.theme-chip{flex:0 0 auto;min-height:36px;padding:0 12px;border:1px solid #CBD3D1;border-radius:999px;background:#F8F9F7;color:#173F46;font-size:12px;font-weight:700;}
+.theme-chip.active{background:#173F46;color:#fff;border-color:#173F46;}
+.featured-protocol-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+.featured-protocol{padding:17px;border:1px solid #CBD3D1;border-radius:16px;background:#fff;}
+.featured-protocol.master{background:#173F46;color:#fff;border-color:#173F46;}
+.featured-protocol.master h3{color:#fff;}
+.featured-protocol.master .eyebrow{color:#AFC5C1;}
+.featured-protocol.master p{color:#D8E2DF;}
+.featured-protocol p{font-size:13px;color:#606B6C;}
+.featured-protocol .btn{width:100%;}
+.catalog-sections{display:grid;gap:22px;}
+.catalog-group>.section-head{padding-bottom:8px;border-bottom:1px solid var(--premium-line);}
+.catalog-list{display:grid;gap:0;}
+.therapeutic-protocol-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;padding:15px 2px;border-bottom:1px solid var(--premium-line);}
+.therapeutic-protocol-card:last-child{border-bottom:0;}
+.therapeutic-protocol-card h3{font-size:16px;}
+.therapeutic-protocol-card p{margin:4px 0 0;color:#606B6C;font-size:12px;line-height:1.4;}
+.therapeutic-protocol-card .eyebrow{margin:0 0 3px;font-size:10px;}
+.therapeutic-protocol-card .btn{min-height:40px;padding:0 13px;}
+.quick-entry{margin-top:18px;padding:14px;border:1px solid #CBD3D1;border-radius:14px;background:#F4F6F4;}
+.catalog-empty{margin-top:18px;}
+
+/* Protocol runner */
+.premium-protocol-sheet{background:#F8F9F7;}
+.protocol-progress{height:4px;margin:0 0 18px;border-radius:999px;background:#DEE4E1;overflow:hidden;}
+.protocol-progress span{display:block;height:100%;background:#173F46;border-radius:inherit;}
+.question-context{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#606B6C;font-size:11px;}
+.question-context span{color:#66898C;font-weight:750;text-transform:uppercase;letter-spacing:.06em;}
+.premium-protocol-sheet .question-panel{min-height:290px;padding:28px 8px;}
+.premium-protocol-sheet .question-panel h1{font-size:clamp(27px,7vw,36px);font-weight:600;line-height:1.16;}
+.root-findings-list{display:grid;gap:10px;}
+.root-finding-choice{padding:14px;border:1px solid #CBD3D1;border-radius:15px;background:#fff;}
+.root-finding-choice label{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;}
+.root-finding-choice input{width:22px;height:22px;accent-color:#173F46;}
+.root-finding-choice span strong,.root-finding-choice span small{display:block;}
+.root-finding-choice span small{margin-top:3px;color:#66898C;}
+.root-finding-choice p{margin:10px 0;color:#606B6C;font-size:12px;line-height:1.45;}
+.root-finding-choice select{width:100%;min-height:44px;border:1px solid #CBD3D1;border-radius:11px;background:#fff;padding:0 10px;}
+.handoff-actions{display:grid;gap:9px;margin-top:18px;}
+
+/* Divorce Energy */
+.divorce-fluxa-sheet{max-width:760px;}
+.divorce-step>h1{font-size:25px;font-weight:620;line-height:1.18;}
+.theme-select-grid{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 20px;}
+.theme-select{min-height:38px;padding:0 11px;border:1px solid #CBD3D1;border-radius:999px;background:#fff;color:#173F46;font-size:12px;font-weight:680;}
+.theme-select.active{background:#173F46;color:#fff;border-color:#173F46;}
+.premium-check{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start;padding:15px 0;border-bottom:1px solid var(--premium-line);}
+.premium-check input{width:23px;height:23px;accent-color:#173F46;}
+.premium-check span strong,.premium-check span small{display:block;}
+.premium-check span small{margin-top:3px;color:#606B6C;line-height:1.4;}
+.divorce-area-list{display:grid;gap:0;margin:16px 0;}
+.divorce-area{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--premium-line);}
+.divorce-area small{display:block;margin-top:2px;color:#66898C;font-size:11px;}
+.divorce-area>div:last-child{display:flex;gap:6px;}
+.divorce-area button{min-width:50px;min-height:38px;border:1px solid #CBD3D1;border-radius:10px;background:#fff;color:#173F46;font-weight:700;}
+.divorce-area button.active{background:#173F46;color:#fff;border-color:#173F46;}
+.premium-summary{display:flex;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--premium-line);}
+.premium-summary span{color:#606B6C;}
+.divorce-treatment-plan{display:grid;gap:10px;margin:16px 0;}
+.divorce-treatment-plan article{padding:15px;border:1px solid #CBD3D1;border-radius:14px;background:#fff;}
+.divorce-treatment-plan p{font-size:12px;color:#606B6C;}
+
+@media(max-width:560px){
+  .featured-protocol-grid{grid-template-columns:1fr;}
+  .therapeutic-protocol-card{grid-template-columns:1fr;}
+  .therapeutic-protocol-card .btn{width:100%;}
+  .home-cockpit-next{padding:17px 16px;}
+  .home-cockpit-next h1{font-size:21px;}
+  .home-cockpit-next .btn.primary{width:100%;}
+  .divorce-area{align-items:flex-start;}
+}
+@media(prefers-reduced-motion:reduce){.catalog-loading span{animation:none;}}
