@@ -94,7 +94,7 @@ function prepare(store, sessionId) {
   pauseReiki(store,first.id);
   assert.throws(
     ()=>startReiki(store,session.id,b.id),
-    /outra aplicação de Reiki está em andamento ou pausada/i,
+    /já existe uma aplicação de Reiki ativa/i,
     'a different assisted context must never receive another active Reiki application'
   );
   assert.equal(store.getState().reikiApplications.length,1);
