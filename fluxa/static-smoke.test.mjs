@@ -99,7 +99,17 @@ assert.match(clientReportUi, /histórico técnico do Fluxa/);
 
 const libraryUi=fs.readFileSync(new URL('./activity-library-ui.js',root),'utf8');
 const libraryRefinement=fs.readFileSync(new URL('./library-refinement-ui.js',root),'utf8');
+const toolPickerUi=fs.readFileSync(new URL('./tool-picker-search-ui.js',root),'utf8');
+const universalSearchUi=fs.readFileSync(new URL('./universal-search-ui.js',root),'utf8');
+const bulkLibrary=fs.readFileSync(new URL('./bulk-library.js',root),'utf8');
 assert.match(libraryUi,/data-library-tool-id=\\?"\$\{tool\.id\}/);
+assert.match(libraryUi,/name="tags"/,'Library editor should expose optional tags.');
 assert.doesNotMatch(libraryRefinement,/activeTools\s*\(/);
+assert.match(libraryRefinement,/tool\.tags/,'Library search should include tags.');
+assert.match(toolPickerUi,/t\.tags/,'Treatment resource picker should include tags in search.');
+assert.match(universalSearchUi,/t\.tags/,'Universal search should include Library tags.');
+assert.match(universalSearchUi,/data-library-tool-id/,'Universal search should reveal Library results by stable tool ID.');
+assert.match(bulkLibrary,/tags:\['tags','tag','etiquetas','etiqueta','categorias'\]/,'Bulk Library parser should accept a Tags column.');
+assert.match(bulkLibrary,/Nome,Tipo,Finalidade,Tags,Observações/,'Library CSV export should preserve tags.');
 
 console.log('static-smoke.test.mjs: ok');
