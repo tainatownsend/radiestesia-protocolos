@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
-import { AssistedType, TreatmentStatus, closeSession, createAssistedEntity, createTreatment, startSession } from './domain.js';
+import {
+  AssistedType, TreatmentStatus, PREPARATION_STEPS,
+  closeSession, completePreparation, createAssistedEntity, createTreatment,
+  startPreparation, startSession, togglePreparationStep
+} from './domain.js';
 import { stopTreatmentComponent } from './backlog.js';
 import { canCompleteTreatmentAdministratively, completeTreatmentAdministratively } from './administrative-treatment.js';
 
@@ -16,6 +20,9 @@ globalThis.localStorage = new MemoryStorage();
 {
   const store = createStore();
   const session = startSession(store);
+  const preparation = startPreparation(store, session.id);
+  for (const step of PREPARATION_STEPS) togglePreparationStep(store, preparation.id, step.key);
+  completePreparation(store, preparation.id);
   const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa administrativa', birthDate:'1980-01-01' });
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:assisted.id, title:'Tratamento administrativo', componentName:'Componente', durationValue:1, durationUnit:'DAY' });
   assert.equal(canCompleteTreatmentAdministratively(store.getState(), treatment.id), false);
