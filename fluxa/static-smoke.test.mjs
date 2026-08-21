@@ -125,11 +125,23 @@ assert.match(structuredPreparation,/completeStructuredPreparation/,'Structured p
 assert.match(structuredPreparationUi,/completeStructuredPreparation\(/,'Preparation UI should complete through the strict boundary.');
 assert.match(structuredPreparationUi,/stopImmediatePropagation\(\)/,'Strict preparation completion should prevent the permissive base handler from running twice.');
 
+const domain=fs.readFileSync(new URL('./domain.js',root),'utf8');
+const backlog=fs.readFileSync(new URL('./backlog.js',root),'utf8');
+assert.match(domain,/function requirePreparedSession\(/,'Core domain should own a prepared-session guard.');
+assert.match(domain,/export function validateAssistedEntityInput\(/,'Assisted validation should live at the core domain boundary.');
+assert.match(domain,/export function startInvestigation[\s\S]*?requirePreparedSession\(state, sessionId\)/,'Quick investigation start should require prepared session in domain.');
+assert.match(domain,/export function createTreatment[\s\S]*?requirePreparedSession\(state, input\.sessionId\)/,'Direct treatment creation should require prepared session in domain.');
+assert.match(domain,/export function reviewTreatment[\s\S]*?requirePreparedSession\(state, input\.sessionId\)/,'Legacy treatment review should require prepared session in domain.');
+assert.match(backlog,/return validateAssistedEntityInput\(input\)/,'Backlog assisted validation should delegate to the domain validator.');
+assert.match(backlog,/requirePreparedSessionState\(state, input\.sessionId, 'Conclua a preparação da sessão antes de alterar componentes do tratamento\.'/,'Active component changes should require a prepared session.');
+
 const historyUi=fs.readFileSync(new URL('./history-ui.js',root),'utf8');
 assert.match(historyUi,/previousTreatmentId/,'Treatment history should expose previous-cycle linkage.');
 assert.match(historyUi,/recommendedByAssessmentId/,'Treatment history should expose assessment-origin linkage.');
 assert.match(historyUi,/planningNotes/,'Treatment history should expose cycle planning notes when present.');
 assert.match(historyUi,/ReikiModeLabel/,'History should render therapist-facing Reiki mode labels.');
 assert.match(historyUi,/durationSeconds/,'Completed Reiki history should retain visible duration context.');
+assert.doesNotMatch(historyUi,/treatments\[index\]/,'Treatment history must never identify cards by visual list position.');
+assert.match(historyUi,/statusLabels/,'History should render product-facing status labels directly.');
 
 console.log('static-smoke.test.mjs: ok');
