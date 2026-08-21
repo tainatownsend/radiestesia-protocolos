@@ -112,4 +112,14 @@ assert.match(universalSearchUi,/data-library-tool-id/,'Universal search should r
 assert.match(bulkLibrary,/tags:\['tags','tag','etiquetas','etiqueta','palavras-chave','palavras chave'\]/,'Bulk Library parser should accept a Tags column.');
 assert.match(bulkLibrary,/Nome,Tipo,Finalidade,Tags,Observações/,'Library CSV export should preserve tags.');
 
+const situationUi=fs.readFileSync(new URL('./assisted-situation-ui.js',root),'utf8');
+assert.match(situationUi,/createValidatedAssistedEntity/,'Situation creation should use validated assisted-domain creation.');
+assert.doesNotMatch(situationUi,/patchRelatedPerson/,'Situation UI should not patch relatedPerson after save.');
+
+const structuredPreparation=fs.readFileSync(new URL('./structured-preparation.js',root),'utf8');
+const structuredPreparationUi=fs.readFileSync(new URL('./structured-preparation-ui.js',root),'utf8');
+assert.match(structuredPreparation,/completeStructuredPreparation/,'Structured preparation should expose a strict completion boundary.');
+assert.match(structuredPreparationUi,/completeStructuredPreparation\(/,'Preparation UI should complete through the strict boundary.');
+assert.match(structuredPreparationUi,/stopImmediatePropagation\(\)/,'Strict preparation completion should prevent the permissive base handler from running twice.');
+
 console.log('static-smoke.test.mjs: ok');
