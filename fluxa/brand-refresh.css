@@ -14,6 +14,7 @@
   --brand-shadow:0 1px 2px rgba(16,47,53,.035),0 8px 24px rgba(16,47,53,.045);
   --brand-shadow-raised:0 12px 32px rgba(16,47,53,.09);
 }
+[hidden]{display:none!important;}
 html,body{background:var(--bg);color:var(--text);}
 body{background:var(--bg);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
 body::before{content:none!important;}
@@ -44,10 +45,10 @@ h3{font-weight:650;color:var(--primary-strong);}
 .btn.danger{color:#875047;border-color:color-mix(in srgb,#875047 24%,var(--border));}
 .btn:active{transform:translateY(1px);}
 .action-card::after{display:none;}
-body.fluxa-home-refreshed main>.eyebrow{color:var(--secondary);}
-body.fluxa-home-refreshed main>h1{font-size:24px;line-height:1.25;font-weight:630;}
-body.fluxa-home-refreshed main>.lead{margin-top:5px;font-size:13px;}
-.home-cockpit{margin-top:18px;border-radius:22px;overflow:hidden;}
+
+/* Prepared session Home: one context, one decision surface, four actions. */
+body.fluxa-home-refreshed main>.eyebrow,body.fluxa-home-refreshed main>h1,body.fluxa-home-refreshed main>.lead{display:none;}
+.home-cockpit{margin-top:0;border-radius:22px;overflow:hidden;}
 .home-cockpit-context{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface);}
 .home-cockpit-context .eyebrow{margin:0 0 3px;}
 .home-cockpit-context h2{font-size:17px;line-height:1.25;}
@@ -65,14 +66,27 @@ body.fluxa-home-refreshed main>.lead{margin-top:5px;font-size:13px;}
 .home-action:disabled{opacity:.45;}
 .home-support-section{margin-top:18px;padding-top:0;}
 .home-support-section .section-head h2{font-size:17px;}
-.home-collapsible-section{margin-top:24px;padding-top:18px;border-top:1px solid var(--border);}
+.home-collapsible-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.home-collapsible-section .section-head{margin-bottom:0;}
 .home-collapsible-section .section-head h2{font-size:16px;}
-body.fluxa-home-refreshed [data-session-dashboard][hidden],body.fluxa-home-refreshed [data-fast-session-context][hidden],body.fluxa-home-refreshed [data-ux-next-action][hidden]{display:none!important;}
+.home-collapsible-section>.timeline:not([hidden]),.home-collapsible-section>.stack:not([hidden]),.home-collapsible-section>.empty:not([hidden]){margin-top:12px;}
 body.fluxa-home-refreshed .ux-investigation-stack{margin-top:18px;}
 body.fluxa-home-refreshed .ux-investigation-list{gap:8px;}
 body.fluxa-home-refreshed .ux-investigation-item{padding:11px 12px;border-radius:14px;box-shadow:none;background:var(--surface);}
 body.fluxa-home-refreshed .ux-investigation-mark{background:var(--surface-2);}
 body.fluxa-home-refreshed .ux-investigation-item.is-open .ux-investigation-mark{background:var(--primary);}
+
+/* Preparation Home: only the preparation should compete for attention. */
+body.fluxa-home-preparing main>.lead{font-size:13px;margin-top:5px;}
+body.fluxa-home-preparing main>.hero-card{margin-top:18px;}
+body.fluxa-home-preparing [data-fast-session-context],body.fluxa-home-preparing [data-session-dashboard]{display:none!important;}
+
+/* Idle Home: opening a session is primary; history becomes optional. */
+body.fluxa-home-idle main>h1{max-width:16ch;}
+body.fluxa-home-idle .hero-card{margin-top:20px;}
+body.fluxa-home-idle .home-idle-secondary{margin-top:14px;}
+body.fluxa-home-idle .home-idle-secondary .btn{min-height:46px;background:transparent;}
+
 .bottom-nav{padding-top:7px;background:rgba(248,249,247,.96);border-top:1px solid var(--border);box-shadow:0 -4px 18px rgba(16,47,53,.04);backdrop-filter:blur(18px);}
 .nav-btn{min-height:50px;border-radius:11px;color:var(--muted);font-size:12px;font-weight:700;}
 .nav-btn.active{background:var(--surface-2);color:var(--primary-strong);box-shadow:none;}
