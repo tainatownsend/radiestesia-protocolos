@@ -1,5 +1,6 @@
 import { EventType, TreatmentStatus, createAssistedEntity } from './domain.js';
 import { validateFinalAssessmentInput } from './final-assessment-rules.js';
+import { requirePreparedSessionState } from './session-rules.js';
 
 function addEvent(store, draft, input) {
   const event = {
@@ -88,7 +89,8 @@ export function resumeTreatmentPreservingDuration(store, treatmentId, input = {}
 }
 
 export function recordStructuredFinalAssessment(store, input) {
-  const state = store.getState(); requireOpenSession(state, input.sessionId);
+  const state = store.getState();
+  requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação final.');
   const treatment = state.treatments.find((item) => item.id === input.treatmentId); if (!treatment) throw new Error('Tratamento não encontrado.');
   const { frequency, imbalancePercent } = validateFinalAssessmentInput(input);
   const needsNewTreatment = Boolean(input.needsNewTreatment);
