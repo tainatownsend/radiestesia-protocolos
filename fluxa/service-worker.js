@@ -1,8 +1,11 @@
-const CACHE_NAME='fluxa-runtime-v2-therapeutic-catalog-20260821';
+const CACHE_NAME='fluxa-runtime-v2-therapeutic-catalog-complete-20260821';
 const ROOT=new URL('./',self.location.href).href;
 const MAX_PRECACHE_ASSETS=300;
 const ROOT_PROTOCOL_SOURCES=new Set([
   new URL('../app.js',ROOT).href,
+  new URL('../marriage.js',ROOT).href,
+  new URL('../deep-tree.js',ROOT).href,
+  new URL('../deep-tree-2.js',ROOT).href,
   new URL('../protocols-v11-core.js',ROOT).href,
   new URL('../protocols-v11-expansion.js',ROOT).href,
   new URL('../protocols-v11-quick.js',ROOT).href
