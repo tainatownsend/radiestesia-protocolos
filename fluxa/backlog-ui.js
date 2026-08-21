@@ -15,10 +15,22 @@ const store = createStore();
 let enhancing = false;
 const FORGOTTEN_DISMISS_PREFIX = 'fluxa.forgotten.dismissed.';
 const QA_FORGOTTEN_PREFIX = 'fluxa.qa.forgotten.';
+const componentStatusLabels = {
+  PLANNED: 'Planejado',
+  IN_PROGRESS: 'Em andamento',
+  COMPLETED: 'Concluído',
+  INTERRUPTED: 'Interrompido',
+  STOPPED: 'Encerrado',
+  REPLACED: 'Substituído'
+};
 
 function esc(value = '') {
-  return String(value).replace(/[&<>'\"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '\"':'&quot;' }[c]));
+  return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
 }
+function safeSessionGet(key) { try { return sessionStorage.getItem(key); } catch (_) { return null; } }
+function safeSessionSet(key, value) { try { sessionStorage.setItem(key, value); } catch (_) {} }
+function safeSessionRemove(key) { try { sessionStorage.removeItem(key); } catch (_) {} }
+function componentStatusLabel(value) { return componentStatusLabels[value] || 'Registrado'; }
 
 function localDateTime(iso = new Date().toISOString()) {
   const d = new Date(iso);
@@ -43,8 +55,8 @@ function qaForgottenKey(sessionId) { return `${QA_FORGOTTEN_PREFIX}${sessionId}`
 
 function shouldShowForgottenBanner(session) {
   if (!session) return false;
-  if (sessionStorage.getItem(forgottenDismissKey(session.id)) === '1') return false;
-  return isPossiblyForgottenOpenSession(session) || sessionStorage.getItem(qaForgottenKey(session.id)) === '1';
+  if (safeSessionGet(forgottenDismissKey(session.id)) === '1') return false;
+  return isPossiblyForgottenOpenSession(session) || safeSessionGet(qaForgottenKey(session.id)) === '1';
 }
 
 function ensureForgottenSessionBanner() {
@@ -75,21 +87,6 @@ function ensureTreatmentActions() {
     button.className = 'btn ghost small';
     button.dataset.backlogManageComponents = treatmentId;
     button.textContent = 'Componentes';
-    row.appendChild(button);
-  });
-
-  const state = store.getState();
-  document.querySelectorAll('.treatment-card').forEach((card) => {
-    if (card.querySelector('[data-backlog-final-assessment]')) return;
-    const title = card.querySelector('h2')?.textContent;
-    const treatment = state.treatments.find((item) => item.title === title && item.status === 'COMPLETED');
-    if (!treatment) return;
-    const button = document.createElement('button');
-    button.className = 'btn secondary small';
-    button.dataset.backlogFinalAssessment = treatment.id;
-    button.textContent = 'Avaliação final';
-    const row = card.querySelector('.button-row') || document.createElement('div');
-    if (!row.parentNode) { row.className = 'button-row'; card.appendChild(row); }
     row.appendChild(button);
   });
 }
@@ -143,7 +140,7 @@ function componentsDialog(treatmentId) {
   const state = store.getState();
   const treatment = state.treatments.find((item) => item.id === treatmentId);
   const components = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId);
-  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Componentes</p><h2>${esc(treatment?.title || '')}</h2></div><button class="close-btn" data-backlog-close>×</button></div><div class="stack">${components.map((item) => `<article class="card"><div class="section-head"><div><strong>${esc(item.name)}</strong><p class="muted">${esc(item.status)}${item.expectedEndAt ? ` · revisão ${new Date(item.expectedEndAt).toLocaleString('pt-BR')}` : ''}</p></div></div>${['IN_PROGRESS','INTERRUPTED'].includes(item.status) ? `<div class="button-row"><button class="btn secondary small" data-backlog-replace-component="${item.id}">Substituir</button><button class="btn danger small" data-backlog-stop-component="${item.id}">Parar</button></div>` : ''}</article>`).join('') || `<div class="empty">Nenhum componente.</div>`}</div>${treatment?.status === 'IN_PROGRESS' ? `<section class="section"><button class="btn primary wide" data-backlog-add-component="${treatmentId}">Adicionar componente</button></section>` : ''}</section>`);
+  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Componentes</p><h2>${esc(treatment?.title || '')}</h2></div><button class="close-btn" data-backlog-close>×</button></div><div class="stack">${components.map((item) => `<article class="card"><div class="section-head"><div><strong>${esc(item.name)}</strong><p class="muted">${esc(componentStatusLabel(item.status))}${item.expectedEndAt ? ` · revisão ${new Date(item.expectedEndAt).toLocaleString('pt-BR')}` : ''}</p></div></div>${['IN_PROGRESS','INTERRUPTED'].includes(item.status) ? `<div class="button-row"><button class="btn secondary small" data-backlog-replace-component="${item.id}">Substituir</button><button class="btn danger small" data-backlog-stop-component="${item.id}">Parar</button></div>` : ''}</article>`).join('') || `<div class="empty">Nenhum componente.</div>`}</div>${treatment?.status === 'IN_PROGRESS' ? `<section class="section"><button class="btn primary wide" data-backlog-add-component="${treatmentId}">Adicionar componente</button></section>` : ''}</section>`);
 }
 
 function componentForm(treatmentId, replaceId = null) {
@@ -165,8 +162,8 @@ document.addEventListener('click', (event) => {
   if (!button) return;
   if (button.dataset.backlogContinue) {
     const sessionId = button.dataset.backlogContinue;
-    sessionStorage.setItem(forgottenDismissKey(sessionId), '1');
-    sessionStorage.removeItem(qaForgottenKey(sessionId));
+    safeSessionSet(forgottenDismissKey(sessionId), '1');
+    safeSessionRemove(qaForgottenKey(sessionId));
     button.closest('[data-forgotten-session]')?.remove();
     return;
   }
@@ -176,7 +173,8 @@ document.addEventListener('click', (event) => {
   if (button.dataset.backlogAddComponent) { componentForm(button.dataset.backlogAddComponent); return; }
   if (button.dataset.backlogReplaceComponent) {
     const component = store.getState().treatmentComponents.find((item) => item.id === button.dataset.backlogReplaceComponent);
-    componentForm(component.treatmentId, component.id); return;
+    if (component) componentForm(component.treatmentId, component.id);
+    return;
   }
   if (button.dataset.backlogStopComponent) {
     if (confirm('Parar este componente mantendo todo o histórico?')) {
@@ -211,7 +209,6 @@ document.addEventListener('submit', (event) => {
       return { fullName, birthDate };
     });
     const type = data.get('type');
-    const relatedPerson = String(data.get('relatedPerson') || '').trim();
     const detailsBase = String(data.get('details') || '').trim();
     const petDetails = String(data.get('petDetails') || '').trim();
     const input = {
@@ -221,7 +218,7 @@ document.addEventListener('submit', (event) => {
       address: data.get('address') || null,
       identifier: data.get('identifier') || null,
       members,
-      details: [detailsBase, petDetails, relatedPerson ? `Pessoa envolvida/solicitante: ${relatedPerson}` : ''].filter(Boolean).join('\n')
+      details: [detailsBase, petDetails].filter(Boolean).join('\n')
     };
     validateAssistedInput(input);
     createAssistedEntity(store, input);
@@ -236,8 +233,8 @@ document.addEventListener('submit', (event) => {
     const data = new FormData(form);
     try {
       correctForgottenSessionClose(store, form.dataset.session, new Date(data.get('endedAt')).toISOString());
-      sessionStorage.removeItem(qaForgottenKey(form.dataset.session));
-      sessionStorage.removeItem(forgottenDismissKey(form.dataset.session));
+      safeSessionRemove(qaForgottenKey(form.dataset.session));
+      safeSessionRemove(forgottenDismissKey(form.dataset.session));
       location.reload();
     } catch (error) { alert(error.message); }
   }

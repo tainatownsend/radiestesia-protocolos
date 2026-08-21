@@ -22,10 +22,14 @@ const REIKI_EVENTS = new Set(['REIKI_STARTED','REIKI_PAUSED','REIKI_RESUMED','RE
 function esc(value = '') { return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c])); }
 function statusLabel(value='') { return value ? (statusLabels[value] || 'Registrado') : ''; }
 function eventLabel(value='') { return eventLabels[value] || 'Atividade registrada'; }
-function fmt(iso) { if (!iso) return '—'; return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(iso)); }
-function fmtDateOrText(value) { if (!value) return ''; const date=new Date(value); return Number.isNaN(date.getTime()) ? String(value) : fmt(value); }
+function timeValue(value){const time=new Date(value||'').getTime();return Number.isFinite(time)?time:null;}
+function sortTime(value){return timeValue(value)??Number.NEGATIVE_INFINITY;}
+function fmt(iso) { const time=timeValue(iso); if(time==null)return '—'; return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(time)); }
+function fmtTime(iso){const time=timeValue(iso);if(time==null)return '—';return new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(time));}
+function fmtDateOrText(value) { if (!value) return ''; const time=timeValue(value); return time==null ? String(value) : fmt(value); }
 function duration(session) {
-  const end = session.endedAt ? new Date(session.endedAt).getTime() : Date.now(); const start = new Date(session.startedAt).getTime();
+  const start=timeValue(session?.startedAt);if(start==null)return 'Duração indisponível';
+  const end=session?.endedAt?timeValue(session.endedAt):Date.now();if(end==null)return 'Duração indisponível';
   const mins = Math.max(0, Math.floor((end - start) / 60000)); const h = Math.floor(mins / 60); const m = mins % 60;
   return h ? `${h}h${m ? ` ${m}min` : ''}` : `${m} min`;
 }
@@ -38,9 +42,10 @@ function eventRows(events, state) {
     const assisted = state.assistedEntities.find((item) => item.id === event.assistedEntityId);
     const baseDetail = event.metadata?.title || event.metadata?.protocolName || event.metadata?.componentName || event.metadata?.name || event.metadata?.body || assisted?.displayName || '';
     const mode = REIKI_EVENTS.has(event.eventType) ? ReikiModeLabel[event.metadata?.mode] : null;
-    const durationMinutes = event.eventType === 'REIKI_COMPLETED' && event.metadata?.durationSeconds != null ? Math.round(Number(event.metadata.durationSeconds) / 60) : null;
+    const rawDuration=Number(event.metadata?.durationSeconds);
+    const durationMinutes = event.eventType === 'REIKI_COMPLETED' && Number.isFinite(rawDuration) && rawDuration>=0 ? Math.round(rawDuration / 60) : null;
     const detail = [baseDetail, mode, durationMinutes != null ? `${durationMinutes} min` : null].filter(Boolean).join(' · ');
-    return `<div class="timeline-item"><div class="timeline-time">${new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(event.occurredAt))}</div><div class="timeline-dot"></div><div class="timeline-copy"><strong>${esc(eventLabel(event.eventType))}</strong><span>${esc(detail)}</span></div></div>`;
+    return `<div class="timeline-item"><div class="timeline-time">${fmtTime(event.occurredAt)}</div><div class="timeline-dot"></div><div class="timeline-copy"><strong>${esc(eventLabel(event.eventType))}</strong><span>${esc(detail)}</span></div></div>`;
   }).join('')}</div>`;
 }
 
@@ -54,10 +59,9 @@ function ensureSessionHistoryAction() {
 
 function ensureTreatmentHistoryActions() {
   const state = store.getState();
-  document.querySelectorAll('.treatment-card').forEach((card) => {
+  document.querySelectorAll('.treatment-card[data-treatment-id]').forEach((card) => {
     if (card.querySelector('[data-treatment-history]')) return;
     const treatmentId = card.dataset.treatmentId;
-    if (!treatmentId) return;
     const treatment = state.treatments.find((item) => item.id === treatmentId); if (!treatment) return;
     const row = card.querySelector('.button-row') || card.appendChild(Object.assign(document.createElement('div'), { className:'button-row' }));
     const button = document.createElement('button'); button.className = 'btn ghost small'; button.dataset.treatmentHistory = treatment.id; button.textContent = 'Histórico'; row.appendChild(button);
@@ -65,34 +69,34 @@ function ensureTreatmentHistoryActions() {
 }
 
 function sessionListDialog() {
-  const state = store.getState(); const sessions = [...state.sessions].sort((a,b) => b.startedAt.localeCompare(a.startedAt));
+  const state = store.getState(); const sessions = [...state.sessions].sort((a,b) => sortTime(b.startedAt)-sortTime(a.startedAt));
   dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Histórico</p><h2>Sessões</h2></div><button class="close-btn" data-history-close>×</button></div><div class="stack">${sessions.length ? sessions.map((session) => {
     const count = state.events.filter((event) => event.sessionId === session.id).length;
-    return `<article class="card"><div class="section-head"><div><p class="eyebrow">${statusLabel(session.status)}</p><h3>${fmt(session.startedAt)}</h3></div><span class="muted">${duration(session)}</span></div><p class="muted">${count} ${count === 1 ? 'evento' : 'eventos'} registrados</p><button class="btn secondary wide" data-open-session-history="${session.id}">Abrir sessão</button></article>`;
+    return `<article class="card"><div class="section-head"><div><p class="eyebrow">${statusLabel(session.status)}</p><h3>${fmt(session.startedAt)}</h3></div><span class="muted">${duration(session)}</span></div><p class="muted">${count} ${count === 1 ? 'evento' : 'eventos'} registrados</p><button class="btn secondary wide" data-open-session-history="${esc(session.id)}">Abrir sessão</button></article>`;
   }).join('') : '<div class="empty">Nenhuma sessão registrada.</div>'}</div></section>`);
 }
 
 function sessionDetailDialog(sessionId) {
   const state = store.getState(); const session = state.sessions.find((item) => item.id === sessionId); if (!session) return;
-  const events = state.events.filter((event) => event.sessionId === sessionId).sort((a,b) => a.occurredAt.localeCompare(b.occurredAt));
+  const events = state.events.filter((event) => event.sessionId === sessionId).sort((a,b) => sortTime(a.occurredAt)-sortTime(b.occurredAt));
   dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Sessão</p><h2>${fmt(session.startedAt)}</h2></div><button class="close-btn" data-history-close>×</button></div><div class="card soft"><p><strong>Início:</strong> ${fmt(session.startedAt)}</p><p><strong>Término:</strong> ${session.endedAt ? fmt(session.endedAt) : 'Ainda aberta'}</p>${session.closedRecordedAt && session.endedAt !== session.closedRecordedAt ? `<p class="muted">Encerramento registrado em ${fmt(session.closedRecordedAt)}</p>` : ''}</div><section class="section"><h3>Timeline</h3>${eventRows(events, state)}</section><button class="btn secondary wide" data-session-history>Voltar para sessões</button></section>`);
 }
 
 function treatmentContinuityHtml(state, treatment) {
   const previous = treatment.previousTreatmentId ? state.treatments.find((item)=>item.id===treatment.previousTreatmentId) : null;
-  const next = state.treatments.filter((item)=>item.previousTreatmentId===treatment.id).sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
+  const next = state.treatments.filter((item)=>item.previousTreatmentId===treatment.id).sort((a,b)=>sortTime(a.createdAt)-sortTime(b.createdAt));
   const recommendation = treatment.recommendedByAssessmentId ? state.assessments.find((item)=>item.id===treatment.recommendedByAssessmentId) : null;
   if (!previous && !next.length && !recommendation && !treatment.planningNotes && !treatment.plannedFor) return '';
-  return `<section class="section"><div class="section-head"><div><p class="eyebrow">Continuidade</p><h3>Ciclos do tratamento</h3></div></div><div class="stack">${previous ? `<article class="card soft"><p class="eyebrow">Ciclo anterior</p><strong>${esc(previous.title)}</strong><p class="muted">${esc(statusLabel(previous.status))}</p><button class="btn ghost small" data-treatment-history="${previous.id}">Abrir ciclo anterior</button></article>` : ''}${recommendation ? `<article class="card soft"><p class="eyebrow">Recomendado pela avaliação</p><strong>${esc(recommendation.subject || 'Avaliação final')}</strong><p class="muted">${recommendation.frequency ? `Frequência ${esc(recommendation.frequency)}` : ''}${recommendation.imbalancePercent != null ? `${recommendation.frequency ? ' · ' : ''}Desequilíbrio ${esc(recommendation.imbalancePercent)}%` : ''}</p></article>` : ''}${treatment.plannedFor || treatment.planningNotes ? `<article class="card soft"><p class="eyebrow">Planejamento deste ciclo</p>${treatment.plannedFor ? `<p><strong>Previsto:</strong> ${esc(fmtDateOrText(treatment.plannedFor))}</p>` : ''}${treatment.planningNotes ? `<p class="muted">${esc(treatment.planningNotes)}</p>` : ''}</article>` : ''}${next.map((item,index)=>`<article class="card soft"><p class="eyebrow">${next.length===1?'Próximo ciclo':`Ciclo seguinte ${index+1}`}</p><strong>${esc(item.title)}</strong><p class="muted">${esc(statusLabel(item.status))}${item.plannedFor ? ` · ${esc(fmtDateOrText(item.plannedFor))}` : ''}</p><button class="btn ghost small" data-treatment-history="${item.id}">Abrir este ciclo</button></article>`).join('')}</div></section>`;
+  return `<section class="section"><div class="section-head"><div><p class="eyebrow">Continuidade</p><h3>Ciclos do tratamento</h3></div></div><div class="stack">${previous ? `<article class="card soft"><p class="eyebrow">Ciclo anterior</p><strong>${esc(previous.title)}</strong><p class="muted">${esc(statusLabel(previous.status))}</p><button class="btn ghost small" data-treatment-history="${esc(previous.id)}">Abrir ciclo anterior</button></article>` : ''}${recommendation ? `<article class="card soft"><p class="eyebrow">Recomendado pela avaliação</p><strong>${esc(recommendation.subject || 'Avaliação final')}</strong><p class="muted">${recommendation.frequency ? `Frequência ${esc(recommendation.frequency)}` : ''}${recommendation.imbalancePercent != null ? `${recommendation.frequency ? ' · ' : ''}Desequilíbrio ${esc(recommendation.imbalancePercent)}%` : ''}</p></article>` : ''}${treatment.plannedFor || treatment.planningNotes ? `<article class="card soft"><p class="eyebrow">Planejamento deste ciclo</p>${treatment.plannedFor ? `<p><strong>Previsto:</strong> ${esc(fmtDateOrText(treatment.plannedFor))}</p>` : ''}${treatment.planningNotes ? `<p class="muted">${esc(treatment.planningNotes)}</p>` : ''}</article>` : ''}${next.map((item,index)=>`<article class="card soft"><p class="eyebrow">${next.length===1?'Próximo ciclo':`Ciclo seguinte ${index+1}`}</p><strong>${esc(item.title)}</strong><p class="muted">${esc(statusLabel(item.status))}${item.plannedFor ? ` · ${esc(fmtDateOrText(item.plannedFor))}` : ''}</p><button class="btn ghost small" data-treatment-history="${esc(item.id)}">Abrir este ciclo</button></article>`).join('')}</div></section>`;
 }
 
 function treatmentDetailDialog(treatmentId) {
   const state = store.getState(); const treatment = state.treatments.find((item) => item.id === treatmentId); if (!treatment) return;
   const assisted = state.assistedEntities.find((item) => item.id === treatment.assistedEntityId);
   const components = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId); const componentIds = new Set(components.map((item) => item.id));
-  const events = state.events.filter((event) => event.entityId === treatmentId || componentIds.has(event.entityId) || event.metadata?.treatmentId === treatmentId).sort((a,b) => a.occurredAt.localeCompare(b.occurredAt));
+  const events = state.events.filter((event) => event.entityId === treatmentId || componentIds.has(event.entityId) || event.metadata?.treatmentId === treatmentId).sort((a,b) => sortTime(a.occurredAt)-sortTime(b.occurredAt));
   const assessments = state.assessments.filter((item) => item.treatmentId === treatmentId);
-  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Histórico do tratamento</p><h2>${esc(treatment.title)}</h2></div><button class="close-btn" data-history-close>×</button></div><p class="muted">${esc(assisted?.displayName || '')} · ${esc(statusLabel(treatment.status))}</p>${treatmentContinuityHtml(state,treatment)}<section class="section"><div class="section-head"><h3>Componentes</h3><span class="muted">${components.length}</span></div><div class="stack">${components.map((component) => `<article class="card soft"><strong>${esc(component.name)}</strong><p class="muted">${esc(statusLabel(component.status))}${component.startedAt ? ` · iniciado ${fmt(component.startedAt)}` : ''}${component.expectedEndAt ? ` · revisão ${fmt(component.expectedEndAt)}` : ' · sem prazo definido'}</p>${component.toolSnapshot ? `<span class="muted">Biblioteca: ${esc(component.toolSnapshot.name)}</span>` : ''}</article>`).join('') || '<div class="empty">Nenhum componente registrado.</div>'}</div></section>${assessments.length ? `<section class="section"><h3>Avaliações vinculadas</h3><div class="stack">${assessments.map((item) => `<div class="card soft"><strong>${esc(item.subject || 'Avaliação final')}</strong><p class="muted">${esc(item.result || item.frequency || '')}${item.imbalancePercent != null ? ` · desequilíbrio ${item.imbalancePercent}%` : ''}</p></div>`).join('')}</div></section>` : ''}<section class="section"><h3>Linha do tempo</h3>${eventRows(events, state)}</section></section>`);
+  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Histórico do tratamento</p><h2>${esc(treatment.title)}</h2></div><button class="close-btn" data-history-close>×</button></div><p class="muted">${esc(assisted?.displayName || '')} · ${esc(statusLabel(treatment.status))}</p>${treatmentContinuityHtml(state,treatment)}<section class="section"><div class="section-head"><h3>Componentes</h3><span class="muted">${components.length}</span></div><div class="stack">${components.map((component) => `<article class="card soft"><strong>${esc(component.name)}</strong><p class="muted">${esc(statusLabel(component.status))}${component.startedAt ? ` · iniciado ${fmt(component.startedAt)}` : ''}${component.expectedEndAt ? ` · revisão ${fmt(component.expectedEndAt)}` : ' · sem prazo definido'}</p>${component.toolSnapshot ? `<span class="muted">Biblioteca: ${esc(component.toolSnapshot.name)}</span>` : ''}</article>`).join('') || '<div class="empty">Nenhum componente registrado.</div>'}</div></section>${assessments.length ? `<section class="section"><h3>Avaliações vinculadas</h3><div class="stack">${assessments.map((item) => `<div class="card soft"><strong>${esc(item.subject || 'Avaliação final')}</strong><p class="muted">${esc(item.result || item.frequency || '')}${item.imbalancePercent != null ? ` · desequilíbrio ${esc(item.imbalancePercent)}%` : ''}</p></div>`).join('')}</div></section>` : ''}<section class="section"><h3>Linha do tempo</h3>${eventRows(events, state)}</section></section>`);
 }
 
 function enhance() { if (enhancing) return; enhancing = true; try { ensureSessionHistoryAction(); ensureTreatmentHistoryActions(); } finally { enhancing = false; } }

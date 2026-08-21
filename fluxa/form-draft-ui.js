@@ -22,7 +22,11 @@ function key(form){
   const context=[
     form.id,
     assistedContext(form),
+    form.dataset.session,
     form.dataset.treatment,
+    form.dataset.component,
+    form.dataset.replace,
+    form.dataset.reiki,
     form.dataset.toolId,
     form.dataset.protocolId,
     form.dataset.template,

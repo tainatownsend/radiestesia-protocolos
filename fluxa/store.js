@@ -57,6 +57,22 @@ function parseCandidate(raw) {
   } catch (_) { return null; }
 }
 
+function candidateTimestamp(candidate) {
+  const value = Date.parse(candidate?.meta?.updatedAt || '');
+  return Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY;
+}
+
+function chooseBestCandidate(candidates) {
+  const valid = candidates.filter((item) => item.candidate);
+  if (!valid.length) return null;
+  valid.sort((a, b) => {
+    const timeDiff = candidateTimestamp(b.candidate) - candidateTimestamp(a.candidate);
+    if (timeDiff) return timeDiff;
+    return a.priority - b.priority;
+  });
+  return valid[0].candidate;
+}
+
 function ensureStorageListener() {
   if (storageListenerInstalled || typeof globalThis.addEventListener !== 'function') return;
   storageListenerInstalled = true;
@@ -70,12 +86,14 @@ function ensureStorageListener() {
 
 export function loadState() {
   const errors=[];
-  for (const key of [STORAGE_KEY, RECOVERY_KEY, BACKUP_KEY]) {
+  const candidates=[];
+  for (const [priority, key] of [STORAGE_KEY, RECOVERY_KEY, BACKUP_KEY].entries()) {
     const result=readStorage(key);
     if (result.error) { errors.push(result.error); continue; }
-    const candidate=parseCandidate(result.value);
-    if (candidate) return candidate;
+    candidates.push({ priority, candidate:parseCandidate(result.value) });
   }
+  const best=chooseBestCandidate(candidates);
+  if (best) return best;
   const fresh=emptyState();
   if (errors.length) {
     fresh.meta.lastPersistenceError=errorMessage(errors[0]);

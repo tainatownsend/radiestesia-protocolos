@@ -14,13 +14,13 @@ class ThrowingStorage {
 }
 globalThis.localStorage=new MemoryStorage();
 
-function state(id){return {version:4,meta:{},sessions:[{id}],assistedEntities:[],events:[],treatments:[]};}
+function state(id, updatedAt=null){return {version:4,meta:updatedAt?{updatedAt}:{},sessions:[{id}],assistedEntities:[],events:[],treatments:[]};}
 
 localStorage.setItem('fluxa.mvp.v1',JSON.stringify({hello:'world'}));
 localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('backup')));
 localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('recovery')));
 const recovered=loadState();
-assert.equal(recovered.sessions[0].id,'recovery','structurally invalid primary should fall through to newest recovery snapshot');
+assert.equal(recovered.sessions[0].id,'recovery','structurally invalid primary should fall through to recovery snapshot');
 assert.equal(recovered.version,5);
 assert.ok(Array.isArray(recovered.componentReviews));
 assert.ok(Array.isArray(recovered.customProtocols));
@@ -30,6 +30,17 @@ localStorage.map.clear();
 localStorage.setItem('fluxa.mvp.v1','{invalid');
 localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('backup-only')));
 assert.equal(loadState().sessions[0].id,'backup-only');
+
+localStorage.map.clear();
+localStorage.setItem('fluxa.mvp.v1',JSON.stringify(state('stale-primary','2026-08-20T10:00:00.000Z')));
+localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('newer-recovery','2026-08-20T10:01:00.000Z')));
+localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('older-backup','2026-08-20T09:59:00.000Z')));
+assert.equal(loadState().sessions[0].id,'newer-recovery','a newer recovery snapshot must win when a prior primary write failed after recovery was written');
+
+localStorage.map.clear();
+localStorage.setItem('fluxa.mvp.v1',JSON.stringify(state('primary-tie','2026-08-20T10:00:00.000Z')));
+localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('recovery-tie','2026-08-20T10:00:00.000Z')));
+assert.equal(loadState().sessions[0].id,'primary-tie','primary remains preferred when valid snapshots have the same update timestamp');
 
 localStorage.map.clear();
 const store=createStore();

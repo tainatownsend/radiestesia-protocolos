@@ -14,6 +14,7 @@ import { inspectStorageHealth, recoverLocalData, exportLocalDataFile } from './s
 const store = createStore();
 let currentAssistedId = null;
 let enhancing = false;
+const assistedLabels = { PERSON:'Pessoa', PET:'PET', ENVIRONMENT:'Ambiente', GROUP:'Grupo', SITUATION:'Situação / Processo', OTHER:'Outro' };
 
 function esc(value = '') {
   return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
@@ -40,6 +41,15 @@ function requirePreparedSession() {
   return session;
 }
 
+function storageHealthCopy(health) {
+  if (health.status === 'READ_ERROR') return 'O navegador bloqueou a leitura do armazenamento local. O Fluxa não consegue confirmar nem exportar os dados deste dispositivo enquanto esse bloqueio continuar.';
+  if (health.status === 'WRITE_ERROR') return 'O Fluxa consegue ler os dados atuais, mas não conseguiu confirmar que este dispositivo aceita novas gravações locais.';
+  if (health.status === 'PRIMARY_CORRUPT') return health.canRecover
+    ? 'A cópia principal dos dados locais não é válida, mas há uma cópia de recuperação disponível.'
+    : 'A cópia principal dos dados locais não é válida e nenhuma cópia de recuperação válida foi encontrada.';
+  return 'O Fluxa encontrou um problema no armazenamento local.';
+}
+
 function ensureStorageBanner() {
   const health = inspectStorageHealth();
   document.querySelector('[data-storage-health]')?.remove();
@@ -50,10 +60,9 @@ function ensureStorageBanner() {
   banner.dataset.storageHealth = health.status;
   banner.className = 'section storage-warning';
   banner.setAttribute('role', 'alert');
-  const copy = health.status === 'WRITE_ERROR'
-    ? 'O Fluxa não conseguiu confirmar que este dispositivo aceita novas gravações locais.'
-    : 'A cópia principal dos dados locais parece corrompida. Há uma cópia de recuperação disponível.';
-  banner.innerHTML = `<div><p class="eyebrow">Dados locais</p><h2>Atenção ao salvamento</h2><p>${copy}</p></div><div class="button-row">${health.canRecover ? '<button class="btn primary small" data-storage-recover>Recuperar cópia</button>' : ''}<button class="btn secondary small" data-storage-export>Exportar dados válidos</button></div>`;
+  const recover = health.canRecover ? '<button class="btn primary small" data-storage-recover>Recuperar cópia</button>' : '';
+  const exportAction = health.status !== 'READ_ERROR' ? '<button class="btn secondary small" data-storage-export>Exportar dados válidos</button>' : '';
+  banner.innerHTML = `<div><p class="eyebrow">Dados locais</p><h2>Atenção ao salvamento</h2><p>${storageHealthCopy(health)}</p></div>${recover || exportAction ? `<div class="button-row">${recover}${exportAction}</div>` : ''}`;
   main.prepend(banner);
 }
 
@@ -62,6 +71,8 @@ function ensureBackupAction() {
   if (!main || document.querySelector('[data-storage-export-quiet]')) return;
   const eyebrow = main.querySelector('.eyebrow')?.textContent?.trim();
   if (eyebrow !== 'Hoje') return;
+  const health = inspectStorageHealth();
+  if (health.status === 'READ_ERROR') return;
   const button = document.createElement('button');
   button.className = 'btn ghost small local-backup-action';
   button.dataset.storageExportQuiet = 'true';
@@ -89,10 +100,10 @@ function enhanceComponentDialog() {
 
 function enhanceTreatmentCards() {
   const state = store.getState();
-  document.querySelectorAll('.treatment-card').forEach((card) => {
+  document.querySelectorAll('.treatment-card[data-treatment-id]').forEach((card) => {
     if (card.querySelector('[data-final-cycle]')) return;
-    const title = card.querySelector('h2')?.textContent?.trim();
-    const treatment = state.treatments.find((item) => item.title === title && item.status === 'IN_PROGRESS');
+    const treatmentId = card.dataset.treatmentId;
+    const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === 'IN_PROGRESS');
     if (!treatment) return;
     const resolution = treatmentComponentResolution(state, treatment.id);
     if (!resolution.readyForFinalAssessment) return;
@@ -112,7 +123,11 @@ function enhanceAssistedDetail() {
   if (!assisted) return;
   const actions = document.createElement('div');
   actions.className = 'button-row assisted-detail-actions';
-  actions.innerHTML = `<button class="btn secondary small" data-assisted-edit="${assisted.id}">Editar</button><button class="btn danger small" data-assisted-archive="${assisted.id}">Arquivar</button>`;
+  const edit = document.createElement('button');
+  edit.className = 'btn secondary small'; edit.dataset.assistedEdit = assisted.id; edit.textContent = 'Editar';
+  const archive = document.createElement('button');
+  archive.className = 'btn danger small'; archive.dataset.assistedArchive = assisted.id; archive.textContent = 'Arquivar';
+  actions.append(edit, archive);
   detail.querySelector('.sheet-head')?.after(actions);
 }
 
@@ -141,7 +156,7 @@ function componentReviewDialog(componentId) {
   if (!component || !treatment) return;
   let session;
   try { session = requirePreparedSession(); } catch (error) { alert(error.message); return; }
-  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Revisão do componente</p><h2>${esc(component.name)}</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">Confirme as duas perguntas com o pêndulo. O componente só será marcado como desmontado quando ambas forem positivas.</p><form id="component-review-form" data-component="${component.id}" data-session="${session.id}" class="form-grid"><label class="check-row"><input type="checkbox" name="verifiedComplete"><span>Este componente está 100% finalizado</span></label><label class="check-row"><input type="checkbox" name="permissionToDismantle"><span>Tenho permissão para desmontar este componente</span></label><div class="field"><label>Observações</label><textarea name="notes" placeholder="Opcional"></textarea></div><button class="btn primary wide" type="submit">Registrar verificação</button></form></section>`);
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Revisão do componente</p><h2>${esc(component.name)}</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">Confirme as duas perguntas com o pêndulo. O componente só será marcado como desmontado quando ambas forem positivas.</p><form id="component-review-form" data-component="${esc(component.id)}" data-session="${esc(session.id)}" class="form-grid"><label class="check-row"><input type="checkbox" name="verifiedComplete"><span>Este componente está 100% finalizado</span></label><label class="check-row"><input type="checkbox" name="permissionToDismantle"><span>Tenho permissão para desmontar este componente</span></label><div class="field"><label>Observações</label><textarea name="notes" placeholder="Opcional"></textarea></div><button class="btn primary wide" type="submit">Registrar verificação</button></form></section>`);
 }
 
 function finalCycleDialog(treatmentId) {
@@ -149,7 +164,7 @@ function finalCycleDialog(treatmentId) {
   try { session = requirePreparedSession(); } catch (error) { alert(error.message); return; }
   const resolution = treatmentComponentResolution(store.getState(), treatmentId);
   if (!resolution.readyForFinalAssessment) { alert('Resolva todos os componentes antes da avaliação final.'); return; }
-  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Avaliação final</p><h2>Reavaliar após desmontagem</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">Todos os componentes estão resolvidos. Registre frequência vibracional, desequilíbrio e se outro ciclo será necessário.</p><form id="final-cycle-form" data-treatment="${treatmentId}" data-session="${session.id}" class="form-grid"><div class="field"><label>Frequência vibracional</label><input name="frequency" placeholder="Valor / escala utilizada"></div><div class="field"><label>Desequilíbrio atual (%)</label><input name="imbalancePercent" type="number" min="0" max="100" step="5"></div><label class="check-row"><input type="checkbox" name="needsNewTreatment"><span>É necessário um novo tratamento</span></label><div class="field"><label>Quando iniciar o próximo tratamento?</label><input name="nextTreatmentWhen" placeholder="Ex.: amanhã, em 7 dias, após nova avaliação"></div><div class="field"><label>Observações</label><textarea name="notes"></textarea></div><button class="btn primary wide" type="submit">Registrar e concluir este tratamento</button></form></section>`);
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Avaliação final</p><h2>Reavaliar após desmontagem</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">Todos os componentes estão resolvidos. Registre frequência vibracional, desequilíbrio e se outro ciclo será necessário.</p><form id="final-cycle-form" data-treatment="${esc(treatmentId)}" data-session="${esc(session.id)}" class="form-grid"><div class="field"><label>Frequência vibracional</label><input name="frequency" required placeholder="Valor / escala utilizada"></div><div class="field"><label>Desequilíbrio atual (%)</label><input name="imbalancePercent" type="number" min="0" max="100" step="5" required></div><label class="check-row"><input type="checkbox" name="needsNewTreatment"><span>É necessário um novo tratamento</span></label><div class="field"><label>Quando iniciar o próximo tratamento?</label><input name="nextTreatmentWhen" placeholder="Ex.: amanhã, em 7 dias, após nova avaliação"></div><div class="field"><label>Observações</label><textarea name="notes"></textarea></div><button class="btn primary wide" type="submit">Registrar e concluir este tratamento</button></form></section>`);
 }
 
 function parseMembers(text) {
@@ -171,13 +186,13 @@ function editAssistedDialog(id) {
         : assisted.type === 'SITUATION'
           ? `<div class="field"><label>Número / identificação do processo</label><input name="identifier" value="${esc(assisted.identifier || '')}" required></div>`
           : '';
-  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Editar assistido</p><h2>${esc(assisted.displayName)}</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">O tipo permanece ${esc(assisted.type)} para preservar a coerência do histórico.</p><form id="edit-assisted-form" data-assisted="${assisted.id}" data-type="${assisted.type}" class="form-grid"><div class="field"><label>Nome ou identificação</label><input name="displayName" value="${esc(assisted.displayName)}" required></div>${typeSpecific}<div class="field"><label>Detalhes</label><textarea name="details">${esc(assisted.details || '')}</textarea></div><button class="btn primary wide" type="submit">Salvar alterações</button></form></section>`);
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Editar assistido</p><h2>${esc(assisted.displayName)}</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">O tipo permanece ${esc(assistedLabels[assisted.type] || 'Assistido')} para preservar a coerência do histórico.</p><form id="edit-assisted-form" data-assisted="${esc(assisted.id)}" data-type="${esc(assisted.type)}" class="form-grid"><div class="field"><label>Nome ou identificação</label><input name="displayName" value="${esc(assisted.displayName)}" required></div>${typeSpecific}<div class="field"><label>Detalhes</label><textarea name="details">${esc(assisted.details || '')}</textarea></div><button class="btn primary wide" type="submit">Salvar alterações</button></form></section>`);
 }
 
 function archiveDialog(id) {
   const assisted = store.getState().assistedEntities.find((item) => item.id === id);
   if (!assisted) return;
-  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Arquivar assistido</p><h2>${esc(assisted.displayName)}</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">Arquivar remove o assistido das listas de trabalho futuro, mas preserva integralmente o histórico. Trabalhos ativos impedem o arquivamento.</p><form id="archive-assisted-form" data-assisted="${id}" class="form-grid"><div class="field"><label>Motivo opcional</label><textarea name="reason"></textarea></div><button class="btn danger wide" type="submit">Arquivar mantendo histórico</button></form></section>`);
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Arquivar assistido</p><h2>${esc(assisted.displayName)}</h2></div><button class="close-btn" data-remaining-close>×</button></div><p class="muted">Arquivar remove o assistido das listas de trabalho futuro, mas preserva integralmente o histórico. Trabalhos ativos impedem o arquivamento.</p><form id="archive-assisted-form" data-assisted="${esc(id)}" class="form-grid"><div class="field"><label>Motivo opcional</label><textarea name="reason"></textarea></div><button class="btn danger wide" type="submit">Arquivar mantendo histórico</button></form></section>`);
 }
 
 document.addEventListener('click', (event) => {
