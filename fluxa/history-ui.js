@@ -5,25 +5,23 @@ const store = createStore();
 let enhancing = false;
 
 const eventLabels = Object.freeze({
-  SESSION_STARTED: 'Sessão iniciada', PREPARATION_STARTED: 'Preparação iniciada', PREPARATION_COMPLETED: 'Preparação concluída',
-  SESSION_ASSISTED_SELECTED: 'Assistido selecionado', INVESTIGATION_STARTED: 'Investigação iniciada', INVESTIGATION_RESUMED: 'Investigação retomada',
-  INVESTIGATION_COMPLETED: 'Investigação concluída', FINDING_IDENTIFIED: 'Achado registrado', TREATMENT_CREATED: 'Tratamento criado',
-  TREATMENT_STARTED: 'Tratamento iniciado', TREATMENT_INTERRUPTED: 'Tratamento interrompido', TREATMENT_RESUMED: 'Tratamento retomado',
-  TREATMENT_REVIEWED: 'Tratamento revisado', TREATMENT_COMPLETED: 'Tratamento concluído', COMPONENT_PLANNED: 'Componente planejado',
-  COMPONENT_STARTED: 'Componente iniciado', COMPONENT_ADDED: 'Componente adicionado', COMPONENT_STOPPED: 'Componente interrompido',
-  COMPONENT_REPLACED: 'Componente substituído', COMPONENT_RESCHEDULED: 'Prazo ajustado', COMPONENT_REVIEWED: 'Componente revisado',
-  COMPONENT_DISMANTLED: 'Componente desmontado', TREATMENT_FINAL_ASSESSMENT: 'Avaliação final', ASSESSMENT_RECORDED: 'Avaliação registrada',
-  REIKI_STARTED: 'Reiki iniciado', REIKI_PAUSED: 'Reiki pausado', REIKI_RESUMED: 'Reiki retomado', REIKI_COMPLETED: 'Reiki concluído',
-  NOTE_CREATED: 'Anotação', CLOSING_COMPLETED: 'Encerramento realizado', SESSION_CLOSE_CORRECTED: 'Encerramento corrigido', SESSION_CLOSED: 'Sessão encerrada'
+  SESSION_STARTED:'Sessão iniciada', SESSION_CLOSED:'Sessão encerrada', PREPARATION_STARTED:'Preparação iniciada', PREPARATION_COMPLETED:'Preparação concluída', CLOSING_COMPLETED:'Encerramento realizado', SESSION_CLOSE_CORRECTED:'Encerramento corrigido',
+  ASSISTED_CREATED:'Assistido criado', ASSISTED_UPDATED:'Dados do assistido atualizados', ASSISTED_ARCHIVED:'Assistido arquivado', SESSION_ASSISTED_SELECTED:'Assistido selecionado',
+  INVESTIGATION_STARTED:'Investigação iniciada', INVESTIGATION_RESUMED:'Investigação retomada', INVESTIGATION_COMPLETED:'Investigação concluída', FINDING_IDENTIFIED:'Achado registrado',
+  TREATMENT_CREATED:'Tratamento criado', TREATMENT_STARTED:'Tratamento iniciado', TREATMENT_INTERRUPTED:'Tratamento interrompido', TREATMENT_RESUMED:'Tratamento retomado', TREATMENT_REVIEWED:'Tratamento revisado', TREATMENT_COMPLETED:'Tratamento concluído', FOLLOW_UP_TREATMENT_PLANNED:'Próximo ciclo planejado', TREATMENT_FINAL_ASSESSMENT:'Avaliação final registrada',
+  COMPONENT_PLANNED:'Componente planejado', COMPONENT_STARTED:'Componente iniciado', COMPONENT_COMPLETED:'Componente concluído', COMPONENT_ADDED:'Componente adicionado', COMPONENT_STOPPED:'Componente interrompido', COMPONENT_REPLACED:'Componente substituído', COMPONENT_RESCHEDULED:'Prazo do componente ajustado', COMPONENT_REVIEWED:'Componente revisado', COMPONENT_DISMANTLED:'Componente desmontado',
+  ASSESSMENT_RECORDED:'Avaliação registrada', TOOL_CREATED:'Recurso criado', TOOL_UPDATED:'Recurso atualizado', TOOL_ARCHIVED:'Recurso arquivado',
+  REIKI_STARTED:'Reiki iniciado', REIKI_PAUSED:'Reiki pausado', REIKI_RESUMED:'Reiki retomado', REIKI_COMPLETED:'Reiki concluído', REIKI_CANCELED:'Reiki cancelado', NOTE_CREATED:'Anotação'
 });
 const statusLabels = Object.freeze({
   OPEN:'Em andamento', CLOSED:'Encerrada', PLANNED:'Planejado', IN_PROGRESS:'Em andamento', COMPLETED:'Concluído',
   INTERRUPTED:'Interrompido', STOPPED:'Encerrado', REPLACED:'Substituído', RUNNING:'Em andamento', PAUSED:'Pausado', CANCELED:'Cancelado'
 });
-const REIKI_EVENTS = new Set(['REIKI_STARTED','REIKI_PAUSED','REIKI_RESUMED','REIKI_COMPLETED']);
+const REIKI_EVENTS = new Set(['REIKI_STARTED','REIKI_PAUSED','REIKI_RESUMED','REIKI_COMPLETED','REIKI_CANCELED']);
 
 function esc(value = '') { return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c])); }
-function statusLabel(value='') { return statusLabels[value] || String(value || ''); }
+function statusLabel(value='') { return value ? (statusLabels[value] || 'Registrado') : ''; }
+function eventLabel(value='') { return eventLabels[value] || 'Atividade registrada'; }
 function fmt(iso) { if (!iso) return '—'; return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(iso)); }
 function fmtDateOrText(value) { if (!value) return ''; const date=new Date(value); return Number.isNaN(date.getTime()) ? String(value) : fmt(value); }
 function duration(session) {
@@ -42,7 +40,7 @@ function eventRows(events, state) {
     const mode = REIKI_EVENTS.has(event.eventType) ? ReikiModeLabel[event.metadata?.mode] : null;
     const durationMinutes = event.eventType === 'REIKI_COMPLETED' && event.metadata?.durationSeconds != null ? Math.round(Number(event.metadata.durationSeconds) / 60) : null;
     const detail = [baseDetail, mode, durationMinutes != null ? `${durationMinutes} min` : null].filter(Boolean).join(' · ');
-    return `<div class="timeline-item"><div class="timeline-time">${new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(event.occurredAt))}</div><div class="timeline-dot"></div><div class="timeline-copy"><strong>${esc(eventLabels[event.eventType] || event.eventType)}</strong><span>${esc(detail)}</span></div></div>`;
+    return `<div class="timeline-item"><div class="timeline-time">${new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(event.occurredAt))}</div><div class="timeline-dot"></div><div class="timeline-copy"><strong>${esc(eventLabel(event.eventType))}</strong><span>${esc(detail)}</span></div></div>`;
   }).join('')}</div>`;
 }
 
