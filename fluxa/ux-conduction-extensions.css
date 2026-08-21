@@ -1,0 +1,26 @@
+.ux-dashboard-collapsed > .metric-grid,
+.ux-dashboard-collapsed > .stack { display:none !important; }
+.ux-dashboard-collapsed { padding-bottom:14px; }
+.ux-last-session-summary { display:grid; gap:12px; }
+.ux-last-session-summary p { margin:0; line-height:1.45; }
+.ux-return-findings { display:grid; gap:6px; padding-top:10px; border-top:1px solid var(--border); }
+.ux-protocol-favorite { float:right; width:42px; height:42px; margin:-4px -4px 6px 10px; border:1px solid var(--border); border-radius:999px; background:var(--surface-2); color:var(--muted); font-size:20px; line-height:1; }
+.ux-protocol-favorite.active { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 38%,var(--border)); background:color-mix(in srgb,var(--accent) 9%,var(--surface)); }
+.ux-protocol-recent { display:inline-flex; align-items:center; min-height:24px; margin:0 0 8px; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--secondary); font-size:11px; font-weight:800; }
+.ux-protocol-intent { margin:8px 0 14px; color:var(--primary-strong); font-size:13px; line-height:1.45; font-weight:650; }
+#investigation-chooser-overlay article.card { overflow:auto; }
+#ux-findings-completion-overlay .card.soft { padding:14px 16px; }
+#ux-findings-completion-overlay .card.soft .eyebrow { margin-bottom:4px; }
+.ux-post-close-groups { display:grid; gap:18px; margin:20px 0; }
+.ux-post-close-groups > section { display:grid; gap:10px; padding:16px; border:1px solid var(--border); border-radius:18px; background:var(--surface-2); }
+.ux-post-close-groups h3,.ux-post-close-groups p { margin:0; }
+.ux-post-close-actions { display:grid; gap:10px; }
+.ux-milestone-toast { position:fixed; left:50%; bottom:calc(94px + env(safe-area-inset-bottom)); z-index:140; width:max-content; max-width:calc(100% - 32px); padding:11px 16px; transform:translateX(-50%); border-radius:999px; background:var(--primary-strong); color:#fff; box-shadow:0 12px 30px rgba(16,47,53,.24); font-size:13px; font-weight:800; text-align:center; }
+@media(max-width:560px){
+  .ux-last-session-summary .section-head { align-items:flex-start; }
+  .ux-last-session-summary .status-pill { white-space:normal; text-align:right; }
+  .ux-dashboard-collapsed .section-head { gap:8px; }
+  .ux-dashboard-collapsed .section-head > div { min-width:0; }
+  .ux-post-close-groups > section { padding:14px; }
+  .ux-milestone-toast { bottom:calc(86px + env(safe-area-inset-bottom)); }
+}
