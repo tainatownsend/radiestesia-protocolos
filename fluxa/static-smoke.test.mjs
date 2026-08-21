@@ -132,6 +132,9 @@ assert.match(domain,/export function validateAssistedEntityInput\(/,'Assisted va
 assert.match(domain,/export function startInvestigation[\s\S]*?requirePreparedSession\(state, sessionId\)/,'Quick investigation start should require prepared session in domain.');
 assert.match(domain,/export function createTreatment[\s\S]*?requirePreparedSession\(state, input\.sessionId\)/,'Direct treatment creation should require prepared session in domain.');
 assert.match(domain,/export function reviewTreatment[\s\S]*?requirePreparedSession\(state, input\.sessionId\)/,'Legacy treatment review should require prepared session in domain.');
+assert.match(domain,/if \(input\.verifiedComplete\) throw new Error\('Use a revisão dos componentes e a avaliação final para concluir este tratamento\.'\)/,'Legacy treatment review must not complete components/treatment directly.');
+assert.doesNotMatch(domain,/if \(review\.verifiedComplete\)/,'Legacy auto-completion branch must stay removed.');
+assert.match(domain,/export function closeSession[\s\S]*?Number\.isNaN\(end\.getTime\(\)\)[\s\S]*?end\.getTime\(\) < start\.getTime\(\)[\s\S]*?end\.getTime\(\) > Date\.now\(\)/,'Normal session close should validate invalid, pre-start, and future timestamps.');
 assert.match(backlog,/return validateAssistedEntityInput\(input\)/,'Backlog assisted validation should delegate to the domain validator.');
 assert.match(backlog,/requirePreparedSessionState\(state, input\.sessionId, 'Conclua a preparação da sessão antes de alterar componentes do tratamento\.'/,'Active component changes should require a prepared session.');
 
