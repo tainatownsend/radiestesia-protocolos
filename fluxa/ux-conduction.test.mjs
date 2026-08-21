@@ -20,6 +20,8 @@ assert.match(conduction,/fluxa-context-collapsed/,'Fast assisted context should 
 assert.match(conduction,/Sessão possivelmente esquecida/,'Long-running sessions should surface forgotten-session context.');
 assert.match(conduction,/ux-hide-before-close/,'Pre-close review should move reports out of the closing decision.');
 assert.match(conduction,/ux-post-close-overlay/,'Post-close documentation actions should be presented after closure.');
+assert.match(conduction,/Para mim/,'Post-close documentation should distinguish therapist-facing records.');
+assert.match(conduction,/Por assistido/,'Post-close documentation should distinguish per-assisted records.');
 assert.match(conduction,/data-ux-open-components/,'Treatment review should route into component review.');
 assert.match(extensions,/handleQuickFindings/,'Quick findings should use the guided handoff.');
 assert.match(extensions,/handleBranchFindings/,'Branching findings should use the guided handoff.');
@@ -41,6 +43,7 @@ assert.match(milestones,/REIKI_COMPLETED:'Reiki concluído'/);
 assert.match(css,/#session-template-editor-overlay \.check-row > span \{ display:flex; flex-direction:column/,'Session template labels and hints must not run together.');
 assert.match(css,/env\(safe-area-inset-bottom\)/,'Sheets must respect iPhone bottom safe area.');
 assert.match(extras,/ux-protocol-intent/,'Therapeutic protocol guidance needs visible styling.');
+assert.match(extras,/ux-post-close-groups/,'Post-close documentation groups need visible separation.');
 assert.match(extras,/ux-milestone-toast/,'Milestone feedback needs visible mobile styling.');
 
 console.log('ux-conduction.test.mjs: ok');
