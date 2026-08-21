@@ -16,9 +16,14 @@ const eventLabels = Object.freeze({
   REIKI_STARTED: 'Reiki iniciado', REIKI_PAUSED: 'Reiki pausado', REIKI_RESUMED: 'Reiki retomado', REIKI_COMPLETED: 'Reiki concluído',
   NOTE_CREATED: 'Anotação', CLOSING_COMPLETED: 'Encerramento realizado', SESSION_CLOSE_CORRECTED: 'Encerramento corrigido', SESSION_CLOSED: 'Sessão encerrada'
 });
+const statusLabels = Object.freeze({
+  OPEN:'Em andamento', CLOSED:'Encerrada', PLANNED:'Planejado', IN_PROGRESS:'Em andamento', COMPLETED:'Concluído',
+  INTERRUPTED:'Interrompido', STOPPED:'Encerrado', REPLACED:'Substituído', RUNNING:'Em andamento', PAUSED:'Pausado', CANCELED:'Cancelado'
+});
 const REIKI_EVENTS = new Set(['REIKI_STARTED','REIKI_PAUSED','REIKI_RESUMED','REIKI_COMPLETED']);
 
 function esc(value = '') { return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c])); }
+function statusLabel(value='') { return statusLabels[value] || String(value || ''); }
 function fmt(iso) { if (!iso) return '—'; return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(iso)); }
 function fmtDateOrText(value) { if (!value) return ''; const date=new Date(value); return Number.isNaN(date.getTime()) ? String(value) : fmt(value); }
 function duration(session) {
@@ -50,10 +55,12 @@ function ensureSessionHistoryAction() {
 }
 
 function ensureTreatmentHistoryActions() {
-  const state = store.getState(); const treatments = [...state.treatments].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-  document.querySelectorAll('.treatment-card').forEach((card, index) => {
+  const state = store.getState();
+  document.querySelectorAll('.treatment-card').forEach((card) => {
     if (card.querySelector('[data-treatment-history]')) return;
-    const treatment = state.treatments.find((item) => item.id === card.dataset.treatmentId) || treatments[index]; if (!treatment) return;
+    const treatmentId = card.dataset.treatmentId;
+    if (!treatmentId) return;
+    const treatment = state.treatments.find((item) => item.id === treatmentId); if (!treatment) return;
     const row = card.querySelector('.button-row') || card.appendChild(Object.assign(document.createElement('div'), { className:'button-row' }));
     const button = document.createElement('button'); button.className = 'btn ghost small'; button.dataset.treatmentHistory = treatment.id; button.textContent = 'Histórico'; row.appendChild(button);
   });
@@ -63,7 +70,7 @@ function sessionListDialog() {
   const state = store.getState(); const sessions = [...state.sessions].sort((a,b) => b.startedAt.localeCompare(a.startedAt));
   dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Histórico</p><h2>Sessões</h2></div><button class="close-btn" data-history-close>×</button></div><div class="stack">${sessions.length ? sessions.map((session) => {
     const count = state.events.filter((event) => event.sessionId === session.id).length;
-    return `<article class="card"><div class="section-head"><div><p class="eyebrow">${session.status === 'OPEN' ? 'Em andamento' : 'Encerrada'}</p><h3>${fmt(session.startedAt)}</h3></div><span class="muted">${duration(session)}</span></div><p class="muted">${count} ${count === 1 ? 'evento' : 'eventos'} registrados</p><button class="btn secondary wide" data-open-session-history="${session.id}">Abrir sessão</button></article>`;
+    return `<article class="card"><div class="section-head"><div><p class="eyebrow">${statusLabel(session.status)}</p><h3>${fmt(session.startedAt)}</h3></div><span class="muted">${duration(session)}</span></div><p class="muted">${count} ${count === 1 ? 'evento' : 'eventos'} registrados</p><button class="btn secondary wide" data-open-session-history="${session.id}">Abrir sessão</button></article>`;
   }).join('') : '<div class="empty">Nenhuma sessão registrada.</div>'}</div></section>`);
 }
 
@@ -78,7 +85,7 @@ function treatmentContinuityHtml(state, treatment) {
   const next = state.treatments.filter((item)=>item.previousTreatmentId===treatment.id).sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
   const recommendation = treatment.recommendedByAssessmentId ? state.assessments.find((item)=>item.id===treatment.recommendedByAssessmentId) : null;
   if (!previous && !next.length && !recommendation && !treatment.planningNotes && !treatment.plannedFor) return '';
-  return `<section class="section"><div class="section-head"><div><p class="eyebrow">Continuidade</p><h3>Ciclos do tratamento</h3></div></div><div class="stack">${previous ? `<article class="card soft"><p class="eyebrow">Ciclo anterior</p><strong>${esc(previous.title)}</strong><p class="muted">${esc(previous.status)}</p><button class="btn ghost small" data-treatment-history="${previous.id}">Abrir ciclo anterior</button></article>` : ''}${recommendation ? `<article class="card soft"><p class="eyebrow">Recomendado pela avaliação</p><strong>${esc(recommendation.subject || 'Avaliação final')}</strong><p class="muted">${recommendation.frequency ? `Frequência ${esc(recommendation.frequency)}` : ''}${recommendation.imbalancePercent != null ? `${recommendation.frequency ? ' · ' : ''}Desequilíbrio ${esc(recommendation.imbalancePercent)}%` : ''}</p></article>` : ''}${treatment.plannedFor || treatment.planningNotes ? `<article class="card soft"><p class="eyebrow">Planejamento deste ciclo</p>${treatment.plannedFor ? `<p><strong>Previsto:</strong> ${esc(fmtDateOrText(treatment.plannedFor))}</p>` : ''}${treatment.planningNotes ? `<p class="muted">${esc(treatment.planningNotes)}</p>` : ''}</article>` : ''}${next.map((item,index)=>`<article class="card soft"><p class="eyebrow">${next.length===1?'Próximo ciclo':`Ciclo seguinte ${index+1}`}</p><strong>${esc(item.title)}</strong><p class="muted">${esc(item.status)}${item.plannedFor ? ` · ${esc(fmtDateOrText(item.plannedFor))}` : ''}</p><button class="btn ghost small" data-treatment-history="${item.id}">Abrir este ciclo</button></article>`).join('')}</div></section>`;
+  return `<section class="section"><div class="section-head"><div><p class="eyebrow">Continuidade</p><h3>Ciclos do tratamento</h3></div></div><div class="stack">${previous ? `<article class="card soft"><p class="eyebrow">Ciclo anterior</p><strong>${esc(previous.title)}</strong><p class="muted">${esc(statusLabel(previous.status))}</p><button class="btn ghost small" data-treatment-history="${previous.id}">Abrir ciclo anterior</button></article>` : ''}${recommendation ? `<article class="card soft"><p class="eyebrow">Recomendado pela avaliação</p><strong>${esc(recommendation.subject || 'Avaliação final')}</strong><p class="muted">${recommendation.frequency ? `Frequência ${esc(recommendation.frequency)}` : ''}${recommendation.imbalancePercent != null ? `${recommendation.frequency ? ' · ' : ''}Desequilíbrio ${esc(recommendation.imbalancePercent)}%` : ''}</p></article>` : ''}${treatment.plannedFor || treatment.planningNotes ? `<article class="card soft"><p class="eyebrow">Planejamento deste ciclo</p>${treatment.plannedFor ? `<p><strong>Previsto:</strong> ${esc(fmtDateOrText(treatment.plannedFor))}</p>` : ''}${treatment.planningNotes ? `<p class="muted">${esc(treatment.planningNotes)}</p>` : ''}</article>` : ''}${next.map((item,index)=>`<article class="card soft"><p class="eyebrow">${next.length===1?'Próximo ciclo':`Ciclo seguinte ${index+1}`}</p><strong>${esc(item.title)}</strong><p class="muted">${esc(statusLabel(item.status))}${item.plannedFor ? ` · ${esc(fmtDateOrText(item.plannedFor))}` : ''}</p><button class="btn ghost small" data-treatment-history="${item.id}">Abrir este ciclo</button></article>`).join('')}</div></section>`;
 }
 
 function treatmentDetailDialog(treatmentId) {
@@ -87,7 +94,7 @@ function treatmentDetailDialog(treatmentId) {
   const components = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId); const componentIds = new Set(components.map((item) => item.id));
   const events = state.events.filter((event) => event.entityId === treatmentId || componentIds.has(event.entityId) || event.metadata?.treatmentId === treatmentId).sort((a,b) => a.occurredAt.localeCompare(b.occurredAt));
   const assessments = state.assessments.filter((item) => item.treatmentId === treatmentId);
-  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Histórico do tratamento</p><h2>${esc(treatment.title)}</h2></div><button class="close-btn" data-history-close>×</button></div><p class="muted">${esc(assisted?.displayName || '')} · ${treatment.status}</p>${treatmentContinuityHtml(state,treatment)}<section class="section"><div class="section-head"><h3>Componentes</h3><span class="muted">${components.length}</span></div><div class="stack">${components.map((component) => `<article class="card soft"><strong>${esc(component.name)}</strong><p class="muted">${esc(component.status)}${component.startedAt ? ` · iniciado ${fmt(component.startedAt)}` : ''}${component.expectedEndAt ? ` · revisão ${fmt(component.expectedEndAt)}` : ' · sem prazo definido'}</p>${component.toolSnapshot ? `<span class="muted">Biblioteca: ${esc(component.toolSnapshot.name)}</span>` : ''}</article>`).join('') || '<div class="empty">Nenhum componente registrado.</div>'}</div></section>${assessments.length ? `<section class="section"><h3>Avaliações vinculadas</h3><div class="stack">${assessments.map((item) => `<div class="card soft"><strong>${esc(item.subject || 'Avaliação final')}</strong><p class="muted">${esc(item.result || item.frequency || '')}${item.imbalancePercent != null ? ` · desequilíbrio ${item.imbalancePercent}%` : ''}</p></div>`).join('')}</div></section>` : ''}<section class="section"><h3>Linha do tempo</h3>${eventRows(events, state)}</section></section>`);
+  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Histórico do tratamento</p><h2>${esc(treatment.title)}</h2></div><button class="close-btn" data-history-close>×</button></div><p class="muted">${esc(assisted?.displayName || '')} · ${esc(statusLabel(treatment.status))}</p>${treatmentContinuityHtml(state,treatment)}<section class="section"><div class="section-head"><h3>Componentes</h3><span class="muted">${components.length}</span></div><div class="stack">${components.map((component) => `<article class="card soft"><strong>${esc(component.name)}</strong><p class="muted">${esc(statusLabel(component.status))}${component.startedAt ? ` · iniciado ${fmt(component.startedAt)}` : ''}${component.expectedEndAt ? ` · revisão ${fmt(component.expectedEndAt)}` : ' · sem prazo definido'}</p>${component.toolSnapshot ? `<span class="muted">Biblioteca: ${esc(component.toolSnapshot.name)}</span>` : ''}</article>`).join('') || '<div class="empty">Nenhum componente registrado.</div>'}</div></section>${assessments.length ? `<section class="section"><h3>Avaliações vinculadas</h3><div class="stack">${assessments.map((item) => `<div class="card soft"><strong>${esc(item.subject || 'Avaliação final')}</strong><p class="muted">${esc(item.result || item.frequency || '')}${item.imbalancePercent != null ? ` · desequilíbrio ${item.imbalancePercent}%` : ''}</p></div>`).join('')}</div></section>` : ''}<section class="section"><h3>Linha do tempo</h3>${eventRows(events, state)}</section></section>`);
 }
 
 function enhance() { if (enhancing) return; enhancing = true; try { ensureSessionHistoryAction(); ensureTreatmentHistoryActions(); } finally { enhancing = false; } }
