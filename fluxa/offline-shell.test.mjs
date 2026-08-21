@@ -63,4 +63,15 @@ const index=read(start.href);
 const directScripts=[...index.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map((m)=>new URL(m[1],start).href);
 for(const script of directScripts)assert.ok(visited.has(script),`Direct shell script was not discovered for offline precache: ${script}`);
 
+const offlineUi=read(new URL('./offline-ui.js',root));
+const controllerBlock=offlineUi.slice(
+  offlineUi.indexOf("navigator.serviceWorker.addEventListener('controllerchange'"),
+  offlineUi.indexOf("window.addEventListener('online'")
+);
+assert.match(controllerBlock,/updateAvailable=true/,'A newly controlling worker should surface an update state.');
+assert.match(controllerBlock,/showUpdateBanner\(\)/,'A newly controlling worker should offer an explicit update action.');
+assert.doesNotMatch(controllerBlock,/location\.reload/,'Service-worker takeover must not force reload while a therapist may be editing a form.');
+assert.match(offlineUi,/data-apply-app-update[\s\S]*window\.location\.reload\(\)/,
+  'Reload should happen only after the user explicitly chooses Atualizar.');
+
 console.log(`offline-shell.test.mjs: ok · ${visited.size}/${MAX_PRECACHE_ASSETS} assets (${utilization}% cap)`);
