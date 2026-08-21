@@ -20,7 +20,7 @@ function dialog(html) {
 }
 
 function closeDialog() { document.querySelector('#treatment-planning-overlay')?.remove(); }
-function toolOptions() { return activeTools(store.getState()).map((tool) => `<option value="${tool.id}">${esc(tool.name)}</option>`).join(''); }
+function toolOptions() { return activeTools(store.getState()).map((tool) => `<option value="${esc(tool.id)}">${esc(tool.name)}</option>`).join(''); }
 
 function plannedComponentFields(index) {
   return `<section class="card" data-planned-component><div class="section-head"><div><p class="eyebrow">Componente ${index}</p><h3>Definir antes de iniciar</h3></div>${index > 1 ? '<button type="button" class="btn ghost small" data-remove-planned-component>Remover</button>' : ''}</div><div class="form-grid"><div class="field"><label>Usar recurso da Biblioteca <span class="muted">(opcional)</span></label><select name="toolId"><option value="">Digitar manualmente</option>${toolOptions()}</select></div><div class="field"><label>Nome do componente</label><input name="componentName" required></div><div class="field"><label>Comando / orientação</label><textarea name="instructions"></textarea></div><div class="duration-grid"><div class="field"><label>Duração <span class="muted">(opcional)</span></label><input name="durationValue" type="number" min="1" inputmode="numeric" placeholder="Sem prazo"></div><div class="field"><label>Unidade</label><select name="durationUnit"><option value="MINUTE">minuto(s)</option><option value="HOUR">hora(s)</option><option value="DAY">dia(s)</option><option value="WEEK">semana(s)</option><option value="MONTH">mês(es)</option></select></div></div></div></section>`;
@@ -41,13 +41,9 @@ function ensurePlanButton() {
 
 function ensurePlannedActions() {
   const state = store.getState();
-  const treatments = [...state.treatments].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
-  [...document.querySelectorAll('.treatment-card')].forEach((card,index)=>{
-    const existingId=card.dataset.treatmentId;
-    const treatment=(existingId&&state.treatments.find((item)=>item.id===existingId)) || treatments[index];
-    if(!treatment)return;
-    card.dataset.treatmentId=treatment.id;
-    if(treatment.status!==TreatmentStatus.PLANNED)return;
+  [...document.querySelectorAll('.treatment-card[data-treatment-id]')].forEach((card)=>{
+    const treatment=state.treatments.find((item)=>item.id===card.dataset.treatmentId);
+    if(!treatment||treatment.status!==TreatmentStatus.PLANNED)return;
     const row=card.querySelector('.button-row') || card.appendChild(Object.assign(document.createElement('div'),{className:'button-row'}));
     if(!card.querySelector('[data-add-existing-planned-component]')){
       const add=document.createElement('button'); add.className='btn secondary small'; add.dataset.addExistingPlannedComponent=treatment.id; add.textContent='Adicionar componente'; row.appendChild(add);
@@ -73,12 +69,12 @@ new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true
 
 function planDialog(){
   const assisted=store.getState().assistedEntities.filter((item)=>!item.archivedAt).sort((a,b)=>a.displayName.localeCompare(b.displayName,'pt-BR'));
-  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Planejar tratamento</p><h2>Preparar um próximo ciclo</h2></div><button class="close-btn" data-planning-close>×</button></div><p class="muted">Planejar não inicia medição nem contagem de duração. Os componentes passam a contar tempo apenas quando o tratamento for iniciado dentro de uma sessão preparada.</p><form id="planned-treatment-form" class="form-grid"><div class="field"><label>Assistido</label><select name="assistedEntityId" required><option value="">Selecione</option>${assisted.map((item)=>`<option value="${item.id}">${esc(item.displayName)}</option>`).join('')}</select></div><div class="field"><label>Objetivo / nome do tratamento</label><input name="title" required></div><div class="field"><label>Observações de planejamento</label><textarea name="notes" placeholder="Opcional"></textarea></div><div data-planned-components>${plannedComponentFields(1)}</div><button type="button" class="btn secondary wide" data-add-planned-component>Adicionar outro componente</button><button class="btn primary wide" type="submit">Salvar como Planejado</button></form></section>`);
+  dialog(`<section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">Planejar tratamento</p><h2>Preparar um próximo ciclo</h2></div><button class="close-btn" data-planning-close>×</button></div><p class="muted">Planejar não inicia medição nem contagem de duração. Os componentes passam a contar tempo apenas quando o tratamento for iniciado dentro de uma sessão preparada.</p><form id="planned-treatment-form" class="form-grid"><div class="field"><label>Assistido</label><select name="assistedEntityId" required><option value="">Selecione</option>${assisted.map((item)=>`<option value="${esc(item.id)}">${esc(item.displayName)}</option>`).join('')}</select></div><div class="field"><label>Objetivo / nome do tratamento</label><input name="title" required></div><div class="field"><label>Observações de planejamento</label><textarea name="notes" placeholder="Opcional"></textarea></div><div data-planned-components>${plannedComponentFields(1)}</div><button type="button" class="btn secondary wide" data-add-planned-component>Adicionar outro componente</button><button class="btn primary wide" type="submit">Salvar como Planejado</button></form></section>`);
 }
 
 function addComponentDialog(treatmentId){
   const treatment=store.getState().treatments.find((item)=>item.id===treatmentId&&item.status===TreatmentStatus.PLANNED);if(!treatment)return;
-  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Completar planejamento</p><h2>${esc(treatment.title)}</h2></div><button class="close-btn" data-planning-close>×</button></div><p class="muted">Este componente ainda não inicia contagem de tempo. O prazo começa somente quando o tratamento for iniciado.</p><form id="add-planned-component-form" data-treatment="${treatment.id}" class="form-grid">${plannedComponentFields(1)}<button class="btn primary wide" type="submit">Adicionar ao planejamento</button></form></section>`);
+  dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Completar planejamento</p><h2>${esc(treatment.title)}</h2></div><button class="close-btn" data-planning-close>×</button></div><p class="muted">Este componente ainda não inicia contagem de tempo. O prazo começa somente quando o tratamento for iniciado.</p><form id="add-planned-component-form" data-treatment="${esc(treatment.id)}" class="form-grid">${plannedComponentFields(1)}<button class="btn primary wide" type="submit">Adicionar ao planejamento</button></form></section>`);
 }
 
 function componentFromData(data,index=0){const names=data.getAll('componentName'),toolIds=data.getAll('toolId'),instructions=data.getAll('instructions'),durations=data.getAll('durationValue'),units=data.getAll('durationUnit');return {name:names[index],toolId:toolIds[index]||null,instructions:instructions[index]||null,durationValue:durations[index]||null,durationUnit:durations[index]?units[index]:null};}
