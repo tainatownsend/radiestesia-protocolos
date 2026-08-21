@@ -27,7 +27,11 @@ function plannedComponentFields(index) {
 }
 
 function renumber(form) {
-  form.querySelectorAll('[data-planned-component]').forEach((section, index) => { const eyebrow=section.querySelector('.eyebrow'); if (eyebrow) eyebrow.textContent=`Componente ${index+1}`; });
+  form.querySelectorAll('[data-planned-component]').forEach((section, index) => {
+    const eyebrow = section.querySelector('.eyebrow');
+    const next = `Componente ${index + 1}`;
+    if (eyebrow && eyebrow.textContent !== next) eyebrow.textContent = next;
+  });
 }
 
 function ensurePlanButton() {
@@ -54,14 +58,20 @@ function ensurePlannedActions() {
     let detail=card.querySelector('[data-planned-component-summary]');
     const count=state.treatmentComponents.filter((item)=>item.treatmentId===treatment.id&&item.status===TreatmentStatus.PLANNED).length;
     if(!detail){ detail=document.createElement('p');detail.className='muted';detail.dataset.plannedComponentSummary='true';row.before(detail); }
-    detail.textContent=count ? `${count} ${count===1?'componente planejado':'componentes planejados'} · os prazos começam ao iniciar` : 'Nenhum componente definido ainda. Adicione ao menos um antes de iniciar.';
-    const startButton=card.querySelector('[data-start-planned-treatment]'); if(startButton) startButton.disabled=count===0;
+    const summary=count ? `${count} ${count===1?'componente planejado':'componentes planejados'} · os prazos começam ao iniciar` : 'Nenhum componente definido ainda. Adicione ao menos um antes de iniciar.';
+    if(detail.textContent!==summary) detail.textContent=summary;
+    const startButton=card.querySelector('[data-start-planned-treatment]');
+    if(startButton && startButton.disabled !== (count===0)) startButton.disabled=count===0;
     if(treatment.planningNotes&&!card.querySelector('[data-planning-note]')){const note=document.createElement('p');note.className='muted';note.dataset.planningNote='true';note.textContent=treatment.planningNotes;detail.before(note);}
   });
 }
 
 function relaxDurationRequirement() {
-  document.querySelectorAll('#treatment-form [name="durationValue"], #component-form [name="durationValue"]').forEach((input)=>{input.required=false;input.removeAttribute('required');input.placeholder=input.placeholder||'Sem prazo';});
+  document.querySelectorAll('#treatment-form [name="durationValue"], #component-form [name="durationValue"]').forEach((input)=>{
+    if (input.required) input.required=false;
+    if (input.hasAttribute('required')) input.removeAttribute('required');
+    if (!input.placeholder) input.placeholder='Sem prazo';
+  });
 }
 
 function enhance(){if(enhancing)return;enhancing=true;try{ensurePlanButton();ensurePlannedActions();relaxDurationRequirement();}finally{enhancing=false;}}
