@@ -1,4 +1,5 @@
 import { createStore } from './store.js';
+import { ReikiModeLabel } from './reiki-flex.js';
 
 const store = createStore();
 let enhancing = false;
@@ -15,6 +16,7 @@ const eventLabels = Object.freeze({
   REIKI_STARTED: 'Reiki iniciado', REIKI_PAUSED: 'Reiki pausado', REIKI_RESUMED: 'Reiki retomado', REIKI_COMPLETED: 'Reiki concluído',
   NOTE_CREATED: 'Anotação', CLOSING_COMPLETED: 'Encerramento realizado', SESSION_CLOSE_CORRECTED: 'Encerramento corrigido', SESSION_CLOSED: 'Sessão encerrada'
 });
+const REIKI_EVENTS = new Set(['REIKI_STARTED','REIKI_PAUSED','REIKI_RESUMED','REIKI_COMPLETED']);
 
 function esc(value = '') { return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c])); }
 function fmt(iso) { if (!iso) return '—'; return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(iso)); }
@@ -31,7 +33,10 @@ function eventRows(events, state) {
   if (!events.length) return '<div class="empty">Nenhum evento registrado.</div>';
   return `<div class="timeline">${events.map((event) => {
     const assisted = state.assistedEntities.find((item) => item.id === event.assistedEntityId);
-    const detail = event.metadata?.title || event.metadata?.protocolName || event.metadata?.componentName || event.metadata?.name || event.metadata?.body || assisted?.displayName || '';
+    const baseDetail = event.metadata?.title || event.metadata?.protocolName || event.metadata?.componentName || event.metadata?.name || event.metadata?.body || assisted?.displayName || '';
+    const mode = REIKI_EVENTS.has(event.eventType) ? ReikiModeLabel[event.metadata?.mode] : null;
+    const durationMinutes = event.eventType === 'REIKI_COMPLETED' && event.metadata?.durationSeconds != null ? Math.round(Number(event.metadata.durationSeconds) / 60) : null;
+    const detail = [baseDetail, mode, durationMinutes != null ? `${durationMinutes} min` : null].filter(Boolean).join(' · ');
     return `<div class="timeline-item"><div class="timeline-time">${new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit'}).format(new Date(event.occurredAt))}</div><div class="timeline-dot"></div><div class="timeline-copy"><strong>${esc(eventLabels[event.eventType] || event.eventType)}</strong><span>${esc(detail)}</span></div></div>`;
   }).join('')}</div>`;
 }
