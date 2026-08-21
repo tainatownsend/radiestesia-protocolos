@@ -150,7 +150,11 @@ function activeElapsedMs(application, now = Date.now()) { return (application.in
 export function reikiElapsedSeconds(application, now = Date.now()) { return Math.floor(activeElapsedMs(application, now) / 1000); }
 export function startReiki(store, sessionId, assistedEntityId) {
   const state = store.getState(); requireOpenSession(state, sessionId); if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
-  const existing = state.reikiApplications.find((item) => ['RUNNING','PAUSED'].includes(item.status)); if (existing) return existing;
+  const existing = state.reikiApplications.find((item) => ['RUNNING','PAUSED'].includes(item.status));
+  if (existing) {
+    if (existing.sessionId === sessionId && existing.assistedEntityId === assistedEntityId) return existing;
+    throw new Error('Já existe uma aplicação de Reiki ativa. Conclua ou retome a aplicação atual antes de iniciar outra.');
+  }
   const now = store.nowIso(); const application = { id: store.makeId('reiki'), sessionId, assistedEntityId, status: 'RUNNING', startedAt: now, endedAt: null, durationSeconds: null, notes: null, intervals: [{ id: store.makeId('int'), startedAt: now, endedAt: null }], createdAt: now, updatedAt: now };
   store.setState((current) => { const draft = structuredClone(current); draft.reikiApplications.push(application); addEvent(store, draft, { eventType: EventType.REIKI_STARTED, entityType: 'ReikiApplication', entityId: application.id, sessionId, assistedEntityId }); return draft; }); return application;
 }
