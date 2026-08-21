@@ -26,8 +26,9 @@ function currentTreatments(state,id){return (state.treatments||[]).filter((t)=>t
 function consolidateReturnSummary(){
   const detail=document.querySelector('.detail-sheet');if(!detail)return;
   const id=assistedId(detail);if(!id)return;
-  /* Remove the older summary layer so only one return context is visible. */
-  detail.querySelector('[data-return-summary]')?.remove();
+  /* Keep the older node in place so its own observer does not recreate it; hide it instead. */
+  const legacy=detail.querySelector('[data-return-summary]');
+  if(legacy&&!legacy.hidden){legacy.hidden=true;legacy.dataset.replacedByUxReturn='true';}
   const section=detail.querySelector('[data-ux-last-session]');if(!section||section.dataset.uxReturnValidated)return;
   section.dataset.uxReturnValidated='true';
   const state=store.getState();
