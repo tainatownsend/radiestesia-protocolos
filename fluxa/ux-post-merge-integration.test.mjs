@@ -12,7 +12,7 @@ assert.match(integration,/rememberCreatedFindings/,'Confirmed findings need an i
 assert.match(integration,/if\(!created\)return; \/\/ validation\/persistence failed: preserve handoff for retry/,'Failed treatment creation must preserve the finding handoff for retry.');
 assert.match(integration,/dataset\.continuityInvestigation=id/,'Investigation stack must route through exact-ID continuity resume.');
 assert.match(integration,/data-ux-resume-specific/,'Exact stack resume must intercept the older latest-investigation action.');
-assert.match(integration,/data-ux-show-options/,'No-pending state should offer neutral options instead of forcing investigation.');
+assert.match(integration,/dataset\.uxShowOptions='true'/,'No-pending state should offer neutral options instead of forcing investigation.');
 assert.match(integration,/Nenhuma pendência exige sua atenção agora/,'Neutral next-action copy must preserve therapist choice.');
 
 console.log('ux-post-merge-integration.test.mjs: ok');
