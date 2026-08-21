@@ -1,4 +1,4 @@
-const CACHE_NAME='fluxa-runtime-v3';
+const CACHE_NAME='fluxa-runtime-v2-hotfix-20260821';
 const ROOT=new URL('./',self.location.href).href;
 const MAX_PRECACHE_ASSETS=300;
 
