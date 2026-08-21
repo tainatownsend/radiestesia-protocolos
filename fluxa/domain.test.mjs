@@ -107,9 +107,14 @@ function prepare(store, sessionId) {
 {
   const store = fakeStore();
   const session = startSession(store);
-  prepare(store, session.id);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Eva', birthDate:'1990-04-04' });
   const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
+  assert.throws(
+    () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'6500', imbalancePercent:15 }),
+    /preparação/i,
+    'final assessment requires a prepared session at the domain boundary'
+  );
+  prepare(store, session.id);
   assert.throws(
     () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'', imbalancePercent:15 }),
     /frequência vibracional/i,
