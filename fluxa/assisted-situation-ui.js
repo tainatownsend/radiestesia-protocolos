@@ -1,6 +1,6 @@
 import { createStore } from './store.js';
-import { createAssistedEntity, getOpenSession, selectAssistedForSession } from './domain.js';
-import { validateAssistedInput } from './backlog.js';
+import { getOpenSession, selectAssistedForSession } from './domain.js';
+import { createValidatedAssistedEntity, validateAssistedInput } from './backlog.js';
 import { updateAssistedEntity } from './remaining.js';
 
 const store = createStore();
@@ -27,18 +27,6 @@ function ensureSituationEditField() {
 new MutationObserver(ensureSituationEditField).observe(document.body,{childList:true,subtree:true});
 queueMicrotask(ensureSituationEditField);
 
-function patchRelatedPerson(assistedEntityId, relatedPerson) {
-  store.setState((state) => {
-    const draft = structuredClone(state);
-    const target = draft.assistedEntities.find((item) => item.id === assistedEntityId);
-    if (target) {
-      target.relatedPerson = relatedPerson.trim();
-      target.updatedAt = store.nowIso();
-    }
-    return draft;
-  });
-}
-
 document.addEventListener('submit',(event)=>{
   const form = event.target;
   if (form.id === 'assisted-form') {
@@ -55,9 +43,7 @@ document.addEventListener('submit',(event)=>{
         details:data.get('details') || null,
         members:[]
       };
-      validateAssistedInput(input);
-      const entity = createAssistedEntity(store,input);
-      patchRelatedPerson(entity.id,String(input.relatedPerson));
+      const entity = createValidatedAssistedEntity(store,input);
       const session = getOpenSession(store.getState());
       if (session) selectAssistedForSession(store,session.id,entity.id);
       location.reload();
@@ -80,7 +66,6 @@ document.addEventListener('submit',(event)=>{
       };
       validateAssistedInput(input);
       updateAssistedEntity(store,form.dataset.assisted,input);
-      patchRelatedPerson(form.dataset.assisted,String(input.relatedPerson));
       location.reload();
     } catch(error){ alert(error.message); }
   }
