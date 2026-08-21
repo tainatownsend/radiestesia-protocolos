@@ -20,8 +20,15 @@ function previousClosedSession(state,id){
     .filter((s)=>s.status==='CLOSED'&&sessionHasAssisted(state,s.id,id))
     .sort((a,b)=>(time(b.endedAt)||0)-(time(a.endedAt)||0))[0]||null;
 }
-function investigationsForSession(state,sessionId,id){return (state.investigations||[]).filter((i)=>i.assistedEntityId===id&&(i.originSessionId===sessionId||i.currentSessionId===sessionId||i.sessionId===sessionId));}
 function currentTreatments(state,id){return (state.treatments||[]).filter((t)=>t.assistedEntityId===id&&['IN_PROGRESS','INTERRUPTED','PLANNED'].includes(t.status));}
+function findingsRecordedInSession(state,sessionId,id){
+  const findingIds=new Set((state.events||[])
+    .filter((e)=>e.sessionId===sessionId&&e.assistedEntityId===id&&e.eventType==='FINDING_IDENTIFIED'&&e.entityId)
+    .map((e)=>e.entityId));
+  return (state.findings||[])
+    .filter((f)=>findingIds.has(f.id))
+    .sort((a,b)=>(time(b.createdAt)||0)-(time(a.createdAt)||0));
+}
 
 function consolidateReturnSummary(){
   const detail=document.querySelector('.detail-sheet');if(!detail)return;
@@ -40,8 +47,7 @@ function consolidateReturnSummary(){
   let assessment=null,findings=[];
   if(previous){
     assessment=(state.assessments||[]).filter((a)=>a.assistedEntityId===id&&a.sessionId===previous.id).sort((a,b)=>(time(b.occurredAt||b.createdAt)||0)-(time(a.occurredAt||a.createdAt)||0))[0]||null;
-    const invIds=new Set(investigationsForSession(state,previous.id,id).map((i)=>i.id));
-    findings=(state.findings||[]).filter((f)=>f.assistedEntityId===id&&invIds.has(f.investigationId)).sort((a,b)=>(time(b.createdAt)||0)-(time(a.createdAt)||0));
+    findings=findingsRecordedInSession(state,previous.id,id);
   }
   const measurement=assessment?(assessment.frequency?`${esc(assessment.frequency)} Hertz`:esc(assessment.result||'')):'';
   section.innerHTML=`<div class="section-head"><div><p class="eyebrow">Retorno</p><h3>${previous?`Último atendimento · ${esc(fmt(previous.startedAt))}`:'Sem atendimento anterior encerrado'}</h3></div>${next?`<span class="status-pill">Próximo: ${esc(fmt(next.expectedEndAt))}</span>`:''}</div>${assessment?`<p><strong>Como terminou:</strong> ${measurement||'Avaliação registrada'}${assessment.imbalancePercent!=null?`${measurement?' · ':''}${esc(assessment.imbalancePercent)}% desequilíbrio`:''}</p>`:''}${findings.length?`<div class="ux-return-findings"><p class="eyebrow">Achados do último atendimento</p>${findings.slice(0,3).map((f)=>`<p><strong>${esc(classifications[f.classification]||'Achado')}:</strong> ${esc(f.title||f.questionTextSnapshot||'Achado registrado')}</p>`).join('')}</div>`:''}<p><strong>Tratamentos atuais:</strong> ${treatments.length}${treatments.length?` · ${treatments.slice(0,2).map((t)=>`${esc(t.title)} (${esc(treatmentStatuses[t.status]||'Registrado')})`).join(' · ')}`:''}</p>`;
