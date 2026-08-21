@@ -3,7 +3,9 @@ import { treatmentNeedsReview } from './domain.js';
 
 const store = createStore();
 let enhancing = false;
-let treatmentFilter = sessionStorage.getItem('fluxa.treatment.filter') || 'ACTIVE';
+function readTreatmentFilter(){try{return sessionStorage.getItem('fluxa.treatment.filter')||'ACTIVE';}catch(_){return 'ACTIVE';}}
+function saveTreatmentFilter(value){try{sessionStorage.setItem('fluxa.treatment.filter',value);}catch(_){}}
+let treatmentFilter = readTreatmentFilter();
 let assistedSearch = '';
 let assistedType = 'ALL';
 
@@ -31,11 +33,10 @@ function ensureTreatmentFilters() {
 
 function applyTreatmentFilter() {
   const state = store.getState();
-  const cards = [...document.querySelectorAll('.treatment-card')];
+  const cards = [...document.querySelectorAll('.treatment-card[data-treatment-id]')];
   cards.forEach((card) => {
-    const id = card.dataset.treatmentId;
-    const treatment = state.treatments.find((item) => item.id === id) || state.treatments.find((item) => item.title === card.querySelector('h2')?.textContent?.trim());
-    if (!treatment) return;
+    const treatment = state.treatments.find((item) => item.id === card.dataset.treatmentId);
+    if (!treatment) { card.hidden = true; return; }
     const show = treatmentFilter === 'ALL'
       || (treatmentFilter === 'ACTIVE' && ['IN_PROGRESS','INTERRUPTED'].includes(treatment.status))
       || (treatmentFilter === 'REVIEW' && treatmentNeedsReview(state, treatment))
@@ -55,7 +56,7 @@ function applyTreatmentFilter() {
         stack.appendChild(empty);
       }
       const copy = { ACTIVE:'Nenhum tratamento ativo.', REVIEW:'Nenhum tratamento disponível para revisão.', PLANNED:'Nenhum tratamento planejado.', COMPLETED:'Nenhum tratamento concluído.', ALL:'Nenhum tratamento.' };
-      empty.textContent = copy[treatmentFilter];
+      empty.textContent = copy[treatmentFilter] || 'Nenhum tratamento.';
     } else empty?.remove();
   }
 }
@@ -78,7 +79,7 @@ function applyAssistedFilters() {
   const state = store.getState();
   document.querySelectorAll('.assisted-row[data-assisted-detail]').forEach((row) => {
     const assisted = state.assistedEntities.find((item) => item.id === row.dataset.assistedDetail);
-    if (!assisted) return;
+    if (!assisted) { row.hidden = true; return; }
     const haystack = `${assisted.displayName || ''} ${assisted.identifier || ''}`.toLocaleLowerCase('pt-BR');
     const matchesText = !assistedSearch || haystack.includes(assistedSearch.toLocaleLowerCase('pt-BR'));
     const matchesType = assistedType === 'ALL' || assisted.type === assistedType;
@@ -92,8 +93,8 @@ function enhanceAssistedLongitudinalDetail() {
   if (!detail || !id || detail.querySelector('[data-longitudinal-summary]')) return;
   const state = store.getState();
   const treatments = state.treatments.filter((item) => item.assistedEntityId === id);
-  const assessments = state.assessments.filter((item) => item.assistedEntityId === id).sort((a,b) => (b.occurredAt || b.createdAt).localeCompare(a.occurredAt || a.createdAt));
-  const reiki = state.reikiApplications.filter((item) => item.assistedEntityId === id && item.status === 'COMPLETED').sort((a,b) => (b.endedAt || b.createdAt).localeCompare(a.endedAt || a.createdAt));
+  const assessments = state.assessments.filter((item) => item.assistedEntityId === id).sort((a,b) => String(b.occurredAt || b.createdAt || '').localeCompare(String(a.occurredAt || a.createdAt || '')));
+  const reiki = state.reikiApplications.filter((item) => item.assistedEntityId === id && item.status === 'COMPLETED').sort((a,b) => String(b.endedAt || b.createdAt || '').localeCompare(String(a.endedAt || a.createdAt || '')));
   const summary = document.createElement('section');
   summary.className = 'section card soft';
   summary.dataset.longitudinalSummary = 'true';
@@ -125,8 +126,9 @@ queueMicrotask(enhance);
 document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-treatment-filter]');
   if (!button) return;
-  treatmentFilter = button.dataset.treatmentFilter;
-  sessionStorage.setItem('fluxa.treatment.filter', treatmentFilter);
+  const requested=button.dataset.treatmentFilter;
+  treatmentFilter=['ACTIVE','REVIEW','PLANNED','COMPLETED','ALL'].includes(requested)?requested:'ACTIVE';
+  saveTreatmentFilter(treatmentFilter);
   document.querySelector('[data-treatment-filters]')?.remove();
   enhance();
 }, true);
