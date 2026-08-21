@@ -143,5 +143,9 @@ assert.match(historyUi,/ReikiModeLabel/,'History should render therapist-facing 
 assert.match(historyUi,/durationSeconds/,'Completed Reiki history should retain visible duration context.');
 assert.doesNotMatch(historyUi,/treatments\[index\]/,'Treatment history must never identify cards by visual list position.');
 assert.match(historyUi,/statusLabels/,'History should render product-facing status labels directly.');
+assert.match(historyUi,/REIKI_CANCELED:'Reiki cancelado'/,'History should label Reiki cancellation directly.');
+assert.match(historyUi,/FOLLOW_UP_TREATMENT_PLANNED:'Próximo ciclo planejado'/,'History should label follow-up planning directly.');
+assert.match(historyUi,/function eventLabel\(value=''\) \{ return eventLabels\[value\] \|\| 'Atividade registrada'; \}/,'Unknown future events should fall back to neutral product copy.');
+assert.match(historyUi,/statusLabels\[value\] \|\| 'Registrado'/,'Unknown future statuses should not leak raw enum values.');
 
 console.log('static-smoke.test.mjs: ok');
