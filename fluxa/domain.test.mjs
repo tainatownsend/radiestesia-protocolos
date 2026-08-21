@@ -109,6 +109,16 @@ function prepare(store, sessionId) {
   prepare(store, session.id);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Eva', birthDate:'1990-04-04' });
   const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
+  assert.throws(
+    () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'', imbalancePercent:15 }),
+    /frequência vibracional/i,
+    'final assessment frequency is required in the domain'
+  );
+  assert.throws(
+    () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'6500', imbalancePercent:'' }),
+    /percentual de desequilíbrio/i,
+    'final assessment imbalance is required in the domain'
+  );
   recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'6500', imbalancePercent:15, needsNewTreatment:true, nextTreatmentWhen:'em 7 dias' });
   assert.equal(store.getState().assessments.length, 1);
   assert.equal(store.getState().assessments[0].needsNewTreatment, true);
