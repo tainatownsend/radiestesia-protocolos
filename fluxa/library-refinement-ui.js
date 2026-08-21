@@ -2,6 +2,7 @@ import { createStore } from './store.js';
 
 const store=createStore();let query='';let type='ALL';let tag='ALL';
 function norm(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
 function activeTags(state=store.getState()){
   const counts=new Map();
   (state.tools||[]).filter((tool)=>!tool.archivedAt).forEach((tool)=>(tool.tags||[]).forEach((value)=>{
@@ -9,16 +10,17 @@ function activeTags(state=store.getState()){
   }));
   return [...counts.entries()].sort((a,b)=>b[1].count-a[1].count||a[1].label.localeCompare(b[1].label,'pt-BR'));
 }
+function tagOptions(tags){return tags.map(([key,item])=>`<option value="${esc(key)}">${esc(item.label)} (${item.count})</option>`).join('');}
 function ensureFilters(){
   const section=document.querySelector('[data-basic-tool-library]');if(!section||section.querySelector('[data-library-filters]'))return;
   const tags=activeTags();const controls=document.createElement('div');controls.className='form-grid';controls.dataset.libraryFilters='true';
-  controls.innerHTML=`<div class="field"><label for="library-search">Buscar recurso</label><input id="library-search" type="search" data-library-search placeholder="Nome, finalidade ou tag"></div><div class="field"><label for="library-type">Tipo</label><select id="library-type" data-library-type><option value="ALL">Todos</option><option value="GRAPH">Gráfico</option><option value="BIOMETER">Biômetro</option><option value="OTHER">Outro recurso</option></select></div>${tags.length?`<div class="field"><label for="library-tag">Tag</label><select id="library-tag" data-library-tag><option value="ALL">Todas</option>${tags.map(([key,item])=>`<option value="${key}">${item.label} (${item.count})</option>`).join('')}</select></div>`:''}`;
+  controls.innerHTML=`<div class="field"><label for="library-search">Buscar recurso</label><input id="library-search" type="search" data-library-search placeholder="Nome, finalidade ou tag"></div><div class="field"><label for="library-type">Tipo</label><select id="library-type" data-library-type><option value="ALL">Todos</option><option value="GRAPH">Gráfico</option><option value="BIOMETER">Biômetro</option><option value="OTHER">Outro recurso</option></select></div>${tags.length?`<div class="field"><label for="library-tag">Tag</label><select id="library-tag" data-library-tag><option value="ALL">Todas</option>${tagOptions(tags)}</select></div>`:''}`;
   section.querySelector('.stack')?.before(controls);
 }
 function syncTagOptions(){
   const select=document.querySelector('[data-library-tag]');if(!select)return;
   const options=activeTags();const signature=options.map(([key,item])=>`${key}:${item.count}`).join('|');if(select.dataset.signature===signature)return;
-  const previous=tag;select.innerHTML=`<option value="ALL">Todas</option>${options.map(([key,item])=>`<option value="${key}">${item.label} (${item.count})</option>`).join('')}`;select.dataset.signature=signature;
+  const previous=tag;select.innerHTML=`<option value="ALL">Todas</option>${tagOptions(options)}`;select.dataset.signature=signature;
   tag=options.some(([key])=>key===previous)?previous:'ALL';select.value=tag;
 }
 function decorateCards(){const state=store.getState();document.querySelectorAll('[data-basic-tool-library] [data-library-tool-id]').forEach((card)=>{const tool=state.tools.find((item)=>item.id===card.dataset.libraryToolId&&!item.archivedAt);if(!tool)return;if(!card.querySelector('[data-tool-usage]')){const usage=state.treatmentComponents.filter((component)=>component.toolId===tool.id).length;const note=document.createElement('p');note.className='muted';note.dataset.toolUsage='true';note.textContent=usage?`Usado em ${usage} ${usage===1?'componente':'componentes'} de tratamento.`:'Ainda não utilizado em tratamentos.';card.appendChild(note);}});}
