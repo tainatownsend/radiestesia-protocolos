@@ -25,11 +25,12 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Completing one step advances to the next step.
 - Structured frequency/protection fields remain hidden until all four base steps are complete.
 - Final preparation step requires vibrational frequency and at least one protection resource/manual description.
+- Structured completion writes `PREPARATION_COMPLETED` only after all required data is valid and never emits the completion twice.
 - Protection resources selected from Biblioteca are preserved as historical snapshots.
 - Preparation wording can be personalized from Biblioteca and the personalized labels appear without changing the required sequence.
 - `Usar preferências` from a previous completed preparation may prefill only reusable scale / still-active protection selections.
 - Reusing preparation preferences never copies the current vibrational-frequency value and never marks any base step complete.
-- Measurement/investigation/treatment-review workflows require an OPEN prepared session even through older UI paths.
+- Measurement/investigation/direct-treatment/treatment-review workflows require an OPEN prepared session even through older UI/domain paths.
 
 ## “Nesta sessão” workspace / fast flow
 
@@ -75,7 +76,9 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - It also offers one distinct report button for each assisted entity touched in the session.
 - Per-assisted reports never include another assisted entity's investigations/assessments/Reiki/treatments.
 - Reports include session timing, assessments, investigations, confirmed findings, treatments/components, optional therapeutic objective and Reiki.
+- Internal reports use product-facing labels and never fall back to raw technical status/classification/mode/protocol IDs.
 - `Resumo para compartilhar` exposes a shorter client-facing layer without replacing the internal record.
+- Shareable reports do not expose internal component commands or internal `NOTE_CREATED` session notes.
 - Browser print works from the report window.
 - Browser Save as PDF works on supported desktop/mobile browsers.
 - Web Share appears only when supported by the browser.
@@ -88,6 +91,8 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Grupo requires at least one member and every member requires full name + birth date.
 - Ambiente requires full address.
 - Situação/Processo requires identifier and structured involved/requesting person.
+- Core `createAssistedEntity` enforces the same type requirements as the UI validator.
+- Situação/Processo stores `relatedPerson` in the created entity directly; no after-save UI patch is required.
 - PET accepts open descriptive details.
 - Editing records `ASSISTED_UPDATED` without rewriting prior events.
 - Assisted type cannot change.
@@ -100,6 +105,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 ## Universal search
 
 - Search can find assisted entities, treatments, active Library resources and protocols.
+- Library resources can be found by tag and the result shows relevant tag context.
 - Search does not surface archived Library resources as active choices.
 - Opening a search result navigates to the appropriate existing route/detail instead of creating duplicate data.
 - Search remains usable with one hand on phone and with keyboard on iPad.
@@ -108,9 +114,12 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 
 - Sim/Não persists immediately.
 - Reload restores the exact current question/node.
+- Starting Triagem before preparation is rejected at the core-domain boundary.
+- Answering or resuming a quick investigation requires a prepared current session at the core-domain boundary.
 - Ending a session does not discard incomplete investigation.
 - Resume in later session requires the new session to be prepared.
 - Resume records `INVESTIGATION_RESUMED`, preserving origin and exact current node.
+- Confirming findings also requires the current investigation session to be prepared.
 - Positive answers never become Findings automatically.
 - Re-confirming does not duplicate the same source finding.
 - Multiple findings from one investigation may have different classifications.
@@ -149,6 +158,8 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Earlier data with an empty PLANNED treatment can receive components before activation.
 - Planned components have no startedAt/expectedEndAt until activation.
 - Starting planned treatment requires OPEN prepared session.
+- Direct treatment creation and legacy treatment review reject an unprepared session at the core-domain boundary.
+- Adding/replacing a component on an active treatment with a `sessionId` rejects an unprepared session.
 - Archived Library resource cannot be newly linked; historical snapshots remain.
 - Multiple components can be created initially and added later.
 - Duration may be omitted.
@@ -158,12 +169,14 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - No-deadline component can be reviewed manually.
 - Component dismantles only with 100% complete + permission.
 - Final assessment waits until all components are resolved.
-- Final assessment requires prepared session, frequency and imbalance 0–100%.
+- Final assessment requires prepared session, frequency and imbalance 0–100% at the domain boundary.
 - Follow-up is a new PLANNED cycle linked to previous treatment/assessment.
 - One final assessment can originate at most one follow-up cycle.
 - Treatment card/history shows source Investigation → Finding where applicable.
+- Treatment history shows previous/next cycles and assessment/planning origin when available.
 - Assisted detail shows Finding → linked treatment(s), or `Ainda sem tratamento vinculado`.
 - Two treatments with the same visible title retain distinct `treatmentId` actions; final assessment never targets the wrong card.
+- Reordering treatment cards cannot change history/action identity; history has no fallback by visual index.
 - Optional therapeutic objective is visible on treatment cards/reports when filled and absent without placeholder noise when empty.
 
 ## Reiki
@@ -179,6 +192,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Session Reiki offers optional treatment link for the selected assisted entity.
 - Out-of-session/retrospective Reiki forms update their optional treatment choices when the assisted entity changes.
 - Linked Reiki record preserves `treatmentId` without changing the treatment lifecycle.
+- Technical history displays therapist-facing Reiki mode and completed duration when available.
 
 ## Biblioteca / Avaliar
 
@@ -189,13 +203,16 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Searchable Library picker remains practical with ~150 resources and prioritizes favorites / usage context.
 - Library favorites can be toggled from both the Library cards and searchable picker.
 - Favorite filtering does not modify resource records or snapshots.
+- Optional tags are normalized/deduplicated and searchable in Library, treatment picker and universal search.
+- When tags exist, Library exposes a tag filter that composes with text search and resource type.
+- Tag labels containing HTML-like characters render as text, not markup.
 - Bulk import accepts comma, semicolon and tab-separated files.
 - Bulk import accepts pasted Excel/Numbers/Sheets data and one-resource-per-line lists.
 - Bulk import preview distinguishes read/new/duplicate rows before saving.
 - Duplicate active names are ignored case/diacritic-insensitively according to parser rules.
-- Downloadable CSV template opens with Nome/Tipo/Finalidade/Observações columns.
+- Downloadable CSV template opens with Nome/Tipo/Finalidade/Tags/Observações columns.
 - Exportar CSV writes all active resources back to the same round-trip format and excludes archived resources.
-- CSV round-trip preserves commas/quotes in resource fields.
+- CSV round-trip preserves commas/quotes and tags in resource fields.
 - Bulk import/export stays local to the device.
 - Avaliar requires OPEN prepared session + valid assisted context.
 - General assessment appears in longitudinal history.
@@ -223,7 +240,9 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Add-to-Home-Screen / standalone launch does not change the local data namespace.
 - First online load registers the scoped `/fluxa/` service worker without affecting the legacy root app.
 - Service worker uses network first while connected, then caches current successful Fluxa responses.
+- Service worker precaches the local module graph required by the shell after successful installation.
 - After at least one successful online load, going offline and reloading serves the cached Fluxa shell/assets.
+- A newly published version does not force an in-session reload; the user explicitly applies the available update.
 - Offline state shows `Sem conexão · trabalhando com a cópia local do Fluxa`.
 - Returning online removes the offline banner.
 - Offline mode never claims to be cloud sync and does not suppress backup reminders.
@@ -234,7 +253,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 - Session action section reads `O que você deseja fazer agora?`.
 - Investigation continuity uses `Retomar investigação`.
 - Closing action reads `Revisar e encerrar`.
-- Raw technical status/type enums do not leak into normal visible product copy.
+- Raw technical status/type enums do not leak into normal history/report product copy.
 
 ## Mobile / one hand / iPad
 
@@ -271,6 +290,7 @@ Use this checklist before merging PR #2. Fluxa remains local-first and the legac
 GitHub Actions runs syntax validation for every Fluxa `.js`/`.mjs` file, then:
 
 - `domain.test.mjs`
+- `core-domain-invariants.test.mjs`
 - `session-rules.test.mjs`
 - `store.test.mjs`
 - `protocol-engine.test.mjs`
@@ -285,6 +305,7 @@ GitHub Actions runs syntax validation for every Fluxa `.js`/`.mjs` file, then:
 - `follow-up-treatment.test.mjs`
 - `structured-preparation.test.mjs`
 - `final-assessment-rules.test.mjs`
+- `report-copy.test.mjs`
 - `static-smoke.test.mjs`
 
 ## Manual validation still required before merge
@@ -296,8 +317,8 @@ GitHub Actions runs syntax validation for every Fluxa `.js`/`.mjs` file, then:
 - Custom protocol creation/versioning/branching/resource snapshots.
 - Closing review + internal/shareable reports with realistic populated states.
 - Report print/save-PDF/share on iPhone/iPad.
-- Bulk import/export using a real large spreadsheet/list of resources.
-- Searchable Library resource picker with a realistically large Library.
+- Bulk import/export using a real large spreadsheet/list of resources with tags.
+- Searchable/tag-filtered Library resource picker with a realistically large Library.
 - Preparation preference reuse across two real sessions.
 - Safari/iPhone keyboard open/closed.
 - Repeated background/foreground and reload during Reiki on a real device.
