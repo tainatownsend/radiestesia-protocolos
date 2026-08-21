@@ -1,4 +1,4 @@
-import { EventType, TreatmentStatus } from './domain.js';
+import { EventType, TreatmentStatus, createAssistedEntity } from './domain.js';
 import { validateFinalAssessmentInput } from './final-assessment-rules.js';
 
 function addEvent(store, draft, input) {
@@ -104,4 +104,19 @@ export function validateAssistedInput(input) {
   if (type === 'SITUATION') { if (!input.identifier?.trim()) throw new Error('Número/identificação do processo é obrigatório.'); if (!input.relatedPerson?.trim()) throw new Error('Pessoa envolvida/solicitante é obrigatória para situação/processo.'); }
   if (type === 'GROUP') { const members = Array.isArray(input.members) ? input.members : []; if (!members.length) throw new Error('Adicione pelo menos uma pessoa ao grupo.'); if (members.some((m) => !m.fullName?.trim() || !m.birthDate)) throw new Error('Cada integrante do grupo precisa de nome completo e data de nascimento.'); }
   return true;
+}
+
+export function createValidatedAssistedEntity(store, input) {
+  validateAssistedInput(input);
+  const entity = createAssistedEntity(store, input);
+  const relatedPerson = input.relatedPerson?.trim() || null;
+  if (entity.relatedPerson === relatedPerson) return entity;
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const target = draft.assistedEntities.find((item) => item.id === entity.id);
+    if (target) { target.relatedPerson = relatedPerson; target.updatedAt = store.nowIso(); }
+    return draft;
+  });
+  entity.relatedPerson = relatedPerson;
+  return entity;
 }
