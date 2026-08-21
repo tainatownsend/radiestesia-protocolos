@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {
   startSession, closeSession, startPreparation, togglePreparationStep, completePreparation,
-  createAssistedEntity, startInvestigation, resumeInvestigation, answerInvestigation,
-  createTreatment, interruptTreatment, startReiki, pauseReiki, resumeReiki, completeReiki,
+  createAssistedEntity, startInvestigation, resumeInvestigation, answerInvestigation, confirmFindings,
+  createTreatment, interruptTreatment, reviewTreatment, startReiki, pauseReiki, resumeReiki, completeReiki,
   TreatmentStatus, PREPARATION_STEPS
 } from './domain.js';
 import {
@@ -50,11 +50,15 @@ function prepare(store, sessionId) {
   const store = fakeStore();
   const session = startSession(store);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Maria', birthDate:'1980-01-01' });
+  assert.throws(() => startInvestigation(store, session.id, person.id), /preparação/i, 'quick investigation start requires preparation');
+  prepare(store, session.id);
   const inv = startInvestigation(store, session.id, person.id);
   answerInvestigation(store, inv.id, 'YES');
   closeSession(store, session.id, { endedAt:'2026-08-19T11:00:00.000Z' });
   store.setNow('2026-08-19T15:00:00.000Z');
   const later = startSession(store);
+  assert.throws(() => resumeInvestigation(store, inv.id, later.id), /preparação/i, 'quick investigation resume requires preparation');
+  prepare(store, later.id);
   resumeInvestigation(store, inv.id, later.id);
   const current = store.getState().investigations.find((item) => item.id === inv.id);
   assert.equal(current.originSessionId, session.id);
@@ -81,6 +85,12 @@ function prepare(store, sessionId) {
   const store = fakeStore();
   const session = startSession(store);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Ana', birthDate:'1979-02-02' });
+  assert.throws(
+    () => createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Teste', componentName:'Gráfico A' }),
+    /preparação/i,
+    'direct treatment creation requires preparation'
+  );
+  prepare(store, session.id);
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Teste', componentName:'Gráfico A', durationValue:2, durationUnit:'HOUR' });
   store.advance(30 * 60 * 1000);
   interruptTreatment(store, treatment.id, 'pausa');
@@ -94,6 +104,7 @@ function prepare(store, sessionId) {
 {
   const store = fakeStore();
   const session = startSession(store);
+  prepare(store, session.id);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Lia', birthDate:'1985-03-03' });
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Multi', componentName:'Original', durationValue:1, durationUnit:'DAY' });
   const extra = addTreatmentComponent(store, { sessionId:session.id, treatmentId:treatment.id, name:'Segundo', durationValue:2, durationUnit:'DAY' });
@@ -108,13 +119,12 @@ function prepare(store, sessionId) {
   const store = fakeStore();
   const session = startSession(store);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Eva', birthDate:'1990-04-04' });
-  const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
   assert.throws(
-    () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'6500', imbalancePercent:15 }),
-    /preparação/i,
-    'final assessment requires a prepared session at the domain boundary'
+    () => createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A' }),
+    /preparação/i
   );
   prepare(store, session.id);
+  const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
   assert.throws(
     () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'', imbalancePercent:15 }),
     /frequência vibracional/i,
@@ -128,6 +138,22 @@ function prepare(store, sessionId) {
   recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'6500', imbalancePercent:15, needsNewTreatment:true, nextTreatmentWhen:'em 7 dias' });
   assert.equal(store.getState().assessments.length, 1);
   assert.equal(store.getState().assessments[0].needsNewTreatment, true);
+}
+
+{
+  const store = fakeStore();
+  const session = startSession(store);
+  prepare(store, session.id);
+  const person = createAssistedEntity(store, { type:'PERSON', displayName:'Joana', birthDate:'1988-06-06' });
+  const inv = startInvestigation(store, session.id, person.id);
+  answerInvestigation(store, inv.id, 'YES');
+  answerInvestigation(store, inv.id, 'NO');
+  answerInvestigation(store, inv.id, 'NO');
+  const findings = confirmFindings(store, inv.id, ['q1']);
+  assert.equal(findings.length, 1);
+  const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, findingIds:[findings[0].id], title:'Revisão', componentName:'A' });
+  reviewTreatment(store, { sessionId:session.id, treatmentId:treatment.id, verifiedComplete:false, imbalancePercent:20 });
+  assert.equal(store.getState().treatmentReviews.length, 1);
 }
 
 {
@@ -154,6 +180,7 @@ function prepare(store, sessionId) {
   assert.equal(store.getState().assistedEntities[0].relatedPerson, 'Maria Silva');
 }
 
+assert.throws(() => createAssistedEntity(fakeStore(), { type:'PERSON', displayName:'Sem data' }), /nascimento/);
 assert.throws(() => validateAssistedInput({ type:'PERSON', displayName:'Sem data' }), /nascimento/);
 assert.throws(() => validateAssistedInput({ type:'ENVIRONMENT', displayName:'Casa' }), /Endereço/);
 assert.throws(() => validateAssistedInput({ type:'GROUP', displayName:'Família', members:[] }), /(pessoa|integrante)/);
