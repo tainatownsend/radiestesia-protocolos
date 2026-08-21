@@ -90,9 +90,13 @@ function prepare(store, sessionId) {
   const b=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Reiki B',birthDate:'1981-01-01'});
   assert.throws(()=>startReiki(store,session.id,'missing'),/assistido válido/i);
   const first=startReiki(store,session.id,a.id);
+  assert.equal(startReiki(store,session.id,a.id).id,first.id,'same Reiki context should remain idempotent');
   pauseReiki(store,first.id);
-  const secondAttempt=startReiki(store,session.id,b.id);
-  assert.equal(secondAttempt.id,first.id,'legacy Reiki path must preserve the single active/paused application invariant');
+  assert.throws(
+    ()=>startReiki(store,session.id,b.id),
+    /outra aplicação de Reiki está em andamento ou pausada/i,
+    'a different assisted context must never receive another active Reiki application'
+  );
   assert.equal(store.getState().reikiApplications.length,1);
   assert.throws(()=>recordReikiRetrospective(store,{assistedEntityId:'missing',durationMinutes:10}),/assistido válido/i);
 }
