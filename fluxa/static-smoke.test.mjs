@@ -109,7 +109,7 @@ assert.match(libraryRefinement,/tool\.tags/,'Library search should include tags.
 assert.match(toolPickerUi,/t\.tags/,'Treatment resource picker should include tags in search.');
 assert.match(universalSearchUi,/t\.tags/,'Universal search should include Library tags.');
 assert.match(universalSearchUi,/data-library-tool-id/,'Universal search should reveal Library results by stable tool ID.');
-assert.match(bulkLibrary,/tags:\['tags','tag','etiquetas','etiqueta','categorias'\]/,'Bulk Library parser should accept a Tags column.');
+assert.match(bulkLibrary,/tags:\['tags','tag','etiquetas','etiqueta','palavras-chave','palavras chave'\]/,'Bulk Library parser should accept a Tags column.');
 assert.match(bulkLibrary,/Nome,Tipo,Finalidade,Tags,Observações/,'Library CSV export should preserve tags.');
 
 console.log('static-smoke.test.mjs: ok');
