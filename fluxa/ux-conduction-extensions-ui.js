@@ -16,6 +16,8 @@ function fmt(value){const t=safeTime(value);return t==null?'—':new Intl.DateTi
 function statusLabel(value){return ({IN_PROGRESS:'Em andamento',PLANNED:'Planejado',INTERRUPTED:'Interrompido',COMPLETED:'Concluído'})[value]||'Registrado';}
 function classificationLabel(value){return ({CAUSE:'Causa',MAINTAINER:'Mantenedor',CONSEQUENCE:'Consequência',ASSOCIATION:'Associação',FACTOR_RELEVANT:'Fator relevante',DEEPEN:'Item a aprofundar'})[value]||'Achado';}
 function closeCompletion(){document.querySelector('#ux-findings-completion-overlay')?.remove();}
+function dismissQuickSheet(){const close=document.querySelector('#findings-form')?.closest('.sheet')?.querySelector('[data-action="dismiss-sheet"]');close?.click();}
+function dismissBranchSheet(){const close=document.querySelector('#protocol-overlay [data-close-protocol]');close?.click();}
 
 function findingsCompletion(ids){
   if(!ids.length)return;
@@ -31,7 +33,7 @@ function handleQuickFindings(form,event){
   event.preventDefault();event.stopImmediatePropagation();
   const data=new FormData(form);const created=confirmFindings(store,form.dataset.investigation,data.getAll('finding'));
   pendingFindingIds=created.map((f)=>f.id);
-  document.querySelector('.modal-backdrop:has(#findings-form)')?.remove();
+  dismissQuickSheet();
   requestAnimationFrame(()=>findingsCompletion(pendingFindingIds));
 }
 
@@ -44,7 +46,7 @@ function handleBranchFindings(form,event){
     created.push(...confirmBranchingFindings(store,form.dataset.investigation,[nodeId],select?.value||fallback));
   }
   pendingFindingIds=[...new Set(created.map((f)=>f.id))];
-  document.querySelector('#protocol-overlay')?.remove();
+  dismissBranchSheet();
   requestAnimationFrame(()=>findingsCompletion(pendingFindingIds));
 }
 
@@ -107,6 +109,8 @@ document.addEventListener('click',(event)=>{
   if(b.dataset.uxFindingsTreat!==undefined){closeCompletion();document.querySelector('[data-action="treat-direct"]')?.click();return;}
   if(b.dataset.uxFindingsInvestigate!==undefined){pendingFindingIds=[];closeCompletion();document.querySelector('[data-action="investigate"]')?.click();return;}
   if(b.dataset.uxFindingsBack!==undefined){pendingFindingIds=[];closeCompletion();return;}
+  if(b.dataset.action==='dismiss-sheet'&&pendingFindingIds.length){pendingFindingIds=[];}
+  if(b.dataset.route&&pendingFindingIds.length){pendingFindingIds=[];}
   if(b.dataset.uxToggleDashboard!==undefined){const dashboard=b.closest('[data-session-dashboard]');dashboard?.classList.toggle('ux-dashboard-collapsed');b.textContent=dashboard?.classList.contains('ux-dashboard-collapsed')?'Resumo':'Recolher';return;}
   if(b.dataset.uxProtocolFavorite){event.preventDefault();event.stopImmediatePropagation();const id=b.dataset.uxProtocolFavorite;const favorites=new Set(safeJsonGet(FAVORITES_KEY));favorites.has(id)?favorites.delete(id):favorites.add(id);safeJsonSet(FAVORITES_KEY,[...favorites]);document.querySelector('#investigation-chooser-overlay')?.remove();document.querySelector('[data-action="investigate"]')?.click();return;}
   if(b.dataset.startBranching){const id=b.dataset.startBranching;const list=safeJsonGet(RECENTS_KEY).filter((x)=>x!==id);list.unshift(id);safeJsonSet(RECENTS_KEY,list.slice(0,5));}
