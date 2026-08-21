@@ -122,4 +122,11 @@ assert.match(structuredPreparation,/completeStructuredPreparation/,'Structured p
 assert.match(structuredPreparationUi,/completeStructuredPreparation\(/,'Preparation UI should complete through the strict boundary.');
 assert.match(structuredPreparationUi,/stopImmediatePropagation\(\)/,'Strict preparation completion should prevent the permissive base handler from running twice.');
 
+const historyUi=fs.readFileSync(new URL('./history-ui.js',root),'utf8');
+assert.match(historyUi,/previousTreatmentId/,'Treatment history should expose previous-cycle linkage.');
+assert.match(historyUi,/recommendedByAssessmentId/,'Treatment history should expose assessment-origin linkage.');
+assert.match(historyUi,/planningNotes/,'Treatment history should expose cycle planning notes when present.');
+assert.match(historyUi,/ReikiModeLabel/,'History should render therapist-facing Reiki mode labels.');
+assert.match(historyUi,/durationSeconds/,'Completed Reiki history should retain visible duration context.');
+
 console.log('static-smoke.test.mjs: ok');
