@@ -4,7 +4,7 @@ const store=createStore();
 let enhancing=false;
 const status={PLANNED:'Planejado',IN_PROGRESS:'Em andamento',COMPLETED:'Concluído',INTERRUPTED:'Interrompido',STOPPED:'Interrompido',REPLACED:'Substituído',RUNNING:'Em andamento',PAUSED:'Pausado',CANCELED:'Cancelado'};
 const reikiMode={IN_PERSON:'Presencial',PRESENTIAL:'Presencial',DISTANCE:'À distância',SELF:'Autoaplicação',SELF_APPLICATION:'Autoaplicação',OTHER:'Outro'};
-function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
+function esc(value=''){return String(value).replace(/[&<>'\"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','\"':'&quot;'}[c]));}
 function fmt(iso){const time=new Date(iso||'').getTime();return Number.isFinite(time)?new Intl.DateTimeFormat('pt-BR',{dateStyle:'long'}).format(new Date(time)):'—';}
 function label(value){return value?(status[value]||'Registrado'):'';}
 function minutesFromSeconds(value){const seconds=Number(value);return Number.isFinite(seconds)&&seconds>=0?Math.round(seconds/60):null;}
@@ -29,7 +29,7 @@ function open(sessionId,assistedId){const html=reportHtml(store.getState(),sessi
 function enhanceButtons(){
   document.querySelectorAll('[data-session-report][data-assisted]').forEach((full)=>{
     if(full.parentElement?.querySelector(`[data-client-report][data-assisted="${CSS.escape(full.dataset.assisted)}"]`))return;
-    const b=document.createElement('button');b.className='btn ghost wide';b.dataset.clientReport='true';b.dataset.session=full.dataset.session;b.dataset.assisted=full.dataset.assisted;b.textContent='Resumo para compartilhar';full.after(b);
+    const b=document.createElement('button');b.className='btn secondary wide';b.dataset.clientReport='true';b.dataset.session=full.dataset.session;b.dataset.assisted=full.dataset.assisted;b.textContent='Resumo para compartilhar';full.after(b);
   });
 }
 function enhance(){if(enhancing)return;enhancing=true;try{enhanceButtons();}finally{enhancing=false;}}
