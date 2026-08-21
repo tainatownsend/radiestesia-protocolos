@@ -1,0 +1,100 @@
+/* Fluxa therapist-conduction layer: mobile rhythm, sheets and session focus */
+:root { --ux-gap-1:8px; --ux-gap-2:12px; --ux-gap-3:16px; --ux-gap-4:20px; --ux-gap-5:24px; }
+
+/* Modal/sheet rhythm */
+.sheet { padding-bottom:max(28px,calc(20px + env(safe-area-inset-bottom))); scroll-padding-bottom:max(96px,calc(72px + env(safe-area-inset-bottom))); }
+.sheet-head { gap:16px; padding-bottom:18px; margin-bottom:18px; }
+.sheet > .section:first-of-type { margin-top:0; }
+.sheet .form-grid { gap:18px; }
+.sheet .field { margin:0; }
+.sheet fieldset.field { margin:0; padding:0; border:0; min-width:0; }
+.sheet fieldset.field > legend { width:100%; margin:0 0 12px; padding:0; color:var(--primary-strong); font-size:14px; font-weight:800; line-height:1.35; }
+.sheet .checklist { display:grid; gap:12px; }
+.sheet .check-row { min-height:72px; padding:14px 16px; gap:14px; border:1px solid var(--border); border-radius:18px; background:var(--surface); align-items:center; }
+.sheet .check-row > span { display:grid; gap:3px; min-width:0; line-height:1.25; }
+.sheet .check-row strong,.sheet .check-row small { display:block; }
+.sheet .check-row strong { font-size:16px; line-height:1.25; }
+.sheet .check-row small { font-size:13px; line-height:1.4; font-weight:600; }
+.sheet .check-row input[type="checkbox"] { flex:0 0 auto; width:28px; height:28px; margin:0; }
+.sheet .btn.primary.wide:last-child { margin-top:2px; }
+
+/* Session template editor: fix crowded label/hint and fieldset chrome */
+#session-template-editor-overlay .sheet { padding-left:20px; padding-right:20px; }
+#session-template-editor-overlay #session-template-form { gap:20px; }
+#session-template-editor-overlay .checklist { gap:12px; }
+#session-template-editor-overlay .check-row { min-height:82px; padding:16px; }
+#session-template-editor-overlay .check-row > span { display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+#session-template-editor-overlay .check-row strong { font-size:17px; }
+#session-template-editor-overlay .check-row small { color:var(--muted); font-size:13px; }
+#session-template-editor-overlay button[type="submit"] { margin-top:4px; }
+
+/* Today: make fast context compact and allow collapse while scrolling */
+.fast-session-context { transition:padding .18s ease,border-radius .18s ease,box-shadow .18s ease; }
+.fluxa-context-collapsed .fast-session-context { padding:10px 12px; }
+.fluxa-context-collapsed .fast-session-context .eyebrow,
+.fluxa-context-collapsed .fast-session-context .fast-assisted-chips,
+.fluxa-context-collapsed .fast-session-context .fast-next-actions,
+.fluxa-context-collapsed .fast-session-context [data-fast-focus-mode] { display:none !important; }
+.fluxa-context-collapsed .fast-session-context .fast-context-main { min-height:48px; gap:10px; }
+.fluxa-context-collapsed .fast-session-context .fast-context-main strong { font-size:16px; }
+.fluxa-context-collapsed .fast-session-context .fast-context-actions .btn { min-height:44px; padding:8px 13px; }
+
+/* Therapist next action */
+.ux-next-action { margin:14px 0 18px; padding:16px; border:1px solid color-mix(in srgb,var(--secondary) 36%,var(--border)); border-radius:18px; background:linear-gradient(150deg,color-mix(in srgb,var(--surface-2) 92%,var(--surface)),var(--surface)); }
+.ux-next-action .eyebrow { margin-bottom:5px; }
+.ux-next-action h2 { margin:0; font-size:19px; line-height:1.25; }
+.ux-next-action p { margin:6px 0 14px; color:var(--muted); line-height:1.45; }
+.ux-next-action .btn { width:100%; }
+
+/* Investigation stack */
+.ux-investigation-stack { margin:18px 0; }
+.ux-investigation-stack .section-head { align-items:flex-end; }
+.ux-investigation-list { display:grid; gap:10px; }
+.ux-investigation-item { display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center; gap:11px; padding:13px 14px; border:1px solid var(--border); border-radius:16px; background:var(--surface); }
+.ux-investigation-mark { display:grid; place-items:center; width:28px; height:28px; border-radius:999px; background:var(--surface-2); color:var(--muted); font-size:13px; font-weight:900; }
+.ux-investigation-item.is-open .ux-investigation-mark { background:var(--primary); color:#fff; }
+.ux-investigation-copy { min-width:0; }
+.ux-investigation-copy strong,.ux-investigation-copy span { display:block; }
+.ux-investigation-copy strong { font-size:14px; line-height:1.3; }
+.ux-investigation-copy span { margin-top:2px; color:var(--muted); font-size:12px; }
+.ux-investigation-item .btn { min-height:40px; padding:7px 10px; }
+
+/* Post-completion confirmation */
+.ux-completion-sheet .ux-complete-mark { display:grid; place-items:center; width:52px; height:52px; margin:0 0 14px; border-radius:999px; background:var(--primary); color:#fff; font-size:26px; font-weight:900; }
+.ux-completion-sheet .stack { gap:10px; }
+
+/* Review sheet context */
+.ux-review-context { display:grid; gap:10px; margin:0 0 18px; }
+.ux-review-context .card { padding:14px; }
+.ux-review-components { display:grid; gap:8px; margin-top:8px; }
+.ux-review-component { display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:13px; background:var(--surface-2); }
+.ux-review-component span { color:var(--muted); font-size:12px; }
+
+/* Closing: reports move to post-close; make pre-close decision lighter */
+#session-close-review-overlay .ux-hide-before-close { display:none !important; }
+.ux-post-close-actions { display:grid; gap:10px; }
+
+/* Shorter daily copy */
+.ux-daily-compact-copy .lead { max-width:42rem; }
+
+/* General mobile card rhythm */
+@media (max-width:560px) {
+  main { padding-left:16px; padding-right:16px; }
+  .section { margin-top:22px; }
+  .stack { gap:12px; }
+  .card { border-radius:18px; }
+  .sheet { width:100%; max-height:calc(100dvh - max(10px,env(safe-area-inset-top))); padding-left:18px; padding-right:18px; }
+  .sheet-head { position:sticky; top:0; z-index:3; margin-left:-18px; margin-right:-18px; padding:14px 18px 16px; background:color-mix(in srgb,var(--surface) 96%,transparent); backdrop-filter:blur(12px); }
+  .sheet-head h2 { font-size:22px; line-height:1.2; }
+  .sheet .check-row { min-height:76px; }
+  #session-template-editor-overlay .sheet { padding-left:16px; padding-right:16px; }
+  #session-template-editor-overlay .sheet-head { margin-left:-16px; margin-right:-16px; }
+  .ux-investigation-item { grid-template-columns:26px minmax(0,1fr); }
+  .ux-investigation-item .btn { grid-column:1 / -1; width:100%; }
+  .ux-next-action { margin-top:12px; }
+}
+
+@media (min-width:700px) {
+  .ux-investigation-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #session-template-editor-overlay .sheet { max-width:680px; }
+}
