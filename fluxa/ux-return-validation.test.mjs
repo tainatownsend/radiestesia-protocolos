@@ -9,9 +9,11 @@ assert.match(html,/ux-return-validation-ui\.js/,'Return validation layer must be
 assert.ok(html.indexOf('ux-return-validation-ui.js')>html.indexOf('ux-post-merge-integration-ui.js'),'Return validation must run after earlier therapist UX enhancers.');
 assert.match(source,/s\.status==='CLOSED'/,'Return context must only select closed sessions.');
 assert.match(source,/previousClosedSession/,'Return context must explicitly resolve the previous closed session.');
-assert.match(source,/data-return-summary/,'The older duplicate return summary must be removed.');
+assert.match(source,/legacy\.hidden=true/,'The older duplicate return summary must remain hidden without observer churn.');
 assert.match(source,/a\.sessionId===previous\.id/,'Previous-session measurement must come from the selected closed session.');
-assert.match(source,/invIds\.has\(f\.investigationId\)/,'Previous-session findings must be scoped to investigations from that closed session.');
+assert.match(source,/eventType==='FINDING_IDENTIFIED'/,'Return findings must be scoped by their actual registration event.');
+assert.match(source,/e\.sessionId===sessionId&&e\.assistedEntityId===id/,'Finding registration must belong to the selected session and assisted entity.');
+assert.match(source,/findingIds\.has\(f\.id\)/,'Return summary must resolve only findings identified in that session.');
 assert.match(source,/Tratamentos atuais/,'Longitudinal treatments should remain current rather than frozen to the previous session.');
 assert.match(source,/Concluída.*Concluído/,'Treatment component review copy should use masculine status.');
 
