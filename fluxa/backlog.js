@@ -60,7 +60,8 @@ export function correctForgottenSessionClose(store, sessionId, endedAt, confirma
 }
 
 export function addTreatmentComponent(store, input) {
-  const state = store.getState(); if (input.sessionId) requireOpenSession(state, input.sessionId);
+  const state = store.getState();
+  if (input.sessionId) requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de alterar componentes do tratamento.');
   const treatment = state.treatments.find((item) => item.id === input.treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
   if (!treatment) throw new Error('Tratamento não disponível para adicionar componente.');
   const now = store.nowIso();
