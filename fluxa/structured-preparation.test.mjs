@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { updatePreparationDetails, validateStructuredPreparation } from './structured-preparation.js';
+import { updatePreparationDetails, validateStructuredPreparation, completeStructuredPreparation } from './structured-preparation.js';
 
 function fakeStore() {
   let seq = 0;
@@ -12,7 +12,9 @@ function fakeStore() {
         { key:'protection', completed:true },
         { key:'permission', completed:true }
       ]
-    }]
+    }],
+    events:[],
+    tools:[]
   };
   return {
     getState:()=>state,
@@ -25,10 +27,15 @@ function fakeStore() {
 {
   const store = fakeStore();
   assert.throws(() => validateStructuredPreparation(store.getState(), 'prep_1'), /frequência vibracional/i);
+  assert.throws(() => completeStructuredPreparation(store, 'prep_1'), /frequência vibracional/i);
+  assert.equal(store.getState().preparationRuns[0].status, 'IN_PROGRESS');
   updatePreparationDetails(store, 'prep_1', { frequencyValue:'8500' });
   assert.throws(() => validateStructuredPreparation(store.getState(), 'prep_1'), /proteção/i);
   updatePreparationDetails(store, 'prep_1', { frequencyValue:'8500', frequencyScale:'Bovis', protectionNotes:'Proteção manual' });
   assert.equal(validateStructuredPreparation(store.getState(), 'prep_1'), true);
+  const completed = completeStructuredPreparation(store, 'prep_1');
+  assert.equal(completed.status, 'COMPLETED');
+  assert.equal(store.getState().events.filter((event)=>event.eventType==='PREPARATION_COMPLETED').length,1);
   const run = store.getState().preparationRuns[0];
   assert.equal(run.frequencyMeasurement.value, '8500');
   assert.equal(run.frequencyMeasurement.scale, 'Bovis');

@@ -10,6 +10,15 @@ function makeId(prefix = 'id') {
   if (globalThis.crypto?.randomUUID) return `${prefix}_${crypto.randomUUID()}`;
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
+function errorMessage(error) { return String(error?.message || error || 'Falha desconhecida de armazenamento.'); }
+function notifyPersistenceError(error) {
+  if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
+  globalThis.dispatchEvent(new CustomEvent('fluxa:persistence-error', { detail:{ message:errorMessage(error) } }));
+}
+function readStorage(key) {
+  try { return { value:localStorage.getItem(key), error:null }; }
+  catch (error) { return { value:null, error }; }
+}
 
 function emptyState() {
   return {
@@ -17,7 +26,7 @@ function emptyState() {
     meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
     sessions: [], assistedEntities: [], events: [], preparationRuns: [], closingRuns: [],
     investigations: [], findings: [], treatments: [], treatmentComponents: [], componentReviews: [],
-    treatmentReviews: [], assessments: [], reikiApplications: [], tools: []
+    treatmentReviews: [], assessments: [], reikiApplications: [], tools: [], customProtocols: [], settings: {}
   };
 }
 
@@ -31,12 +40,12 @@ function hasFluxaShape(value) {
 function normalize(parsed) {
   const base = emptyState();
   return {
-    ...base, ...parsed, version: 5, meta: { ...base.meta, ...(parsed?.meta || {}) },
+    ...base, ...parsed, version: 5, meta: { ...base.meta, ...(parsed?.meta || {}) }, settings: { ...base.settings, ...(parsed?.settings || {}) },
     sessions:list(parsed?.sessions), assistedEntities:list(parsed?.assistedEntities), events:list(parsed?.events),
     preparationRuns:list(parsed?.preparationRuns), closingRuns:list(parsed?.closingRuns), investigations:list(parsed?.investigations),
     findings:list(parsed?.findings), treatments:list(parsed?.treatments), treatmentComponents:list(parsed?.treatmentComponents),
     componentReviews:list(parsed?.componentReviews), treatmentReviews:list(parsed?.treatmentReviews), assessments:list(parsed?.assessments),
-    reikiApplications:list(parsed?.reikiApplications), tools:list(parsed?.tools)
+    reikiApplications:list(parsed?.reikiApplications), tools:list(parsed?.tools), customProtocols:list(parsed?.customProtocols)
   };
 }
 
@@ -60,31 +69,40 @@ function ensureStorageListener() {
 }
 
 export function loadState() {
-  const primary = parseCandidate(localStorage.getItem(STORAGE_KEY));
-  if (primary) return primary;
-  const recovery = parseCandidate(localStorage.getItem(RECOVERY_KEY));
-  if (recovery) return recovery;
-  const backup = parseCandidate(localStorage.getItem(BACKUP_KEY));
-  if (backup) return backup;
-  return emptyState();
+  const errors=[];
+  for (const key of [STORAGE_KEY, RECOVERY_KEY, BACKUP_KEY]) {
+    const result=readStorage(key);
+    if (result.error) { errors.push(result.error); continue; }
+    const candidate=parseCandidate(result.value);
+    if (candidate) return candidate;
+  }
+  const fresh=emptyState();
+  if (errors.length) {
+    fresh.meta.lastPersistenceError=errorMessage(errors[0]);
+    notifyPersistenceError(errors[0]);
+  }
+  return fresh;
 }
 
 export function saveState(state) {
   const next = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso(), lastPersistenceError: null } });
-  const current = localStorage.getItem(STORAGE_KEY);
   const serialized = JSON.stringify(next);
   try {
+    const current = localStorage.getItem(STORAGE_KEY);
     localStorage.setItem(RECOVERY_KEY, serialized);
     if (current && parseCandidate(current)) localStorage.setItem(BACKUP_KEY, current);
     localStorage.setItem(STORAGE_KEY, serialized);
     return next;
   } catch (error) {
     console.error('Fluxa: falha ao persistir dados locais', error);
+    notifyPersistenceError(error);
     try {
-      const fallback = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso(), lastPersistenceError: String(error?.message || error) } });
+      const fallback = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso(), lastPersistenceError: errorMessage(error) } });
       localStorage.setItem(RECOVERY_KEY, JSON.stringify(fallback));
     } catch (_) {}
-    throw error;
+    const wrapped=new Error('Não foi possível salvar neste dispositivo. Verifique o armazenamento do navegador antes de continuar.');
+    try { wrapped.cause=error; } catch (_) {}
+    throw wrapped;
   }
 }
 

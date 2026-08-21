@@ -12,7 +12,9 @@ import {
 const store = createStore();
 const root = document.querySelector('#app');
 const validRoutes = new Set(['today', 'treatments', 'assisted', 'library']);
-const persistedRoute = sessionStorage.getItem('fluxa.activeRoute');
+function readRoutePreference() { try { return sessionStorage.getItem('fluxa.activeRoute'); } catch (_) { return null; } }
+function saveRoutePreference(value) { try { sessionStorage.setItem('fluxa.activeRoute', value); } catch (_) {} }
+const persistedRoute = readRoutePreference();
 let route = validRoutes.has(persistedRoute) ? persistedRoute : 'today';
 let sheet = null;
 let saveMessage = '';
@@ -246,7 +248,7 @@ function renderSheet(state) {
 }
 
 function render() {
-  sessionStorage.setItem('fluxa.activeRoute', route);
+  saveRoutePreference(route);
   const state = store.getState();
   if (timerTick) { clearInterval(timerTick); timerTick = null; }
   const views = { today: todayView, treatments: treatmentsView, assisted: assistedView, library: libraryView };

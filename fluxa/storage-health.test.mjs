@@ -7,6 +7,11 @@ class MemoryStorage {
   setItem(key, value) { this.map.set(key, String(value)); }
   removeItem(key) { this.map.delete(key); }
 }
+class ThrowingStorage {
+  getItem(){throw new Error('blocked storage read');}
+  setItem(){throw new Error('blocked storage write');}
+  removeItem(){throw new Error('blocked storage remove');}
+}
 
 globalThis.localStorage = new MemoryStorage();
 
@@ -16,6 +21,7 @@ function payload(overrides={}) { return { version:4, sessions:[], assistedEntiti
   const health = inspectStorageHealth();
   assert.equal(health.status, 'OK');
   assert.equal(health.writable, true);
+  assert.equal(health.lastExportAt,null);
 }
 
 {
@@ -32,6 +38,8 @@ function payload(overrides={}) { return { version:4, sessions:[], assistedEntiti
   assert.equal(restored.version,5);
   assert.ok(Array.isArray(restored.componentReviews));
   assert.ok(Array.isArray(restored.tools));
+  assert.ok(Array.isArray(restored.customProtocols));
+  assert.deepEqual(restored.settings,{});
 }
 
 {
@@ -47,14 +55,27 @@ function payload(overrides={}) { return { version:4, sessions:[], assistedEntiti
 {
   localStorage.map.clear();
   localStorage.setItem('fluxa.mvp.v1', JSON.stringify(payload({ sessions:[{ id:'old' }] })));
-  const imported = JSON.stringify(payload({ sessions:[{ id:'new' }], assistedEntities:[{ id:'a1' }] }));
+  const imported = JSON.stringify(payload({
+    sessions:[{ id:'new' }],
+    assistedEntities:[{ id:'a1' }],
+    customProtocols:[{id:'cp1',protocolKey:'mine',version:1,questions:[]}],
+    settings:{preparationLabels:{breathing:'Respirar'}}
+  }));
   importLocalDataText(imported);
   const current=JSON.parse(localStorage.getItem('fluxa.mvp.v1'));
   assert.equal(current.sessions[0].id, 'new');
   assert.equal(current.version,5);
   assert.ok(Array.isArray(current.componentReviews));
+  assert.equal(current.customProtocols[0].protocolKey,'mine');
+  assert.equal(current.settings.preparationLabels.breathing,'Respirar');
   assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1.backup')).sessions[0].id, 'old');
   assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1.recovery')).assistedEntities[0].id, 'a1');
+}
+
+{
+  localStorage.map.clear();
+  localStorage.setItem('fluxa.lastSuccessfulExportAt','2026-08-20T10:00:00.000Z');
+  assert.equal(inspectStorageHealth().lastExportAt,'2026-08-20T10:00:00.000Z');
 }
 
 {
@@ -67,6 +88,17 @@ function payload(overrides={}) { return { version:4, sessions:[], assistedEntiti
 {
   assert.throws(() => importLocalDataText(JSON.stringify({ hello:'world' })), /não parece ser uma cópia válida/i);
   assert.throws(() => validateImportPayload(payload({ tools:{} })), /não parece ser uma cópia válida/i);
+  assert.throws(() => validateImportPayload(payload({ customProtocols:{} })), /não parece ser uma cópia válida/i);
+}
+
+{
+  globalThis.localStorage=new ThrowingStorage();
+  const health=inspectStorageHealth();
+  assert.equal(health.status,'READ_ERROR');
+  assert.equal(health.writable,false);
+  assert.match(health.readError,/blocked storage read/);
+  assert.throws(()=>recoverLocalData(),/navegador bloqueou o armazenamento local/i);
+  assert.throws(()=>importLocalDataText(JSON.stringify(payload())),/navegador bloqueou o armazenamento local/i);
 }
 
 console.log('storage-health.test.mjs: ok');

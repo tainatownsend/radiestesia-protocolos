@@ -1,7 +1,7 @@
 import { createStore } from './store.js';
 import { getOpenSession, latestPreparation } from './domain.js';
 import { activeTools, ToolType } from './activity-library.js';
-import { updatePreparationDetails, validateStructuredPreparation } from './structured-preparation.js';
+import { updatePreparationDetails, completeStructuredPreparation } from './structured-preparation.js';
 
 const store = createStore();
 let enhancing = false;
@@ -77,12 +77,14 @@ document.addEventListener('change', (event) => {
 document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action="complete-preparation"]');
   if (!button) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
   try {
     const run = collectAndSave();
-    if (run) validateStructuredPreparation(store.getState(), run.id);
+    if (!run) return;
+    completeStructuredPreparation(store, run.id);
+    document.querySelector('[data-action="dismiss-sheet"]')?.click();
   } catch (error) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
     alert(error.message);
   }
 }, true);

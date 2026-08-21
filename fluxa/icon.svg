@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Fluxa">
+  <rect width="512" height="512" rx="112" fill="#173F46"/>
+  <path d="M150 132h226v62H220v73h137v60H220v121h-70V132Z" fill="#F8F9F7"/>
+  <circle cx="364" cy="378" r="34" fill="#C17C61"/>
+</svg>

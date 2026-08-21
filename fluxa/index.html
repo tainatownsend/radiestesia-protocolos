@@ -4,30 +4,69 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#173F46">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Fluxa">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
   <title>Fluxa</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="remaining.css">
+  <link rel="stylesheet" href="visual-polish.css">
+  <link rel="stylesheet" href="interaction-polish.css">
+  <link rel="stylesheet" href="daily-use-polish.css">
 </head>
 <body>
   <div id="app" class="app-shell" aria-live="polite"></div>
   <script type="module" src="app.js"></script>
+  <script type="module" src="persistence-status-ui.js"></script>
+  <script type="module" src="viewport-ui.js"></script>
+  <script type="module" src="offline-ui.js"></script>
+  <script type="module" src="today-continuity-ui.js"></script>
+  <script type="module" src="continuity-resume-ui.js"></script>
+  <script type="module" src="form-draft-ui.js"></script>
+  <script type="module" src="assisted-context-ui.js"></script>
+  <script type="module" src="assisted-quick-pick-ui.js"></script>
   <script type="module" src="assisted-situation-ui.js"></script>
   <script type="module" src="final-assessment-validation-ui.js"></script>
   <script type="module" src="backlog-ui.js"></script>
   <script type="module" src="treatment-create-ui.js"></script>
   <script type="module" src="treatment-planning-ui.js"></script>
+  <script type="module" src="treatment-objective-ui.js"></script>
   <script type="module" src="follow-up-treatment-ui.js"></script>
   <script type="module" src="protocol-ui.js"></script>
+  <script type="module" src="custom-protocol-ui.js"></script>
   <script type="module" src="branching-resume-ui.js"></script>
   <script type="module" src="finding-classification-ui.js"></script>
   <script type="module" src="remaining-ui.js"></script>
+  <script type="module" src="treatment-card-identity-ui.js"></script>
   <script type="module" src="workflow-integrity-ui.js"></script>
   <script type="module" src="administrative-treatment-ui.js"></script>
   <script type="module" src="activity-library-ui.js"></script>
   <script type="module" src="library-refinement-ui.js"></script>
+  <script type="module" src="library-favorites-ui.js"></script>
+  <script type="module" src="bulk-library-ui.js"></script>
+  <script type="module" src="tool-picker-search-ui.js"></script>
+  <script type="module" src="session-template-ui.js"></script>
   <script type="module" src="workflow-refinement-ui.js"></script>
+  <script type="module" src="therapist-experience-ui.js"></script>
+  <script type="module" src="session-fast-flow-ui.js"></script>
+  <script type="module" src="quick-input-ui.js"></script>
+  <script type="module" src="quick-percentage-ui.js"></script>
+  <script type="module" src="repeat-component-ui.js"></script>
+  <script type="module" src="recent-choice-ui.js"></script>
+  <script type="module" src="touch-select-ui.js"></script>
+  <script type="module" src="longitudinal-insights-ui.js"></script>
+  <script type="module" src="reports-ui.js"></script>
+  <script type="module" src="client-report-ui.js"></script>
+  <script type="module" src="therapist-language-ui.js"></script>
+  <script type="module" src="universal-search-ui.js"></script>
+  <script type="module" src="traceability-ui.js"></script>
   <script type="module" src="history-ui.js"></script>
+  <script type="module" src="session-report-history-ui.js"></script>
   <script type="module" src="preparation-history-ui.js"></script>
   <script type="module" src="archive-view-ui.js"></script>
   <script type="module" src="event-copy-ui.js"></script>
@@ -36,7 +75,10 @@
   <script type="module" src="reiki-mode-ui.js"></script>
   <script type="module" src="reiki-lifecycle-ui.js"></script>
   <script type="module" src="structured-preparation-ui.js"></script>
+  <script type="module" src="preparation-repeat-ui.js"></script>
+  <script type="module" src="guided-preparation-ui.js"></script>
   <script type="module" src="import-ui.js"></script>
+  <script type="module" src="backup-reminder-ui.js"></script>
   <script type="module" src="qa-tools.js"></script>
   <script type="module" src="validation-ui.js"></script>
   <script type="module" src="a11y.js"></script>
