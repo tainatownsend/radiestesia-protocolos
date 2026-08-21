@@ -42,6 +42,8 @@ function prepare(store, sessionId) {
   const investigation=startInvestigation(store,session.id,assisted.id);
   assert.equal(investigation.status,'IN_PROGRESS');
   const { treatment }=createTreatment(store,{sessionId:session.id,assistedEntityId:assisted.id,title:'Teste',componentName:'A'});
+  assert.throws(()=>reviewTreatment(store,{sessionId:session.id,treatmentId:treatment.id,verifiedComplete:true,imbalancePercent:20}),/revisão dos componentes.*avaliação final/i);
+  assert.equal(store.getState().treatments.find((item)=>item.id===treatment.id).status,'IN_PROGRESS','legacy review must not complete treatment');
   assert.throws(()=>reviewTreatment(store,{sessionId:session.id,treatmentId:treatment.id,verifiedComplete:false,imbalancePercent:101}),/0% e 100%/i);
   reviewTreatment(store,{sessionId:session.id,treatmentId:treatment.id,verifiedComplete:false,imbalancePercent:20});
   assert.equal(store.getState().treatmentReviews.length,1);
@@ -57,6 +59,15 @@ function prepare(store, sessionId) {
   assert.equal(added.name,'B');
   reviewTreatment(store,{sessionId:later.id,treatmentId:treatment.id,verifiedComplete:false,imbalancePercent:15});
   assert.equal(store.getState().treatmentReviews.length,2);
+}
+
+{
+  const store=makeStore();
+  const session=startSession(store);
+  assert.throws(()=>closeSession(store,session.id,{endedAt:'not-a-date'}),/horário de encerramento válido/i);
+  assert.throws(()=>closeSession(store,session.id,{endedAt:'2026-08-20T09:59:59.000Z'}),/anterior ao início/i);
+  assert.throws(()=>closeSession(store,session.id,{endedAt:'2999-01-01T00:00:00.000Z'}),/futuro/i);
+  assert.equal(store.getState().sessions[0].status,'OPEN');
 }
 
 {
