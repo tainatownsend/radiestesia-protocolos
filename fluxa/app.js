@@ -25,7 +25,7 @@ const treatmentLabels = { PLANNED:'Planejado', IN_PROGRESS:'Em andamento', COMPL
 const durationLabels = { MINUTE:'minuto(s)', HOUR:'hora(s)', DAY:'dia(s)', WEEK:'semana(s)', MONTH:'mês(es)' };
 
 function esc(value = '') {
-  return String(value).replace(/[&<>'\"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '\"':'&quot;' }[c]));
+  return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
 }
 function formatTime(iso) { return iso ? new Intl.DateTimeFormat('pt-BR', { hour:'2-digit', minute:'2-digit' }).format(new Date(iso)) : ''; }
 function formatDate(iso) { return iso ? new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', year:'numeric' }).format(new Date(iso)) : ''; }
@@ -73,7 +73,7 @@ function eventCopy(event, state) {
     [EventType.REIKI_COMPLETED]: ['Reiki concluído', event.metadata?.durationSeconds != null ? formatClock(event.metadata.durationSeconds) : 'Aplicação registrada'],
     [EventType.NOTE_CREATED]: ['Anotação', event.metadata?.body || 'Registro da sessão']
   };
-  return copies[event.eventType] || [event.eventType, name || ''];
+  return copies[event.eventType] || ['Atividade registrada', name || ''];
 }
 
 function timeline(events, state) {
@@ -130,9 +130,9 @@ function todayView(state) {
 function treatmentCard(item, state) {
   const assisted = assistedById(state, item.assistedEntityId); const components = treatmentComponents(state, item.id); const needs = treatmentNeedsReview(state, item);
   const next = components.filter((c) => c.expectedEndAt && c.status === TreatmentStatus.IN_PROGRESS).sort((a,b) => a.expectedEndAt.localeCompare(b.expectedEndAt))[0];
-  return `<article class="card treatment-card"><div class="section-head"><div><p class="eyebrow">${esc(assisted?.displayName || 'Assistido')}</p><h2>${esc(item.title)}</h2></div><span class="status-pill status-${item.status.toLowerCase()}">${needs ? 'Revisão disponível' : treatmentLabels[item.status]}</span></div>
+  return `<article class="card treatment-card" data-treatment-id="${esc(item.id)}"><div class="section-head"><div><p class="eyebrow">${esc(assisted?.displayName || 'Assistido')}</p><h2>${esc(item.title)}</h2></div><span class="status-pill status-${item.status.toLowerCase()}">${needs ? 'Revisão disponível' : treatmentLabels[item.status]}</span></div>
     <p class="muted">${components.length} ${components.length === 1 ? 'componente' : 'componentes'}${next?.expectedEndAt ? ` · ${needs ? 'Disponível desde' : 'Próxima revisão'} ${formatDateTime(next.expectedEndAt)}` : ''}</p>
-    <div class="button-row">${item.status === TreatmentStatus.IN_PROGRESS ? `<button class="btn secondary small" data-review-treatment="${item.id}">Revisar</button><button class="btn danger small" data-interrupt-treatment="${item.id}">Interromper</button>` : ''}${item.status === TreatmentStatus.INTERRUPTED ? `<button class="btn primary small" data-resume-treatment="${item.id}">Retomar tratamento</button>` : ''}</div></article>`;
+    <div class="button-row">${item.status === TreatmentStatus.IN_PROGRESS ? `<button class="btn secondary small" data-review-treatment="${esc(item.id)}">Revisar</button><button class="btn danger small" data-interrupt-treatment="${esc(item.id)}">Interromper</button>` : ''}${item.status === TreatmentStatus.INTERRUPTED ? `<button class="btn primary small" data-resume-treatment="${esc(item.id)}">Retomar tratamento</button>` : ''}</div></article>`;
 }
 
 function treatmentsView(state) {
@@ -145,7 +145,7 @@ function assistedView(state) {
   const items = state.assistedEntities.filter((i) => !i.archivedAt).sort((a,b) => a.displayName.localeCompare(b.displayName));
   return `<main><p class="eyebrow">Assistidos</p><h1>Histórias que continuam.</h1><p class="lead">Cada assistido reúne sessões, investigações, tratamentos, Reiki e registros ao longo do tempo.</p>
     <section class="section"><button class="btn primary wide" data-action="new-assisted">Novo assistido</button></section>
-    <section class="section assisted-list">${items.length ? items.map((item) => `<button class="assisted-row row-button" data-assisted-detail="${item.id}"><div class="assisted-meta"><strong>${esc(item.displayName)}</strong><span>${assistedLabels[item.type]}</span></div><span class="muted">Ver histórico</span></button>`).join('') : `<div class="empty">Nenhum assistido cadastrado.</div>`}</section></main>`;
+    <section class="section assisted-list">${items.length ? items.map((item) => `<button class="assisted-row row-button" data-assisted-detail="${esc(item.id)}"><div class="assisted-meta"><strong>${esc(item.displayName)}</strong><span>${assistedLabels[item.type]}</span></div><span class="muted">Ver histórico</span></button>`).join('') : `<div class="empty">Nenhum assistido cadastrado.</div>`}</section></main>`;
 }
 
 function libraryView() {
@@ -162,7 +162,7 @@ function preparationSheet(state) {
 
 function assistedPickerSheet(state) {
   const items = state.assistedEntities.filter((i) => !i.archivedAt);
-  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Contexto da sessão</p><h2>Escolha um assistido</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div>${items.length ? `<div class="assisted-list">${items.map((item) => `<div class="assisted-row"><div class="assisted-meta"><strong>${esc(item.displayName)}</strong><span>${assistedLabels[item.type]}</span></div><button class="btn secondary small" data-select-assisted="${item.id}">Usar</button></div>`).join('')}</div>` : `<div class="empty">Cadastre o primeiro assistido para começar.</div>`}<div class="section"><button class="btn primary wide" data-action="new-assisted">Novo assistido</button></div></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Contexto da sessão</p><h2>Escolha um assistido</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div>${items.length ? `<div class="assisted-list">${items.map((item) => `<div class="assisted-row"><div class="assisted-meta"><strong>${esc(item.displayName)}</strong><span>${assistedLabels[item.type]}</span></div><button class="btn secondary small" data-select-assisted="${esc(item.id)}">Usar</button></div>`).join('')}</div>` : `<div class="empty">Cadastre o primeiro assistido para começar.</div>`}<div class="section"><button class="btn primary wide" data-action="new-assisted">Novo assistido</button></div></section></div>`;
 }
 
 function newAssistedSheet() {
@@ -181,39 +181,40 @@ function investigationSheet(state, investigationId) {
     const yesAnswers = investigation.answers.filter((a) => a.answer === 'YES');
     const existing = state.findings.filter((f) => f.investigationId === investigation.id && f.status !== 'DISMISSED');
     return `<div class="modal-backdrop"><section class="sheet focus-sheet"><div class="sheet-head"><div><p class="eyebrow">Investigação concluída</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><p class="muted">Respostas positivas não viram achados automaticamente. Confirme apenas o que deve entrar no registro.</p>
-      <form id="findings-form" data-investigation="${investigation.id}" class="stack">${yesAnswers.length ? `<div class="checklist">${yesAnswers.map((a) => `<label class="check-row"><input type="checkbox" name="finding" value="${a.questionId}" ${existing.some((f) => f.sourceQuestionId === a.questionId) ? 'checked disabled' : ''}><span>${esc(a.questionTextSnapshot)}</span></label>`).join('')}</div>` : `<div class="empty">Nenhuma resposta “Sim” nesta investigação.</div>`}<button class="btn primary wide" type="submit">Confirmar achados</button></form></section></div>`;
+      <form id="findings-form" data-investigation="${esc(investigation.id)}" class="stack">${yesAnswers.length ? `<div class="checklist">${yesAnswers.map((a) => `<label class="check-row"><input type="checkbox" name="finding" value="${esc(a.questionId)}" ${existing.some((f) => f.sourceQuestionId === a.questionId) ? 'checked disabled' : ''}><span>${esc(a.questionTextSnapshot)}</span></label>`).join('')}</div>` : `<div class="empty">Nenhuma resposta “Sim” nesta investigação.</div>`}<button class="btn primary wide" type="submit">Confirmar achados</button></form></section></div>`;
   }
   const question = investigation.protocolSnapshot.questions[investigation.currentIndex];
-  return `<div class="modal-backdrop"><section class="sheet focus-sheet"><div class="sheet-head"><div><p class="eyebrow">${esc(investigation.protocolSnapshot.name)} · ${investigation.currentIndex + 1}/${investigation.protocolSnapshot.questions.length}</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="question-panel"><p class="muted">Consulte o pêndulo</p><h1>${esc(question.text)}</h1></div><div class="binary-actions"><button class="binary-btn" data-answer="YES" data-investigation="${investigation.id}">Sim</button><button class="binary-btn" data-answer="NO" data-investigation="${investigation.id}">Não</button></div><div class="save-state">Autosave ativo</div></section></div>`;
+  if (!question) return `<div class="modal-backdrop"><section class="sheet focus-sheet"><div class="sheet-head"><div><p class="eyebrow">Investigação</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="empty">Não foi possível localizar a pergunta atual. Retome a investigação pelo histórico ou escolha outro protocolo.</div></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet focus-sheet"><div class="sheet-head"><div><p class="eyebrow">${esc(investigation.protocolSnapshot.name)} · ${investigation.currentIndex + 1}/${investigation.protocolSnapshot.questions.length}</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="question-panel"><p class="muted">Consulte o pêndulo</p><h1>${esc(question.text)}</h1></div><div class="binary-actions"><button class="binary-btn" data-answer="YES" data-investigation="${esc(investigation.id)}">Sim</button><button class="binary-btn" data-answer="NO" data-investigation="${esc(investigation.id)}">Não</button></div><div class="save-state">Autosave ativo</div></section></div>`;
 }
 
 function treatmentFormSheet(state, findingIds = []) {
   const session = getOpenSession(state); const assisted = assistedById(state, session?.currentAssistedEntityId);
   const findings = state.findings.filter((f) => findingIds.includes(f.id));
   return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Novo tratamento</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div>${findings.length ? `<div class="notice">${findings.length} ${findings.length === 1 ? 'achado vinculado' : 'achados vinculados'} à origem deste tratamento.</div>` : `<p class="muted">Tratamentos podem ser criados diretamente, mesmo sem investigação anterior.</p>`}
-    <form id="treatment-form" data-findings="${findingIds.join(',')}" class="form-grid section"><div class="field"><label>Objetivo / nome do tratamento</label><input name="title" required placeholder="Ex.: Reequilíbrio do tema prioritário"></div><div class="field"><label>Gráfico, ferramenta ou componente</label><input name="componentName" required placeholder="Nome do recurso"></div><div class="field"><label>Comando / orientação</label><textarea name="instructions" placeholder="Comando associado ao componente"></textarea></div><div class="duration-grid"><div class="field"><label>Duração</label><input name="durationValue" type="number" min="1" required inputmode="numeric"></div><div class="field"><label>Unidade</label><select name="durationUnit">${Object.entries(durationLabels).map(([key,label]) => `<option value="${key}">${label}</option>`).join('')}</select></div></div><button class="btn primary wide" type="submit">Iniciar tratamento</button></form></section></div>`;
+    <form id="treatment-form" data-findings="${esc(findingIds.join(','))}" class="form-grid section"><div class="field"><label>Objetivo / nome do tratamento</label><input name="title" required placeholder="Ex.: Reequilíbrio do tema prioritário"></div><div class="field"><label>Gráfico, ferramenta ou componente</label><input name="componentName" required placeholder="Nome do recurso"></div><div class="field"><label>Comando / orientação</label><textarea name="instructions" placeholder="Comando associado ao componente"></textarea></div><div class="duration-grid"><div class="field"><label>Duração</label><input name="durationValue" type="number" min="1" required inputmode="numeric"></div><div class="field"><label>Unidade</label><select name="durationUnit">${Object.entries(durationLabels).map(([key,label]) => `<option value="${key}">${label}</option>`).join('')}</select></div></div><button class="btn primary wide" type="submit">Iniciar tratamento</button></form></section></div>`;
 }
 
 function reviewTreatmentSheet(state, treatmentId) {
   const treatment = state.treatments.find((item) => item.id === treatmentId); const assisted = assistedById(state, treatment?.assistedEntityId);
-  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Revisão do tratamento</p><h2>${esc(treatment?.title || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><p class="muted">${esc(assisted?.displayName || '')}. Esta revisão envolve nova medição e, por isso, usa a sessão aberta.</p><form id="review-form" data-treatment="${treatmentId}" class="form-grid"><label class="check-row"><input type="checkbox" name="verifiedComplete"><span>O tratamento está 100% finalizado e posso desmontar os componentes</span></label><div class="field"><label>Desequilíbrio atual (%)</label><input name="imbalancePercent" type="number" min="0" max="100" step="5" inputmode="numeric" placeholder="Opcional"></div><div class="field"><label>Observações</label><textarea name="notes" placeholder="Resultado da revisão"></textarea></div><button class="btn primary wide" type="submit">Registrar revisão</button></form></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Revisão do tratamento</p><h2>${esc(treatment?.title || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><p class="muted">${esc(assisted?.displayName || '')}. Registre uma observação intermediária. Para concluir ou desmontar componentes, use o fluxo de Componentes e depois a Avaliação final.</p><form id="review-form" data-treatment="${esc(treatmentId)}" class="form-grid"><div class="field"><label>Desequilíbrio atual (%)</label><input name="imbalancePercent" type="number" min="0" max="100" step="5" inputmode="numeric" placeholder="Opcional"></div><div class="field"><label>Observações</label><textarea name="notes" placeholder="Resultado da revisão"></textarea></div><button class="btn primary wide" type="submit">Registrar revisão</button></form></section></div>`;
 }
 
 function reikiSheet(state, applicationId) {
   const app = state.reikiApplications.find((item) => item.id === applicationId); if (!app) return '';
   const assisted = assistedById(state, app.assistedEntityId); const elapsed = reikiElapsedSeconds(app);
-  return `<div class="modal-backdrop"><section class="sheet timer-sheet"><div class="sheet-head"><div><p class="eyebrow">Reiki</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="timer-value timer-large" data-live-timer="${app.id}">${formatClock(elapsed)}</div><p class="muted timer-status">${app.status === 'PAUSED' ? 'Pausado' : 'Em andamento'} · o tempo é reconstruído pelos horários, não por um contador volátil.</p><div class="button-row">${app.status === 'RUNNING' ? `<button class="btn secondary" data-pause-reiki="${app.id}">Pausar</button>` : `<button class="btn secondary" data-resume-reiki="${app.id}">Retomar</button>`}<button class="btn primary" data-finish-reiki="${app.id}">Concluir</button></div></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet timer-sheet"><div class="sheet-head"><div><p class="eyebrow">Reiki</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="timer-value timer-large" data-live-timer="${esc(app.id)}">${formatClock(elapsed)}</div><p class="muted timer-status">${app.status === 'PAUSED' ? 'Pausado' : 'Em andamento'} · o tempo é reconstruído pelos horários, não por um contador volátil.</p><div class="button-row">${app.status === 'RUNNING' ? `<button class="btn secondary" data-pause-reiki="${esc(app.id)}">Pausar</button>` : `<button class="btn secondary" data-resume-reiki="${esc(app.id)}">Retomar</button>`}<button class="btn primary" data-finish-reiki="${esc(app.id)}">Concluir</button></div></section></div>`;
 }
 
 function finishReikiSheet(state, applicationId) {
   const app = state.reikiApplications.find((item) => item.id === applicationId); const assisted = assistedById(state, app?.assistedEntityId);
-  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Concluir Reiki</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><form id="finish-reiki-form" data-reiki="${applicationId}" class="form-grid"><div class="field"><label>Observações opcionais</label><textarea name="notes" placeholder="Registro da aplicação"></textarea></div><button class="btn primary wide" type="submit">Concluir aplicação</button></form></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Concluir Reiki</p><h2>${esc(assisted?.displayName || '')}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><form id="finish-reiki-form" data-reiki="${esc(applicationId)}" class="form-grid"><div class="field"><label>Observações opcionais</label><textarea name="notes" placeholder="Registro da aplicação"></textarea></div><button class="btn primary wide" type="submit">Concluir aplicação</button></form></section></div>`;
 }
 
 function retrospectiveReikiSheet(state) {
   const items = state.assistedEntities.filter((i) => !i.archivedAt);
   const localNow = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0,16);
-  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Registro retrospectivo</p><h2>Aplicação de Reiki</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><p class="muted">Use para registrar uma aplicação já realizada. Não cria uma medição radiestésica fora de sessão.</p><form id="reiki-retro-form" class="form-grid"><div class="field"><label>Assistido</label><select name="assistedEntityId" required><option value="">Selecione</option>${items.map((i) => `<option value="${i.id}">${esc(i.displayName)}</option>`).join('')}</select></div><div class="field"><label>Término da aplicação</label><input name="occurredAt" type="datetime-local" value="${localNow}" required></div><div class="field"><label>Duração em minutos</label><input name="durationMinutes" type="number" min="1" required inputmode="numeric"></div><div class="field"><label>Observações</label><textarea name="notes"></textarea></div><button class="btn primary wide" type="submit">Registrar aplicação</button></form></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Registro retrospectivo</p><h2>Aplicação de Reiki</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><p class="muted">Use para registrar uma aplicação já realizada. Não cria uma medição radiestésica fora de sessão.</p><form id="reiki-retro-form" class="form-grid"><div class="field"><label>Assistido</label><select name="assistedEntityId" required><option value="">Selecione</option>${items.map((i) => `<option value="${esc(i.id)}">${esc(i.displayName)}</option>`).join('')}</select></div><div class="field"><label>Término da aplicação</label><input name="occurredAt" type="datetime-local" value="${localNow}" required></div><div class="field"><label>Duração em minutos</label><input name="durationMinutes" type="number" min="1" required inputmode="numeric"></div><div class="field"><label>Observações</label><textarea name="notes"></textarea></div><button class="btn primary wide" type="submit">Registrar aplicação</button></form></section></div>`;
 }
 
 function assistedDetailSheet(state, assistedEntityId) {
@@ -221,7 +222,7 @@ function assistedDetailSheet(state, assistedEntityId) {
   const events = state.events.filter((e) => e.assistedEntityId === assisted.id).sort((a,b) => b.occurredAt.localeCompare(a.occurredAt));
   const treatments = state.treatments.filter((t) => t.assistedEntityId === assisted.id && t.status !== TreatmentStatus.COMPLETED);
   const investigations = state.investigations.filter((i) => i.assistedEntityId === assisted.id && i.status === 'IN_PROGRESS');
-  return `<div class="modal-backdrop"><section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">${assistedLabels[assisted.type]}</p><h2>${esc(assisted.displayName)}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="metric-grid"><div class="metric"><strong>${treatments.length}</strong><span>tratamentos ativos</span></div><div class="metric"><strong>${investigations.length}</strong><span>investigações abertas</span></div></div><section class="section"><h3>Histórico longitudinal</h3><div class="section">${timeline(events, state)}</div></section></section></div>`;
+  return `<div class="modal-backdrop"><section class="sheet detail-sheet"><div class="sheet-head"><div><p class="eyebrow">${assistedLabels[assisted.type] || 'Assistido'}</p><h2>${esc(assisted.displayName)}</h2></div><button class="close-btn" data-action="dismiss-sheet">×</button></div><div class="metric-grid"><div class="metric"><strong>${treatments.length}</strong><span>tratamentos ativos</span></div><div class="metric"><strong>${investigations.length}</strong><span>investigações abertas</span></div></div><section class="section"><h3>Histórico longitudinal</h3><div class="section">${timeline(events, state)}</div></section></section></div>`;
 }
 
 function closeSessionSheet(state) {
@@ -303,6 +304,7 @@ root.addEventListener('click', (event) => {
       if (!open) { startSession(store); route = 'today'; sheet = { type:'preparation' }; render(); return; }
       if (!isPrepared(current, open.id)) { route = 'today'; sheet = { type:'preparation' }; render(); return; }
       const treatment = current.treatments.find((t) => t.id === button.dataset.reviewTreatment);
+      if (!treatment) throw new Error('Tratamento não encontrado.');
       selectAssistedForSession(store, open.id, treatment.assistedEntityId); sheet = { type:'review-treatment', id:treatment.id }; render(); return;
     }
   } catch (error) { alert(error.message); }
@@ -337,7 +339,7 @@ root.addEventListener('submit', (event) => {
     }
     if (form.id === 'review-form') {
       const session = getOpenSession(store.getState());
-      reviewTreatment(store, { treatmentId:form.dataset.treatment, sessionId:session.id, verifiedComplete:data.get('verifiedComplete') === 'on', imbalancePercent:data.get('imbalancePercent'), notes:data.get('notes') });
+      reviewTreatment(store, { treatmentId:form.dataset.treatment, sessionId:session.id, verifiedComplete:false, imbalancePercent:data.get('imbalancePercent'), notes:data.get('notes') });
       sheet = null; route = 'treatments'; setSaved('Revisão registrada'); return;
     }
     if (form.id === 'finish-reiki-form') { completeReiki(store, form.dataset.reiki, data.get('notes')); sheet = null; setSaved('Aplicação de Reiki concluída'); return; }
