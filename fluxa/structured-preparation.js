@@ -1,3 +1,5 @@
+import { completePreparation } from './domain.js';
+
 export function updatePreparationDetails(store, runId, input = {}) {
   const state = store.getState();
   const run = state.preparationRuns.find((item) => item.id === runId && item.status !== 'COMPLETED');
@@ -46,4 +48,12 @@ export function validateStructuredPreparation(state, runId) {
     throw new Error('Registre ao menos um gráfico/recurso de proteção ou descreva a proteção utilizada.');
   }
   return true;
+}
+
+export function completeStructuredPreparation(store, runId) {
+  validateStructuredPreparation(store.getState(), runId);
+  completePreparation(store, runId);
+  const completed = store.getState().preparationRuns.find((item) => item.id === runId);
+  if (completed?.status !== 'COMPLETED') throw new Error('Não foi possível concluir a preparação.');
+  return completed;
 }
