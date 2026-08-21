@@ -13,6 +13,11 @@ function enhanceDurationGrid(grid){
   const unit=grid.querySelector('select[name="durationUnit"],select[name="unit"]');
   if(!value||!unit)return;
   grid.dataset.quickDurationEnhanced='true';
+  value.required=false;
+  value.removeAttribute('required');
+  if(!value.placeholder)value.placeholder='Sem prazo';
+  const label=value.closest('.field')?.querySelector('label');
+  if(label&&!label.querySelector('.muted'))label.insertAdjacentHTML('beforeend',' <span class="muted">(opcional)</span>');
   const wrap=document.createElement('div');wrap.className='quick-duration-presets';wrap.dataset.quickDurationPresets='true';
   wrap.innerHTML=presets.map((p)=>`<button type="button" class="quick-duration-chip" data-duration-value="${p.value}" data-duration-unit="${p.unit}">${p.label}</button>`).join('');
   grid.after(wrap);
@@ -21,7 +26,7 @@ function enhance(){if(enhancing)return;enhancing=true;try{document.querySelector
 new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
 
 function setUnit(select,unit){
-  if(!unit)return;
+  if(!unit){select.value='';return;}
   const exact=[...select.options].find((option)=>option.value===unit);
   const compatible=exact||[...select.options].find((option)=>option.value.replace(/S$/,'')===unit.replace(/S$/,''));
   if(compatible)select.value=compatible.value;
@@ -35,7 +40,8 @@ document.addEventListener('click',(event)=>{
   if(!value||!unit)return;
   value.value=button.dataset.durationValue;
   setUnit(unit,button.dataset.durationUnit);
-  if(!button.dataset.durationValue){value.removeAttribute('required');value.dispatchEvent(new Event('input',{bubbles:true}));}
-  else {value.setAttribute('required','');value.dispatchEvent(new Event('input',{bubbles:true}));unit.dispatchEvent(new Event('change',{bubbles:true}));}
+  value.removeAttribute('required');
+  value.dispatchEvent(new Event('input',{bubbles:true}));
+  if(button.dataset.durationValue)unit.dispatchEvent(new Event('change',{bubbles:true}));
   wrap.querySelectorAll('.quick-duration-chip').forEach((chip)=>chip.classList.toggle('active',chip===button));
 },true);
