@@ -11,7 +11,7 @@ let bypassWorkspaceChooser = false;
 let workspaceInvestigateButton = null;
 
 function esc(value = '') {
-  return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[c]));
+  return String(value).replace(/[&<>'\"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '\"':'&quot;' }[c]));
 }
 
 function preparedSession() {
@@ -77,7 +77,6 @@ const observer = new MutationObserver(ensureLibraryCards);
 observer.observe(document.querySelector('#app'), { childList:true, subtree:true });
 queueMicrotask(ensureLibraryCards);
 
-// Intercept the workspace action before app.js defaults to the quick triage.
 document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action="investigate"]');
   if (!button || bypassWorkspaceChooser) {
@@ -143,7 +142,12 @@ document.addEventListener('submit', (event) => {
   event.preventDefault();
   const data = new FormData(form);
   try {
-    confirmBranchingFindings(store, form.dataset.investigation, data.getAll('finding'), data.get('classification'));
+    const selected=data.getAll('finding');
+    const fallback=data.get('classification')||'FACTOR_RELEVANT';
+    for(const nodeId of selected){
+      const perFinding=form.querySelector(`[data-finding-classification-for="${CSS.escape(nodeId)}"]`);
+      confirmBranchingFindings(store,form.dataset.investigation,[nodeId],perFinding?.value||fallback);
+    }
     document.querySelector('#protocol-overlay')?.remove();
     activeId = null;
     alert('Investigação registrada no histórico do assistido.');
