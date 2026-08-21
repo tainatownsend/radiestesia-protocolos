@@ -44,7 +44,7 @@ function collapseSection(section,{buttonLabel='Ver atividade'}={}){
   const content=section.querySelector('.timeline,.stack,.empty');const head=section.querySelector('.section-head');
   if(!content||!head)return;
   section.dataset.homeCollapsed='true';section.classList.add('home-collapsible-section');content.hidden=true;
-  const btn=document.createElement('button');btn.type='button';btn.className='btn ghost small';btn.dataset.homeToggleSection='true';btn.textContent=buttonLabel;head.prepend(btn);
+  const btn=document.createElement('button');btn.type='button';btn.className='btn ghost small';btn.dataset.homeToggleSection='true';btn.textContent=buttonLabel;head.appendChild(btn);
 }
 function moveInvestigationStack(main,cockpit){const stack=main.querySelector('[data-ux-investigation-stack]');if(!stack)return;stack.classList.add('home-support-section');cockpit.after(stack);}
 function hideLegacySessionLayers(main){
