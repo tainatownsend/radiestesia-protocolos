@@ -3,8 +3,8 @@ name: Fluxa domain checks
 on:
   push:
     branches:
-      - fluxa-mvp-foundation
-      - fluxa-assisted-selection-guard
+      - main
+      - 'fluxa-*'
     paths:
       - 'fluxa/**'
       - '.github/workflows/fluxa-domain.yml'
