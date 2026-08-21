@@ -7,7 +7,8 @@ import {
 } from './domain.js';
 import {
   correctForgottenSessionClose, addTreatmentComponent, replaceTreatmentComponent,
-  resumeTreatmentPreservingDuration, recordStructuredFinalAssessment, validateAssistedInput
+  resumeTreatmentPreservingDuration, recordStructuredFinalAssessment, validateAssistedInput,
+  createValidatedAssistedEntity
 } from './backlog.js';
 
 function makeState() {
@@ -137,6 +138,15 @@ function prepare(store, sessionId) {
   completeReiki(store, app.id, 'ok');
   const done = store.getState().reikiApplications[0];
   assert.equal(done.durationSeconds, 20 * 60, 'paused time must not count');
+}
+
+{
+  const store = fakeStore();
+  const situation = createValidatedAssistedEntity(store, {
+    type:'SITUATION', displayName:'Processo familiar', identifier:'PROC-123', relatedPerson:'Maria Silva', members:[]
+  });
+  assert.equal(situation.relatedPerson, 'Maria Silva');
+  assert.equal(store.getState().assistedEntities[0].relatedPerson, 'Maria Silva');
 }
 
 assert.throws(() => validateAssistedInput({ type:'PERSON', displayName:'Sem data' }), /nascimento/);
