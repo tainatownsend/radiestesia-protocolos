@@ -14,7 +14,7 @@ class ThrowingStorage {
 }
 globalThis.localStorage=new MemoryStorage();
 
-function state(id, updatedAt=null){return {version:4,meta:updatedAt?{updatedAt}:{},sessions:[{id}],assistedEntities:[],events:[],treatments:[]};}
+function state(id, updatedAt=null, overrides={}){return {version:4,meta:updatedAt?{updatedAt}:{},sessions:[{id}],assistedEntities:[],events:[],treatments:[],...overrides};}
 
 localStorage.setItem('fluxa.mvp.v1',JSON.stringify({hello:'world'}));
 localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('backup','2026-08-20T09:59:00.000Z')));
@@ -41,6 +41,29 @@ localStorage.map.clear();
 localStorage.setItem('fluxa.mvp.v1',JSON.stringify(state('primary-tie','2026-08-20T10:00:00.000Z')));
 localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('recovery-tie','2026-08-20T10:00:00.000Z')));
 assert.equal(loadState().sessions[0].id,'primary-tie','primary remains preferred when valid snapshots have the same update timestamp');
+
+localStorage.map.clear();
+localStorage.setItem('fluxa.mvp.v1',JSON.stringify(state('safe-primary','2026-08-20T10:00:00.000Z')));
+localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('future-recovery','2026-08-20T10:05:00.000Z',{version:6,futureOnly:{must:'survive'}})));
+assert.equal(loadState().sessions[0].id,'safe-primary','a newer snapshot from an unsupported future schema must be ignored rather than downgraded');
+
+localStorage.map.clear();
+localStorage.setItem('fluxa.mvp.v1',JSON.stringify(state('broken-primary','2026-08-20T10:05:00.000Z',{
+  assistedEntities:[{id:'a1'}],
+  treatments:[{id:'t1',assistedEntityId:'a1'}],
+  treatmentComponents:[{id:'c1',treatmentId:'missing'}]
+})));
+localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('safe-backup','2026-08-20T10:00:00.000Z')));
+assert.equal(loadState().sessions[0].id,'safe-backup','semantically broken primary must fall through to a valid snapshot');
+
+localStorage.map.clear();
+localStorage.setItem('fluxa.mvp.v1',JSON.stringify(state('safe-primary','2026-08-20T10:00:00.000Z')));
+localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('broken-recovery','2026-08-20T10:06:00.000Z',{
+  assistedEntities:[{id:'a1'}],
+  treatments:[{id:'t1',assistedEntityId:'a1'}],
+  assessments:[{id:'as1',assistedEntityId:'a1',treatmentId:'missing'}]
+})));
+assert.equal(loadState().sessions[0].id,'safe-primary','newer recovery with broken references must not win startup selection');
 
 localStorage.map.clear();
 const store=createStore();
