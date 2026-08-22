@@ -6,6 +6,7 @@ const html=read('./index.html'),ui=read('./premium-workflow-ui.js'),css=read('./
 assert.ok(html.includes('premium-workflow.css'),'Premium workflow CSS must load.');
 assert.ok(html.includes('premium-workflow-ui.js'),'Premium workflow UI must load.');
 assert.ok(html.indexOf('premium-workflow.css')>html.indexOf('premium-reference.css'),'Workflow CSS must load after the reference layer.');
+assert.ok(html.indexOf('brand-shell.css')>html.indexOf('premium-workflow.css'),'Global brand shell must remain the final stylesheet.');
 assert.ok(html.indexOf('premium-workflow-ui.js')>html.indexOf('premium-shell-ui.js'),'Workflow UI must run after premium shell cleanup.');
 assert.match(ui,/querySelectorAll\('\.treatment-card\[data-treatment-id\]'\)/);
 assert.match(ui,/premium-treatment-components/);
