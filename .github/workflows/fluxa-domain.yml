@@ -57,4 +57,5 @@ jobs:
           node fluxa/root-protocol-parser.test.mjs
           node fluxa/root-protocol-runtime.test.mjs
           node fluxa/root-treatment-prefill.test.mjs
+          node fluxa/premium-treatments.test.mjs
           node fluxa/static-smoke.test.mjs
