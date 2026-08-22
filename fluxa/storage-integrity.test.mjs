@@ -44,10 +44,24 @@ const sourceAssessment={id:'as-source',sessionId:'s1',assistedEntityId:'a1',foll
 const orientingAssessment={id:'as-orient',kind:'ORIENTING',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source',linkedInvestigationId:'root1',selectedProtocolId:'p1'};
 const handoffAssessments=[sourceAssessment,orientingAssessment];
 assert.equal(validateStateReferences(base({investigations:[rootInvestigation],assessments:handoffAssessments})),true);
-assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,sourceAssessmentId:'missing'}]})),/Assessment\.sourceAssessmentId.*inexistente/i);
-assert.throws(()=>validateStateReferences(base({assessments:[{...sourceAssessment,followUpAssessmentId:'missing'}]})),/Assessment\.followUpAssessmentId.*inexistente/i);
-assert.throws(()=>validateStateReferences(base({assessments:[sourceAssessment,{...orientingAssessment,linkedInvestigationId:'missing'}]})),/Assessment\.linkedInvestigationId.*inexistente/i);
-assert.throws(()=>validateStateReferences(base({investigations:[rootInvestigation],assessments:[{...orientingAssessment,sourceAssessmentId:'as-orient'}]})),/não pode apontar para si própria/i);
+
+// Keep each negative fixture invalid in only the relationship being asserted. This
+// makes the tests independent from validation order as more integrity rules are added.
+assert.throws(()=>validateStateReferences(base({
+  investigations:[rootInvestigation],
+  assessments:[{...orientingAssessment,sourceAssessmentId:'missing',linkedInvestigationId:null}]
+})),/Assessment\.sourceAssessmentId.*inexistente/i);
+assert.throws(()=>validateStateReferences(base({
+  assessments:[{...sourceAssessment,followUpAssessmentId:'missing'}]
+})),/Assessment\.followUpAssessmentId.*inexistente/i);
+assert.throws(()=>validateStateReferences(base({
+  assessments:[{...orientingAssessment,sourceAssessmentId:null,linkedInvestigationId:'missing'}]
+})),/Assessment\.linkedInvestigationId.*inexistente/i);
+assert.throws(()=>validateStateReferences(base({
+  investigations:[rootInvestigation],
+  assessments:[{...orientingAssessment,sourceAssessmentId:'as-orient',linkedInvestigationId:null}]
+})),/não pode apontar para si própria/i);
+
 assert.throws(()=>validateStateReferences(base({
   assessments:[{...sourceAssessment,assistedEntityId:'a2'},orientingAssessment],investigations:[rootInvestigation]
 })),/avaliação (?:de origem|de continuidade).*outro Assistido/i);
