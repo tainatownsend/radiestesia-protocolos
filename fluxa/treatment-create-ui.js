@@ -5,9 +5,16 @@ import { addTreatmentComponent } from './backlog.js';
 const store = createStore();
 let enhancing = false;
 
+const OPTIONAL_MODALITY_LABELS = {
+  REIKI:'Aplicação de Reiki',
+  BACH_FLOWERS:'Florais de Bach',
+  CRYSTALS:'Cristais',
+  RADIONIC_TABLE:'Mesa radiônica'
+};
+
 function componentFields(index) {
   return `<section class="card treatment-component-draft" data-treatment-component-draft>
-    <div class="section-head"><div><p class="eyebrow">Componente ${index}</p><h3>Gráfico, ferramenta ou recurso</h3></div>${index > 1 ? '<button class="btn ghost small" type="button" data-remove-treatment-component>Remover</button>' : ''}</div>
+    <div class="section-head"><div><p class="eyebrow">Componente ${index}</p><h3>Gráfico, ferramenta ou recurso radiestésico</h3></div>${index > 1 ? '<button class="btn ghost small" type="button" data-remove-treatment-component>Remover</button>' : ''}</div>
     <div class="form-grid">
       <div class="field"><label>Nome do componente</label><input name="componentName" required placeholder="Nome do recurso"></div>
       <div class="field"><label>Comando / orientação</label><textarea name="instructions" placeholder="Comando associado ao componente"></textarea></div>
@@ -16,10 +23,29 @@ function componentFields(index) {
   </section>`;
 }
 
+function configuredOptionalModalities(state) {
+  const settings = state?.settings?.therapeuticModalities || {};
+  const enabled = Array.isArray(settings.enabled) ? settings.enabled : [];
+  const custom = Array.isArray(settings.custom) ? settings.custom : [];
+  return [
+    ...enabled.filter((id)=>OPTIONAL_MODALITY_LABELS[id]).map((id)=>({ id, label:OPTIONAL_MODALITY_LABELS[id] })),
+    ...custom.map((label,index)=>({ id:`CUSTOM_${index}`, label:String(label).trim() })).filter((item)=>item.label)
+  ];
+}
+
+function modalityPicker() {
+  const optional = configuredOptionalModalities(store.getState());
+  return `<section class="card treatment-modality-picker" data-treatment-modality-picker>
+    <div class="section-head"><div><p class="eyebrow">Composição do tratamento</p><h3>Quais terapias farão parte?</h3></div></div>
+    <div class="modality-base-card compact"><span class="eyebrow">Base</span><strong>Radiestesia</strong><small>O tratamento radiestésico faz parte deste fluxo por padrão.</small></div>
+    ${optional.length ? `<fieldset class="field"><legend>Deseja incluir alguma terapia complementar?</legend><div class="checklist">${optional.map((item)=>`<label class="check-row"><input type="checkbox" name="treatmentModality" value="${item.id}" data-modality-label="${item.label.replace(/"/g,'&quot;')}"><span><strong>${item.label}</strong><small>Adicionar ao plano deste tratamento.</small></span></label>`).join('')}</div></fieldset>` : `<div class="notice">Nenhuma terapia complementar está ativa no seu perfil. Este tratamento será composto apenas por Radiestesia.</div>`}
+  </section>`;
+}
+
 function renumber(form) {
   form.querySelectorAll('[data-treatment-component-draft]').forEach((section, index) => {
     const eyebrow = section.querySelector('.eyebrow');
-    if (eyebrow) eyebrow.textContent = `Componente ${index + 1}`;
+    if (eyebrow) eyebrow.textContent = `Componente radiestésico ${index + 1}`;
     const remove = section.querySelector('[data-remove-treatment-component]');
     if (index === 0 && remove) remove.remove();
   });
@@ -56,6 +82,18 @@ function linkTreatmentThemeProvenance(treatmentId, form) {
   });
 }
 
+function linkTreatmentModalities(treatmentId, modalities) {
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const treatment = draft.treatments.find((item) => item.id === treatmentId);
+    if (!treatment) return draft;
+    treatment.modalities = ['RADIESTHESIA', ...modalities.map((item)=>item.id)];
+    treatment.modalitySnapshots = [{ id:'RADIESTHESIA', label:'Radiestesia' }, ...modalities];
+    treatment.updatedAt = store.nowIso();
+    return draft;
+  });
+}
+
 function enhanceTreatmentForm() {
   const form = document.querySelector('#treatment-form');
   if (!form || form.dataset.multiComponentEnhanced) return;
@@ -81,16 +119,17 @@ function enhanceTreatmentForm() {
   const first = document.createElement('section');
   first.className = 'card treatment-component-draft';
   first.dataset.treatmentComponentDraft = 'true';
-  first.innerHTML = `<div class="section-head"><div><p class="eyebrow">Componente 1</p><h3>Gráfico, ferramenta ou recurso</h3></div></div><div class="form-grid"></div>`;
+  first.innerHTML = `<div class="section-head"><div><p class="eyebrow">Componente radiestésico 1</p><h3>Gráfico, ferramenta ou recurso radiestésico</h3></div></div><div class="form-grid"></div>`;
   const fields = first.querySelector('.form-grid');
   fields.append(componentStart, instructionsField, durationGrid);
   submit.before(first);
+  first.insertAdjacentHTML('beforebegin', modalityPicker());
 
   const add = document.createElement('button');
   add.type = 'button';
   add.className = 'btn secondary wide';
   add.dataset.addTreatmentComponentDraft = 'true';
-  add.textContent = 'Adicionar outro componente';
+  add.textContent = 'Adicionar outro componente radiestésico';
   submit.before(add);
 }
 
@@ -155,7 +194,8 @@ document.addEventListener('submit', (event) => {
     const durations = data.getAll('durationValue');
     const units = data.getAll('durationUnit');
     const toolIds = data.getAll('toolId');
-    if (!names.length) throw new Error('Adicione pelo menos um componente.');
+    const modalities = [...form.querySelectorAll('input[name="treatmentModality"]:checked')].map((input)=>({ id:input.value, label:input.dataset.modalityLabel || input.value }));
+    if (!names.length) throw new Error('Adicione pelo menos um componente radiestésico.');
 
     const created = createTreatment(store, {
       sessionId: session.id,
@@ -169,6 +209,7 @@ document.addEventListener('submit', (event) => {
     });
     linkComponentToTool(created.component.id, toolIds[0]);
     linkTreatmentThemeProvenance(created.treatment.id, form);
+    linkTreatmentModalities(created.treatment.id, modalities);
 
     for (let i = 1; i < names.length; i += 1) {
       const component = addTreatmentComponent(store, {
@@ -180,6 +221,16 @@ document.addEventListener('submit', (event) => {
         durationUnit: units[i]
       });
       linkComponentToTool(component.id, toolIds[i]);
+    }
+
+    for (const modality of modalities) {
+      addTreatmentComponent(store, {
+        sessionId: session.id,
+        treatmentId: created.treatment.id,
+        type: modality.id === 'REIKI' ? 'REIKI' : 'COMPLEMENTARY_THERAPY',
+        name: modality.label,
+        instructions: 'Terapia complementar incluída na composição deste tratamento.'
+      });
     }
 
     document.querySelector('[data-action="dismiss-sheet"]')?.click();
