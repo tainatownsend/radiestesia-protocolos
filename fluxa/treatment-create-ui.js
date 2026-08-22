@@ -1,189 +1,49 @@
 import { createStore } from './store.js';
 import { createTreatment, getOpenSession } from './domain.js';
 import { addTreatmentComponent } from './backlog.js';
+import { enrichComponentWithTreatmentItem } from './treatment-item-graphs.js';
 
-const store = createStore();
-let enhancing = false;
+const store=createStore();
+let enhancing=false;
+const esc=(value='')=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
-function componentFields(index) {
-  return `<section class="card treatment-component-draft" data-treatment-component-draft>
-    <div class="section-head"><div><p class="eyebrow">Componente ${index}</p><h3>Gráfico, ferramenta ou recurso</h3></div>${index > 1 ? '<button class="btn ghost small" type="button" data-remove-treatment-component>Remover</button>' : ''}</div>
-    <div class="form-grid">
-      <div class="field"><label>Nome do componente</label><input name="componentName" required placeholder="Nome do recurso"></div>
-      <div class="field"><label>Comando / orientação</label><textarea name="instructions" placeholder="Comando associado ao componente"></textarea></div>
-      <div class="duration-grid"><div class="field"><label>Duração <span class="muted">(opcional)</span></label><input name="durationValue" type="number" min="1" inputmode="numeric" placeholder="Sem prazo"></div><div class="field"><label>Unidade</label><select name="durationUnit"><option value="MINUTE">minuto(s)</option><option value="HOUR">hora(s)</option><option value="DAY">dia(s)</option><option value="WEEK">semana(s)</option><option value="MONTH">mês(es)</option></select></div></div>
-    </div>
-  </section>`;
+function graphOptions(){return (store.getState().tools||[]).filter(tool=>!tool.archivedAt&&tool.status!=='ARCHIVED').sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(tool=>`<option value="${esc(tool.name)}"></option>`).join('');}
+function graphFields(index=1){return `<div class="treatment-graph-row" data-treatment-graph><div class="field grow"><label>Gráfico ${index}</label><input name="graphName" list="fluxa-treatment-graphs" required placeholder="Selecione ou digite o nome"></div><div class="graph-duration"><div class="field"><label>Tempo <span class="muted">(opcional)</span></label><input name="graphDurationValue" type="number" min="1" inputmode="numeric" placeholder="Sem prazo"></div><div class="field"><label>Unidade</label><select name="graphDurationUnit"><option value="MINUTE">min</option><option value="HOUR">hora(s)</option><option value="DAY" selected>dia(s)</option><option value="WEEK">semana(s)</option><option value="MONTH">mês(es)</option></select></div></div>${index>1?'<button class="btn ghost small" type="button" data-remove-treatment-graph>Remover gráfico</button>':''}</div>`;}
+function commandFields(index=1,prefill={}){return `<article class="treatment-command-draft" data-treatment-command><div class="section-head"><div><p class="eyebrow">Comando ${index}</p><h4>O que será feito</h4></div>${index>1?'<button class="btn ghost small" type="button" data-remove-treatment-command>Remover</button>':''}</div><div class="field"><label>Comando / orientação</label><textarea name="commandText" required placeholder="Ex.: neutralizar, harmonizar, fortalecer…">${esc(prefill.text||'')}</textarea></div><div class="treatment-graphs" data-treatment-graphs>${graphFields(1)}</div><button class="btn secondary small" type="button" data-add-treatment-graph>+ Adicionar gráfico</button></article>`;}
+function itemFields(index=1,prefill={}){return `<section class="card treatment-item-draft" data-treatment-item><div class="section-head"><div><p class="eyebrow">Item ${index}</p><h3>Item a tratar</h3></div>${index>1?'<button class="btn ghost small" type="button" data-remove-treatment-item>Remover item</button>':''}</div><div class="field"><label>Tópico / item de tratamento</label><input name="itemLabel" required value="${esc(prefill.itemLabel||'')}" placeholder="Ex.: crença de escassez"></div><div class="treatment-commands" data-treatment-commands>${commandFields(1,{text:prefill.command||''})}</div><button class="btn secondary wide" type="button" data-add-treatment-command>+ Adicionar comando</button></section>`;}
+
+function renumber(container,selector,label){container.querySelectorAll(selector).forEach((node,index)=>{const eyebrow=node.querySelector(':scope > .section-head .eyebrow');if(eyebrow)eyebrow.textContent=`${label} ${index+1}`;});}
+function refreshGraphLabels(command){command.querySelectorAll('[data-treatment-graph]').forEach((row,index)=>{const label=row.querySelector('label');if(label)label.textContent=`Gráfico ${index+1}`;});}
+
+function linkTreatmentThemeProvenance(treatmentId,form){const treatmentTheme=String(form.dataset.treatmentTheme||'').trim(),treatmentThemeSource=String(form.dataset.treatmentThemeSource||'').trim(),suggestion=String(form.dataset.treatmentThemeSuggestion||'').trim();if(!treatmentTheme&&!treatmentThemeSource&&!suggestion)return;store.setState(state=>{const draft=structuredClone(state),t=draft.treatments.find(row=>row.id===treatmentId);if(!t)return draft;t.treatmentTheme=treatmentTheme||null;t.treatmentThemeSource=treatmentThemeSource||null;t.treatmentThemeSuggestionId=suggestion||null;t.updatedAt=store.nowIso();return draft;});}
+
+function readGraph(row){return {graphName:row.querySelector('[name="graphName"]')?.value||'',durationValue:row.querySelector('[name="graphDurationValue"]')?.value||'',durationUnit:row.querySelector('[name="graphDurationUnit"]')?.value||'DAY'};}
+function readCommand(node){return {text:node.querySelector('[name="commandText"]')?.value||'',graphApplications:[...node.querySelectorAll('[data-treatment-graph]')].map(readGraph)};}
+function readItem(node){return {itemLabel:node.querySelector('[name="itemLabel"]')?.value||'',commands:[...node.querySelectorAll(':scope > [data-treatment-commands] > [data-treatment-command]')].map(readCommand)};}
+
+function enhanceTreatmentForm(){const form=document.querySelector('#treatment-form');if(!form||form.dataset.treatmentItemsEnhanced)return;const oldName=form.querySelector('[name="componentName"]'),oldInstructions=form.querySelector('[name="instructions"]'),oldDuration=form.querySelector('[name="durationValue"]'),oldUnit=form.querySelector('[name="durationUnit"]'),submit=form.querySelector('button[type="submit"]');if(!oldName||!oldInstructions||!oldDuration||!oldUnit||!submit)return;form.dataset.treatmentItemsEnhanced='true';form.dataset.multiComponentEnhanced='true';
+  const oldNodes=new Set([oldName.closest('.field'),oldInstructions.closest('.field'),oldDuration.closest('.duration-grid')].filter(Boolean));oldNodes.forEach(node=>node.remove());
+  form.querySelectorAll('[data-treatment-component-draft],[data-add-treatment-component-draft]').forEach(node=>node.remove());
+  const datalist=document.createElement('datalist');datalist.id='fluxa-treatment-graphs';datalist.innerHTML=graphOptions();form.appendChild(datalist);
+  const items=document.createElement('div');items.className='treatment-items';items.dataset.treatmentItems='true';items.innerHTML=itemFields(1);submit.before(items);
+  const add=document.createElement('button');add.type='button';add.className='btn secondary wide';add.dataset.addTreatmentItem='true';add.textContent='+ Adicionar outro item';submit.before(add);
+  const note=document.createElement('p');note.className='muted treatment-model-note';note.textContent='Cada item precisa de ao menos um comando e cada comando de ao menos um gráfico. Você pode escolher da Biblioteca ou digitar um nome novo.';items.before(note);
 }
+function enhance(){if(enhancing)return;enhancing=true;try{enhanceTreatmentForm();}finally{enhancing=false;}}
+new MutationObserver(enhance).observe(document.querySelector('#app'),{childList:true,subtree:true});queueMicrotask(enhance);
 
-function renumber(form) {
-  form.querySelectorAll('[data-treatment-component-draft]').forEach((section, index) => {
-    const eyebrow = section.querySelector('.eyebrow');
-    if (eyebrow) eyebrow.textContent = `Componente ${index + 1}`;
-    const remove = section.querySelector('[data-remove-treatment-component]');
-    if (index === 0 && remove) remove.remove();
-  });
-}
+document.addEventListener('click',event=>{
+  const review=event.target.closest('[data-review-treatment]');if(review){event.preventDefault();event.stopImmediatePropagation();const card=review.closest('.treatment-card');let manage=card?.querySelector('[data-backlog-manage-components]'),temporary=false;if(!manage&&card){manage=document.createElement('button');manage.type='button';manage.hidden=true;manage.dataset.backlogManageComponents=review.dataset.reviewTreatment;card.appendChild(manage);temporary=true;}manage?.click();if(temporary)manage.remove();return;}
+  const addItem=event.target.closest('[data-add-treatment-item]');if(addItem){const form=addItem.closest('#treatment-form'),items=form.querySelector('[data-treatment-items]'),count=items.querySelectorAll(':scope > [data-treatment-item]').length+1;items.insertAdjacentHTML('beforeend',itemFields(count));return;}
+  const removeItem=event.target.closest('[data-remove-treatment-item]');if(removeItem){const form=removeItem.closest('#treatment-form');removeItem.closest('[data-treatment-item]')?.remove();renumber(form,'[data-treatment-item]','Item');return;}
+  const addCommand=event.target.closest('[data-add-treatment-command]');if(addCommand){const item=addCommand.closest('[data-treatment-item]'),commands=item.querySelector('[data-treatment-commands]'),count=commands.querySelectorAll(':scope > [data-treatment-command]').length+1;commands.insertAdjacentHTML('beforeend',commandFields(count));return;}
+  const removeCommand=event.target.closest('[data-remove-treatment-command]');if(removeCommand){const item=removeCommand.closest('[data-treatment-item]');removeCommand.closest('[data-treatment-command]')?.remove();renumber(item,'[data-treatment-command]','Comando');return;}
+  const addGraph=event.target.closest('[data-add-treatment-graph]');if(addGraph){const command=addGraph.closest('[data-treatment-command]'),graphs=command.querySelector('[data-treatment-graphs]'),count=graphs.querySelectorAll('[data-treatment-graph]').length+1;graphs.insertAdjacentHTML('beforeend',graphFields(count));return;}
+  const removeGraph=event.target.closest('[data-remove-treatment-graph]');if(removeGraph){const command=removeGraph.closest('[data-treatment-command]');removeGraph.closest('[data-treatment-graph]')?.remove();refreshGraphLabels(command);}
+},true);
 
-function linkComponentToTool(componentId, toolId) {
-  if (!toolId) return;
-  store.setState((state) => {
-    const draft = structuredClone(state);
-    const component = draft.treatmentComponents.find((item) => item.id === componentId);
-    const tool = draft.tools.find((item) => item.id === toolId && !item.archivedAt);
-    if (!component || !tool) return draft;
-    component.toolId = tool.id;
-    component.toolSnapshot = { id: tool.id, type: tool.type, name: tool.name };
-    component.updatedAt = store.nowIso();
-    return draft;
-  });
-}
-
-function linkTreatmentThemeProvenance(treatmentId, form) {
-  const treatmentTheme = String(form.dataset.treatmentTheme || '').trim();
-  const treatmentThemeSource = String(form.dataset.treatmentThemeSource || '').trim();
-  const treatmentThemeSuggestionId = String(form.dataset.treatmentThemeSuggestion || '').trim();
-  if (!treatmentTheme && !treatmentThemeSource && !treatmentThemeSuggestionId) return;
-  store.setState((state) => {
-    const draft = structuredClone(state);
-    const treatment = draft.treatments.find((item) => item.id === treatmentId);
-    if (!treatment) return draft;
-    treatment.treatmentTheme = treatmentTheme || null;
-    treatment.treatmentThemeSource = treatmentThemeSource || null;
-    treatment.treatmentThemeSuggestionId = treatmentThemeSuggestionId || null;
-    treatment.updatedAt = store.nowIso();
-    return draft;
-  });
-}
-
-function enhanceTreatmentForm() {
-  const form = document.querySelector('#treatment-form');
-  if (!form || form.dataset.multiComponentEnhanced) return;
-  form.dataset.multiComponentEnhanced = 'true';
-
-  const componentName = form.querySelector('[name="componentName"]');
-  const instructions = form.querySelector('[name="instructions"]');
-  const durationValue = form.querySelector('[name="durationValue"]');
-  const durationUnit = form.querySelector('[name="durationUnit"]');
-  if (!componentName || !instructions || !durationValue || !durationUnit) return;
-  durationValue.required = false;
-  durationValue.removeAttribute('required');
-  durationValue.placeholder = 'Sem prazo';
-  const durationLabel = durationValue.closest('.field')?.querySelector('label');
-  if (durationLabel && !durationLabel.querySelector('.muted')) durationLabel.insertAdjacentHTML('beforeend',' <span class="muted">(opcional)</span>');
-
-  const componentStart = componentName.closest('.field');
-  const instructionsField = instructions.closest('.field');
-  const durationGrid = durationValue.closest('.duration-grid');
-  const submit = form.querySelector('button[type="submit"]');
-  if (!componentStart || !instructionsField || !durationGrid || !submit) return;
-
-  const first = document.createElement('section');
-  first.className = 'card treatment-component-draft';
-  first.dataset.treatmentComponentDraft = 'true';
-  first.innerHTML = `<div class="section-head"><div><p class="eyebrow">Componente 1</p><h3>Gráfico, ferramenta ou recurso</h3></div></div><div class="form-grid"></div>`;
-  const fields = first.querySelector('.form-grid');
-  fields.append(componentStart, instructionsField, durationGrid);
-  submit.before(first);
-
-  const add = document.createElement('button');
-  add.type = 'button';
-  add.className = 'btn secondary wide';
-  add.dataset.addTreatmentComponentDraft = 'true';
-  add.textContent = 'Adicionar outro componente';
-  submit.before(add);
-}
-
-function enhance() {
-  if (enhancing) return;
-  enhancing = true;
-  try { enhanceTreatmentForm(); } finally { enhancing = false; }
-}
-
-new MutationObserver(enhance).observe(document.querySelector('#app'), { childList:true, subtree:true });
-queueMicrotask(enhance);
-
-document.addEventListener('click', (event) => {
-  const review = event.target.closest('[data-review-treatment]');
-  if (review) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    const card = review.closest('.treatment-card');
-    let manage = card?.querySelector('[data-backlog-manage-components]');
-    let temporary = false;
-    if (!manage && card) {
-      manage = document.createElement('button');
-      manage.type = 'button';
-      manage.hidden = true;
-      manage.dataset.backlogManageComponents = review.dataset.reviewTreatment;
-      card.appendChild(manage);
-      temporary = true;
-    }
-    manage?.click();
-    if (temporary) manage.remove();
-    return;
-  }
-
-  const add = event.target.closest('[data-add-treatment-component-draft]');
-  if (add) {
-    const form = add.closest('#treatment-form');
-    const count = form.querySelectorAll('[data-treatment-component-draft]').length + 1;
-    add.insertAdjacentHTML('beforebegin', componentFields(count));
-    return;
-  }
-  const remove = event.target.closest('[data-remove-treatment-component]');
-  if (remove) {
-    const form = remove.closest('#treatment-form');
-    remove.closest('[data-treatment-component-draft]')?.remove();
-    renumber(form);
-  }
-}, true);
-
-document.addEventListener('submit', (event) => {
-  const form = event.target;
-  if (form.id !== 'treatment-form' || !form.dataset.multiComponentEnhanced) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-
-  try {
-    const data = new FormData(form);
-    const session = getOpenSession(store.getState());
-    if (!session?.currentAssistedEntityId) throw new Error('Selecione um assistido antes de criar o tratamento.');
-
-    const names = data.getAll('componentName');
-    const instructions = data.getAll('instructions');
-    const durations = data.getAll('durationValue');
-    const units = data.getAll('durationUnit');
-    const toolIds = data.getAll('toolId');
-    if (!names.length) throw new Error('Adicione pelo menos um componente.');
-
-    const created = createTreatment(store, {
-      sessionId: session.id,
-      assistedEntityId: session.currentAssistedEntityId,
-      findingIds: (form.dataset.findings || '').split(',').filter(Boolean),
-      title: data.get('title'),
-      componentName: names[0],
-      instructions: instructions[0],
-      durationValue: durations[0],
-      durationUnit: units[0]
-    });
-    linkComponentToTool(created.component.id, toolIds[0]);
-    linkTreatmentThemeProvenance(created.treatment.id, form);
-
-    for (let i = 1; i < names.length; i += 1) {
-      const component = addTreatmentComponent(store, {
-        sessionId: session.id,
-        treatmentId: created.treatment.id,
-        name: names[i],
-        instructions: instructions[i],
-        durationValue: durations[i],
-        durationUnit: units[i]
-      });
-      linkComponentToTool(component.id, toolIds[i]);
-    }
-
+document.addEventListener('submit',event=>{const form=event.target;if(form.id!=='treatment-form'||!form.dataset.treatmentItemsEnhanced)return;event.preventDefault();event.stopImmediatePropagation();try{const session=getOpenSession(store.getState());if(!session?.currentAssistedEntityId)throw new Error('Selecione um assistido antes de criar o tratamento.');const items=[...form.querySelectorAll('[data-treatment-items] > [data-treatment-item]')].map(readItem);if(!items.length)throw new Error('Adicione pelo menos um item de tratamento.');
+    const data=new FormData(form),first=items[0],firstCommand=first.commands.map(c=>c.text).filter(Boolean).join('\n');const created=createTreatment(store,{sessionId:session.id,assistedEntityId:session.currentAssistedEntityId,findingIds:(form.dataset.findings||'').split(',').filter(Boolean),title:data.get('title'),componentName:first.itemLabel,instructions:firstCommand,durationValue:null,durationUnit:'DAY'});enrichComponentWithTreatmentItem(store,created.component.id,first);linkTreatmentThemeProvenance(created.treatment.id,form);
+    for(let i=1;i<items.length;i++){const item=items[i],component=addTreatmentComponent(store,{sessionId:session.id,treatmentId:created.treatment.id,name:item.itemLabel,instructions:item.commands.map(c=>c.text).filter(Boolean).join('\n'),durationValue:null,durationUnit:'DAY'});enrichComponentWithTreatmentItem(store,component.id,item);}
     document.querySelector('[data-action="dismiss-sheet"]')?.click();
-  } catch (error) {
-    alert(error.message);
-  }
-}, true);
+  }catch(error){alert(error.message);}},true);
