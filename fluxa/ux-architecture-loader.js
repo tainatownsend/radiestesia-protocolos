@@ -1,4 +1,5 @@
 import './workspace-shell-ui.js';
+import './workspace-layout-fix.js';
 import './acervo-ui.js';
 import './investigation-entry-ui.js';
 import './assisted-summary-ui.js';
