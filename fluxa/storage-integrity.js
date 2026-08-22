@@ -148,8 +148,7 @@ export function validateStateReferences(state={}){
     const linkedInvestigation=investigationById.get(String(assessment.linkedInvestigationId));
     if(linkedInvestigation){
       if(linkedInvestigation.assistedEntityId&&assessment.assistedEntityId&&linkedInvestigation.assistedEntityId!==assessment.assistedEntityId)throw new Error(`Backup inválido: a investigação vinculada à avaliação ${assessment.id} pertence a outro Assistido.`);
-      const linkedSessionId=linkedInvestigation.currentSessionId||linkedInvestigation.sessionId;
-      if(linkedSessionId&&assessment.sessionId&&linkedSessionId!==assessment.sessionId)throw new Error(`Backup inválido: a investigação vinculada à avaliação ${assessment.id} pertence a outra sessão.`);
+      // currentSessionId is intentionally mutable when an investigation is resumed later. The assessment keeps the historical session where the handoff was made, so storage integrity must validate stable identity/protocol references without requiring the investigation to remain in that original current session.
       if(assessment.selectedProtocolId&&linkedInvestigation.protocolId&&assessment.selectedProtocolId!==linkedInvestigation.protocolId)throw new Error(`Backup inválido: o protocolo selecionado na avaliação ${assessment.id} não corresponde à investigação vinculada.`);
     }
   }
