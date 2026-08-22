@@ -1,5 +1,12 @@
+import { DIVORCE_ENERGY_GENERAL,DIVORCE_ENERGY_CUT } from './divorce-energy-domain.js';
+
 const SOURCES=Object.freeze([
   '../app.js','../marriage.js','../protocols-v11-core.js','../protocols-v11-expansion.js','../protocols-v11-quick.js','../deep-tree.js','../deep-tree-2.js'
+]);
+
+const BUILTIN_SUGGESTIONS=Object.freeze([
+  Object.freeze({id:'fluxa:divorce-general',legacyId:'divorce_general',title:DIVORCE_ENERGY_GENERAL.label,command:`${DIVORCE_ENERGY_GENERAL.command} Gráfico sugerido no protocolo original: ${DIVORCE_ENERGY_GENERAL.graph}.`,theme:'Divórcio Energético',sourcePath:'fluxa/divorce-energy-domain.js'}),
+  Object.freeze({id:'fluxa:divorce-cut',legacyId:'divorce_cut',title:DIVORCE_ENERGY_CUT.label,command:`${DIVORCE_ENERGY_CUT.command} Gráfico sugerido no protocolo original: ${DIVORCE_ENERGY_CUT.graph}.`,theme:'Divórcio Energético',sourcePath:'fluxa/divorce-energy-domain.js'})
 ]);
 
 let catalog=[];
@@ -35,7 +42,7 @@ async function sourceText(path){const response=await fetch(new URL(path,import.m
 export async function ensureTreatmentThemeLibrary(){
   if(loading)return loading;
   loading=(async()=>{
-    const all=[];
+    const all=BUILTIN_SUGGESTIONS.map(item=>({...item,search:normalize(`${item.title} ${item.command} ${item.theme}`)}));
     for(const path of SOURCES){try{all.push(...parsePlans(await sourceText(path),path));}catch(error){console.warn('Fluxa: sugestões terapêuticas indisponíveis',path,error);}}
     const unique=[],seen=new Set();
     for(const item of all){const key=normalize(`${item.title}|${item.command}`);if(seen.has(key))continue;seen.add(key);unique.push(item);}
@@ -48,5 +55,6 @@ export async function ensureTreatmentThemeLibrary(){
 export function treatmentThemeLibrary(){return catalog;}
 export function treatmentThemeById(id){return catalog.find(item=>item.id===id)||null;}
 export const TREATMENT_THEME_SOURCES=SOURCES;
+export const TREATMENT_THEME_BUILTINS=BUILTIN_SUGGESTIONS;
 
 queueMicrotask(()=>ensureTreatmentThemeLibrary());
