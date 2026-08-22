@@ -100,12 +100,21 @@ async function submitAssessment(form) {
   suggestionDialog(assessment);
 }
 
+function restoreSuggestionAfterFailedStart(selectedAssessmentId,message){
+  close('#root-protocol-overlay');
+  const assessment=(store.getState().assessments||[]).find((item)=>item.id===selectedAssessmentId&&item.kind==='ORIENTING');
+  if(assessment)suggestionDialog(assessment);else assessmentId=null;
+  alert(message);
+}
+
 function startSuggestedProtocol(button) {
   const protocolId = button.dataset.assessmentStartProtocol;
   const protocolName = button.dataset.assessmentProtocolName;
   const { session } = currentContext();
   const selectedAssessmentId = assessmentId;
   if (!protocolId || !session || !selectedAssessmentId) return;
+  const selectedAssessment=(store.getState().assessments||[]).find((item)=>item.id===selectedAssessmentId&&item.kind==='ORIENTING');
+  if(!selectedAssessment){assessmentId=null;alert('A avaliação orientadora não está mais disponível. Refaça a avaliação antes de iniciar o protocolo.');return;}
   if(!currentHawkinsBaseline()){
     alert('Registre a frequência vibracional de Hawkins em Hz antes de iniciar o protocolo.');
     document.querySelector('#assessment-hawkins-baseline-form [name="hertz"]')?.focus();
@@ -120,8 +129,13 @@ function startSuggestedProtocol(button) {
   proxy.remove();
   const investigation = activeRootProtocol(protocolId, session.currentAssistedEntityId)
     || [...(store.getState().investigations || [])].reverse().find((item) => item.kind === 'ROOT_PROTOCOL' && item.protocolId === protocolId && item.assistedEntityId === session.currentAssistedEntityId);
-  linkOrientingAssessmentToProtocol(store, selectedAssessmentId, { protocolId, protocolName, investigationId:investigation?.id || null });
-  assessmentId = null;
+  if(!investigation){restoreSuggestionAfterFailedStart(selectedAssessmentId,'Não foi possível iniciar o protocolo agora. As sugestões foram preservadas para você tentar novamente.');return;}
+  try{
+    linkOrientingAssessmentToProtocol(store, selectedAssessmentId, { protocolId, protocolName, investigationId:investigation.id });
+    assessmentId = null;
+  }catch(error){
+    restoreSuggestionAfterFailedStart(selectedAssessmentId,error.message||'Não foi possível vincular o protocolo à avaliação. As sugestões foram preservadas.');
+  }
 }
 
 function openGeneralAssessmentFromCatalog() {
