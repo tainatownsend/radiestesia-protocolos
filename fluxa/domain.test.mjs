@@ -91,6 +91,11 @@ function prepare(store, sessionId) {
     'direct treatment creation requires preparation'
   );
   prepare(store, session.id);
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    draft.sessions.find((item) => item.id === session.id).currentAssistedEntityId = person.id;
+    return draft;
+  });
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Teste', componentName:'Gráfico A', durationValue:2, durationUnit:'HOUR' });
   store.advance(30 * 60 * 1000);
   interruptTreatment(store, treatment.id, 'pausa');
