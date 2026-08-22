@@ -35,6 +35,6 @@ assert.ok(!treatment.includes("type: modality.id === 'REIKI'"),'complementary mo
 
 assert.match(css,/\.home-cockpit-context\s*\{[\s\S]*?position:static !important/,'Assistido context must stay in normal document flow');
 assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'Home must use three core actions');
-assert.ok(worker.includes('fluxa-runtime-v3-therapeutic-flow-20260822'),'offline shell cache must refresh for the new assets');
+assert.ok(worker.includes('therapeutic-catalog-complete-20260821-therapeutic-flow-20260822'),'offline shell cache must refresh while preserving the catalog completion marker');
 
 console.log('therapeutic-flow-refresh.test.mjs: ok');
