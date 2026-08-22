@@ -60,5 +60,6 @@ jobs:
           node fluxa/treatment-theme-library.test.mjs
           node fluxa/assessment-protocol-handoff.test.mjs
           node fluxa/divorce-energy-domain.test.mjs
+          node fluxa/treatment-resume-context.test.mjs
           node fluxa/premium-treatments.test.mjs
           node fluxa/static-smoke.test.mjs
