@@ -37,9 +37,15 @@ export function parseTreatmentPlans(source,path){
     const theme=inferTreatmentTheme(title,command);
     items.push({id:`${path}:${legacyId}`,legacyId,title,command,theme,sourcePath:path,search:normalizeTreatmentThemeText(`${title} ${command} ${theme}`)});
   };
-  const callRe=/([A-Za-z0-9_]+)\s*:\s*(?:C|P)\(\s*'((?:\\.|[^'])*)'\s*,\s*'((?:\\.|[^'])*)'\s*\)/g;
-  for(const match of source.matchAll(callRe))add(match[1],match[2],match[3]);
-  const objectRe=/([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*'((?:\\.|[^'])*)'\s*,\s*command\s*:\s*'((?:\\.|[^'])*)'\s*\}/g;
-  for(const match of source.matchAll(objectRe))add(match[1],match[2],match[3]);
+  const callPatterns=[
+    /([A-Za-z0-9_]+)\s*:\s*(?:C|P)\(\s*'((?:\\.|[^'])*)'\s*,\s*'((?:\\.|[^'])*)'\s*\)/g,
+    /([A-Za-z0-9_]+)\s*:\s*(?:C|P)\(\s*"((?:\\.|[^"])*)"\s*,\s*"((?:\\.|[^"])*)"\s*\)/g
+  ];
+  for(const pattern of callPatterns)for(const match of source.matchAll(pattern))add(match[1],match[2],match[3]);
+  const objectPatterns=[
+    /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*'((?:\\.|[^'])*)'\s*,\s*command\s*:\s*'((?:\\.|[^'])*)'\s*\}/g,
+    /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*"((?:\\.|[^"])*)"\s*,\s*command\s*:\s*"((?:\\.|[^"])*)"\s*\}/g
+  ];
+  for(const pattern of objectPatterns)for(const match of source.matchAll(pattern))add(match[1],match[2],match[3]);
   return items;
 }
