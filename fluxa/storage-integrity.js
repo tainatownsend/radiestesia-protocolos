@@ -87,7 +87,13 @@ export function validateStateReferences(state={}){
     }
   }
 
-  for(const component of asArray(state.treatmentComponents))requireRef(component.treatmentId,treatments,'TreatmentComponent.treatmentId');
+  for(const component of asArray(state.treatmentComponents)){
+    requireRef(component.treatmentId,treatments,'TreatmentComponent.treatmentId');
+    requireRef(component.replacedByComponentId,treatmentComponents,'TreatmentComponent.replacedByComponentId');
+    if(component.replacedByComponentId&&String(component.replacedByComponentId)===String(component.id))throw new Error(`Backup inválido: o componente ${component.id} não pode apontar para si próprio como substituto.`);
+    const replacement=componentById.get(String(component.replacedByComponentId));
+    if(replacement?.treatmentId&&component.treatmentId&&String(replacement.treatmentId)!==String(component.treatmentId))throw new Error(`Backup inválido: o componente ${component.id} aponta para substituto de outro tratamento.`);
+  }
   for(const review of asArray(state.treatmentReviews)){
     requireRef(review.treatmentId,treatments,'TreatmentReview.treatmentId');
     requireRef(review.sessionId,sessions,'TreatmentReview.sessionId');
