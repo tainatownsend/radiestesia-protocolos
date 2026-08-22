@@ -42,27 +42,28 @@ assert.equal(validateStateReferences(base({
 const rootInvestigation={id:'root1',kind:'ROOT_PROTOCOL',protocolId:'p1',originSessionId:'s1',currentSessionId:'s1',assistedEntityId:'a1'};
 const sourceAssessment={id:'as-source',sessionId:'s1',assistedEntityId:'a1',followUpAssessmentId:'as-orient'};
 const orientingAssessment={id:'as-orient',kind:'ORIENTING',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source',linkedInvestigationId:'root1',selectedProtocolId:'p1'};
-assert.equal(validateStateReferences(base({investigations:[rootInvestigation],assessments:[sourceAssessment,orientingAssessment]})),true);
+const handoffAssessments=[sourceAssessment,orientingAssessment];
+assert.equal(validateStateReferences(base({investigations:[rootInvestigation],assessments:handoffAssessments})),true);
 assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,sourceAssessmentId:'missing'}]})),/Assessment\.sourceAssessmentId.*inexistente/i);
 assert.throws(()=>validateStateReferences(base({assessments:[{...sourceAssessment,followUpAssessmentId:'missing'}]})),/Assessment\.followUpAssessmentId.*inexistente/i);
-assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,linkedInvestigationId:'missing'}]})),/Assessment\.linkedInvestigationId.*inexistente/i);
+assert.throws(()=>validateStateReferences(base({assessments:[sourceAssessment,{...orientingAssessment,linkedInvestigationId:'missing'}]})),/Assessment\.linkedInvestigationId.*inexistente/i);
 assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,sourceAssessmentId:'as-orient'}]})),/não pode apontar para si própria/i);
 assert.throws(()=>validateStateReferences(base({
   assessments:[{...sourceAssessment,assistedEntityId:'a2'},orientingAssessment],investigations:[rootInvestigation]
-})),/avaliação de origem.*outro Assistido/i);
+})),/avaliação (?:de origem|de continuidade).*outro Assistido/i);
 assert.throws(()=>validateStateReferences(base({
   sessions:[{id:'s1',currentAssistedEntityId:'a1'},{id:'s2',currentAssistedEntityId:'a1'}],
   assessments:[{...sourceAssessment,sessionId:'s2'},orientingAssessment],investigations:[rootInvestigation]
-})),/avaliação de origem.*outra sessão/i);
+})),/avaliação (?:de origem|de continuidade).*outra sessão/i);
 assert.throws(()=>validateStateReferences(base({
-  investigations:[{...rootInvestigation,assistedEntityId:'a2'}],assessments:[orientingAssessment]
+  investigations:[{...rootInvestigation,assistedEntityId:'a2'}],assessments:handoffAssessments
 })),/investigação vinculada.*outro Assistido/i);
 assert.throws(()=>validateStateReferences(base({
   sessions:[{id:'s1',currentAssistedEntityId:'a1'},{id:'s2',currentAssistedEntityId:'a1'}],
-  investigations:[{...rootInvestigation,currentSessionId:'s2'}],assessments:[orientingAssessment]
+  investigations:[{...rootInvestigation,currentSessionId:'s2'}],assessments:handoffAssessments
 })),/investigação vinculada.*outra sessão/i);
 assert.throws(()=>validateStateReferences(base({
-  investigations:[{...rootInvestigation,protocolId:'p2'}],assessments:[orientingAssessment]
+  investigations:[{...rootInvestigation,protocolId:'p2'}],assessments:handoffAssessments
 })),/protocolo selecionado.*não corresponde/i);
 
 console.log('storage-integrity.test.mjs: ok');
