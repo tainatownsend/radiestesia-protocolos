@@ -70,6 +70,7 @@ jobs:
           node fluxa/treatment-theme-storage.test.mjs
           node fluxa/assessment-protocol-handoff.test.mjs
           node fluxa/assessment-suggestion-integrity.test.mjs
+          node fluxa/treatment-continuity-provenance.test.mjs
           node fluxa/divorce-energy-domain.test.mjs
           node fluxa/treatment-resume-context.test.mjs
           node fluxa/premium-treatments.test.mjs
