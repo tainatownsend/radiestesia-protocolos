@@ -11,6 +11,14 @@ assert.ok(html.indexOf('premium-shell-ui.js')>html.indexOf('home-refresh-ui.js')
 const rootSources=['../app.js','../marriage.js','../deep-tree.js','../deep-tree-2.js','../protocols-v11-core.js','../protocols-v11-expansion.js','../protocols-v11-quick.js'];
 for(const source of rootSources)assert.ok(adapter.includes(source),`Root catalog adapter must read ${source}`);
 assert.match(adapter,/kind:'ROOT_PROTOCOL'/);assert.match(adapter,/legacyPlanCommand/);assert.match(adapter,/suggestedTreatmentCommand/);assert.match(adapter,/applyRootProtocolMutations/);
+assert.match(adapter,/let failedPaths=\[\]/,'Root protocol loading must track transient source and mutation failures.');
+assert.match(adapter,/if\(catalog\.length&&failedPaths\.length===0\)return catalog/,'A complete root protocol catalog should be reused without unnecessary reloads.');
+assert.match(adapter,/failures\.push\(source\.path\)/,'Unavailable protocol sources must be tracked.');
+assert.match(adapter,/failures\.push\(mutation\.path\)/,'Unavailable deep-tree mutations must be tracked.');
+assert.match(adapter,/finally\{loadingPromise=null;\}/,'The root catalog load promise must be released so later chooser opens can retry.');
+assert.match(adapter,/rootProtocolCatalogStatus/,'Root catalog completeness must be inspectable for diagnostics.');
+assert.match(adapter,/complete:failedPaths\.length===0/,'Root-protocol-ready events must expose complete versus partial catalog state.');
+assert.match(catalog,/ensureRootProtocolCatalog\(\)/,'Opening a fresh investigation chooser must re-enter the loader and retry a previous partial catalog.');
 for(const title of ['Vida Financeira','Carreira / Profissional','Casamento / Relacionamento','Autoestima, Amor-próprio e Merecimento','Relacionamentos Familiares','Prosperidade e Abundância','Propósito e Caminho de Vida','Casa e Ambiente','Relacionamento com o Próprio Corpo','Criatividade e Projetos','Vida Social e Pertencimento','Parentalidade','Padrões Repetitivos','Limpeza e Reequilíbrio','Reequilíbrio após um Dia Difícil','Preparação para uma Decisão Importante','Encerramento de Ciclo','Reequilíbrio após Conflito'])assert.ok(readme.includes(title)||legacyApp.includes(title)||marriage.includes(title)||core.includes(title)||expansion.includes(title)||quick.includes(title),`Root source should preserve ${title}`);
 assert.match(catalog,/Testemunho/);assert.match(catalog,/Por tema|THEME_FILTERS/);assert.match(catalog,/Divórcio Energético/);assert.match(catalog,/Protocolo Mestre de Causa Raiz/);assert.match(catalog,/data-therapeutic-search/);
 assert.match(divorce,/Relacionamentos amorosos/);assert.match(divorce,/Ex-relacionamentos e prosperidade/);assert.match(divorce,/Testemunho preparado/);assert.match(divorce,/suggestedTreatmentCommand/);
