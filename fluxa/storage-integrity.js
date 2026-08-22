@@ -17,11 +17,12 @@ export function validateStateReferences(state={}){
   const investigations=idSet(state.investigations,'investigations');
   const findings=idSet(state.findings,'findings');
   const treatments=idSet(state.treatments,'treatments');
-  const components=idSet(state.treatmentComponents,'treatmentComponents');
+  const assessments=idSet(state.assessments,'assessments');
+  idSet(state.events,'events');
+  idSet(state.treatmentComponents,'treatmentComponents');
   idSet(state.preparationRuns,'preparationRuns');
   idSet(state.closingRuns,'closingRuns');
   idSet(state.treatmentReviews,'treatmentReviews');
-  idSet(state.assessments,'assessments');
   idSet(state.reikiApplications,'reikiApplications');
   idSet(state.tools,'tools');
   idSet(state.customProtocols,'customProtocols');
@@ -52,6 +53,12 @@ export function validateStateReferences(state={}){
     requireRef(treatment.assistedEntityId,assisted,'Treatment.assistedEntityId');
     requireRef(treatment.originSessionId,sessions,'Treatment.originSessionId');
     requireRef(treatment.previousTreatmentId,treatments,'Treatment.previousTreatmentId');
+    requireRef(treatment.recommendedByAssessmentId,assessments,'Treatment.recommendedByAssessmentId');
+    if(treatment.previousTreatmentId===treatment.id)throw new Error(`Backup inválido: o tratamento ${treatment.id} não pode apontar para si próprio como ciclo anterior.`);
+    const previous=treatmentById.get(String(treatment.previousTreatmentId));
+    if(previous?.assistedEntityId&&treatment.assistedEntityId&&previous.assistedEntityId!==treatment.assistedEntityId){
+      throw new Error(`Backup inválido: o tratamento ${treatment.id} aponta para ciclo anterior de outro Assistido.`);
+    }
     for(const findingId of asArray(treatment.findingIds)){
       requireRef(findingId,findings,'Treatment.findingIds');
       const finding=asArray(state.findings).find((item)=>String(item.id)===String(findingId));
@@ -87,7 +94,6 @@ export function validateStateReferences(state={}){
   }
 
   for(const event of asArray(state.events)){
-    if(!event?.id)throw new Error('Backup inválido: há evento sem id.');
     requireRef(event.sessionId,sessions,'Event.sessionId');
     requireRef(event.assistedEntityId,assisted,'Event.assistedEntityId');
   }
