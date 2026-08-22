@@ -77,12 +77,30 @@ export function validateStateReferences(state={}){
     if(treatment?.assistedEntityId&&review.assistedEntityId&&treatment.assistedEntityId!==review.assistedEntityId)throw new Error(`Backup inválido: a revisão ${review.id} pertence a outro Assistido.`);
   }
 
+  const assessmentById=new Map(asArray(state.assessments).map((item)=>[String(item.id),item]));
   for(const assessment of asArray(state.assessments)){
     requireRef(assessment.sessionId,sessions,'Assessment.sessionId');
     requireRef(assessment.assistedEntityId,assisted,'Assessment.assistedEntityId');
     requireRef(assessment.treatmentId,treatments,'Assessment.treatmentId');
+    requireRef(assessment.sourceAssessmentId,assessments,'Assessment.sourceAssessmentId');
+    requireRef(assessment.followUpAssessmentId,assessments,'Assessment.followUpAssessmentId');
+    requireRef(assessment.linkedInvestigationId,investigations,'Assessment.linkedInvestigationId');
+    if(assessment.sourceAssessmentId===assessment.id||assessment.followUpAssessmentId===assessment.id)throw new Error(`Backup inválido: a avaliação ${assessment.id} não pode apontar para si própria.`);
     const treatment=treatmentById.get(String(assessment.treatmentId));
     if(treatment?.assistedEntityId&&assessment.assistedEntityId&&treatment.assistedEntityId!==assessment.assistedEntityId)throw new Error(`Backup inválido: a avaliação ${assessment.id} pertence a outro Assistido.`);
+    for(const [field,label] of [['sourceAssessmentId','avaliação de origem'],['followUpAssessmentId','avaliação de continuidade']]){
+      const linked=assessmentById.get(String(assessment[field]));
+      if(!linked)continue;
+      if(linked.assistedEntityId&&assessment.assistedEntityId&&linked.assistedEntityId!==assessment.assistedEntityId)throw new Error(`Backup inválido: a ${label} de ${assessment.id} pertence a outro Assistido.`);
+      if(linked.sessionId&&assessment.sessionId&&linked.sessionId!==assessment.sessionId)throw new Error(`Backup inválido: a ${label} de ${assessment.id} pertence a outra sessão.`);
+    }
+    const linkedInvestigation=investigationById.get(String(assessment.linkedInvestigationId));
+    if(linkedInvestigation){
+      if(linkedInvestigation.assistedEntityId&&assessment.assistedEntityId&&linkedInvestigation.assistedEntityId!==assessment.assistedEntityId)throw new Error(`Backup inválido: a investigação vinculada à avaliação ${assessment.id} pertence a outro Assistido.`);
+      const linkedSessionId=linkedInvestigation.currentSessionId||linkedInvestigation.sessionId;
+      if(linkedSessionId&&assessment.sessionId&&linkedSessionId!==assessment.sessionId)throw new Error(`Backup inválido: a investigação vinculada à avaliação ${assessment.id} pertence a outra sessão.`);
+      if(assessment.selectedProtocolId&&linkedInvestigation.protocolId&&assessment.selectedProtocolId!==linkedInvestigation.protocolId)throw new Error(`Backup inválido: o protocolo selecionado na avaliação ${assessment.id} não corresponde à investigação vinculada.`);
+    }
   }
 
   for(const reiki of asArray(state.reikiApplications)){
