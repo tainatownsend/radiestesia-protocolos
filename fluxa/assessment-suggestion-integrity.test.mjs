@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { validateStateReferences } from './storage-integrity.js';
 
-function base(assessmentOverrides={}){
+function base(assessmentOverrides={},investigationOverrides={}){
   return {
-    sessions:[{id:'s1',currentAssistedEntityId:'a1'}],
+    sessions:[{id:'s1',currentAssistedEntityId:'a1'},{id:'s2',currentAssistedEntityId:'a1'}],
     assistedEntities:[{id:'a1'}],
     events:[],preparationRuns:[],closingRuns:[],findings:[],treatments:[],treatmentComponents:[],treatmentReviews:[],reikiApplications:[],tools:[],customProtocols:[],
-    investigations:[{id:'i1',kind:'ROOT_PROTOCOL',protocolId:'p1',originSessionId:'s1',currentSessionId:'s1',assistedEntityId:'a1'}],
+    investigations:[{id:'i1',kind:'ROOT_PROTOCOL',protocolId:'p1',originSessionId:'s1',currentSessionId:'s1',assistedEntityId:'a1',...investigationOverrides}],
     assessments:[{
       id:'as1',kind:'ORIENTING',sessionId:'s1',assistedEntityId:'a1',
       protocolSuggestions:[{protocolId:'p1',protocolName:'Vida Financeira'},{protocolId:'p2',protocolName:'Prosperidade e Abundância'}],
@@ -17,6 +17,8 @@ function base(assessmentOverrides={}){
 }
 
 assert.equal(validateStateReferences(base()),true,'A current assessment handoff matching its recorded suggestion snapshot must remain valid.');
+
+assert.equal(validateStateReferences(base({}, {currentSessionId:'s2'})),true,'A historical assessment handoff must remain valid after its linked investigation is resumed in a later session.');
 
 assert.throws(()=>validateStateReferences(base({
   protocolSuggestions:[{protocolId:'p2',protocolName:'Prosperidade e Abundância'}]
