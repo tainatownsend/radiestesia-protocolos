@@ -13,6 +13,7 @@ img,svg,canvas{max-width:100%;}
 h1,h2,h3,p,strong,span,label{overflow-wrap:anywhere;}
 .section-head{align-items:flex-start;}
 .button-row{align-items:center;}
+.btn,.nav-btn,.action-card,.home-action,.close-btn{touch-action:manipulation;}
 
 /* Session preparation should feel like a focused step, not a full-screen panel. */
 body.fluxa-session-open main>.hero-card{
