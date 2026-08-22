@@ -1,5 +1,5 @@
 import { createStore } from './store.js';
-import { sessionAssistedIds, sessionComponents, sessionFindings, sessionInvestigations, sessionTreatments } from './session-report-data.js';
+import { sessionAssistedIds, sessionComponents, sessionFindings, sessionHawkinsMeasurements, sessionInvestigations, sessionTreatments } from './session-report-data.js';
 
 const store=createStore();
 const statusLabels={PLANNED:'Planejado',IN_PROGRESS:'Em andamento',COMPLETED:'Concluído',INTERRUPTED:'Interrompido',STOPPED:'Interrompido',REPLACED:'Substituído',RUNNING:'Em andamento',PAUSED:'Pausado',CANCELED:'Cancelado'};
@@ -13,29 +13,41 @@ function labelStatus(value){return value?(statusLabels[value]||'Registrado'):'';
 function objectiveOf(treatment){return treatment?.objective||treatment?.therapeuticObjective||'';}
 function protocolName(inv){return inv?.protocolSnapshot?.name||inv?.protocolName||'Investigação';}
 function assistedName(state,id){return state.assistedEntities.find((a)=>a.id===id)?.displayName||'Assistido';}
+function hawkinsValue(measurement){const value=measurement?.hertz??measurement?.frequency??measurement?.result;return value==null||value===''?'—':String(value);}
+function hawkinsLabel(state,measurement){
+  if(measurement?.phase==='FINAL'){
+    const treatment=state.treatments.find((item)=>item.id===measurement.treatmentId);
+    return treatment?.title?`Frequência após tratamento · ${treatment.title}`:'Frequência após tratamento';
+  }
+  const linked=state.treatments.filter((item)=>item.hawkinsBaselineAssessmentId===measurement?.id);
+  return linked.length===1?`Frequência inicial · ${linked[0].title}`:'Frequência inicial da investigação';
+}
 function dataFor(state,sessionId,assistedId){
   const investigations=sessionInvestigations(state,sessionId).filter((i)=>!assistedId||i.assistedEntityId===assistedId);
+  const assessments=state.assessments.filter((a)=>a.sessionId===sessionId&&a.kind!=='HAWKINS_FREQUENCY'&&(!assistedId||a.assistedEntityId===assistedId));
   return {
     investigations,
     findings:sessionFindings(state,sessionId,investigations),
     treatments:sessionTreatments(state,sessionId).filter((t)=>!assistedId||t.assistedEntityId===assistedId),
     reiki:state.reikiApplications.filter((r)=>r.sessionId===sessionId&&(!assistedId||r.assistedEntityId===assistedId)),
-    assessments:state.assessments.filter((a)=>a.sessionId===sessionId&&(!assistedId||a.assistedEntityId===assistedId)),
+    assessments,
+    hawkins:sessionHawkinsMeasurements(state,sessionId,assistedId),
     notes:state.events.filter((e)=>e.sessionId===sessionId&&e.eventType==='NOTE_CREATED'&&(!assistedId||e.assistedEntityId===assistedId))
   };
 }
 function section(title,body){return `<section><h2>${esc(title)}</h2>${body}</section>`;}
-function list(items,renderer,empty){return items.length?`<ul>${items.map(renderer).join('')}</ul>`:`<p class="muted">${esc(empty)}</p>`;}
+function list(items,renderer){return `<ul>${items.map(renderer).join('')}</ul>`;}
 function assistedReportBody(state,sessionId,assistedId){
   const d=dataFor(state,sessionId,assistedId);
   const components=(id)=>sessionComponents(state,sessionId,id);
-  return [
-    section('Avaliações',list(d.assessments,(a)=>`<li><strong>${esc(a.subject||'Avaliação')}</strong>: ${esc(a.result??a.frequency??'')}${a.scale?` ${esc(a.scale)}`:''}${a.imbalancePercent!=null?` · desequilíbrio ${esc(a.imbalancePercent)}%`:''}${a.notes?`<br><span class="muted">${esc(a.notes)}</span>`:''}</li>`,'Nenhuma avaliação registrada.')),
-    section('Investigações',list(d.investigations,(i)=>`<li><strong>${esc(protocolName(i))}</strong> · ${esc(labelStatus(i.status))} · ${Array.isArray(i.answers)?i.answers.length:0} resposta(s)${i.protocolSnapshot?.version?` · versão ${esc(i.protocolSnapshot.version)}`:''}</li>`,'Nenhuma investigação registrada.') + (d.findings.length?`<h3>Achados confirmados</h3>${list(d.findings,(f)=>`<li>${esc(f.title||f.questionTextSnapshot||f.sourceQuestionText||'Achado')} · ${esc(findingLabels[f.classification]||'Fator relevante')}</li>`,'')}`:'')),
-    section('Tratamentos',d.treatments.length?d.treatments.map((t)=>{const objective=objectiveOf(t);return `<article><h3>${esc(t.title)}</h3>${objective?`<p><strong>Objetivo terapêutico:</strong> ${esc(objective)}</p>`:''}<p>${esc(labelStatus(t.status))}</p>${list(components(t.id),(c)=>`<li><strong>${esc(c.name)}</strong> · ${esc(labelStatus(c.status))}${c.instructions?`<br><span class="muted">${esc(c.instructions)}</span>`:''}${c.expectedEndAt?`<br><span class="muted">Revisão prevista: ${fmt(c.expectedEndAt)}</span>`:''}</li>`,'Nenhum componente registrado nesta sessão.')}</article>`;}).join(''):'<p class="muted">Nenhum tratamento registrado nesta sessão.</p>'),
-    section('Reiki',list(d.reiki,(r)=>{const treatment=state.treatments.find((t)=>t.id===r.treatmentId);const minutes=minutesFromSeconds(r.durationSeconds);return `<li><strong>${esc(reikiModeLabels[r.mode]||'Aplicação')}</strong> · ${esc(labelStatus(r.status))}${minutes!=null?` · ${minutes} min`:''}${treatment?` · vinculado a ${esc(treatment.title)}`:''}${r.notes?`<br><span class="muted">${esc(r.notes)}</span>`:''}</li>`;},'Nenhuma aplicação registrada.')),
-    section('Anotações da sessão',list(d.notes,(e)=>`<li>${esc(e.metadata?.body||e.metadata?.notes||'Anotação')}</li>`,'Nenhuma anotação registrada para este assistido.'))
-  ].join('');
+  const blocks=[];
+  if(d.hawkins.length)blocks.push(section('Medições de Hawkins',list(d.hawkins,(a)=>`<li><strong>${esc(hawkinsLabel(state,a))}</strong>: ${esc(hawkinsValue(a))} Hz${a.imbalancePercent!=null?` · desequilíbrio ${esc(a.imbalancePercent)}%`:''}${a.notes?`<br><span class="muted">${esc(a.notes)}</span>`:''}</li>`)));
+  if(d.assessments.length)blocks.push(section('Avaliações',list(d.assessments,(a)=>`<li><strong>${esc(a.subject||'Avaliação')}</strong>: ${esc(a.result??a.frequency??'')}${a.scale?` ${esc(a.scale)}`:''}${a.imbalancePercent!=null?` · desequilíbrio ${esc(a.imbalancePercent)}%`:''}${a.notes?`<br><span class="muted">${esc(a.notes)}</span>`:''}</li>`)));
+  if(d.investigations.length||d.findings.length)blocks.push(section('Investigações',(d.investigations.length?list(d.investigations,(i)=>`<li><strong>${esc(protocolName(i))}</strong> · ${esc(labelStatus(i.status))} · ${Array.isArray(i.answers)?i.answers.length:0} resposta(s)${i.protocolSnapshot?.version?` · versão ${esc(i.protocolSnapshot.version)}`:''}</li>`):'')+(d.findings.length?`<h3>Achados confirmados</h3>${list(d.findings,(f)=>`<li>${esc(f.title||f.questionTextSnapshot||f.sourceQuestionText||'Achado')} · ${esc(findingLabels[f.classification]||'Fator relevante')}</li>`)}`:'')));
+  if(d.treatments.length)blocks.push(section('Tratamentos',d.treatments.map((t)=>{const objective=objectiveOf(t),items=components(t.id);return `<article><h3>${esc(t.title)}</h3>${objective?`<p><strong>Objetivo terapêutico:</strong> ${esc(objective)}</p>`:''}<p>${esc(labelStatus(t.status))}</p>${items.length?list(items,(c)=>`<li><strong>${esc(c.name)}</strong> · ${esc(labelStatus(c.status))}${c.instructions?`<br><span class="muted">${esc(c.instructions)}</span>`:''}${c.expectedEndAt?`<br><span class="muted">Revisão prevista: ${fmt(c.expectedEndAt)}</span>`:''}</li>`):''}</article>`;}).join('')));
+  if(d.reiki.length)blocks.push(section('Reiki',list(d.reiki,(r)=>{const treatment=state.treatments.find((t)=>t.id===r.treatmentId);const minutes=minutesFromSeconds(r.durationSeconds);return `<li><strong>${esc(reikiModeLabels[r.mode]||'Aplicação')}</strong> · ${esc(labelStatus(r.status))}${minutes!=null?` · ${minutes} min`:''}${treatment?` · vinculado a ${esc(treatment.title)}`:''}${r.notes?`<br><span class="muted">${esc(r.notes)}</span>`:''}</li>`;})));
+  if(d.notes.length)blocks.push(section('Anotações da sessão',list(d.notes,(e)=>`<li>${esc(e.metadata?.body||e.metadata?.notes||'Anotação')}</li>`)));
+  return blocks.join('')||'<p class="muted">Nenhuma atividade terapêutica registrada para este assistido nesta sessão.</p>';
 }
 function internalReportBody(state,sessionId){
   const ids=sessionAssistedIds(state,sessionId);
