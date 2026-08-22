@@ -2,6 +2,7 @@ import { createStore } from './store.js';
 import { getOpenSession, latestPreparation } from './domain.js';
 import { ensureRootProtocolCatalog, activeRootProtocol } from './legacy-protocol-adapter.js';
 import { ORIENTING_ASSESSMENT_AREAS, recordOrientingAssessment, linkOrientingAssessmentToProtocol } from './assessment-protocol-handoff.js';
+import { hawkinsBaseline, recordHawkinsBaseline } from './hawkins-measurement.js';
 
 const store = createStore();
 let assessmentId = null;
@@ -18,6 +19,7 @@ function currentContext() {
   return { state, session, assisted };
 }
 function prepared(session, state) { return Boolean(session && latestPreparation(state, session.id)?.status === 'COMPLETED'); }
+function currentHawkinsBaseline(){const {state,session,assisted}=currentContext();return session&&assisted?hawkinsBaseline(state,session.id,assisted.id):null;}
 
 function injectAssessmentEntry() {
   if (enhancing) return;
@@ -70,11 +72,15 @@ function suggestionDialog(assessment) {
   close('#assessment-suggestions-overlay');
   sourceAssessmentId = null;
   assessmentId = assessment.id;
+  const {session,assisted}=currentContext();
+  const baseline=currentHawkinsBaseline();
+  const baselineBlock=baseline?`<section class="assessment-source-note" data-assessment-hawkins-ready><strong>Frequência inicial de Hawkins</strong><span>${esc(baseline.hertz)} Hz · registrada nesta sessão</span></section>`:(session&&assisted?`<section class="hawkins-measurement-card compact" data-assessment-hawkins-required><div><p class="eyebrow">Antes de iniciar</p><strong>Frequência vibracional de Hawkins</strong><p>Registre a medição inicial obrigatória em Hz para seguir ao protocolo.</p></div><form id="assessment-hawkins-baseline-form" data-session="${esc(session.id)}" data-assisted="${esc(assisted.id)}"><label><span>Frequência</span><span class="hawkins-input"><input name="hertz" type="number" min="0.01" step="any" inputmode="decimal" required placeholder="Ex.: 540"><b>Hz</b></span></label><button class="btn primary" type="submit">Registrar</button></form></section>`:'');
   const wrap = document.createElement('div');
   wrap.id = 'assessment-suggestions-overlay';
   wrap.className = 'modal-backdrop';
   wrap.innerHTML = `<section class="sheet assessment-suggestions-sheet"><div class="sheet-head"><div><p class="eyebrow">Próximo passo</p><h2>Protocolos sugeridos</h2></div><button class="close-btn" data-close-assessment-suggestions>×</button></div>
     <p class="muted">As sugestões refletem apenas as áreas registradas nesta avaliação. Escolha uma investigação, volte ao catálogo completo ou retorne à sessão.</p>
+    ${baselineBlock}
     <div class="assessment-suggestion-list">${assessment.protocolSuggestions.map((item, index) => `<article class="assessment-suggestion-card ${index === 0 ? 'primary-suggestion' : ''}"><div><p class="eyebrow">${esc(item.category)}</p><h3>${esc(item.protocolName)}</h3><p class="muted">Relacionado a: ${esc(item.reason)}</p></div><button class="btn ${index === 0 ? 'primary' : 'secondary'}" data-assessment-start-protocol="${esc(item.protocolId)}" data-assessment-protocol-name="${esc(item.protocolName)}">${activeRootProtocol(item.protocolId, assessment.assistedEntityId) ? 'Retomar protocolo' : 'Iniciar protocolo'}</button></article>`).join('')}</div>
     <div class="assessment-handoff-actions"><button class="btn secondary wide" data-assessment-open-catalog>Ver catálogo completo</button><button class="btn ghost wide" data-close-assessment-suggestions>Voltar à sessão</button></div>
   </section>`;
@@ -99,8 +105,13 @@ function startSuggestedProtocol(button) {
   const protocolName = button.dataset.assessmentProtocolName;
   const { session } = currentContext();
   const selectedAssessmentId = assessmentId;
-  close('#assessment-suggestions-overlay');
   if (!protocolId || !session || !selectedAssessmentId) return;
+  if(!currentHawkinsBaseline()){
+    alert('Registre a frequência vibracional de Hawkins em Hz antes de iniciar o protocolo.');
+    document.querySelector('#assessment-hawkins-baseline-form [name="hertz"]')?.focus();
+    return;
+  }
+  close('#assessment-suggestions-overlay');
   const proxy = document.createElement('button');
   proxy.hidden = true;
   proxy.dataset.startRootProtocol = protocolId;
@@ -154,6 +165,16 @@ document.addEventListener('submit', (event) => {
 
 document.addEventListener('submit', (event) => {
   const form = event.target;
+  if(form.id==='assessment-hawkins-baseline-form'){
+    event.preventDefault();
+    try{
+      const data=new FormData(form);
+      recordHawkinsBaseline(store,{sessionId:form.dataset.session,assistedEntityId:form.dataset.assisted,hertz:data.get('hertz')});
+      const assessment=(store.getState().assessments||[]).find(item=>item.id===assessmentId);
+      if(assessment)suggestionDialog(assessment);
+    }catch(error){alert(error.message);}
+    return;
+  }
   if (form.id !== 'orienting-assessment-form') return;
   event.preventDefault();
   submitAssessment(form).catch((error) => alert(error.message));
