@@ -13,3 +13,9 @@ export function requirePreparedSessionState(state, sessionId, message = 'Conclua
   if (!isSessionPrepared(state, sessionId)) throw new Error(message);
   return session;
 }
+
+export function requirePreparedAssistedSessionState(state, sessionId, assistedEntityId, message = 'Volte para o Assistido desta atividade antes de continuar.') {
+  const session = requirePreparedSessionState(state, sessionId);
+  if (!assistedEntityId || session.currentAssistedEntityId !== assistedEntityId) throw new Error(message);
+  return session;
+}
