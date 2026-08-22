@@ -23,8 +23,20 @@ assert.throws(()=>validateStateReferences(base({
 })),/não pertence às sugestões registradas/i,'A backup must not inject a protocol selection that was never suggested by the assessment.');
 
 assert.throws(()=>validateStateReferences(base({
+  protocolSuggestions:[]
+})),/protocolo selecionado sem sugestões registradas/i,'An explicitly empty current-format suggestion snapshot must not be treated as a legacy handoff.');
+
+assert.throws(()=>validateStateReferences(base({
   selectedProtocolName:'Nome adulterado'
 })),/nome do protocolo selecionado.*não corresponde à sugestão registrada/i,'A backup must not rewrite the selected protocol name independently from the recorded suggestion snapshot.');
+
+assert.throws(()=>validateStateReferences(base({
+  selectedProtocolName:''
+})),/nome do protocolo selecionado.*não corresponde à sugestão registrada/i,'Current-format handoffs must keep the selected protocol name recorded.');
+
+assert.throws(()=>validateStateReferences(base({
+  protocolSuggestions:[{protocolId:'p1',protocolName:''},{protocolId:'p2',protocolName:'Prosperidade e Abundância'}]
+})),/nome do protocolo selecionado.*não corresponde à sugestão registrada/i,'Current-format handoffs must keep the selected suggestion name recorded.');
 
 assert.equal(validateStateReferences(base({
   protocolSuggestions:undefined,
