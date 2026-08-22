@@ -25,6 +25,16 @@ function addEvent(store, draft, input) {
   return event;
 }
 
+function requireTreatmentSessionContext(session, treatment, actionLabel) {
+  if (!session.currentAssistedEntityId) {
+    throw new Error(`Selecione o Assistido do tratamento antes de ${actionLabel}.`);
+  }
+  if (session.currentAssistedEntityId !== treatment.assistedEntityId) {
+    throw new Error(`O Assistido atual não corresponde ao tratamento que você tentou ${actionLabel}.`);
+  }
+  return session;
+}
+
 export function componentReviewAvailable(component, now = Date.now()) {
   return Boolean(
     component &&
@@ -35,7 +45,7 @@ export function componentReviewAvailable(component, now = Date.now()) {
 
 export function recordComponentDismantlingReview(store, input) {
   const state = store.getState();
-  requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de revisar um componente.');
+  const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de revisar um componente.');
   const component = state.treatmentComponents.find((item) => item.id === input.componentId);
   if (!component) throw new Error('Componente não encontrado.');
   if (component.status !== TreatmentStatus.IN_PROGRESS) throw new Error('Este componente não está disponível para revisão.');
@@ -44,6 +54,7 @@ export function recordComponentDismantlingReview(store, input) {
   }
   const treatment = state.treatments.find((item) => item.id === component.treatmentId);
   if (!treatment || treatment.status !== TreatmentStatus.IN_PROGRESS) throw new Error('O tratamento não está em andamento.');
+  requireTreatmentSessionContext(session, treatment, 'revisar este componente');
 
   const verifiedComplete = Boolean(input.verifiedComplete);
   const permissionToDismantle = Boolean(input.permissionToDismantle);
@@ -188,9 +199,10 @@ export function canRunFinalAssessment(state, treatmentId) {
 
 export function completeTreatmentAfterFinalAssessment(store, treatmentId, sessionId) {
   const state = store.getState();
-  requirePreparedSessionState(state, sessionId, 'Conclua a preparação da sessão antes de concluir a avaliação do tratamento.');
+  const session = requirePreparedSessionState(state, sessionId, 'Conclua a preparação da sessão antes de concluir a avaliação do tratamento.');
   const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
   if (!treatment) throw new Error('Tratamento não disponível para conclusão.');
+  requireTreatmentSessionContext(session, treatment, 'concluir este tratamento');
   const resolution = treatmentComponentResolution(state, treatmentId);
   if (!resolution.readyForFinalAssessment) throw new Error('Resolva todos os componentes antes de concluir o tratamento.');
   const assessments = Array.isArray(state.assessments) ? state.assessments : [];
