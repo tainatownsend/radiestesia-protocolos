@@ -26,9 +26,11 @@ function addDuration(startedAt, value, unit) {
   return date.toISOString();
 }
 function shiftTreatmentItemGraphDeadlines(component, pauseMs) {
-  if (!pauseMs || !component?.treatmentItem?.commands) return 0;
+  if (!pauseMs) return 0;
+  const commands = Array.isArray(component?.commands) ? component.commands : component?.treatmentItem?.commands;
+  if (!Array.isArray(commands)) return 0;
   let shifted = 0;
-  for (const command of component.treatmentItem.commands) {
+  for (const command of commands) {
     for (const graph of command.graphApplications || []) {
       if (graph.noDuration || !graph.expectedEndAt) continue;
       const end = new Date(graph.expectedEndAt);
