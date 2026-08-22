@@ -38,6 +38,26 @@ assert.equal(validateStateReferences(base({
   treatments:[{id:'t0',assistedEntityId:'a1'},{id:'t1',assistedEntityId:'a1',previousTreatmentId:'t0',recommendedByAssessmentId:'as1'}],
   assessments:[{id:'as1',assistedEntityId:'a1',treatmentId:'t0'}]
 })),true);
+assert.equal(validateStateReferences(base({
+  treatments:[{id:'legacy-next',assistedEntityId:'a1',recommendedByAssessmentId:'legacy-as'}],
+  assessments:[{id:'legacy-as',assistedEntityId:'a1'}]
+})),true,'Legacy recommendation links without explicit previousTreatmentId remain valid.');
+assert.throws(()=>validateStateReferences(base({
+  treatments:[{id:'t0',assistedEntityId:'a1'},{id:'t1',assistedEntityId:'a1',previousTreatmentId:'t0',recommendedByAssessmentId:'as1'}],
+  assessments:[{id:'as1',assistedEntityId:'a2',treatmentId:'t0'}]
+})),/recomendado por avaliação de outro Assistido/i,'A follow-up treatment cannot be recommended by another assisted entity assessment.');
+assert.throws(()=>validateStateReferences(base({
+  treatments:[{id:'t0',assistedEntityId:'a1'},{id:'t-other',assistedEntityId:'a1'},{id:'t1',assistedEntityId:'a1',previousTreatmentId:'t0',recommendedByAssessmentId:'as1'}],
+  assessments:[{id:'as1',assistedEntityId:'a1',treatmentId:'t-other'}]
+})),/não pertence ao ciclo anterior informado/i,'A follow-up recommendation must be the assessment of the recorded previous cycle.');
+assert.throws(()=>validateStateReferences(base({
+  treatments:[
+    {id:'t0',assistedEntityId:'a1'},
+    {id:'t1',assistedEntityId:'a1',previousTreatmentId:'t0',recommendedByAssessmentId:'as1'},
+    {id:'t2',assistedEntityId:'a1',previousTreatmentId:'t0',recommendedByAssessmentId:'as1'}
+  ],
+  assessments:[{id:'as1',assistedEntityId:'a1',treatmentId:'t0'}]
+})),/recomenda mais de um próximo ciclo/i,'One final assessment cannot originate multiple follow-up treatment cycles.');
 
 const rootInvestigation={id:'root1',kind:'ROOT_PROTOCOL',protocolId:'p1',originSessionId:'s1',currentSessionId:'s1',assistedEntityId:'a1'};
 const sourceAssessment={id:'as-source',sessionId:'s1',assistedEntityId:'a1',followUpAssessmentId:'as-orient'};

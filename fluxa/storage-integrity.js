@@ -48,7 +48,9 @@ export function validateStateReferences(state={}){
     }
   }
 
+  const assessmentById=new Map(asArray(state.assessments).map((item)=>[String(item.id),item]));
   const treatmentById=new Map(asArray(state.treatments).map((item)=>[String(item.id),item]));
+  const recommendationClaimByAssessmentId=new Map();
   for(const treatment of asArray(state.treatments)){
     requireRef(treatment.assistedEntityId,assisted,'Treatment.assistedEntityId');
     requireRef(treatment.originSessionId,sessions,'Treatment.originSessionId');
@@ -58,6 +60,21 @@ export function validateStateReferences(state={}){
     const previous=treatmentById.get(String(treatment.previousTreatmentId));
     if(previous?.assistedEntityId&&treatment.assistedEntityId&&previous.assistedEntityId!==treatment.assistedEntityId){
       throw new Error(`Backup inválido: o tratamento ${treatment.id} aponta para ciclo anterior de outro Assistido.`);
+    }
+    if(treatment.recommendedByAssessmentId){
+      const recommendation=assessmentById.get(String(treatment.recommendedByAssessmentId));
+      if(recommendation?.assistedEntityId&&treatment.assistedEntityId&&recommendation.assistedEntityId!==treatment.assistedEntityId){
+        throw new Error(`Backup inválido: o tratamento ${treatment.id} foi recomendado por avaliação de outro Assistido.`);
+      }
+      if(previous&&recommendation?.treatmentId&&String(recommendation.treatmentId)!==String(previous.id)){
+        throw new Error(`Backup inválido: a avaliação que recomenda o tratamento ${treatment.id} não pertence ao ciclo anterior informado.`);
+      }
+      if(previous){
+        const recommendationId=String(treatment.recommendedByAssessmentId);
+        const existingClaim=recommendationClaimByAssessmentId.get(recommendationId);
+        if(existingClaim&&existingClaim!==String(treatment.id))throw new Error(`Backup inválido: a avaliação ${recommendationId} recomenda mais de um próximo ciclo de tratamento.`);
+        recommendationClaimByAssessmentId.set(recommendationId,String(treatment.id));
+      }
     }
     for(const findingId of asArray(treatment.findingIds)){
       requireRef(findingId,findings,'Treatment.findingIds');
@@ -77,7 +94,6 @@ export function validateStateReferences(state={}){
     if(treatment?.assistedEntityId&&review.assistedEntityId&&treatment.assistedEntityId!==review.assistedEntityId)throw new Error(`Backup inválido: a revisão ${review.id} pertence a outro Assistido.`);
   }
 
-  const assessmentById=new Map(asArray(state.assessments).map((item)=>[String(item.id),item]));
   const sourceClaimByAssessmentId=new Map();
   for(const assessment of asArray(state.assessments)){
     if(assessment.sourceAssessmentId){
