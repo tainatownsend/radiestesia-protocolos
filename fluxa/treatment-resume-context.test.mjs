@@ -12,8 +12,19 @@ function buildState(overrides = {}) {
       createdAt: '2026-08-20T10:00:00.000Z', updatedAt: '2026-08-21T10:00:00.000Z'
     }],
     treatmentComponents: [{
-      id: 'cmp_1', treatmentId: 'trt_1', name: 'Gráfico principal',
+      id: 'cmp_1', treatmentId: 'trt_1', name: 'Item principal',
       status: TreatmentStatus.INTERRUPTED, expectedEndAt: '2026-08-22T10:00:00.000Z',
+      treatmentItem: {
+        itemLabel: 'Item principal',
+        commands: [{
+          text: 'Harmonizar',
+          graphApplications: [
+            { graphName: 'Luxor', expectedEndAt: '2026-08-21T14:00:00.000Z', noDuration: false },
+            { graphName: 'Prosperador', expectedEndAt: '2026-08-22T10:00:00.000Z', noDuration: false },
+            { graphName: 'Flor da Vida', expectedEndAt: null, noDuration: true }
+          ]
+        }]
+      },
       updatedAt: '2026-08-21T10:00:00.000Z'
     }],
     events: [],
@@ -86,6 +97,11 @@ assert.equal(
   'the interruption interval must extend the component review time'
 );
 
+const graphs = state.treatmentComponents[0].treatmentItem.commands[0].graphApplications;
+assert.equal(graphs[0].expectedEndAt, '2026-08-22T14:00:00.000Z', 'each timed graph must preserve its own remaining duration');
+assert.equal(graphs[1].expectedEndAt, '2026-08-23T10:00:00.000Z', 'the longest timed graph must also move by the pause interval');
+assert.equal(graphs[2].expectedEndAt, null, 'untimed graphs must stay untimed when a treatment resumes');
+
 const resumedEvent = state.events.find((event) => event.eventType === EventType.TREATMENT_RESUMED);
 assert.ok(resumedEvent, 'resume must remain visible in history');
 assert.equal(resumedEvent.sessionId, 'ses_1');
@@ -98,5 +114,6 @@ assert.ok(rescheduledEvent, 'duration preservation must remain auditable');
 assert.equal(rescheduledEvent.sessionId, 'ses_1');
 assert.equal(rescheduledEvent.assistedEntityId, 'ast_1');
 assert.equal(rescheduledEvent.metadata.treatmentId, 'trt_1');
+assert.equal(rescheduledEvent.metadata.graphDeadlinesShifted, 2, 'history must record how many graph deadlines were preserved');
 
 console.log('treatment-resume-context.test.mjs: ok');
