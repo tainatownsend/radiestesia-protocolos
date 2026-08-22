@@ -18,14 +18,22 @@ export const ORIENTING_ASSESSMENT_AREAS = Object.freeze([
 
 const areaById = new Map(ORIENTING_ASSESSMENT_AREAS.map((area) => [area.id, area]));
 
+function orderedSuggestionNames(selected) {
+  if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
+  const names = [];
+  const maxDepth = Math.max(0, ...selected.map((area) => area.protocolNames.length));
+  for (let depth = 0; depth < maxDepth; depth += 1) {
+    for (const area of selected) {
+      const name = area.protocolNames[depth];
+      if (name && !names.includes(name)) names.push(name);
+    }
+  }
+  return names.length ? names : ['Protocolo Mestre de Causa Raiz'];
+}
+
 export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) {
   const selected = [...new Set(areaIds)].map((id) => areaById.get(id)).filter(Boolean);
-  const names = [];
-  if (!selected.length || selected.some((area) => area.id === 'unclear')) names.push('Protocolo Mestre de Causa Raiz');
-  for (const area of selected.filter((item) => item.id !== 'unclear')) {
-    for (const name of area.protocolNames) if (!names.includes(name)) names.push(name);
-  }
-  if (!names.length) names.push('Protocolo Mestre de Causa Raiz');
+  const names = orderedSuggestionNames(selected);
   const byName = new Map(catalog.map((protocol) => [protocol.name, protocol]));
   return names.map((name) => byName.get(name)).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
     protocolId: protocol.id,
@@ -53,8 +61,10 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   if (sourceAssessment?.followUpAssessmentId) throw new Error('Esta avaliação de origem já possui um próximo passo registrado.');
   const focusAreas = [...new Set((input.focusAreas || []).filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
+  if (focusAreas.includes('unclear') && focusAreas.length > 1) throw new Error('“Ainda não está claro” deve ser usado sozinho, sem outras áreas selecionadas.');
   const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
-  const suggestions = suggestProtocolsForAreas(focusAreas, catalog, 3);
+  const suggestionLimit = focusAreas.includes('unclear') ? 1 : Math.min(6, Math.max(3, focusAreas.length));
+  const suggestions = suggestProtocolsForAreas(focusAreas, catalog, suggestionLimit);
   if (!suggestions.length) throw new Error('A biblioteca terapêutica ainda não está disponível. Tente novamente em instantes.');
   const now = store.nowIso();
   const assessment = {
