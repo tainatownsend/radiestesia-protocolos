@@ -17,6 +17,13 @@ assert.match(library,/TREATMENT_THEME_BUILTINS/,'Fluxa-native therapeutic sugges
 assert.match(library,/sourcePath:'fluxa\/divorce-energy-domain\.js'/,'Native suggestions must preserve their source provenance.');
 assert.match(library,/inferTheme/,'Theme library must classify suggestions for fast discovery.');
 assert.match(library,/seen\.has\(key\)/,'Duplicate commands from overlapping sources must be removed.');
+assert.match(library,/let failedSources=\[\]/,'Theme loading must track transient source failures.');
+assert.match(library,/if\(catalog\.length&&failedSources\.length===0\)return catalog/,'A complete catalog should be reused without unnecessary reloads.');
+assert.match(library,/failures\.push\(path\)/,'Unavailable sources must be recorded instead of silently locking a partial catalog.');
+assert.match(library,/finally\{loading=null;\}/,'The load promise must be released so a later picker open can retry transient failures.');
+assert.match(library,/treatmentThemeLibraryStatus/,'Catalog completeness must be inspectable for diagnostics and future UI handling.');
+assert.match(library,/complete:failedSources\.length===0/,'Library-ready events must expose whether all therapeutic sources loaded.');
+assert.match(ui,/ensureTreatmentThemeLibrary\(\)/,'Opening the picker must re-enter the loader, allowing a retry when the previous load was partial.');
 assert.match(ui,/Tratamentos por tema/,'Treatment creation must expose thematic discovery.');
 assert.match(ui,/data-open-treatment-theme/,'Treatment form must expose a theme picker action.');
 assert.match(ui,/data-apply-treatment-theme/,'A selected thematic suggestion must be applicable to the form.');
