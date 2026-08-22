@@ -44,6 +44,7 @@ const sourceAssessment={id:'as-source',sessionId:'s1',assistedEntityId:'a1',foll
 const orientingAssessment={id:'as-orient',kind:'ORIENTING',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source',linkedInvestigationId:'root1',selectedProtocolId:'p1'};
 const handoffAssessments=[sourceAssessment,orientingAssessment];
 assert.equal(validateStateReferences(base({investigations:[rootInvestigation],assessments:handoffAssessments})),true);
+assert.equal(validateStateReferences(base({assessments:[{id:'legacy-source',sessionId:'s1',assistedEntityId:'a1'},{id:'legacy-orient',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'legacy-source'}]})),true,'Legacy one-way handoff remains valid when the reciprocal field was never stored.');
 assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,sourceAssessmentId:'missing'}]})),/Assessment\.sourceAssessmentId.*inexistente/i);
 assert.throws(()=>validateStateReferences(base({assessments:[{...sourceAssessment,followUpAssessmentId:'missing'}]})),/Assessment\.followUpAssessmentId.*inexistente/i);
 assert.throws(()=>validateStateReferences(base({assessments:[sourceAssessment,{...orientingAssessment,linkedInvestigationId:'missing'}]})),/Assessment\.linkedInvestigationId.*inexistente/i);
@@ -55,6 +56,27 @@ assert.throws(()=>validateStateReferences(base({
   sessions:[{id:'s1',currentAssistedEntityId:'a1'},{id:'s2',currentAssistedEntityId:'a1'}],
   assessments:[{...sourceAssessment,sessionId:'s2'},orientingAssessment],investigations:[rootInvestigation]
 })),/avaliação (?:de origem|de continuidade).*outra sessão/i);
+assert.throws(()=>validateStateReferences(base({
+  assessments:[
+    {id:'as-source',sessionId:'s1',assistedEntityId:'a1'},
+    {id:'as-orient-1',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source'},
+    {id:'as-orient-2',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source'}
+  ]
+})),/mais de uma avaliação de continuidade/i,'One source assessment must not be claimed by multiple follow-up assessments.');
+assert.throws(()=>validateStateReferences(base({
+  assessments:[
+    {id:'as-source',sessionId:'s1',assistedEntityId:'a1',followUpAssessmentId:'as-orient-2'},
+    {id:'as-orient-1',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source'},
+    {id:'as-orient-2',sessionId:'s1',assistedEntityId:'a1'}
+  ]
+})),/aponta para outra continuidade/i,'Contradictory source/follow-up handoff references must be rejected.');
+assert.throws(()=>validateStateReferences(base({
+  assessments:[
+    {id:'as-source-1',sessionId:'s1',assistedEntityId:'a1',followUpAssessmentId:'as-orient'},
+    {id:'as-source-2',sessionId:'s1',assistedEntityId:'a1'},
+    {id:'as-orient',sessionId:'s1',assistedEntityId:'a1',sourceAssessmentId:'as-source-2'}
+  ]
+})),/aponta para outra origem/i,'Contradictory follow-up/source handoff references must be rejected.');
 assert.throws(()=>validateStateReferences(base({
   investigations:[{...rootInvestigation,assistedEntityId:'a2'}],assessments:handoffAssessments
 })),/investigação vinculada.*outro Assistido/i);
