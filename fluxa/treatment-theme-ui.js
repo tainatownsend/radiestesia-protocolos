@@ -1,7 +1,7 @@
 import { ensureTreatmentThemeLibrary,treatmentThemeById } from './treatment-theme-library.js';
 
 let enhancing=false;
-function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));}
+function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 function normalize(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function enhanceTreatmentForm(){
   const form=document.querySelector('#treatment-form');if(!form||form.dataset.themeLibraryEnhanced)return;
