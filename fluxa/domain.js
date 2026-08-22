@@ -42,6 +42,11 @@ function requirePreparedSession(state, sessionId) {
   const prepared = (state.preparationRuns || []).some((run) => run.sessionId === sessionId && run.status === 'COMPLETED');
   if (!prepared) throw new Error('Conclua a preparação da sessão antes de continuar.'); return session;
 }
+function requireTreatmentAssistedContext(session, assistedEntityId) {
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de registrar esta medição.');
+  if (session.currentAssistedEntityId !== assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que está sendo medido.');
+  return session;
+}
 function getAssisted(state, assistedEntityId) { return state.assistedEntities.find((item) => item.id === assistedEntityId && !item.archivedAt) || null; }
 
 export function validateAssistedEntityInput(input = {}) {
@@ -137,7 +142,7 @@ export function createTreatment(store, input) {
 export function interruptTreatment(store, treatmentId, reason = '') { store.setState((state) => { const draft = structuredClone(state); const treatment = draft.treatments.find((item) => item.id === treatmentId); if (!treatment || treatment.status !== TreatmentStatus.IN_PROGRESS) return draft; treatment.status = TreatmentStatus.INTERRUPTED; treatment.interruptedAt = store.nowIso(); treatment.updatedAt = store.nowIso(); draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.IN_PROGRESS).forEach((item) => { item.status = TreatmentStatus.INTERRUPTED; item.interruptedAt = store.nowIso(); item.updatedAt = store.nowIso(); }); addEvent(store, draft, { eventType: EventType.TREATMENT_INTERRUPTED, entityType: 'Treatment', entityId: treatment.id, assistedEntityId: treatment.assistedEntityId, metadata: { reason: reason.trim() || null } }); return draft; }); }
 export function resumeTreatment(store, treatmentId) { store.setState((state) => { const draft = structuredClone(state); const treatment = draft.treatments.find((item) => item.id === treatmentId); if (!treatment || treatment.status !== TreatmentStatus.INTERRUPTED) return draft; treatment.status = TreatmentStatus.IN_PROGRESS; treatment.resumedAt = store.nowIso(); treatment.updatedAt = store.nowIso(); draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.INTERRUPTED).forEach((item) => { item.status = TreatmentStatus.IN_PROGRESS; item.updatedAt = store.nowIso(); }); addEvent(store, draft, { eventType: EventType.TREATMENT_RESUMED, entityType: 'Treatment', entityId: treatment.id, assistedEntityId: treatment.assistedEntityId }); return draft; }); }
 export function reviewTreatment(store, input) {
-  const state = store.getState(); requirePreparedSession(state, input.sessionId); const treatment = state.treatments.find((item) => item.id === input.treatmentId && item.status === TreatmentStatus.IN_PROGRESS); if (!treatment) throw new Error('Tratamento não disponível para revisão.');
+  const state = store.getState(); const session = requirePreparedSession(state, input.sessionId); const treatment = state.treatments.find((item) => item.id === input.treatmentId && item.status === TreatmentStatus.IN_PROGRESS); if (!treatment) throw new Error('Tratamento não disponível para revisão.'); requireTreatmentAssistedContext(session, treatment.assistedEntityId);
   if (input.verifiedComplete) throw new Error('Use a revisão dos componentes e a avaliação final para concluir este tratamento.');
   const imbalancePercent = input.imbalancePercent === '' || input.imbalancePercent == null ? null : Number(input.imbalancePercent);
   if (imbalancePercent != null && (!Number.isFinite(imbalancePercent) || imbalancePercent < 0 || imbalancePercent > 100)) throw new Error('Desequilíbrio deve estar entre 0% e 100%.');
