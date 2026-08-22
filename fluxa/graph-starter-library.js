@@ -15,7 +15,7 @@ export function ensureStarterGraphs(store=createStore()){
     for(const name of STARTER_GRAPHS){
       if(existing.has(key(name)))continue;
       const now=store.nowIso();
-      draft.tools.push({id:`starter_graph_${slug(name)}`,name,type:'GRAFICO',purpose:'',practitionerNotes:'',tags:[],source:'Biblioteca inicial Fluxa',status:'ACTIVE',createdAt:now,updatedAt:now,starterGraph:true});
+      draft.tools.push({id:`starter_graph_${slug(name)}`,name,type:'GRAPH',purpose:'',practitionerNotes:'',tags:[],source:'Biblioteca inicial Fluxa',status:'ACTIVE',createdAt:now,updatedAt:now,starterGraph:true});
       existing.add(key(name));added++;
     }
     return draft;
