@@ -27,7 +27,8 @@ assert.equal(prepared.ready[0].name,'Escala A');
 assert.equal(prepared.duplicates.length,2);
 
 let state={tools:[],events:[]};
-const store={nowIso:()=> '2026-08-20T12:00:00.000Z',makeId:(prefix)=>`${prefix}_${Math.random()}`,setState:(updater)=>{state=updater(state);return state;}};
+let sequence=0;
+const store={nowIso:()=> '2026-08-20T12:00:00.000Z',makeId:(prefix)=>`${prefix}_${++sequence}`,setState:(updater)=>{state=updater(state);return state;}};
 const created=importLibraryItems(store,[{name:'Gráfico 1',type:'GRAPH',purpose:'Teste',tags:['Proteção','proteção','Limpeza']}]);
 assert.equal(created.length,1);
 assert.equal(state.tools.length,1);
@@ -36,16 +37,46 @@ assert.deepEqual(state.events[0].metadata.tags,['Proteção','Limpeza']);
 assert.equal(state.events[0].metadata.bulkImport,true);
 
 const csv=libraryItemsToCsv([
-  {name:'Campo, especial',type:'GRAPH',purpose:'Proteção',tags:['proteção','campo'],notes:'Usar "duas" vezes',archivedAt:null},
+  {name:'Campo, especial',type:'GRAPH',purpose:'Proteção',tags:['proteção','campo'],notes:'Usar "duas" vezes\nConfirmar novamente depois',archivedAt:null},
   {name:'Escala B',type:'BIOMETER',purpose:'Medição',tags:['escala','medição'],notes:null,archivedAt:null},
   {name:'Antigo',type:'OTHER',tags:['antigo'],archivedAt:'2026-08-01T00:00:00Z'}
 ]);
 assert.match(csv,/Nome,Tipo,Finalidade,Tags,Observações/);
 const roundTrip=parseLibraryBulkText(csv);
+assert.equal(roundTrip.errors.length,0);
 assert.equal(roundTrip.items.length,2);
-assert.equal(roundTrip.items.find((item)=>item.name==='Campo, especial')?.notes,'Usar "duas" vezes');
+assert.equal(roundTrip.items.find((item)=>item.name==='Campo, especial')?.notes,'Usar "duas" vezes\nConfirmar novamente depois');
 assert.deepEqual(roundTrip.items.find((item)=>item.name==='Campo, especial')?.tags,['proteção','campo']);
 assert.equal(roundTrip.items.find((item)=>item.name==='Escala B')?.type,'BIOMETER');
 assert.ok(!roundTrip.items.some((item)=>item.name==='Antigo'));
+
+const multilineInput='Nome,Tipo,Finalidade,Tags,Observações\n"Campo, complexo",Gráfico,Proteção,"campo, proteção","Linha 1\nLinha 2, com vírgula\nLinha 3 com ""aspas"""\nEscala C,Biômetro,Medição,escala,Fim';
+const multiline=parseLibraryBulkText(multilineInput);
+assert.equal(multiline.errors.length,0);
+assert.equal(multiline.items.length,2);
+assert.equal(multiline.items[0].name,'Campo, complexo');
+assert.equal(multiline.items[0].notes,'Linha 1\nLinha 2, com vírgula\nLinha 3 com "aspas"');
+assert.equal(multiline.items[1].sourceLine,5,'source line must follow physical lines even after a multiline quoted record');
+
+const malformed=parseLibraryBulkText('Nome,Tipo,Observações\nA,Gráfico,"texto sem fim');
+assert.match(malformed.errors.join(' '),/aspas não fechadas/i);
+
+const largeTools=Array.from({length:500},(_,index)=>({
+  name:`Recurso ${String(index+1).padStart(3,'0')}`,
+  type:index%3===0?'BIOMETER':(index%3===1?'GRAPH':'OTHER'),
+  purpose:`Finalidade ${index%7}`,
+  tags:[`tag-${index%11}`,'escala'],
+  notes:index%10===0?`Observação ${index}\nsegunda linha`:null,
+  archivedAt:null
+}));
+const largeCsv=libraryItemsToCsv(largeTools);
+const largeRoundTrip=parseLibraryBulkText(largeCsv);
+assert.equal(largeRoundTrip.errors.length,0);
+assert.equal(largeRoundTrip.items.length,500,'large synthetic Library must survive CSV export/import intact');
+assert.equal(new Set(largeRoundTrip.items.map((item)=>item.name)).size,500);
+assert.equal(largeRoundTrip.items.find((item)=>item.name==='Recurso 001')?.notes,'Observação 0\nsegunda linha');
+const largePrepared=prepareLibraryBulkImport({tools:[]},largeRoundTrip.items);
+assert.equal(largePrepared.ready.length,500);
+assert.equal(largePrepared.duplicates.length,0);
 
 console.log('bulk-library.test.mjs: ok');
