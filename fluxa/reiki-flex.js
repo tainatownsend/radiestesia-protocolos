@@ -41,14 +41,20 @@ function requireAssisted(state, assistedEntityId) {
   return assisted;
 }
 
+function requireSessionContext(state, sessionId, assistedEntityId, action) {
+  const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
+  if (!session) throw new Error(action === 'resume' ? 'Reabra uma sessão para retomar esta aplicação vinculada à sessão.' : 'A sessão informada não está aberta.');
+  if (session.currentAssistedEntityId && session.currentAssistedEntityId !== assistedEntityId) {
+    throw new Error('O Assistido atual não corresponde à aplicação de Reiki desta sessão.');
+  }
+  return session;
+}
+
 export function startFlexibleReiki(store, input) {
   const state = store.getState();
   requireAssisted(state, input.assistedEntityId);
   const sessionId = input.sessionId || null;
-  if (sessionId) {
-    const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
-    if (!session) throw new Error('A sessão informada não está aberta.');
-  }
+  if (sessionId) requireSessionContext(state, sessionId, input.assistedEntityId, 'start');
   const existing = state.reikiApplications.find((item) => ['RUNNING','PAUSED'].includes(item.status));
   if (existing) throw new Error('Já existe uma aplicação de Reiki ativa. Conclua ou retome a aplicação atual antes de iniciar outra.');
   const now = store.nowIso();
@@ -105,10 +111,7 @@ export function resumeFlexibleReiki(store, applicationId) {
   const state = store.getState();
   const application = state.reikiApplications.find((item) => item.id === applicationId && item.status === 'PAUSED');
   if (!application) throw new Error('Aplicação de Reiki não disponível para retomada.');
-  if (application.sessionId) {
-    const session = state.sessions.find((item) => item.id === application.sessionId && item.status === 'OPEN');
-    if (!session) throw new Error('Reabra uma sessão para retomar esta aplicação vinculada à sessão.');
-  }
+  if (application.sessionId) requireSessionContext(state, application.sessionId, application.assistedEntityId, 'resume');
   store.setState((current) => {
     const draft = structuredClone(current);
     const app = draft.reikiApplications.find((item) => item.id === applicationId);
