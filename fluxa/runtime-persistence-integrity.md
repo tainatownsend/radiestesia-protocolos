@@ -1,0 +1,1 @@
+Runtime persistence safety is covered by `runtime-persistence-integrity.test.mjs`: semantic reference validation runs before local primary/recovery/backup writes, and rejected mutations leave all prior copies unchanged.
