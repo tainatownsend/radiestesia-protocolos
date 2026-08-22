@@ -54,4 +54,8 @@ for(const protocol of catalog){
   }
 }
 
+const adapter=fs.readFileSync(new URL('fluxa/legacy-protocol-adapter.js',repo),'utf8');
+assert.match(adapter,/requirePreparedAssistedSessionState\(draft,inv\.currentSessionId,inv\.assistedEntityId,[^)]*continuar/i,'Root protocol answering must require the investigation assisted context.');
+assert.match(adapter,/requirePreparedAssistedSessionState\(draft,inv\.currentSessionId,inv\.assistedEntityId,[^)]*achados/i,'Finding consolidation must require the investigation assisted context.');
+
 console.log(`root-protocol-runtime.test.mjs: ok (${catalog.length} protocols)`);
