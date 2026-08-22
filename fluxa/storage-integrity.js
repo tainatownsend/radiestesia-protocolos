@@ -17,11 +17,12 @@ export function validateStateReferences(state={}){
   const investigations=idSet(state.investigations,'investigations');
   const findings=idSet(state.findings,'findings');
   const treatments=idSet(state.treatments,'treatments');
+  const treatmentComponents=idSet(state.treatmentComponents,'treatmentComponents');
   const assessments=idSet(state.assessments,'assessments');
   idSet(state.events,'events');
-  idSet(state.treatmentComponents,'treatmentComponents');
   idSet(state.preparationRuns,'preparationRuns');
   idSet(state.closingRuns,'closingRuns');
+  idSet(state.componentReviews,'componentReviews');
   idSet(state.treatmentReviews,'treatmentReviews');
   idSet(state.reikiApplications,'reikiApplications');
   idSet(state.tools,'tools');
@@ -50,6 +51,7 @@ export function validateStateReferences(state={}){
 
   const assessmentById=new Map(asArray(state.assessments).map((item)=>[String(item.id),item]));
   const treatmentById=new Map(asArray(state.treatments).map((item)=>[String(item.id),item]));
+  const componentById=new Map(asArray(state.treatmentComponents).map((item)=>[String(item.id),item]));
   const recommendationClaimByAssessmentId=new Map();
   for(const treatment of asArray(state.treatments)){
     requireRef(treatment.assistedEntityId,assisted,'Treatment.assistedEntityId');
@@ -92,6 +94,16 @@ export function validateStateReferences(state={}){
     requireRef(review.assistedEntityId,assisted,'TreatmentReview.assistedEntityId');
     const treatment=treatmentById.get(String(review.treatmentId));
     if(treatment?.assistedEntityId&&review.assistedEntityId&&treatment.assistedEntityId!==review.assistedEntityId)throw new Error(`Backup inválido: a revisão ${review.id} pertence a outro Assistido.`);
+  }
+  for(const review of asArray(state.componentReviews)){
+    requireRef(review.treatmentId,treatments,'ComponentReview.treatmentId');
+    requireRef(review.componentId,treatmentComponents,'ComponentReview.componentId');
+    requireRef(review.sessionId,sessions,'ComponentReview.sessionId');
+    requireRef(review.assistedEntityId,assisted,'ComponentReview.assistedEntityId');
+    const treatment=treatmentById.get(String(review.treatmentId));
+    const component=componentById.get(String(review.componentId));
+    if(treatment?.assistedEntityId&&review.assistedEntityId&&treatment.assistedEntityId!==review.assistedEntityId)throw new Error(`Backup inválido: a revisão de componente ${review.id} pertence a outro Assistido.`);
+    if(component?.treatmentId&&review.treatmentId&&String(component.treatmentId)!==String(review.treatmentId))throw new Error(`Backup inválido: a revisão de componente ${review.id} aponta para um componente de outro tratamento.`);
   }
 
   const sourceClaimByAssessmentId=new Map();
