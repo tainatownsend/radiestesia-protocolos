@@ -73,6 +73,7 @@ jobs:
           node fluxa/root-protocol-runtime.test.mjs
           node fluxa/root-treatment-prefill.test.mjs
           node fluxa/treatment-theme-library.test.mjs
+          node fluxa/treatment-theme-parser-quote-coverage.test.mjs
           node fluxa/treatment-theme-storage.test.mjs
           node fluxa/treatment-modality-storage.test.mjs
           node fluxa/assessment-protocol-handoff.test.mjs
