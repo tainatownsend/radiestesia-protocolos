@@ -83,21 +83,41 @@ export function recordOrientingAssessment(store, input, catalog = []) {
 }
 
 export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
+  const state = store.getState();
+  const assessment = (state.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
+  if (!assessment) throw new Error('Avaliação orientadora não encontrada.');
+  const session = requirePreparedSessionState(state, assessment.sessionId, 'Conclua a preparação da sessão antes de vincular a avaliação a um protocolo.');
+  if (session.currentAssistedEntityId !== assessment.assistedEntityId) throw new Error('A avaliação deve permanecer vinculada ao Assistido atual da sessão.');
+
+  const suggestion = (assessment.protocolSuggestions || []).find((item) => item.protocolId === input.protocolId);
+  if (!suggestion) throw new Error('O protocolo selecionado não pertence às sugestões desta avaliação.');
+  if (!input.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
+  const investigation = (state.investigations || []).find((item) => item.id === input.investigationId);
+  if (!investigation || investigation.kind !== 'ROOT_PROTOCOL') throw new Error('A investigação vinculada não é um protocolo terapêutico válido.');
+  if (investigation.protocolId !== suggestion.protocolId) throw new Error('A investigação vinculada não corresponde ao protocolo selecionado.');
+  if (investigation.assistedEntityId !== assessment.assistedEntityId) throw new Error('A investigação vinculada pertence a outro Assistido.');
+  if (investigation.currentSessionId !== assessment.sessionId) throw new Error('A investigação vinculada não pertence à sessão atual da avaliação.');
+
+  if (assessment.linkedInvestigationId) {
+    if (assessment.linkedInvestigationId === investigation.id && assessment.selectedProtocolId === suggestion.protocolId) return assessment;
+    throw new Error('Esta avaliação já está vinculada a outra investigação.');
+  }
+
   let updated = null;
   store.setState((current) => {
     const draft = structuredClone(current);
-    const assessment = (draft.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
-    if (!assessment) return draft;
-    assessment.selectedProtocolId = input.protocolId || null;
-    assessment.selectedProtocolName = input.protocolName || null;
-    assessment.linkedInvestigationId = input.investigationId || null;
-    assessment.updatedAt = store.nowIso();
+    const target = (draft.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
+    if (!target) return draft;
+    target.selectedProtocolId = suggestion.protocolId;
+    target.selectedProtocolName = suggestion.protocolName;
+    target.linkedInvestigationId = investigation.id;
+    target.updatedAt = store.nowIso();
     addEvent(store, draft, {
-      eventType:'ASSESSMENT_PROTOCOL_SELECTED', entityType:'Assessment', entityId:assessment.id,
-      sessionId:assessment.sessionId, assistedEntityId:assessment.assistedEntityId,
-      metadata:{ protocolId:assessment.selectedProtocolId, protocolName:assessment.selectedProtocolName, investigationId:assessment.linkedInvestigationId }
+      eventType:'ASSESSMENT_PROTOCOL_SELECTED', entityType:'Assessment', entityId:target.id,
+      sessionId:target.sessionId, assistedEntityId:target.assistedEntityId,
+      metadata:{ protocolId:target.selectedProtocolId, protocolName:target.selectedProtocolName, investigationId:target.linkedInvestigationId }
     });
-    updated = assessment;
+    updated = target;
     return draft;
   });
   return updated;
