@@ -36,6 +36,9 @@ assert.ok(treatment.includes("t.modalities=['RADIESTHESIA'"),'saved treatments m
 assert.ok(treatment.includes("t.modalitySnapshots=[{id:'RADIESTHESIA',label:'Radiestesia'}"),'saved treatment must preserve modality labels');
 assert.ok(treatment.includes('enrichComponentWithTreatmentItem'),'modality work must preserve the item-command-graph model');
 assert.ok(!treatment.includes("type: modality.id === 'REIKI'"),'complementary modalities must not be misrepresented as radiesthesia treatment components');
+assert.ok(treatment.includes("node?.dataset?.treatmentTheme||''"),'manual treatment items must tolerate missing theme provenance');
+assert.ok(treatment.includes("node?.dataset?.treatmentThemeSource||''"),'manual treatment items must tolerate missing theme source');
+assert.ok(treatment.includes("node?.dataset?.treatmentThemeSuggestion||''"),'manual treatment items must tolerate missing theme suggestion');
 
 assert.ok(picker.includes('input[name="graphName"]'),'treatment graph inputs must be enhanced');
 assert.ok(picker.includes('data-open-graph-picker'),'graph picker must open from a compact launcher');
