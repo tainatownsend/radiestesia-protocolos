@@ -108,6 +108,11 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
   if (!prepared) throw new Error('Conclua a preparação da sessão antes de iniciar o tratamento planejado.');
   const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.PLANNED);
   if (!treatment) throw new Error('Tratamento planejado não encontrado.');
+  const assisted = state.assistedEntities.find((item) => item.id === treatment.assistedEntityId && !item.archivedAt);
+  if (!assisted) throw new Error('O assistido deste tratamento não está disponível.');
+  if (session.currentAssistedEntityId && session.currentAssistedEntityId !== treatment.assistedEntityId) {
+    throw new Error('O Assistido atual não corresponde ao tratamento planejado que você tentou iniciar.');
+  }
   const plannedComponents = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.PLANNED);
   if (!plannedComponents.length) throw new Error('Adicione ao menos um componente antes de iniciar o tratamento planejado.');
   const now = store.nowIso();
