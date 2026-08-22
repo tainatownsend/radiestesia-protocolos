@@ -3,7 +3,7 @@ import { buildTreatmentItem,graphExpectedEndAt,latestExpectedEndAt,treatmentItem
 
 const tools=[{id:'tool_prosperador',name:'Prosperador',type:'GRAFICO',status:'ACTIVE'}];
 const started='2026-08-22T12:00:00.000Z';
-const item=buildTreatmentItem({itemLabel:'Crença de escassez',commands:[{text:'Desprogramar limitação financeira',graphApplications:[{graphName:'Prosperador',durationValue:7,durationUnit:'DAY'},{graphName:'Gráfico livre',durationValue:3,durationUnit:'DAY'}]},{text:'Fortalecer prosperidade',graphApplications:[{graphName:'Prosperador',durationValue:1,durationUnit:'WEEK'}]}]},tools,started);
+const item=buildTreatmentItem({itemLabel:'Crença de escassez',themeProvenance:{theme:'Prosperidade',sourcePath:'../app.js',suggestionId:'app:prosperidade'},commands:[{text:'Desprogramar limitação financeira',graphApplications:[{graphName:'Prosperador',durationValue:7,durationUnit:'DAY'},{graphName:'Gráfico livre',durationValue:3,durationUnit:'DAY'}]},{text:'Fortalecer prosperidade',graphApplications:[{graphName:'Prosperador',durationValue:1,durationUnit:'WEEK'}]}]},tools,started);
 assert.equal(item.commands.length,2);
 assert.equal(item.commands[0].graphApplications.length,2);
 assert.equal(item.commands[0].graphApplications[0].toolId,'tool_prosperador');
@@ -12,9 +12,15 @@ assert.equal(item.commands[0].graphApplications[1].toolId,null);
 assert.equal(item.commands[0].graphApplications[1].manual,true,'Typed graph names must remain valid even when absent from the library.');
 assert.equal(item.commands[0].graphApplications[0].expectedEndAt,graphExpectedEndAt(started,7,'DAY'));
 assert.equal(latestExpectedEndAt(item),graphExpectedEndAt(started,1,'WEEK'));
+assert.deepEqual(item.themeProvenance,{theme:'Prosperidade',sourcePath:'../app.js',suggestionId:'app:prosperidade'},'Each treatment item should preserve its own themed-suggestion provenance.');
+const manual=buildTreatmentItem({itemLabel:'Tema manual',commands:[{text:'Comando',graphApplications:[{graphName:'Prosperador'}]}]},tools,started);
+assert.equal(manual.themeProvenance,null,'Manually authored treatment items should not invent theme provenance.');
 assert.throws(()=>buildTreatmentItem({itemLabel:'Tema',commands:[]},tools,started),/pelo menos um comando/);
 assert.throws(()=>buildTreatmentItem({itemLabel:'Tema',commands:[{text:'Comando',graphApplications:[]}]},tools,started),/pelo menos um gráfico/);
+const view=treatmentItemView({...item,id:'new'});
+assert.deepEqual(view.themeProvenance,item.themeProvenance,'Treatment item views must expose preserved provenance without changing commands.');
 const legacy=treatmentItemView({id:'old',name:'SCAP',instructions:'Neutralizar',durationValue:7,durationUnit:'DAY',expectedEndAt:'2026-08-29T12:00:00.000Z'});
 assert.equal(legacy.legacy,true);
+assert.equal(legacy.themeProvenance,null,'Legacy treatment records remain compatible without synthetic provenance.');
 assert.equal(legacy.commands[0].graphApplications[0].graphName,'SCAP');
 console.log('treatment-item-graphs.test.mjs: ok');
