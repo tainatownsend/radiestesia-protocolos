@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { validateHawkinsHertz,recordHawkinsBaseline,hawkinsBaseline,linkTreatmentHawkinsBaseline,enrichFinalHawkinsAssessment,HAWKINS_KIND,HawkinsPhase } from './hawkins-measurement.js';
 
 function makeStore(){
@@ -30,4 +31,13 @@ const treatment=store.getState().treatments.find(t=>t.id==='t1');assert.equal(tr
 
 const closed=makeStore();closed.setState(state=>({...state,sessions:state.sessions.map(s=>({...s,status:'CLOSED'}))}));
 assert.throws(()=>recordHawkinsBaseline(closed,{sessionId:'s1',assistedEntityId:'a1',hertz:500}),/Conclua a preparação|sessão aberta/);
+
+const index=await readFile(new URL('./index.html',import.meta.url),'utf8');
+const ui=await readFile(new URL('./hawkins-measurement-ui.js',import.meta.url),'utf8');
+assert.ok(index.includes('hawkins-measurement.css')&&index.includes('hawkins-measurement-ui.js'),'Hawkins UI assets must load');
+assert.ok(index.indexOf('hawkins-measurement-ui.js')<index.indexOf('treatment-create-ui.js'),'Hawkins submit guard must load before treatment creation');
+assert.ok(ui.includes('data-hawkins-baseline-form'),'investigation and treatment flows must expose a baseline entry');
+assert.ok(ui.includes('data-start-planned-treatment'),'planned treatment start must also require a baseline');
+assert.ok(ui.includes('Frequência vibracional de Hawkins (Hz)'),'final assessment must explicitly identify Hawkins Hz');
+assert.ok(ui.includes('enrichFinalHawkinsAssessment'),'final treatment measurement must be linked without replacing legacy fields');
 console.log('hawkins-measurement.test.mjs: ok');
