@@ -12,6 +12,7 @@ if(idle>=0)assert.ok(idle>workflow,'Idle Home specialization may remain after th
 assert.ok(html.indexOf('premium-workflow-ui.js')>html.indexOf('premium-shell-ui.js'),'Workflow UI must run after premium shell cleanup.');
 assert.match(ui,/querySelectorAll\('\.treatment-card\[data-treatment-id\]'\)/);
 assert.match(ui,/premium-treatment-components/);
+assert.ok(ui.includes('.slice(0,3)'),'Treatment preview must stay compact at a maximum of three components.');
 assert.match(ui,/preview\.replaceWith\(next\)/,'Treatment enhancement must replace its preview instead of duplicating it.');
 assert.match(ui,/durationRemaining/);
 assert.match(ui,/premium-protocol-kicker/);
