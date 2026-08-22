@@ -1,7 +1,10 @@
 .featured-protocol-grid.with-assessment{grid-template-columns:repeat(3,minmax(0,1fr));}
 .featured-protocol.assessment{background:linear-gradient(145deg,rgba(222,228,225,.72),rgba(248,249,247,.96));border-color:rgba(23,63,70,.14);}
 .featured-protocol.assessment h3{color:#173f46;}
+.assessment-featured-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;}
 .orienting-assessment-sheet,.assessment-suggestions-sheet{max-width:760px;}
+.assessment-source-note{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:12px 14px;margin:0 0 16px;border:1px solid rgba(23,63,70,.12);border-radius:14px;background:rgba(222,228,225,.45);color:#173f46;}
+.assessment-source-note span{color:#606b6c;text-align:right;}
 .assessment-area-fieldset{border:0;padding:0;margin:0;min-width:0;}
 .assessment-area-fieldset legend{font-weight:700;color:#173f46;margin-bottom:12px;}
 .assessment-area-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
@@ -14,4 +17,5 @@
 .assessment-suggestion-card.primary-suggestion{border-color:rgba(23,63,70,.22);background:rgba(222,228,225,.55);}
 .assessment-suggestion-card h3{margin:3px 0 6px;color:#173f46;}
 .assessment-handoff-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-@media(max-width:680px){.featured-protocol-grid.with-assessment{grid-template-columns:1fr;}.assessment-area-grid{grid-template-columns:1fr;}.assessment-area-option.unclear{grid-column:auto;}.assessment-suggestion-card{align-items:stretch;flex-direction:column;}.assessment-suggestion-card .btn{width:100%;}.assessment-handoff-actions{grid-template-columns:1fr;}}
+@media(max-width:680px){.featured-protocol-grid.with-assessment{grid-template-columns:1fr;}.assessment-featured-actions{display:grid;grid-template-columns:1fr 1fr;}.assessment-area-grid{grid-template-columns:1fr;}.assessment-area-option.unclear{grid-column:auto;}.assessment-source-note{align-items:flex-start;flex-direction:column;}.assessment-source-note span{text-align:left;}.assessment-suggestion-card{align-items:stretch;flex-direction:column;}.assessment-suggestion-card .btn{width:100%;}.assessment-handoff-actions{grid-template-columns:1fr;}}
+@media(max-width:420px){.assessment-featured-actions{grid-template-columns:1fr;}.assessment-featured-actions .btn{width:100%;}}
