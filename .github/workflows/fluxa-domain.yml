@@ -77,6 +77,7 @@ jobs:
           node fluxa/assessment-protocol-handoff.test.mjs
           node fluxa/assessment-hawkins-handoff.test.mjs
           node fluxa/therapeutic-discovery-completeness.test.mjs
+          node fluxa/assessment-focus-exclusivity.test.mjs
           node fluxa/assessment-suggestion-integrity.test.mjs
           node fluxa/treatment-continuity-provenance.test.mjs
           node fluxa/divorce-energy-domain.test.mjs
