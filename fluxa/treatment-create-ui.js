@@ -39,6 +39,23 @@ function linkComponentToTool(componentId, toolId) {
   });
 }
 
+function linkTreatmentThemeProvenance(treatmentId, form) {
+  const treatmentTheme = String(form.dataset.treatmentTheme || '').trim();
+  const treatmentThemeSource = String(form.dataset.treatmentThemeSource || '').trim();
+  const treatmentThemeSuggestionId = String(form.dataset.treatmentThemeSuggestion || '').trim();
+  if (!treatmentTheme && !treatmentThemeSource && !treatmentThemeSuggestionId) return;
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const treatment = draft.treatments.find((item) => item.id === treatmentId);
+    if (!treatment) return draft;
+    treatment.treatmentTheme = treatmentTheme || null;
+    treatment.treatmentThemeSource = treatmentThemeSource || null;
+    treatment.treatmentThemeSuggestionId = treatmentThemeSuggestionId || null;
+    treatment.updatedAt = store.nowIso();
+    return draft;
+  });
+}
+
 function enhanceTreatmentForm() {
   const form = document.querySelector('#treatment-form');
   if (!form || form.dataset.multiComponentEnhanced) return;
@@ -151,6 +168,7 @@ document.addEventListener('submit', (event) => {
       durationUnit: units[0]
     });
     linkComponentToTool(created.component.id, toolIds[0]);
+    linkTreatmentThemeProvenance(created.treatment.id, form);
 
     for (let i = 1; i < names.length; i += 1) {
       const component = addTreatmentComponent(store, {
