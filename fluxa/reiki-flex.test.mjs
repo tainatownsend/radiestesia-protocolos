@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
-import { AssistedType, createAssistedEntity } from './domain.js';
+import { AssistedType, createAssistedEntity, selectAssistedForSession, startSession } from './domain.js';
 import { ReikiMode, startFlexibleReiki, pauseFlexibleReiki, resumeFlexibleReiki, completeFlexibleReiki } from './reiki-flex.js';
 
 class MemoryStorage {
@@ -29,5 +29,36 @@ assert.equal(done.status,'COMPLETED');
 assert.equal(done.sessionId,null);
 assert.equal(done.notes,'registro');
 assert.ok(store.getState().events.some((e)=>e.eventType==='REIKI_COMPLETED' && e.metadata.outsideSession===true));
+
+const sessionOwner=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Reiki sessão',birthDate:'1992-02-02'});
+const other=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Outro contexto',birthDate:'1993-03-03'});
+const session=startSession(store);
+selectAssistedForSession(store,session.id,other.id);
+const countBefore=store.getState().reikiApplications.length;
+assert.throws(
+  ()=>startFlexibleReiki(store,{sessionId:session.id,assistedEntityId:sessionOwner.id,mode:ReikiMode.IN_PERSON}),
+  /Assistido atual não corresponde/i,
+  'session Reiki must not start for a different assisted entity than the explicit session context'
+);
+assert.equal(store.getState().reikiApplications.length,countBefore,'rejected session Reiki start must not create an application');
+assert.equal(store.getState().sessions.find((item)=>item.id===session.id).currentAssistedEntityId,other.id,'rejected start must not replace session context');
+
+selectAssistedForSession(store,session.id,sessionOwner.id);
+const sessionApp=startFlexibleReiki(store,{sessionId:session.id,assistedEntityId:sessionOwner.id,mode:ReikiMode.IN_PERSON});
+pauseFlexibleReiki(store,sessionApp.id);
+selectAssistedForSession(store,session.id,other.id);
+const eventsBeforeResume=store.getState().events.length;
+assert.throws(
+  ()=>resumeFlexibleReiki(store,sessionApp.id),
+  /Assistido atual não corresponde/i,
+  'paused session Reiki must not resume while the session points at a different assisted entity'
+);
+assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id).status,'PAUSED');
+assert.equal(store.getState().events.length,eventsBeforeResume,'rejected resume must not append history');
+
+selectAssistedForSession(store,session.id,sessionOwner.id);
+resumeFlexibleReiki(store,sessionApp.id);
+assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id).status,'RUNNING');
+completeFlexibleReiki(store,sessionApp.id,'sessão alinhada');
 
 console.log('reiki-flex.test.mjs: ok');
