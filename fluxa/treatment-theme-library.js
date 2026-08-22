@@ -11,6 +11,7 @@ const BUILTIN_SUGGESTIONS=Object.freeze([
 
 let catalog=[];
 let loading=null;
+let failedSources=[];
 
 function decode(value=''){return String(value).replace(/\\n/g,'\n').replace(/\\'/g,"'").replace(/\\"/g,'"').replace(/\\\\/g,'\\');}
 function normalize(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
@@ -41,19 +42,26 @@ async function sourceText(path){const response=await fetch(new URL(path,import.m
 
 export async function ensureTreatmentThemeLibrary(){
   if(loading)return loading;
+  if(catalog.length&&failedSources.length===0)return catalog;
   loading=(async()=>{
     const all=BUILTIN_SUGGESTIONS.map(item=>({...item,search:normalize(`${item.title} ${item.command} ${item.theme}`)}));
-    for(const path of SOURCES){try{all.push(...parsePlans(await sourceText(path),path));}catch(error){console.warn('Fluxa: sugestões terapêuticas indisponíveis',path,error);}}
+    const failures=[];
+    for(const path of SOURCES){
+      try{all.push(...parsePlans(await sourceText(path),path));}
+      catch(error){failures.push(path);console.warn('Fluxa: sugestões terapêuticas indisponíveis',path,error);}
+    }
     const unique=[],seen=new Set();
     for(const item of all){const key=normalize(`${item.title}|${item.command}`);if(seen.has(key))continue;seen.add(key);unique.push(item);}
     catalog=unique.sort((a,b)=>a.theme.localeCompare(b.theme,'pt-BR')||a.title.localeCompare(b.title,'pt-BR'));
-    window.dispatchEvent(new CustomEvent('fluxa:treatment-theme-library-ready',{detail:{count:catalog.length}}));
+    failedSources=failures;
+    window.dispatchEvent(new CustomEvent('fluxa:treatment-theme-library-ready',{detail:{count:catalog.length,complete:failedSources.length===0,failedSources:[...failedSources]}}));
     return catalog;
   })();
-  return loading;
+  try{return await loading;}finally{loading=null;}
 }
 export function treatmentThemeLibrary(){return catalog;}
 export function treatmentThemeById(id){return catalog.find(item=>item.id===id)||null;}
+export function treatmentThemeLibraryStatus(){return {count:catalog.length,complete:catalog.length>0&&failedSources.length===0,failedSources:[...failedSources]};}
 export const TREATMENT_THEME_SOURCES=SOURCES;
 export const TREATMENT_THEME_BUILTINS=BUILTIN_SUGGESTIONS;
 
