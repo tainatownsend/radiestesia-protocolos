@@ -17,6 +17,7 @@ export const ROOT_PROTOCOL_MUTATIONS=Object.freeze([
 ]);
 const catalog=[];
 let loadingPromise=null;
+let failedPaths=[];
 
 async function sourceText(path){
   const response=await fetch(new URL(path,import.meta.url),{cache:'no-cache'});
@@ -26,26 +27,30 @@ async function sourceText(path){
 
 export async function ensureRootProtocolCatalog(){
   if(loadingPromise)return loadingPromise;
+  if(catalog.length&&failedPaths.length===0)return catalog;
   loadingPromise=(async()=>{
     const all=[];
+    const failures=[];
     for(const source of ROOT_PROTOCOL_SOURCES){
       try{all.push(...parseRootProtocols(await sourceText(source.path),source));}
-      catch(error){console.warn('Fluxa: catálogo da raiz indisponível',source.path,error);}
+      catch(error){failures.push(source.path);console.warn('Fluxa: catálogo da raiz indisponível',source.path,error);}
     }
     const unique=[];const ids=new Set();
     for(const item of all){if(ids.has(item.id))continue;ids.add(item.id);unique.push(item);}
     for(const mutation of ROOT_PROTOCOL_MUTATIONS){
       try{applyRootProtocolMutations(unique,await sourceText(mutation.path));}
-      catch(error){console.warn('Fluxa: expansão terapêutica da raiz indisponível',mutation.path,error);}
+      catch(error){failures.push(mutation.path);console.warn('Fluxa: expansão terapêutica da raiz indisponível',mutation.path,error);}
     }
     catalog.splice(0,catalog.length,...finalizeRootProtocols(unique));
-    window.dispatchEvent(new CustomEvent('fluxa:root-protocols-ready',{detail:{count:catalog.length}}));
+    failedPaths=[...new Set(failures)];
+    window.dispatchEvent(new CustomEvent('fluxa:root-protocols-ready',{detail:{count:catalog.length,complete:failedPaths.length===0,failedPaths:[...failedPaths]}}));
     return catalog;
   })();
-  return loadingPromise;
+  try{return await loadingPromise;}finally{loadingPromise=null;}
 }
 
 export function rootProtocolCatalog(){return catalog;}
+export function rootProtocolCatalogStatus(){return {count:catalog.length,complete:catalog.length>0&&failedPaths.length===0,failedPaths:[...failedPaths]};}
 export function rootProtocolById(id){return catalog.find(p=>p.id===id)||null;}
 export function currentRootNode(inv){return inv?.protocolSnapshot?.nodes?.[inv.currentNodeId]||null;}
 function addEvent(draft,input){draft.events.push({id:store.makeId('evt'),eventType:input.eventType,entityType:input.entityType,entityId:input.entityId,sessionId:input.sessionId||null,assistedEntityId:input.assistedEntityId||null,occurredAt:store.nowIso(),createdAt:store.nowIso(),metadata:input.metadata||{}});}
