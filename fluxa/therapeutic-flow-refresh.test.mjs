@@ -46,6 +46,9 @@ assert.ok(picker.includes('Digitar nome novo'),'manual graph entry must remain a
 
 assert.match(css,/\.home-cockpit-context\s*\{[\s\S]*?position:static !important/,'Assistido context must stay in normal document flow');
 assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'Home must use three core actions');
+assert.match(css,/\.sheet>\.sheet-head\s*\{[\s\S]*?background:#F8F9F7/,'sheet headers must use an opaque surface while scrolling');
+assert.match(css,/box-shadow:0 -24px 0 24px #F8F9F7/,'sheet header must cover the scroll gap above it');
+assert.ok(!/\.sheet>\.sheet-head\s*\{[^}]*background:\s*rgba\(/s.test(css),'sheet header background must not be translucent');
 assert.ok(worker.includes('therapeutic-catalog-complete-20260821-therapeutic-flow-20260822'),'offline shell cache must refresh while preserving the catalog completion marker');
 
 console.log('therapeutic-flow-refresh.test.mjs: ok');

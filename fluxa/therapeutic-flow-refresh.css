@@ -9,6 +9,17 @@ body.fluxa-home-refreshed .home-cockpit-context{
 }
 body.fluxa-home-refreshed main{scroll-padding-top:88px;}
 .home-primary-actions{grid-template-columns:repeat(3,minmax(0,1fr));}
+/* Sticky sheet headers must be fully opaque. The negative top shadow covers the sheet's
+   scroll-padding gap so content cannot become visible above/behind the header. */
+.sheet>.sheet-head{
+  background:#F8F9F7;
+  background-color:#F8F9F7;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  box-shadow:0 -24px 0 24px #F8F9F7;
+  isolation:isolate;
+}
+.premium-workflow-protocol .sheet-head{background:#F8F9F7;}
 .modality-settings-card{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
