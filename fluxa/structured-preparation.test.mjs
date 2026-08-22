@@ -4,6 +4,7 @@ import { updatePreparationDetails, validateStructuredPreparation, completeStruct
 function fakeStore() {
   let seq = 0;
   let state = {
+    sessions:[{ id:'ses_1', status:'OPEN' }],
     preparationRuns: [{
       id:'prep_1', sessionId:'ses_1', status:'IN_PROGRESS',
       steps:[
@@ -47,6 +48,22 @@ function fakeStore() {
   updatePreparationDetails(store, 'prep_1', { frequencyValue:'9200', protectionToolIds:['tool_1','tool_1','tool_2'] });
   assert.equal(validateStructuredPreparation(store.getState(), 'prep_1'), true);
   assert.deepEqual(store.getState().preparationRuns[0].protection.toolIds, ['tool_1','tool_2']);
+}
+
+{
+  const store = fakeStore();
+  updatePreparationDetails(store, 'prep_1', { frequencyValue:'9100', protectionNotes:'Proteção original' });
+  const before = structuredClone(store.getState().preparationRuns[0]);
+  const eventsBefore = store.getState().events.length;
+  store.getState().sessions[0].status = 'CLOSED';
+
+  assert.throws(() => updatePreparationDetails(store, 'prep_1', { frequencyValue:'12000', protectionNotes:'Alterada' }), /sessão.*aberta/i);
+  assert.throws(() => validateStructuredPreparation(store.getState(), 'prep_1'), /sessão.*aberta/i);
+  assert.throws(() => completeStructuredPreparation(store, 'prep_1'), /sessão.*aberta/i);
+
+  assert.deepEqual(store.getState().preparationRuns[0], before);
+  assert.equal(store.getState().events.length, eventsBefore);
+  assert.equal(store.getState().preparationRuns[0].status, 'IN_PROGRESS');
 }
 
 console.log('structured-preparation.test.mjs: ok');
