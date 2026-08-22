@@ -21,6 +21,10 @@ const areaById = new Map(ORIENTING_ASSESSMENT_AREAS.map((area) => [area.id, area
 function orderedSuggestionNames(selected) {
   if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
   const names = [];
+  if (selected.length <= 2) {
+    for (const area of selected) for (const name of area.protocolNames) if (!names.includes(name)) names.push(name);
+    return names.length ? names : ['Protocolo Mestre de Causa Raiz'];
+  }
   const maxDepth = Math.max(0, ...selected.map((area) => area.protocolNames.length));
   for (let depth = 0; depth < maxDepth; depth += 1) {
     for (const area of selected) {
