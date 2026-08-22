@@ -39,7 +39,8 @@ function fakeStore(initial) {
 const baseState = {
   sessions:[{id:'ses_1',status:'OPEN',currentAssistedEntityId:'ast_1'}],
   preparationRuns:[{id:'prep_1',sessionId:'ses_1',status:'COMPLETED'}],
-  assistedEntities:[{id:'ast_1',displayName:'Maria'}], assessments:[], events:[]
+  assistedEntities:[{id:'ast_1',displayName:'Maria'},{id:'ast_2',displayName:'Ana'}],
+  assessments:[], investigations:[], events:[]
 };
 const store = fakeStore(baseState);
 const assessment = recordOrientingAssessment(store, {
@@ -55,12 +56,54 @@ assert.equal(store.getState().events.at(-1).eventType, 'ORIENTING_ASSESSMENT_REC
 assert.deepEqual(store.getState().events.at(-1).metadata.focusAreaLabels, ['Financeiro e prosperidade']);
 assert.equal(store.getState().findings, undefined, 'Assessment must not create findings or classify causes automatically.');
 
+const validInvestigation = {
+  id:'inv_9', kind:'ROOT_PROTOCOL', protocolId:'root_finance', assistedEntityId:'ast_1',
+  originSessionId:'ses_1', currentSessionId:'ses_1', status:'IN_PROGRESS'
+};
+store.setState((current) => ({ ...current, investigations:[validInvestigation] }));
 const linked = linkOrientingAssessmentToProtocol(store, assessment.id, {
-  protocolId:'root_finance', protocolName:'Vida Financeira', investigationId:'inv_9'
+  protocolId:'root_finance', protocolName:'tampered name is ignored', investigationId:'inv_9'
 });
 assert.equal(linked.selectedProtocolId, 'root_finance');
+assert.equal(linked.selectedProtocolName, 'Vida Financeira', 'Persisted protocol name must come from the recorded suggestion snapshot.');
 assert.equal(linked.linkedInvestigationId, 'inv_9');
 assert.equal(store.getState().events.at(-1).eventType, 'ASSESSMENT_PROTOCOL_SELECTED');
+const eventCount = store.getState().events.length;
+assert.equal(linkOrientingAssessmentToProtocol(store, assessment.id, { protocolId:'root_finance', investigationId:'inv_9' }).linkedInvestigationId, 'inv_9', 'Repeating the exact link should be idempotent.');
+assert.equal(store.getState().events.length, eventCount, 'Idempotent relinking must not duplicate history events.');
+
+function linkSafetyStore(investigationOverrides = {}, assessmentOverrides = {}) {
+  const orienting = structuredClone({ ...assessment, selectedProtocolId:null, selectedProtocolName:null, linkedInvestigationId:null, ...assessmentOverrides });
+  const investigation = { ...validInvestigation, ...investigationOverrides };
+  return fakeStore({ ...baseState, assessments:[orienting], investigations:[investigation] });
+}
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore(), assessment.id, {
+  protocolId:'root_patterns', investigationId:'inv_9'
+}), /não pertence às sugestões/i, 'Assessment must not be linked to an arbitrary protocol outside its suggestion snapshot.');
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore(), assessment.id, {
+  protocolId:'root_finance', investigationId:null
+}), /inicie ou retome/i, 'Assessment must not claim a protocol selection without a concrete investigation.');
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore({ protocolId:'root_prosperity' }), assessment.id, {
+  protocolId:'root_finance', investigationId:'inv_9'
+}), /não corresponde/i, 'Linked investigation must match the selected protocol.');
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore({ assistedEntityId:'ast_2' }), assessment.id, {
+  protocolId:'root_finance', investigationId:'inv_9'
+}), /outro Assistido/i, 'Cross-assisted investigation links must be blocked.');
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore({ currentSessionId:'ses_other' }), assessment.id, {
+  protocolId:'root_finance', investigationId:'inv_9'
+}), /sessão atual/i, 'Cross-session investigation links must be blocked.');
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore({ kind:'BRANCHING' }), assessment.id, {
+  protocolId:'root_finance', investigationId:'inv_9'
+}), /não é um protocolo terapêutico válido/i, 'Assessment handoff must link only to the root therapeutic protocol flow.');
+assert.throws(() => linkOrientingAssessmentToProtocol(linkSafetyStore({}, { linkedInvestigationId:'inv_old', selectedProtocolId:'root_finance' }), assessment.id, {
+  protocolId:'root_finance', investigationId:'inv_9'
+}), /já está vinculada/i, 'An existing assessment link must not be silently reassigned.');
+
+const switchedAssistedStore = linkSafetyStore();
+switchedAssistedStore.setState((current) => ({ ...current, sessions:current.sessions.map((item) => ({ ...item, currentAssistedEntityId:'ast_2' })) }));
+assert.throws(() => linkOrientingAssessmentToProtocol(switchedAssistedStore, assessment.id, {
+  protocolId:'root_finance', investigationId:'inv_9'
+}), /Assistido atual/i, 'Assessment link must respect the current assisted entity at link time.');
 
 const generalAssessment = { id:'assess_general', kind:'GENERAL', sessionId:'ses_1', assistedEntityId:'ast_1', subject:'Frequência vibracional', result:'8500', createdAt:'2026-08-22T03:50:00Z' };
 const chainedStore = fakeStore({ ...baseState, assessments:[generalAssessment] });
