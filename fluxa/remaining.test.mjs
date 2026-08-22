@@ -40,6 +40,22 @@ function baseState() {
 }
 
 {
+  const state=baseState();
+  state.assistedEntities.push({id:'a2',type:'PERSON',displayName:'Outra pessoa',birthDate:'1991-01-01',members:[],archivedAt:null});
+  state.sessions[0].currentAssistedEntityId='a2';
+  const store=makeStore(state);
+  const eventsBefore=store.getState().events.length;
+  assert.throws(
+    ()=>recordComponentDismantlingReview(store,{componentId:'c1',sessionId:'s1',verifiedComplete:true,permissionToDismantle:true}),
+    /Assistido atual não corresponde/i,
+    'component review must stay bound to the treatment assisted entity'
+  );
+  assert.equal(store.getState().componentReviews.length,0);
+  assert.equal(store.getState().treatmentComponents[0].status,'IN_PROGRESS');
+  assert.equal(store.getState().events.length,eventsBefore,'rejected component review must not append history');
+}
+
+{
   const state = baseState();
   state.treatmentComponents.push({ id:'c2', treatmentId:'t1', name:'Planejado', status:'PLANNED' });
   assert.equal(treatmentComponentResolution(state, 't1').readyForFinalAssessment, false, 'planned components remain unresolved');
@@ -69,6 +85,23 @@ function baseState() {
   completeTreatmentAfterFinalAssessment(store, 't1', 's1');
   assert.equal(store.getState().treatments[0].status, 'COMPLETED');
   assert.equal(store.getState().events.at(-1).eventType, 'TREATMENT_COMPLETED');
+}
+
+{
+  const state=baseState();
+  state.assistedEntities.push({id:'a2',type:'PERSON',displayName:'Outra pessoa',birthDate:'1991-01-01',members:[],archivedAt:null});
+  state.sessions[0].currentAssistedEntityId='a2';
+  state.treatmentComponents[0].status='COMPLETED';
+  state.assessments.push({id:'fa1',treatmentId:'t1',createdAt:'2026-08-20T00:50:00.000Z',imbalancePercent:10,needsNewTreatment:false});
+  const store=makeStore(state);
+  const eventsBefore=store.getState().events.length;
+  assert.throws(
+    ()=>completeTreatmentAfterFinalAssessment(store,'t1','s1'),
+    /Assistido atual não corresponde/i,
+    'treatment completion after final assessment must not run in another assisted context'
+  );
+  assert.equal(store.getState().treatments[0].status,'IN_PROGRESS');
+  assert.equal(store.getState().events.length,eventsBefore,'rejected treatment completion must not append history');
 }
 
 {
