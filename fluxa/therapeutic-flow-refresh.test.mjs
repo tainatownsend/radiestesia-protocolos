@@ -43,6 +43,9 @@ assert.ok(picker.includes("mode==='graph'"),'graph picker must have a graph-only
 assert.ok(picker.includes("t.type==='GRAPH'"),'graph-only mode must exclude unrelated library resources');
 assert.ok(picker.includes('Selecionar gráfico da Biblioteca'),'graph entry must support fast library selection');
 assert.ok(picker.includes('Digitar nome novo'),'manual graph entry must remain available');
+assert.ok(picker.includes('showManualGraphInput(input,Boolean(input.value&&!known))'),'manual graph field must stay collapsed for normal library selection');
+assert.ok(picker.includes("input.removeAttribute('list')"),'native long datalist must not compete with the searchable picker');
+assert.ok(picker.includes('showManualGraphInput(control,true)'),'manual graph field must open only when explicitly requested');
 
 assert.match(css,/\.home-cockpit-context\s*\{[\s\S]*?position:static !important/,'Assistido context must stay in normal document flow');
 assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'Home must use three core actions');
