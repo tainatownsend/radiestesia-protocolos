@@ -1,0 +1,6 @@
+/* Keep session/context chrome opaque so scrolled content never reads through it. */
+.topbar{isolation:isolate;background:#F8F9F7;}
+.topbar-session-open{background:#173F46;}
+.home-cockpit-context{position:relative;z-index:1;background:#EFF1EF;}
+body.fluxa-session-open .home-cockpit-context{background:#EFF1EF;}
+[data-therapy-settings]{margin-top:12px;}
