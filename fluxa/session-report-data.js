@@ -14,7 +14,7 @@ export function sessionInvestigations(state,sessionId){
 
 export function sessionFindings(state,sessionId,investigations=sessionInvestigations(state,sessionId)){
   const session=sessionOf(state,sessionId);const ids=eventIds(state,sessionId,'Finding');const investigationIds=new Set(investigations.map((item)=>item.id));
-  return asArray(state.findings).filter((item)=>ids.has(item.id)||(!ids.size&&investigationIds.has(item.investigationId)&&withinSession(session,item.createdAt)));
+  return asArray(state.findings).filter((item)=>investigationIds.has(item.investigationId)&&(ids.has(item.id)||(!ids.size&&withinSession(session,item.createdAt))));
 }
 
 export function sessionTreatments(state,sessionId){
