@@ -39,6 +39,7 @@ jobs:
           node fluxa/storage-health.test.mjs
           node fluxa/storage-integrity.test.mjs
           node fluxa/component-review-storage-integrity.test.mjs
+          node fluxa/component-replacement-storage-integrity.test.mjs
           node fluxa/storage-reference-import.test.mjs
           node fluxa/activity-library.test.mjs
           node fluxa/bulk-library.test.mjs
