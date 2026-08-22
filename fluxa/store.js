@@ -115,6 +115,9 @@ export function loadState() {
 
 export function saveState(state) {
   const next = normalize({ ...state, meta: { ...state.meta, updatedAt: nowIso(), lastPersistenceError: null } });
+  // Mutations must be semantically valid before recovery/backup/primary are touched.
+  // This keeps a domain/UI bug from poisoning every local copy and only being discovered after reload.
+  validateStateReferences(next);
   const serialized = JSON.stringify(next);
   try {
     const current = localStorage.getItem(STORAGE_KEY);
