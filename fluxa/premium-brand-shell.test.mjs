@@ -9,15 +9,15 @@ const styles=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=
 assert.equal(styles.at(-1),'brand-shell.css','The global brand shell must remain the final stylesheet in the cascade.');
 assert.ok(styles.indexOf('premium-reference.css')<styles.indexOf('brand-shell.css'),'Brand shell must refine, not precede, the premium reference layer.');
 
-assert.match(ui,/topbar-session-open/,'Session-open state must have a dedicated topbar treatment.');
-assert.match(ui,/bottom-nav-icon/,'Bottom navigation must expose iconography.');
-assert.match(ui,/bottom-nav-label/,'Bottom navigation must preserve visible text labels alongside icons.');
-assert.match(ui,/aria-label','Brand enhancement must preserve an accessible name.');
+assert.ok(ui.includes('topbar-session-open'),'Session-open state must have a dedicated topbar treatment.');
+assert.ok(ui.includes('bottom-nav-icon'),'Bottom navigation must expose iconography.');
+assert.ok(ui.includes('bottom-nav-label'),'Bottom navigation must preserve visible text labels alongside icons.');
+assert.ok(ui.includes("setAttribute('aria-label','Fluxa · Hoje')"),'Brand enhancement must preserve an accessible name.');
 
-assert.match(css,/font-family:Georgia,'Times New Roman',serif/,'Fluxa wordmark must keep the editorial serif treatment.');
-assert.match(css,/\.topbar-session-open\s*\{[\s\S]*background:#173F46/,'Open sessions must use the approved Deep Teal topbar.');
-assert.match(css,/\.bottom-nav-icon/,'Bottom navigation icon styling must remain present.');
-assert.match(css,/env\(safe-area-inset-bottom\)/,'Bottom navigation must continue respecting the iPhone safe area.');
-assert.match(css,/backdrop-filter/,'Global navigation should retain the restrained premium translucent surface treatment.');
+assert.ok(css.includes("font-family:Georgia,'Times New Roman',serif"),'Fluxa wordmark must keep the editorial serif treatment.');
+assert.match(css,/\.topbar-session-open\s*\{[\s\S]*?background:#173F46/,'Open sessions must use the approved Deep Teal topbar.');
+assert.ok(css.includes('.bottom-nav-icon'),'Bottom navigation icon styling must remain present.');
+assert.ok(css.includes('env(safe-area-inset-bottom)'),'Bottom navigation must continue respecting the iPhone safe area.');
+assert.ok(css.includes('backdrop-filter'),'Global navigation should retain the restrained premium translucent surface treatment.');
 
 console.log('premium-brand-shell.test.mjs: ok');
