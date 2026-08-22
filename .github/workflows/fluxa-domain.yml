@@ -71,4 +71,5 @@ jobs:
           node fluxa/divorce-energy-domain.test.mjs
           node fluxa/treatment-resume-context.test.mjs
           node fluxa/premium-treatments.test.mjs
+          node fluxa/premium-workflow.test.mjs
           node fluxa/static-smoke.test.mjs
