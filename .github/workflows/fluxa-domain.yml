@@ -36,6 +36,8 @@ jobs:
           node fluxa/protocol-engine.test.mjs
           node fluxa/remaining.test.mjs
           node fluxa/storage-health.test.mjs
+          node fluxa/storage-integrity.test.mjs
+          node fluxa/storage-reference-import.test.mjs
           node fluxa/activity-library.test.mjs
           node fluxa/bulk-library.test.mjs
           node fluxa/treatment-planning.test.mjs

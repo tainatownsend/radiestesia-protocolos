@@ -1,3 +1,5 @@
+import { validateStateReferences } from './storage-integrity.js';
+
 const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
 const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
@@ -40,6 +42,10 @@ function looksLikeFluxaData(value) {
 }
 
 function validCandidate(raw) { const value = parse(raw); return looksLikeFluxaData(value) ? value : null; }
+function validSemanticCandidate(raw) {
+  const value=validCandidate(raw);if(!value)return null;
+  try { validateStateReferences(value); return value; } catch (_) { return null; }
+}
 
 function canonicalize(value) {
   const next = { ...value, version: CURRENT_VERSION };
@@ -64,8 +70,8 @@ export function inspectStorageHealth() {
   const backupRaw=backupRead.value;
   const recoveryRaw=recoveryRead.value;
   const primary=validCandidate(primaryRaw);
-  const backup=validCandidate(backupRaw);
-  const recovery=validCandidate(recoveryRaw);
+  const backup=validSemanticCandidate(backupRaw);
+  const recovery=validSemanticCandidate(recoveryRaw);
 
   return {
     writable:writable&&!readError,
@@ -86,9 +92,10 @@ export function recoverLocalData() {
   const recoveryRead=read(RECOVERY_KEY);
   const backupRead=read(BACKUP_KEY);
   if(recoveryRead.error||backupRead.error)throw storageAccessError('ler as cópias de recuperação',recoveryRead.error||backupRead.error);
-  const sourceRaw=validCandidate(recoveryRead.value)?recoveryRead.value:(validCandidate(backupRead.value)?backupRead.value:null);
+  const sourceRaw=validSemanticCandidate(recoveryRead.value)?recoveryRead.value:(validSemanticCandidate(backupRead.value)?backupRead.value:null);
   if(!sourceRaw)throw new Error('Nenhuma cópia local válida do Fluxa foi encontrada para recuperação.');
   const source=canonicalize(JSON.parse(sourceRaw));
+  validateStateReferences(source);
   const serialized=JSON.stringify(source);
   const recoveryError=write(RECOVERY_KEY,serialized);if(recoveryError)throw storageAccessError('gravar a cópia de recuperação',recoveryError);
   const primaryError=write(STORAGE_KEY,serialized);if(primaryError)throw storageAccessError('restaurar os dados principais',primaryError);
@@ -98,7 +105,9 @@ export function recoverLocalData() {
 export function validateImportPayload(value) {
   if (hasUnsupportedFutureVersion(value)) throw new Error(`Este backup foi criado por uma versão mais nova do Fluxa (schema ${schemaVersion(value)}). Atualize o Fluxa antes de importar para não perder dados.`);
   if (!looksLikeFluxaData(value)) throw new Error('Este arquivo não parece ser uma cópia válida do Fluxa.');
-  return canonicalize(value);
+  const normalized=canonicalize(value);
+  validateStateReferences(normalized);
+  return normalized;
 }
 
 export function importLocalDataText(text) {
