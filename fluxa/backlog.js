@@ -25,6 +25,20 @@ function addDuration(startedAt, value, unit) {
   if (unit === 'MONTH') date.setMonth(date.getMonth() + n);
   return date.toISOString();
 }
+function shiftTreatmentItemGraphDeadlines(component, pauseMs) {
+  if (!pauseMs || !component?.treatmentItem?.commands) return 0;
+  let shifted = 0;
+  for (const command of component.treatmentItem.commands) {
+    for (const graph of command.graphApplications || []) {
+      if (graph.noDuration || !graph.expectedEndAt) continue;
+      const end = new Date(graph.expectedEndAt);
+      if (Number.isNaN(end.getTime())) continue;
+      graph.expectedEndAt = new Date(end.getTime() + pauseMs).toISOString();
+      shifted += 1;
+    }
+  }
+  return shifted;
+}
 
 export const BacklogEventType = Object.freeze({
   SESSION_CLOSE_CORRECTED: 'SESSION_CLOSE_CORRECTED', COMPONENT_ADDED: 'COMPONENT_ADDED',
@@ -101,9 +115,10 @@ export function resumeTreatmentPreservingDuration(store, treatmentId, input = {}
     target.status = TreatmentStatus.IN_PROGRESS; target.resumedAt = resumedAt; target.updatedAt = resumedAt;
     draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.INTERRUPTED).forEach((item) => {
       item.status = TreatmentStatus.IN_PROGRESS; item.updatedAt = resumedAt;
-      if (input.preserveRemainingDuration !== false && item.expectedEndAt && pauseMs) {
-        item.expectedEndAt = new Date(new Date(item.expectedEndAt).getTime() + pauseMs).toISOString();
-        addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_RESCHEDULED, entityType: 'TreatmentComponent', entityId: item.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { treatmentId, expectedEndAt: item.expectedEndAt, pauseMs } });
+      if (input.preserveRemainingDuration !== false && pauseMs) {
+        const graphDeadlinesShifted = shiftTreatmentItemGraphDeadlines(item, pauseMs);
+        if (item.expectedEndAt) item.expectedEndAt = new Date(new Date(item.expectedEndAt).getTime() + pauseMs).toISOString();
+        if (item.expectedEndAt || graphDeadlinesShifted) addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_RESCHEDULED, entityType: 'TreatmentComponent', entityId: item.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { treatmentId, expectedEndAt: item.expectedEndAt || null, pauseMs, graphDeadlinesShifted } });
       }
     });
     addEvent(store, draft, { eventType: EventType.TREATMENT_RESUMED, entityType: 'Treatment', entityId: target.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { preserveRemainingDuration: input.preserveRemainingDuration !== false, pauseMs } });
