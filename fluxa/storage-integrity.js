@@ -78,7 +78,14 @@ export function validateStateReferences(state={}){
   }
 
   const assessmentById=new Map(asArray(state.assessments).map((item)=>[String(item.id),item]));
+  const sourceClaimByAssessmentId=new Map();
   for(const assessment of asArray(state.assessments)){
+    if(assessment.sourceAssessmentId){
+      const sourceId=String(assessment.sourceAssessmentId);
+      const existingClaim=sourceClaimByAssessmentId.get(sourceId);
+      if(existingClaim&&existingClaim!==String(assessment.id))throw new Error(`Backup inválido: a avaliação de origem ${sourceId} possui mais de uma avaliação de continuidade.`);
+      sourceClaimByAssessmentId.set(sourceId,String(assessment.id));
+    }
     requireRef(assessment.sessionId,sessions,'Assessment.sessionId');
     requireRef(assessment.assistedEntityId,assisted,'Assessment.assistedEntityId');
     requireRef(assessment.treatmentId,treatments,'Assessment.treatmentId');
@@ -93,6 +100,8 @@ export function validateStateReferences(state={}){
       if(!linked)continue;
       if(linked.assistedEntityId&&assessment.assistedEntityId&&linked.assistedEntityId!==assessment.assistedEntityId)throw new Error(`Backup inválido: a ${label} de ${assessment.id} pertence a outro Assistido.`);
       if(linked.sessionId&&assessment.sessionId&&linked.sessionId!==assessment.sessionId)throw new Error(`Backup inválido: a ${label} de ${assessment.id} pertence a outra sessão.`);
+      if(field==='sourceAssessmentId'&&linked.followUpAssessmentId&&String(linked.followUpAssessmentId)!==String(assessment.id))throw new Error(`Backup inválido: a avaliação de origem de ${assessment.id} aponta para outra continuidade.`);
+      if(field==='followUpAssessmentId'&&linked.sourceAssessmentId&&String(linked.sourceAssessmentId)!==String(assessment.id))throw new Error(`Backup inválido: a avaliação de continuidade de ${assessment.id} aponta para outra origem.`);
     }
     const linkedInvestigation=investigationById.get(String(assessment.linkedInvestigationId));
     if(linkedInvestigation){
