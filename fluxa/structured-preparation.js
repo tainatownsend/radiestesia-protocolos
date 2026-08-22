@@ -1,9 +1,16 @@
 import { completePreparation } from './domain.js';
 
-export function updatePreparationDetails(store, runId, input = {}) {
-  const state = store.getState();
+function requireOpenPreparationSession(state, runId) {
   const run = state.preparationRuns.find((item) => item.id === runId && item.status !== 'COMPLETED');
   if (!run) throw new Error('Preparação não disponível para atualização.');
+  const session = (state.sessions || []).find((item) => item.id === run.sessionId && item.status === 'OPEN');
+  if (!session) throw new Error('Esta ação exige que a sessão da preparação esteja aberta.');
+  return run;
+}
+
+export function updatePreparationDetails(store, runId, input = {}) {
+  const state = store.getState();
+  requireOpenPreparationSession(state, runId);
 
   const frequencyValue = String(input.frequencyValue ?? '').trim();
   const frequencyScale = String(input.frequencyScale ?? '').trim();
@@ -35,8 +42,7 @@ export function updatePreparationDetails(store, runId, input = {}) {
 }
 
 export function validateStructuredPreparation(state, runId) {
-  const run = state.preparationRuns.find((item) => item.id === runId);
-  if (!run) throw new Error('Preparação não encontrada.');
+  const run = requireOpenPreparationSession(state, runId);
   if (!run.steps?.every((step) => step.completed)) {
     throw new Error('Conclua as quatro etapas da preparação antes de finalizar.');
   }
