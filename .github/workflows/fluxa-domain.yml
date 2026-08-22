@@ -33,6 +33,7 @@ jobs:
           node fluxa/core-domain-invariants.test.mjs
           node fluxa/session-rules.test.mjs
           node fluxa/store.test.mjs
+          node fluxa/runtime-persistence-integrity.test.mjs
           node fluxa/protocol-engine.test.mjs
           node fluxa/remaining.test.mjs
           node fluxa/storage-health.test.mjs
