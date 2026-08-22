@@ -6,19 +6,43 @@ function clean(value=''){return String(value??'').trim();}
 function normalizeKey(value=''){return clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function normalizeType(value=''){return TYPE_ALIASES.get(clean(value).toUpperCase())||ToolType.GRAPH;}
 function csvCell(value=''){const text=String(value??'');return /[",\n\r;]/.test(text)?`"${text.replace(/"/g,'""')}"`:text;}
-function splitDelimitedLine(line,delimiter){const cells=[];let current='',quoted=false;for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'){if(quoted&&line[i+1]==='"'){current+='"';i++;}else quoted=!quoted;continue;}if(char===delimiter&&!quoted){cells.push(current);current='';continue;}current+=char;}cells.push(current);return cells.map(clean);}
 function detectDelimiter(firstLine=''){const candidates=[',',';','\t'];return candidates.sort((a,b)=>(firstLine.split(b).length-firstLine.split(a).length))[0];}
 function headerMap(cells){const aliases={name:['nome','name','grafico','gráfico','recurso'],type:['tipo','type','categoria'],purpose:['finalidade','purpose','uso','objetivo'],tags:['tags','tag','etiquetas','etiqueta','palavras-chave','palavras chave'],notes:['observacoes','observações','notes','nota','notas']},result={};cells.forEach((cell,index)=>{const key=normalizeKey(cell);for(const[field,names]of Object.entries(aliases))if(names.map(normalizeKey).includes(key))result[field]=index;});return result;}
+function parseDelimitedRecords(text,delimiter){
+  const records=[],errors=[];let cells=[],current='',quoted=false,line=1,startLine=1;
+  const finishCell=()=>{cells.push(clean(current));current='';};
+  const finishRecord=()=>{finishCell();if(cells.some((cell)=>cell.trim()))records.push({cells,startLine});cells=[];startLine=line;};
+  for(let i=0;i<text.length;i++){
+    const char=text[i];
+    if(char==='"'){
+      if(quoted&&text[i+1]==='"'){current+='"';i++;continue;}
+      quoted=!quoted;continue;
+    }
+    if(char===delimiter&&!quoted){finishCell();continue;}
+    if((char==='\n'||char==='\r')&&!quoted){
+      if(char==='\r'&&text[i+1]==='\n')i++;
+      line++;finishRecord();startLine=line;continue;
+    }
+    if(char==='\r'&&quoted&&text[i+1]==='\n'){current+='\n';i++;line++;continue;}
+    if(char==='\n'){current+='\n';line++;continue;}
+    current+=char;
+  }
+  if(quoted)errors.push(`Linha ${startLine}: aspas não fechadas.`);
+  if(current.length||cells.length)finishRecord();
+  return{records,errors};
+}
 
 export function parseLibraryBulkText(text){
   const raw=String(text||'').replace(/^\uFEFF/,'').trim();if(!raw)return{items:[],errors:['O arquivo está vazio.'],delimiter:','};
-  const lines=raw.split(/\r?\n/).filter((line)=>line.trim()),delimiter=detectDelimiter(lines[0]),first=splitDelimitedLine(lines[0],delimiter),map=headerMap(first),hasHeader=Number.isInteger(map.name),start=hasHeader?1:0,items=[],errors=[];
-  for(let i=start;i<lines.length;i++){
-    const cells=splitDelimitedLine(lines[i],delimiter),name=clean(hasHeader?cells[map.name]:cells[0]);if(!name){errors.push(`Linha ${i+1}: nome vazio.`);continue;}
+  const firstPhysicalLine=raw.split(/\r?\n/,1)[0],delimiter=detectDelimiter(firstPhysicalLine),parsed=parseDelimitedRecords(raw,delimiter),records=parsed.records;
+  if(!records.length)return{items:[],errors:parsed.errors.length?parsed.errors:['O arquivo está vazio.'],delimiter};
+  const first=records[0].cells,map=headerMap(first),hasHeader=Number.isInteger(map.name),start=hasHeader?1:0,items=[],errors=[...parsed.errors];
+  for(let i=start;i<records.length;i++){
+    const record=records[i],cells=record.cells,name=clean(hasHeader?cells[map.name]:cells[0]);if(!name){errors.push(`Linha ${record.startLine}: nome vazio.`);continue;}
     const type=normalizeType(hasHeader&&Number.isInteger(map.type)?cells[map.type]:cells[1]),purpose=clean(hasHeader&&Number.isInteger(map.purpose)?cells[map.purpose]:cells[2])||null;
     const tags=normalizeToolTags(hasHeader&&Number.isInteger(map.tags)?cells[map.tags]:'');
     const notes=clean(hasHeader&&Number.isInteger(map.notes)?cells[map.notes]:cells[hasHeader?4:3])||null;
-    items.push({name,type,purpose,tags,notes,sourceLine:i+1});
+    items.push({name,type,purpose,tags,notes,sourceLine:record.startLine});
   }
   return{items,errors,delimiter};
 }
