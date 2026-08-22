@@ -5,6 +5,7 @@ import { parseTreatmentPlans } from './treatment-theme-parser.js';
 const root=new URL('.',import.meta.url);
 const library=fs.readFileSync(new URL('./treatment-theme-library.js',root),'utf8');
 const ui=fs.readFileSync(new URL('./treatment-theme-ui.js',root),'utf8');
+const createUi=fs.readFileSync(new URL('./treatment-create-ui.js',root),'utf8');
 const html=fs.readFileSync(new URL('./index.html',root),'utf8');
 const css=fs.readFileSync(new URL('./treatment-theme.css',root),'utf8');
 
@@ -32,6 +33,12 @@ assert.match(ui,/data-add-treatment-component-draft/,'Applying a suggestion must
 assert.match(ui,/instructions\.value=item\.command/,'Original therapeutic command must prefill the editable instructions.');
 assert.match(ui,/form\.dataset\.treatmentTheme=item\.theme/,'Treatment must retain thematic provenance in the form.');
 assert.match(ui,/form\.dataset\.treatmentThemeSource=item\.sourcePath/,'Treatment must retain source provenance for native and root suggestions.');
+assert.match(ui,/form\.dataset\.treatmentThemeSuggestion=item\.id/,'Treatment must retain the exact selected suggestion before save.');
+assert.match(createUi,/function linkTreatmentThemeProvenance\(treatmentId, form\)/,'Treatment creation must persist thematic provenance instead of leaving it only on the form.');
+assert.match(createUi,/treatment\.treatmentTheme = treatmentTheme \|\| null/,'Saved treatment history must retain the selected theme.');
+assert.match(createUi,/treatment\.treatmentThemeSource = treatmentThemeSource \|\| null/,'Saved treatment history must retain the source path.');
+assert.match(createUi,/treatment\.treatmentThemeSuggestionId = treatmentThemeSuggestionId \|\| null/,'Saved treatment history must retain the exact source suggestion ID.');
+assert.match(createUi,/linkTreatmentThemeProvenance\(created\.treatment\.id, form\)/,'Theme provenance must be linked to the treatment created by the same submit action.');
 assert.ok(html.indexOf('treatment-theme.css')<html.indexOf('premium-reference.css'),'Premium reference must remain the final CSS authority.');
 assert.match(html,/treatment-theme-library\.js/,'Treatment theme library must load in the app shell.');
 assert.match(html,/treatment-theme-ui\.js/,'Treatment theme UI must load in the app shell.');
