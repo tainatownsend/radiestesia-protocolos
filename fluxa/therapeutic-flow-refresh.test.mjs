@@ -5,6 +5,7 @@ const index=await readFile(new URL('./index.html',import.meta.url),'utf8');
 const home=await readFile(new URL('./home-refresh-ui.js',import.meta.url),'utf8');
 const treatment=await readFile(new URL('./treatment-create-ui.js',import.meta.url),'utf8');
 const modalities=await readFile(new URL('./therapeutic-modalities-ui.js',import.meta.url),'utf8');
+const picker=await readFile(new URL('./tool-picker-search-ui.js',import.meta.url),'utf8');
 const css=await readFile(new URL('./therapeutic-flow-refresh.css',import.meta.url),'utf8');
 const reset=await readFile(new URL('./data-reset.js',import.meta.url),'utf8');
 const worker=await readFile(new URL('./service-worker.js',import.meta.url),'utf8');
@@ -27,11 +28,21 @@ assert.ok(modalities.includes("BASE={id:'RADIESTHESIA'"),'Radiestesia must remai
 assert.ok(modalities.includes('customModalities'),'therapists must be able to define additional modalities');
 assert.ok(modalities.includes('name="treatmentModality"'),'configured modalities must appear in treatment composition');
 assert.ok(modalities.includes('data-modality-summary'),'saved composition must be visible on treatment cards');
+assert.ok(modalities.includes('enhanceLibraryPreferences'),'modality configuration must live with Library preferences');
+assert.ok(!modalities.includes('enhanceTreatmentsPage'),'Treatment flow must not contain profile/settings configuration');
+assert.ok(modalities.includes('Biblioteca → Preferências'),'treatment flow should point to configuration without embedding it');
 
 assert.ok(treatment.includes("t.modalities=['RADIESTHESIA'"),'saved treatments must persist Radiestesia as base');
 assert.ok(treatment.includes("t.modalitySnapshots=[{id:'RADIESTHESIA',label:'Radiestesia'}"),'saved treatment must preserve modality labels');
 assert.ok(treatment.includes('enrichComponentWithTreatmentItem'),'modality work must preserve the item-command-graph model');
 assert.ok(!treatment.includes("type: modality.id === 'REIKI'"),'complementary modalities must not be misrepresented as radiesthesia treatment components');
+
+assert.ok(picker.includes('input[name="graphName"]'),'treatment graph inputs must be enhanced');
+assert.ok(picker.includes('data-open-graph-picker'),'graph picker must open from a compact launcher');
+assert.ok(picker.includes("mode==='graph'"),'graph picker must have a graph-only mode');
+assert.ok(picker.includes("t.type==='GRAPH'"),'graph-only mode must exclude unrelated library resources');
+assert.ok(picker.includes('Selecionar gráfico da Biblioteca'),'graph entry must support fast library selection');
+assert.ok(picker.includes('Digitar nome novo'),'manual graph entry must remain available');
 
 assert.match(css,/\.home-cockpit-context\s*\{[\s\S]*?position:static !important/,'Assistido context must stay in normal document flow');
 assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'Home must use three core actions');
