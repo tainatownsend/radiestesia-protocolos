@@ -74,6 +74,25 @@ function payload(overrides={}) { return { version:4, sessions:[], assistedEntiti
 
 {
   localStorage.map.clear();
+  localStorage.setItem('fluxa.mvp.v1', JSON.stringify(payload({ sessions:[{ id:'keep-current' }] })));
+  const future=JSON.stringify(payload({version:6,sessions:[{id:'future'}],futureOnlyField:{must:'survive'}}));
+  assert.throws(()=>importLocalDataText(future),/versão mais nova|schema 6/i,'future backups must never be silently downgraded');
+  assert.equal(JSON.parse(localStorage.getItem('fluxa.mvp.v1')).sessions[0].id,'keep-current','failed future import must preserve current data');
+  assert.equal(localStorage.getItem('fluxa.mvp.v1.backup'),null,'rejected import must not mutate backup state');
+  assert.throws(()=>validateImportPayload(payload({version:99})),/versão mais nova|schema 99/i);
+}
+
+{
+  localStorage.map.clear();
+  localStorage.setItem('fluxa.mvp.v1',JSON.stringify(payload({version:6,sessions:[{id:'future-primary'}]})));
+  localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(payload({sessions:[{id:'compatible-backup'}]})));
+  const health=inspectStorageHealth();
+  assert.equal(health.status,'PRIMARY_CORRUPT','a future primary must not be rewritten by an older runtime');
+  assert.equal(health.preferredRecoverySource,'BACKUP');
+}
+
+{
+  localStorage.map.clear();
   localStorage.setItem('fluxa.lastSuccessfulExportAt','2026-08-20T10:00:00.000Z');
   assert.equal(inspectStorageHealth().lastExportAt,'2026-08-20T10:00:00.000Z');
 }
