@@ -17,7 +17,7 @@ for(const [token,value] of Object.entries({
 
 assert.match(home,/data-home-cockpit/,'Home should expose one canonical therapist cockpit.');
 assert.match(home,/Atendimento atual/,'Home cockpit should show current assisted context.');
-assert.match(home,/Próxima ação/,'Home cockpit should prioritize the next action.');
+assert.match(home,/Próximo passo/,'Home cockpit should prioritize the next step.');
 assert.match(home,/data-home-actions/,'Home cockpit should retain the four core therapist actions.');
 assert.match(home,/data-fast-session-context.*hidden/,'Legacy fast context should be hidden from the refreshed Home.');
 assert.match(home,/data-ux-next-action.*hidden/,'Previous next-action card should be hidden to avoid duplication.');
@@ -29,7 +29,7 @@ assert.match(home,/fluxa-home-preparing/,'Preparation should have its own reduce
 assert.match(home,/fluxa-home-idle/,'Idle Home should have its own reduced-density state.');
 assert.match(home,/Atividade recente/,'Idle activity should be explicitly collapsed by the Home refresh.');
 
-assert.match(brand,/\.home-cockpit-next\{[^}]*background:var\(--primary-strong\)/,'Primary Home decision surface should use Deep Teal.');
+assert.match(brand,/\.home-cockpit-next\{[^}]*background:var\(--primary-strong\)/,'Canonical Deep Teal layer must retain the primary decision token before premium overrides.');
 assert.match(brand,/\.home-primary-actions/,'Core actions should share one visually unified surface.');
 assert.match(brand,/fluxa-home-refreshed main>\.eyebrow[^}]*display:none/,'Prepared Home should remove redundant page-level heading chrome.');
 assert.match(brand,/fluxa-home-preparing/,'Brand layer should visually prioritize preparation.');
