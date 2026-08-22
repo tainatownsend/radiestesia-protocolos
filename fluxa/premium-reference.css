@@ -38,6 +38,25 @@ body.fluxa-home-refreshed .action-grid:not(.home-primary-actions){display:none!i
 .home-collapsible-section .section-head .home-close-session{color:#875047;}
 .home-collapsible-section .timeline{margin-top:14px;}
 
+/* Longitudinal treatments: calmer cards with status, timing and actions clearly separated. */
+.treatment-card{padding:18px;border:1px solid var(--premium-line);border-radius:19px;background:#F8F9F7;box-shadow:0 7px 22px rgba(16,47,53,.04);}
+.treatment-card+.treatment-card{margin-top:12px;}
+.treatment-card>.section-head{align-items:flex-start;margin-bottom:12px;gap:14px;}
+.treatment-card>.section-head .eyebrow{margin-bottom:4px;color:#66898C;font-size:10px;letter-spacing:.09em;}
+.treatment-card>.section-head h2{font-size:19px;font-weight:650;line-height:1.2;letter-spacing:-.025em;}
+.treatment-card .status-pill{flex:0 0 auto;min-height:30px;padding:5px 10px;border:0;border-radius:999px;background:#E8EFED;color:#173F46;font-size:11px;font-weight:750;line-height:1.15;}
+.treatment-card .status-planned{background:#F0F2F1;color:#606B6C;}
+.treatment-card .status-completed{background:#DEE4E1;color:#385B5E;}
+.treatment-card .status-interrupted{background:#F5E9E4;color:#875047;}
+.treatment-card>.muted,.treatment-card>[data-planned-component-summary]{margin:0 0 14px;padding:11px 12px;border-radius:12px;background:#F1F4F2;color:#606B6C;font-size:12px;line-height:1.45;}
+.treatment-card>[data-planning-note]{margin:0 0 8px;padding:0 2px;color:#606B6C;font-size:12px;line-height:1.45;}
+.treatment-card .button-row{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--premium-line);}
+.treatment-card .button-row .btn{flex:1;min-height:44px;padding-inline:12px;border-radius:12px;font-size:12px;}
+.treatment-card .button-row [data-review-treatment]{background:#173F46;border-color:#173F46;color:#fff;}
+.treatment-card .button-row [data-interrupt-treatment]{background:transparent;border-color:rgba(193,124,97,.45);color:#875047;}
+.treatment-card .button-row [data-resume-treatment],.treatment-card .button-row [data-start-planned-treatment]{background:#173F46;color:#fff;}
+.treatment-card .button-row [data-add-existing-planned-component]{background:#F8F9F7;border-color:#CBD3D1;color:#173F46;}
+
 /* Catalog */
 #investigation-chooser-overlay .sheet{max-width:760px;background:#F8F9F7;}
 .catalog-loading{min-height:280px;display:grid;place-items:center;align-content:center;gap:12px;color:#606B6C;}
@@ -130,6 +149,11 @@ body.fluxa-home-refreshed .action-grid:not(.home-primary-actions){display:none!i
   .home-action span:not(.home-action-icon){display:none;}
   .home-collapsible-section .section-head h2{font-size:13px;}
   .home-collapsible-section .section-head .btn{padding:0 8px;font-size:11px;}
+  .treatment-card{padding:16px;}
+  .treatment-card>.section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;}
+  .treatment-card .status-pill{max-width:132px;text-align:center;}
+  .treatment-card .button-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+  .treatment-card .button-row .btn:only-child{grid-column:1/-1;}
   .featured-protocol-grid{grid-template-columns:1fr;}
   .therapeutic-protocol-card{grid-template-columns:1fr;}
   .therapeutic-protocol-card .btn{width:100%;}
