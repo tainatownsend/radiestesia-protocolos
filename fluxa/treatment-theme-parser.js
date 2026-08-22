@@ -16,10 +16,14 @@ export function inferTreatmentTheme(title='',command=''){
     ['Financeiro',['finance','dinheiro','prosper','escassez','material','receber','cobrar','dívida','divida']],
     ['Carreira',['carreira','profission','trabalho','liderança','lideranca','sucesso','reconhecimento']],
     ['Relacionamentos',['relacion','casamento','afetiv','amor','parceir','conflito','separação','separacao']],
-    ['Família e ancestralidade',['famil','ancestr','transger','parent','linhagem','lealdade']],
-    ['Autoestima e identidade',['autoestima','amor-próprio','amor proprio','merecimento','identidade','autovalor','corpo']],
-    ['Casa e ambiente',['casa','ambiente','lar','espaço','espaco']],
+    ['Parentalidade',['matern','patern','filho','filha','criança','crianca','cuidadores','sobrecarga parental']],
+    ['Família e ancestralidade',['famil','ancestr','transger','parental','linhagem','lealdade','mãe','mae','pai']],
+    ['Autoestima e identidade',['autoestima','amor-próprio','amor proprio','merecimento','identidade','autovalor','rejeição','rejeicao','aprovação','aprovacao']],
+    ['Corpo e autoimagem',['corpo','autoimagem','vergonha corporal','imagem corporal','aparência','aparencia']],
+    ['Casa e ambiente',['casa','ambiente','lar','espaço','espaco','moradia']],
+    ['Vida social e pertencimento',['social','pertencimento','amizade','amigos','isolamento','grupo','confiança social','confianca social']],
     ['Propósito e criatividade',['propósito','proposito','missão','missao','criativ','projeto','caminho de vida']],
+    ['Ciclos e transições',['encerramento','fechamento','transição','transicao','mudança','mudanca','novo ciclo','fim de ciclo','decisão','decisao']],
     ['Energia e padrões',['energ','vínculo','vinculo','cordão','cordao','padrão','padrao','kárm','karm','voto','pacto','crença','crenca']]
   ];
   return rules.find(([,terms])=>terms.some(term=>text.includes(normalizeTreatmentThemeText(term))))?.[0]||'Outros temas';
