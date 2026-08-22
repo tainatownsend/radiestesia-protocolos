@@ -113,6 +113,14 @@ const chained = recordOrientingAssessment(chainedStore, {
 assert.equal(chained.sourceAssessmentId, 'assess_general', 'A general measurement can explicitly hand off into an orienting assessment.');
 assert.equal(chainedStore.getState().assessments.find((item) => item.id === 'assess_general').followUpAssessmentId, chained.id, 'The source assessment should retain the forward link without being overwritten.');
 assert.equal(chainedStore.getState().events.at(-1).metadata.sourceAssessmentId, 'assess_general');
+const chainedAssessmentCount = chainedStore.getState().assessments.length;
+const chainedEventCount = chainedStore.getState().events.length;
+assert.throws(() => recordOrientingAssessment(chainedStore, {
+  sessionId:'ses_1', assistedEntityId:'ast_1', sourceAssessmentId:'assess_general', focusAreas:['finance']
+}, catalog), /já possui um próximo passo/i, 'A source measurement must not overwrite its existing handoff with a second orienting assessment.');
+assert.equal(chainedStore.getState().assessments.length, chainedAssessmentCount, 'Rejected duplicate handoff must not create another assessment.');
+assert.equal(chainedStore.getState().events.length, chainedEventCount, 'Rejected duplicate handoff must not create history events.');
+assert.equal(chainedStore.getState().assessments.find((item) => item.id === 'assess_general').followUpAssessmentId, chained.id, 'Rejected duplicate handoff must preserve the original forward link.');
 assert.throws(() => recordOrientingAssessment(fakeStore({ ...baseState, assessments:[{...generalAssessment, sessionId:'other'}] }), {
   sessionId:'ses_1', assistedEntityId:'ast_1', sourceAssessmentId:'assess_general', focusAreas:['patterns']
 }, catalog), /avaliação de origem/i, 'Cross-session assessment handoff must be blocked.');
