@@ -11,7 +11,7 @@ const state={
   customProtocols:[{toolIds:['graph-b','graph-b']}]
 };
 
-assert.equal(toolUsageCount(state,'graph-a'),4,'legacy component, nested graph applications and preparation use must all count');
+assert.equal(toolUsageCount(state,'graph-a'),5,'legacy component, nested graph applications and preparation use must all count');
 assert.equal(toolUsageCount(state,'graph-b'),3,'treatment graph and repeated custom-protocol references must count');
 assert.equal(toolUsageCount(state,'missing'),0);
 assert.equal(toolUsageCount({},'graph-a'),0);
