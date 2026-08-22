@@ -28,6 +28,12 @@ export function sessionComponents(state,sessionId,treatmentId){
   return asArray(state.treatmentComponents).filter((item)=>item.treatmentId===treatmentId&&(ids.has(item.id)||(!ids.size&&withinSession(session,item.startedAt||item.createdAt))));
 }
 
+export function sessionHawkinsMeasurements(state,sessionId,assistedId=null){
+  return asArray(state.assessments)
+    .filter((item)=>item.sessionId===sessionId&&item.kind==='HAWKINS_FREQUENCY'&&(!assistedId||item.assistedEntityId===assistedId))
+    .sort((a,b)=>String(a.occurredAt||a.createdAt||'').localeCompare(String(b.occurredAt||b.createdAt||'')));
+}
+
 export function sessionAssistedIds(state,sessionId){
   const ids=new Set();
   asArray(state.events).filter((event)=>event.sessionId===sessionId&&event.assistedEntityId).forEach((event)=>ids.add(event.assistedEntityId));
