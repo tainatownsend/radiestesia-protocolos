@@ -4,3 +4,8 @@
 .home-cockpit-context{position:relative;z-index:1;background:#EFF1EF;}
 body.fluxa-session-open .home-cockpit-context{background:#EFF1EF;}
 [data-therapy-settings]{margin-top:12px;}
+.therapy-composition{margin-bottom:16px;background:#F4F6F4;}
+.therapy-base{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid #CBD3D1;border-radius:14px;background:#E8EFED;color:#173F46;}
+.therapy-base strong{font-size:15px;}
+.therapy-base span{color:#606B6C;font-size:12px;text-align:right;}
+.therapy-composition>.muted{margin:14px 0 8px;font-size:13px;}
