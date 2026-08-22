@@ -1,15 +1,15 @@
 import { createStore } from './store.js';
+import { toolUsageCount } from './tool-usage.js';
 
 const store=createStore();
 const FAVORITES_KEY='fluxa.toolFavorites';
 let targetControl=null;let pickerCounter=0;let enhancing=false;
-function esc(value=''){return String(value).replace(/[&<>'"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));}
+function esc(value=''){return String(value).replace(/[&<>'\"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','\"':'&quot;'}[c]));}
 function norm(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function activeTools(){return(store.getState().tools||[]).filter((t)=>!t.archivedAt);}
 function favoriteIds(){try{return new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]'));}catch(_){return new Set();}}
 function saveFavoriteIds(ids){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...ids]));}catch(_){} }
-function usage(toolId,state=store.getState()){let n=(state.treatmentComponents||[]).filter((c)=>c.toolId===toolId).length;n+=(state.preparationRuns||[]).filter((p)=>(p.protection?.toolIds||[]).includes(toolId)).length;n+=(state.customProtocols||[]).filter((p)=>(p.toolIds||[]).includes(toolId)).length;return n;}
-function sortedTools(mode='all'){const state=store.getState(),favorites=favoriteIds();return activeTools().filter(t=>mode!=='graph'||t.type==='GRAPH').map((t)=>({...t,_usage:usage(t.id,state),_favorite:favorites.has(t.id)})).sort((a,b)=>Number(b._favorite)-Number(a._favorite)||b._usage-a._usage||a.name.localeCompare(b.name,'pt-BR'));}
+function sortedTools(mode='all'){const state=store.getState(),favorites=favoriteIds();return activeTools().filter(t=>mode!=='graph'||t.type==='GRAPH').map((t)=>({...t,_usage:toolUsageCount(state,t.id),_favorite:favorites.has(t.id)})).sort((a,b)=>Number(b._favorite)-Number(a._favorite)||b._usage-a._usage||a.name.localeCompare(b.name,'pt-BR'));}
 function typeLabel(type){return({GRAPH:'Gráfico',BIOMETER:'Biômetro',OTHER:'Outro'})[type]||'Recurso';}
 function close(){document.querySelector('#tool-picker-overlay')?.remove();targetControl=null;}
 function searchText(t){return `${t.name||''} ${t.purpose||''} ${t.notes||''} ${(t.tags||[]).join(' ')}`;}
