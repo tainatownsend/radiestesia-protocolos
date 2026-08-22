@@ -18,4 +18,14 @@ const escaped=parseTreatmentPlans('ESC:P("Limites profissionais","Trabalhar \\"v
 assert.equal(escaped.length,1,'Escaped quotes inside double-quoted plans must not truncate the plan.');
 assert.equal(escaped[0].command,'Trabalhar "visibilidade" sem abandonar limites');
 
+const mixedCall=parseTreatmentPlans('MIX:P(\'Direção profissional\',"Fortalecer confiança no trabalho")','mixed-call.js');
+assert.equal(mixedCall.length,1,'Mixed quote styles inside P/C treatment plans must remain discoverable.');
+assert.equal(mixedCall[0].legacyId,'MIX');
+assert.equal(mixedCall[0].theme,'Carreira');
+
+const mixedObject=parseTreatmentPlans('OBJ:{label:"Receber com tranquilidade",command:\'Trabalhar prosperidade e dinheiro\'}','mixed-object.js');
+assert.equal(mixedObject.length,1,'Mixed quote styles inside object treatment plans must remain discoverable.');
+assert.equal(mixedObject[0].legacyId,'OBJ');
+assert.equal(mixedObject[0].theme,'Financeiro');
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
