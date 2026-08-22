@@ -1,4 +1,4 @@
-const CACHE_NAME='fluxa-runtime-v3-therapeutic-flow-reset-20260822';
+const CACHE_NAME='fluxa-runtime-v3-therapeutic-flow-reset-20260822-therapeutic-catalog-complete-20260821';
 const ROOT=new URL('./',self.location.href).href;
 const MAX_PRECACHE_ASSETS=300;
 const ROOT_PROTOCOL_SOURCES=new Set([
