@@ -48,6 +48,8 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação orientadora.');
   if (!session.currentAssistedEntityId) throw new Error('Escolha o Assistido antes de fazer a avaliação orientadora.');
   if (input.assistedEntityId && input.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
+  const sourceAssessment = input.sourceAssessmentId ? (state.assessments || []).find((item) => item.id === input.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
+  if (input.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
   const focusAreas = [...new Set((input.focusAreas || []).filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
   const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
@@ -56,7 +58,8 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   const now = store.nowIso();
   const assessment = {
     id: store.makeId('assess'), kind:'ORIENTING', subject:'Avaliação orientadora', status:'COMPLETED',
-    sessionId: session.id, assistedEntityId: session.currentAssistedEntityId, focusAreas, focusAreaLabels,
+    sessionId: session.id, assistedEntityId: session.currentAssistedEntityId,
+    sourceAssessmentId: sourceAssessment?.id || null, focusAreas, focusAreaLabels,
     result: focusAreaLabels.join(', '), notes: String(input.notes || '').trim() || null,
     protocolSuggestions: structuredClone(suggestions),
     selectedProtocolId:null, selectedProtocolName:null, linkedInvestigationId:null, occurredAt:now, createdAt:now, updatedAt:now
@@ -65,10 +68,14 @@ export function recordOrientingAssessment(store, input, catalog = []) {
     const draft = structuredClone(current);
     if (!Array.isArray(draft.assessments)) draft.assessments = [];
     draft.assessments.push(assessment);
+    if (assessment.sourceAssessmentId) {
+      const source = draft.assessments.find((item) => item.id === assessment.sourceAssessmentId);
+      if (source) { source.followUpAssessmentId = assessment.id; source.updatedAt = now; }
+    }
     addEvent(store, draft, {
       eventType:'ORIENTING_ASSESSMENT_RECORDED', entityType:'Assessment', entityId:assessment.id,
       sessionId:assessment.sessionId, assistedEntityId:assessment.assistedEntityId,
-      metadata:{ focusAreas:[...focusAreas], focusAreaLabels:[...focusAreaLabels], suggestedProtocolIds:suggestions.map((item) => item.protocolId) }
+      metadata:{ sourceAssessmentId:assessment.sourceAssessmentId, focusAreas:[...focusAreas], focusAreaLabels:[...focusAreaLabels], suggestedProtocolIds:suggestions.map((item) => item.protocolId) }
     });
     return draft;
   });
