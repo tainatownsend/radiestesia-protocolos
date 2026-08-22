@@ -83,10 +83,32 @@ export function replaceTreatmentComponent(store, componentId, input) {
 }
 
 export function resumeTreatmentPreservingDuration(store, treatmentId, input = {}) {
-  const state = store.getState(); const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.INTERRUPTED);
+  const state = store.getState();
+  const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.INTERRUPTED);
   if (!treatment) throw new Error('Tratamento não disponível para retomada.');
-  const resumedAt = store.nowIso(); const interruptedAt = treatment.interruptedAt ? new Date(treatment.interruptedAt).getTime() : null; const pauseMs = interruptedAt ? Math.max(0, new Date(resumedAt).getTime() - interruptedAt) : 0;
-  store.setState((current) => { const draft = structuredClone(current); const target = draft.treatments.find((item) => item.id === treatmentId); target.status = TreatmentStatus.IN_PROGRESS; target.resumedAt = resumedAt; target.updatedAt = resumedAt; draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.INTERRUPTED).forEach((item) => { item.status = TreatmentStatus.IN_PROGRESS; item.updatedAt = resumedAt; if (input.preserveRemainingDuration !== false && item.expectedEndAt && pauseMs) { item.expectedEndAt = new Date(new Date(item.expectedEndAt).getTime() + pauseMs).toISOString(); addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_RESCHEDULED, entityType: 'TreatmentComponent', entityId: item.id, assistedEntityId: target.assistedEntityId, metadata: { treatmentId, expectedEndAt: item.expectedEndAt, pauseMs } }); } }); addEvent(store, draft, { eventType: EventType.TREATMENT_RESUMED, entityType: 'Treatment', entityId: target.id, assistedEntityId: target.assistedEntityId, metadata: { preserveRemainingDuration: input.preserveRemainingDuration !== false, pauseMs } }); return draft; });
+  const session = state.sessions.find((item) => item.status === 'OPEN');
+  if (!session) throw new Error('Abra e prepare uma sessão antes de retomar o tratamento.');
+  requirePreparedSessionState(state, session.id, 'Conclua a preparação da sessão antes de retomar o tratamento.');
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de retomá-lo.');
+  if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que você tentou retomar.');
+
+  const resumedAt = store.nowIso();
+  const interruptedAt = treatment.interruptedAt ? new Date(treatment.interruptedAt).getTime() : null;
+  const pauseMs = interruptedAt ? Math.max(0, new Date(resumedAt).getTime() - interruptedAt) : 0;
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const target = draft.treatments.find((item) => item.id === treatmentId);
+    target.status = TreatmentStatus.IN_PROGRESS; target.resumedAt = resumedAt; target.updatedAt = resumedAt;
+    draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.INTERRUPTED).forEach((item) => {
+      item.status = TreatmentStatus.IN_PROGRESS; item.updatedAt = resumedAt;
+      if (input.preserveRemainingDuration !== false && item.expectedEndAt && pauseMs) {
+        item.expectedEndAt = new Date(new Date(item.expectedEndAt).getTime() + pauseMs).toISOString();
+        addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_RESCHEDULED, entityType: 'TreatmentComponent', entityId: item.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { treatmentId, expectedEndAt: item.expectedEndAt, pauseMs } });
+      }
+    });
+    addEvent(store, draft, { eventType: EventType.TREATMENT_RESUMED, entityType: 'Treatment', entityId: target.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { preserveRemainingDuration: input.preserveRemainingDuration !== false, pauseMs } });
+    return draft;
+  });
 }
 
 export function recordStructuredFinalAssessment(store, input) {
