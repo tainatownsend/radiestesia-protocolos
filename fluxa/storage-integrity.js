@@ -103,6 +103,11 @@ export function validateStateReferences(state={}){
       if(field==='sourceAssessmentId'&&linked.followUpAssessmentId&&String(linked.followUpAssessmentId)!==String(assessment.id))throw new Error(`Backup inválido: a avaliação de origem de ${assessment.id} aponta para outra continuidade.`);
       if(field==='followUpAssessmentId'&&linked.sourceAssessmentId&&String(linked.sourceAssessmentId)!==String(assessment.id))throw new Error(`Backup inválido: a avaliação de continuidade de ${assessment.id} aponta para outra origem.`);
     }
+    if(assessment.selectedProtocolId&&Array.isArray(assessment.protocolSuggestions)&&assessment.protocolSuggestions.length){
+      const selectedSuggestion=assessment.protocolSuggestions.find((item)=>String(item?.protocolId)===String(assessment.selectedProtocolId));
+      if(!selectedSuggestion)throw new Error(`Backup inválido: o protocolo selecionado na avaliação ${assessment.id} não pertence às sugestões registradas.`);
+      if(assessment.selectedProtocolName&&selectedSuggestion.protocolName&&assessment.selectedProtocolName!==selectedSuggestion.protocolName)throw new Error(`Backup inválido: o nome do protocolo selecionado na avaliação ${assessment.id} não corresponde à sugestão registrada.`);
+    }
     const linkedInvestigation=investigationById.get(String(assessment.linkedInvestigationId));
     if(linkedInvestigation){
       if(linkedInvestigation.assistedEntityId&&assessment.assistedEntityId&&linkedInvestigation.assistedEntityId!==assessment.assistedEntityId)throw new Error(`Backup inválido: a investigação vinculada à avaliação ${assessment.id} pertence a outro Assistido.`);
