@@ -61,6 +61,7 @@ jobs:
           node fluxa/offline-shell.test.mjs
           node fluxa/home-brand-refresh.test.mjs
           node fluxa/premium-brand-shell.test.mjs
+          node fluxa/premium-idle-home.test.mjs
           node fluxa/therapeutic-catalog.test.mjs
           node fluxa/root-protocol-parser.test.mjs
           node fluxa/root-protocol-runtime.test.mjs
