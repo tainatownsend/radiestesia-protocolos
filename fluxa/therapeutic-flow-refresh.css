@@ -1,0 +1,110 @@
+/* Therapeutic-flow refinement: keep session context readable and modality choices calm. */
+body.fluxa-home-refreshed .home-cockpit{
+  overflow:visible;
+}
+body.fluxa-home-refreshed .home-cockpit-context{
+  position:static !important;
+  inset:auto !important;
+  top:auto !important;
+  z-index:auto !important;
+  background:#EFF1EF;
+}
+body.fluxa-home-refreshed .home-cockpit-next{
+  position:relative;
+  z-index:0;
+}
+body.fluxa-home-refreshed main{
+  scroll-padding-top:88px;
+}
+.home-primary-actions{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+.modality-settings-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  padding:16px 0;
+  border-top:1px solid rgba(203,211,209,.72);
+  border-bottom:1px solid rgba(203,211,209,.72);
+}
+.modality-settings-card h2{
+  font-size:17px;
+  font-weight:650;
+}
+.modality-settings-card p:not(.eyebrow){
+  margin:5px 0 0;
+  color:#606B6C;
+  font-size:12px;
+  line-height:1.45;
+}
+.therapeutic-modalities-sheet{
+  max-width:680px;
+}
+.modality-base-card{
+  display:grid;
+  gap:3px;
+  padding:15px 16px;
+  border:1px solid rgba(102,137,140,.22);
+  border-radius:16px;
+  background:#E8EFED;
+}
+.modality-base-card.compact{
+  margin-bottom:16px;
+  padding:13px 14px;
+}
+.modality-base-card .eyebrow{
+  margin:0;
+  color:#66898C;
+  font-size:9px;
+}
+.modality-base-card strong{
+  color:#102F35;
+  font-size:15px;
+}
+.modality-base-card small{
+  color:#606B6C;
+  font-size:11px;
+  line-height:1.4;
+}
+.treatment-modality-picker{
+  margin-bottom:14px;
+  background:#F4F6F4;
+}
+.treatment-modality-picker fieldset{
+  margin-top:14px;
+}
+.treatment-modality-picker .check-row,
+.therapeutic-modalities-sheet .check-row{
+  background:#F8F9F7;
+}
+
+@media(max-width:560px){
+  body.fluxa-home-refreshed .home-cockpit-context{
+    margin-left:-16px;
+    margin-right:-16px;
+    padding-left:16px;
+    padding-right:16px;
+  }
+  .home-primary-actions{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:3px;
+  }
+  .home-action{
+    padding-inline:3px;
+  }
+  .home-action strong{
+    font-size:12px;
+  }
+  .home-action span:not(.home-action-icon){
+    font-size:9px;
+  }
+  .modality-settings-card{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .modality-settings-card .btn{
+    width:100%;
+  }
+}
