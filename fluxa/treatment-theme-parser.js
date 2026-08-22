@@ -34,7 +34,8 @@ export function parseTreatmentPlans(source,path){
   const add=(legacyId,title,command)=>{
     title=decode(title);command=decode(command);
     if(!title||!command)return;
-    items.push({id:`${path}:${legacyId}`,legacyId,title,command,theme:inferTreatmentTheme(title,command),sourcePath:path,search:normalizeTreatmentThemeText(`${title} ${command}`)});
+    const theme=inferTreatmentTheme(title,command);
+    items.push({id:`${path}:${legacyId}`,legacyId,title,command,theme,sourcePath:path,search:normalizeTreatmentThemeText(`${title} ${command} ${theme}`)});
   };
   const callRe=/([A-Za-z0-9_]+)\s*:\s*(?:C|P)\(\s*'((?:\\.|[^'])*)'\s*,\s*'((?:\\.|[^'])*)'\s*\)/g;
   for(const match of source.matchAll(callRe))add(match[1],match[2],match[3]);
