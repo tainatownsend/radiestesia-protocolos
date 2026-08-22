@@ -47,7 +47,7 @@ assert.equal(validateStateReferences(base({investigations:[rootInvestigation],as
 assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,sourceAssessmentId:'missing'}]})),/Assessment\.sourceAssessmentId.*inexistente/i);
 assert.throws(()=>validateStateReferences(base({assessments:[{...sourceAssessment,followUpAssessmentId:'missing'}]})),/Assessment\.followUpAssessmentId.*inexistente/i);
 assert.throws(()=>validateStateReferences(base({assessments:[sourceAssessment,{...orientingAssessment,linkedInvestigationId:'missing'}]})),/Assessment\.linkedInvestigationId.*inexistente/i);
-assert.throws(()=>validateStateReferences(base({assessments:[{...orientingAssessment,sourceAssessmentId:'as-orient'}]})),/não pode apontar para si própria/i);
+assert.throws(()=>validateStateReferences(base({investigations:[rootInvestigation],assessments:[{...orientingAssessment,sourceAssessmentId:'as-orient'}]})),/não pode apontar para si própria/i);
 assert.throws(()=>validateStateReferences(base({
   assessments:[{...sourceAssessment,assistedEntityId:'a2'},orientingAssessment],investigations:[rootInvestigation]
 })),/avaliação (?:de origem|de continuidade).*outro Assistido/i);
