@@ -1,5 +1,6 @@
 let dialogIdCounter = 0;
 let lastActive = null;
+const NO_ARIA_HIDDEN = '__none__';
 
 function nextDialogTitleId() {
   dialogIdCounter += 1;
@@ -52,6 +53,41 @@ function newestDialog() {
   return [...document.querySelectorAll('.sheet[role="dialog"]')].at(-1) || null;
 }
 
+function topLevelOwner(node) {
+  let current = node;
+  while (current?.parentElement && current.parentElement !== document.body) current = current.parentElement;
+  return current?.parentElement === document.body ? current : null;
+}
+
+function isolateNode(node) {
+  if (!node.dataset.fluxaModalIsolated) {
+    node.dataset.fluxaModalIsolated = 'true';
+    node.dataset.fluxaPreviousAriaHidden = node.hasAttribute('aria-hidden') ? node.getAttribute('aria-hidden') : NO_ARIA_HIDDEN;
+  }
+  node.inert = true;
+  node.setAttribute('aria-hidden', 'true');
+}
+
+function restoreNode(node) {
+  if (!node.dataset.fluxaModalIsolated) return;
+  node.inert = false;
+  const previous = node.dataset.fluxaPreviousAriaHidden;
+  if (previous === NO_ARIA_HIDDEN) node.removeAttribute('aria-hidden');
+  else if (previous != null) node.setAttribute('aria-hidden', previous);
+  delete node.dataset.fluxaModalIsolated;
+  delete node.dataset.fluxaPreviousAriaHidden;
+}
+
+function syncModalIsolation() {
+  const dialog = newestDialog();
+  const owner = dialog ? topLevelOwner(dialog) : null;
+  [...document.body.children].forEach((child) => {
+    if (child.tagName === 'SCRIPT') return;
+    if (dialog && child !== owner) isolateNode(child);
+    else restoreNode(child);
+  });
+}
+
 function focusNewestDialog() {
   const dialog = newestDialog();
   if (!dialog || dialog.dataset.focusInitialized) return;
@@ -64,13 +100,16 @@ function focusNewestDialog() {
   }
 }
 
+function refreshAccessibility() {
+  enhanceAccessibility();
+  syncModalIsolation();
+  focusNewestDialog();
+}
+
 document.addEventListener('click', (event) => {
   const trigger = event.target.closest('button,[href]');
   if (trigger && !trigger.closest('.sheet')) lastActive = trigger;
-  queueMicrotask(() => {
-    enhanceAccessibility();
-    focusNewestDialog();
-  });
+  queueMicrotask(refreshAccessibility);
 }, true);
 
 document.addEventListener('keydown', (event) => {
@@ -99,16 +138,13 @@ document.addEventListener('keydown', (event) => {
   if (close) {
     event.preventDefault();
     close.click();
-    queueMicrotask(() => lastActive?.isConnected && lastActive.focus?.({ preventScroll:true }));
+    queueMicrotask(() => {
+      refreshAccessibility();
+      lastActive?.isConnected && lastActive.focus?.({ preventScroll:true });
+    });
   }
 });
 
-const observer = new MutationObserver(() => {
-  enhanceAccessibility();
-  focusNewestDialog();
-});
+const observer = new MutationObserver(refreshAccessibility);
 observer.observe(document.body, { childList:true, subtree:true });
-queueMicrotask(() => {
-  enhanceAccessibility();
-  focusNewestDialog();
-});
+queueMicrotask(refreshAccessibility);
