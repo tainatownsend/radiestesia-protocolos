@@ -78,4 +78,6 @@ jobs:
           node fluxa/treatment-resume-context.test.mjs
           node fluxa/premium-treatments.test.mjs
           node fluxa/premium-workflow.test.mjs
+          node fluxa/treatment-item-graphs.test.mjs
+          node fluxa/graph-starter-library.test.mjs
           node fluxa/static-smoke.test.mjs

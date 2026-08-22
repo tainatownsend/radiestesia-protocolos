@@ -1,0 +1,30 @@
+.treatment-model-note{margin:4px 0 14px;line-height:1.5}
+.treatment-items{display:grid;gap:14px}
+.treatment-item-draft{padding:16px;border-color:#CBD3D1;background:#F8F9F7}
+.treatment-commands{display:grid;gap:12px;margin-top:14px}
+.treatment-command-draft{padding:14px;border:1px solid #DEE4E1;border-radius:16px;background:#fff}
+.treatment-command-draft h4{margin:0;color:#102F35;font-size:15px}
+.treatment-graphs{display:grid;gap:10px;margin:12px 0}
+.treatment-graph-row{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,.8fr);gap:10px;align-items:end;padding:12px;border-radius:14px;background:#EFF1EF}
+.graph-duration{display:grid;grid-template-columns:minmax(70px,.7fr) minmax(95px,1fr);gap:8px}
+.treatment-graph-row>.btn{grid-column:1/-1;justify-self:start}
+.treatment-item-draft>.section-head,.treatment-command-draft>.section-head{align-items:flex-start}
+.thematic-prefill-notice span{display:block;margin-top:4px}
+.premium-item-command{margin-top:8px;padding-top:8px;border-top:1px solid #EEF1EF}
+.premium-item-command>span{display:block;color:#606B6C;font-size:10px;line-height:1.4}
+.premium-item-graphs{display:grid;gap:4px;margin-top:6px}
+.premium-item-graphs small{display:flex;justify-content:space-between;gap:8px;color:#102F35;font-size:10px}
+.premium-item-graphs em{color:#66898C;font-style:normal;white-space:nowrap}
+.premium-item-review{margin-top:6px!important}
+@media(max-width:600px){
+ .treatment-item-draft{padding:14px}
+ .treatment-command-draft{padding:12px}
+ .treatment-graph-row{grid-template-columns:1fr;gap:8px}
+ .graph-duration{grid-template-columns:minmax(0,.8fr) minmax(0,1fr)}
+}
+/* Keep the guided question viewport stable between Sim/Não responses. */
+.premium-workflow-protocol{overflow-anchor:none}
+.premium-workflow-protocol .question-panel{height:clamp(300px,44dvh,430px);min-height:0;box-sizing:border-box;contain:layout paint;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow-anchor:none}
+.premium-workflow-protocol .question-panel h1{margin:0;max-width:720px}
+.premium-workflow-protocol .protocol-progress,.premium-workflow-protocol .question-context,.premium-workflow-protocol .binary-actions{contain:layout;overflow-anchor:none}
+@media(max-width:560px){.premium-workflow-protocol .question-panel{height:42dvh;min-height:300px;padding:22px 12px}}
