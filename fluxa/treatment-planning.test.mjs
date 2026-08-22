@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
-import { AssistedType, TreatmentStatus, PREPARATION_STEPS, createAssistedEntity, startSession, startPreparation, togglePreparationStep, completePreparation } from './domain.js';
+import { AssistedType, TreatmentStatus, PREPARATION_STEPS, createAssistedEntity, selectAssistedForSession, startSession, startPreparation, togglePreparationStep, completePreparation } from './domain.js';
 import { createPlannedTreatment, addPlannedTreatmentComponent, startPlannedTreatment } from './treatment-planning.js';
 
 class MemoryStorage {
@@ -79,6 +79,24 @@ function prepare(store, sessionId) {
   assert.ok(componentsAfter[0].expectedEndAt);
   assert.equal(componentsAfter[0].toolSnapshot.name, 'Gráfico A original');
   assert.equal(componentsAfter[1].expectedEndAt, null);
+}
+
+{
+  localStorage.map.clear();
+  const store=createStore();
+  const owner=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Dono do tratamento',birthDate:'1990-01-01'});
+  const other=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Outro assistido',birthDate:'1991-01-01'});
+  const planned=createPlannedTreatment(store,{assistedEntityId:owner.id,title:'Planejado com contexto',components:[{name:'Componente'}]});
+  const session=startSession(store);prepare(store,session.id);selectAssistedForSession(store,session.id,other.id);
+  const eventsBefore=store.getState().events.length;
+  assert.throws(()=>startPlannedTreatment(store,planned.id,session.id),/Assistido atual não corresponde/i,'starting a planned treatment must not silently replace an explicitly selected different assisted context');
+  assert.equal(store.getState().treatments.find((item)=>item.id===planned.id).status,TreatmentStatus.PLANNED);
+  assert.equal(store.getState().sessions.find((item)=>item.id===session.id).currentAssistedEntityId,other.id);
+  assert.equal(store.getState().events.length,eventsBefore,'rejected start must not create treatment/component events');
+
+  selectAssistedForSession(store,session.id,owner.id);
+  startPlannedTreatment(store,planned.id,session.id);
+  assert.equal(store.getState().treatments.find((item)=>item.id===planned.id).status,TreatmentStatus.IN_PROGRESS);
 }
 
 console.log('treatment-planning.test.mjs: ok');
