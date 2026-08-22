@@ -5,7 +5,8 @@ function text(value=''){return String(value??'').trim();}
 function positiveNumber(value){if(value===''||value==null)return null;const n=Number(value);return Number.isFinite(n)&&n>0?n:null;}
 function unit(value){const u=String(value||'DAY').toUpperCase();return UNIT_MS[u]?u:'DAY';}
 function themeProvenance(input={}){
-  const theme=text(input.theme),sourcePath=text(input.sourcePath),suggestionId=text(input.suggestionId);
+  const source=input&&typeof input==='object'?input:{};
+  const theme=text(source.theme),sourcePath=text(source.sourcePath),suggestionId=text(source.suggestionId);
   return theme||sourcePath||suggestionId?{theme:theme||null,sourcePath:sourcePath||null,suggestionId:suggestionId||null}:null;
 }
 

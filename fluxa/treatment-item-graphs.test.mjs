@@ -15,6 +15,8 @@ assert.equal(latestExpectedEndAt(item),graphExpectedEndAt(started,1,'WEEK'));
 assert.deepEqual(item.themeProvenance,{theme:'Prosperidade',sourcePath:'../app.js',suggestionId:'app:prosperidade'},'Each treatment item should preserve its own themed-suggestion provenance.');
 const manual=buildTreatmentItem({itemLabel:'Tema manual',commands:[{text:'Comando',graphApplications:[{graphName:'Prosperador'}]}]},tools,started);
 assert.equal(manual.themeProvenance,null,'Manually authored treatment items should not invent theme provenance.');
+const explicitNull=buildTreatmentItem({itemLabel:'Tema manual com proveniência nula',themeProvenance:null,commands:[{text:'Comando',graphApplications:[{graphName:'Prosperador'}]}]},tools,started);
+assert.equal(explicitNull.themeProvenance,null,'Explicit null provenance from the treatment form must be accepted without reading input.theme.');
 assert.throws(()=>buildTreatmentItem({itemLabel:'Tema',commands:[]},tools,started),/pelo menos um comando/);
 assert.throws(()=>buildTreatmentItem({itemLabel:'Tema',commands:[{text:'Comando',graphApplications:[]}]},tools,started),/pelo menos um gráfico/);
 const view=treatmentItemView({...item,id:'new'});
