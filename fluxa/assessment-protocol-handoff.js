@@ -50,13 +50,15 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   if (input.assistedEntityId && input.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
   const focusAreas = [...new Set((input.focusAreas || []).filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
+  const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
   const suggestions = suggestProtocolsForAreas(focusAreas, catalog, 3);
   if (!suggestions.length) throw new Error('A biblioteca terapêutica ainda não está disponível. Tente novamente em instantes.');
   const now = store.nowIso();
   const assessment = {
     id: store.makeId('assess'), kind:'ORIENTING', subject:'Avaliação orientadora', status:'COMPLETED',
-    sessionId: session.id, assistedEntityId: session.currentAssistedEntityId, focusAreas,
-    notes: String(input.notes || '').trim() || null, protocolSuggestions: structuredClone(suggestions),
+    sessionId: session.id, assistedEntityId: session.currentAssistedEntityId, focusAreas, focusAreaLabels,
+    result: focusAreaLabels.join(', '), notes: String(input.notes || '').trim() || null,
+    protocolSuggestions: structuredClone(suggestions),
     selectedProtocolId:null, selectedProtocolName:null, linkedInvestigationId:null, occurredAt:now, createdAt:now, updatedAt:now
   };
   store.setState((current) => {
@@ -66,7 +68,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
     addEvent(store, draft, {
       eventType:'ORIENTING_ASSESSMENT_RECORDED', entityType:'Assessment', entityId:assessment.id,
       sessionId:assessment.sessionId, assistedEntityId:assessment.assistedEntityId,
-      metadata:{ focusAreas:[...focusAreas], suggestedProtocolIds:suggestions.map((item) => item.protocolId) }
+      metadata:{ focusAreas:[...focusAreas], focusAreaLabels:[...focusAreaLabels], suggestedProtocolIds:suggestions.map((item) => item.protocolId) }
     });
     return draft;
   });
