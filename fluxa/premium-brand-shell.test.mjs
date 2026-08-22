@@ -6,8 +6,11 @@ const ui=fs.readFileSync(new URL('./premium-shell-ui.js',import.meta.url),'utf8'
 const css=fs.readFileSync(new URL('./brand-shell.css',import.meta.url),'utf8');
 
 const styles=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]);
-assert.equal(styles.at(-1),'brand-shell.css','The global brand shell must remain the final stylesheet in the cascade.');
-assert.ok(styles.indexOf('premium-reference.css')<styles.indexOf('brand-shell.css'),'Brand shell must refine, not precede, the premium reference layer.');
+const premiumIndex=styles.indexOf('premium-reference.css');
+const brandIndex=styles.indexOf('brand-shell.css');
+assert.ok(premiumIndex>=0&&brandIndex>premiumIndex,'Brand shell must refine, not precede, the premium reference layer.');
+const idleIndex=styles.indexOf('idle-home-premium.css');
+if(idleIndex>=0)assert.ok(idleIndex>brandIndex,'State-specific idle styling may follow the global brand shell, never precede it.');
 
 assert.ok(ui.includes('topbar-session-open'),'Session-open state must have a dedicated topbar treatment.');
 assert.ok(ui.includes('bottom-nav-icon'),'Bottom navigation must expose iconography.');
