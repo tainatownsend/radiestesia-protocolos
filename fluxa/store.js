@@ -1,6 +1,9 @@
+import { validateStateReferences } from './storage-integrity.js';
+
 const STORAGE_KEY = 'fluxa.mvp.v1';
 const BACKUP_KEY = 'fluxa.mvp.v1.backup';
 const RECOVERY_KEY = 'fluxa.mvp.v1.recovery';
+const CURRENT_VERSION = 5;
 const storeInstances = new Set();
 const crossTabSubscribers = new Set();
 let storageListenerInstalled = false;
@@ -22,7 +25,7 @@ function readStorage(key) {
 
 function emptyState() {
   return {
-    version: 5,
+    version: CURRENT_VERSION,
     meta: { createdAt: nowIso(), updatedAt: nowIso(), lastPersistenceError: null },
     sessions: [], assistedEntities: [], events: [], preparationRuns: [], closingRuns: [],
     investigations: [], findings: [], treatments: [], treatmentComponents: [], componentReviews: [],
@@ -36,11 +39,16 @@ function hasFluxaShape(value) {
     && Array.isArray(value.sessions) && Array.isArray(value.assistedEntities)
     && Array.isArray(value.events) && Array.isArray(value.treatments));
 }
+function isSupportedPersistedVersion(value) {
+  if (value?.version == null) return true;
+  const version=Number(value.version);
+  return Number.isFinite(version)&&version>0&&version<=CURRENT_VERSION;
+}
 
 function normalize(parsed) {
   const base = emptyState();
   return {
-    ...base, ...parsed, version: 5, meta: { ...base.meta, ...(parsed?.meta || {}) }, settings: { ...base.settings, ...(parsed?.settings || {}) },
+    ...base, ...parsed, version: CURRENT_VERSION, meta: { ...base.meta, ...(parsed?.meta || {}) }, settings: { ...base.settings, ...(parsed?.settings || {}) },
     sessions:list(parsed?.sessions), assistedEntities:list(parsed?.assistedEntities), events:list(parsed?.events),
     preparationRuns:list(parsed?.preparationRuns), closingRuns:list(parsed?.closingRuns), investigations:list(parsed?.investigations),
     findings:list(parsed?.findings), treatments:list(parsed?.treatments), treatmentComponents:list(parsed?.treatmentComponents),
@@ -53,7 +61,10 @@ function parseCandidate(raw) {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    return hasFluxaShape(parsed) ? normalize(parsed) : null;
+    if (!hasFluxaShape(parsed) || !isSupportedPersistedVersion(parsed)) return null;
+    const normalized=normalize(parsed);
+    validateStateReferences(normalized);
+    return normalized;
   } catch (_) { return null; }
 }
 
