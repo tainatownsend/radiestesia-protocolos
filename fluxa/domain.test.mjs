@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   startSession, closeSession, startPreparation, togglePreparationStep, completePreparation,
-  createAssistedEntity, startInvestigation, resumeInvestigation, answerInvestigation, confirmFindings,
+  createAssistedEntity, selectAssistedForSession, startInvestigation, resumeInvestigation, answerInvestigation, confirmFindings,
   createTreatment, interruptTreatment, reviewTreatment, startReiki, pauseReiki, resumeReiki, completeReiki,
   TreatmentStatus, PREPARATION_STEPS
 } from './domain.js';
@@ -91,11 +91,7 @@ function prepare(store, sessionId) {
     'direct treatment creation requires preparation'
   );
   prepare(store, session.id);
-  store.setState((state) => {
-    const draft = structuredClone(state);
-    draft.sessions.find((item) => item.id === session.id).currentAssistedEntityId = person.id;
-    return draft;
-  });
+  selectAssistedForSession(store,session.id,person.id);
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Teste', componentName:'Gráfico A', durationValue:2, durationUnit:'HOUR' });
   store.advance(30 * 60 * 1000);
   interruptTreatment(store, treatment.id, 'pausa');
@@ -129,6 +125,7 @@ function prepare(store, sessionId) {
     /preparação/i
   );
   prepare(store, session.id);
+  selectAssistedForSession(store,session.id,person.id);
   const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
   assert.throws(
     () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'', imbalancePercent:15 }),
@@ -150,6 +147,7 @@ function prepare(store, sessionId) {
   const session = startSession(store);
   prepare(store, session.id);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Joana', birthDate:'1988-06-06' });
+  selectAssistedForSession(store,session.id,person.id);
   const inv = startInvestigation(store, session.id, person.id);
   answerInvestigation(store, inv.id, 'YES');
   answerInvestigation(store, inv.id, 'NO');
