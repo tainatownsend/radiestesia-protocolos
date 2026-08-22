@@ -50,6 +50,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   if (input.assistedEntityId && input.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
   const sourceAssessment = input.sourceAssessmentId ? (state.assessments || []).find((item) => item.id === input.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
   if (input.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
+  if (sourceAssessment?.followUpAssessmentId) throw new Error('Esta avaliação de origem já possui um próximo passo registrado.');
   const focusAreas = [...new Set((input.focusAreas || []).filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
   const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
