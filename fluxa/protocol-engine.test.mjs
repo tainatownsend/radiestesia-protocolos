@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { startSession, closeSession, createAssistedEntity, startPreparation, togglePreparationStep, completePreparation, PREPARATION_STEPS } from './domain.js';
+import { startSession, closeSession, createAssistedEntity, selectAssistedForSession, startPreparation, togglePreparationStep, completePreparation, PREPARATION_STEPS } from './domain.js';
 import { PROTOCOL_LIBRARY, startBranchingInvestigation, resumeBranchingInvestigation, answerBranchingInvestigation, currentProtocolNode, confirmBranchingFindings } from './protocol-engine.js';
 
 function makeState() {
@@ -28,11 +28,36 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
 }
 
 {
+  const store=fakeStore();
+  const session=startSession(store);prepare(store,session.id);
+  const owner=createAssistedEntity(store,{type:'PERSON',displayName:'Investigação A',birthDate:'1980-01-01'});
+  const other=createAssistedEntity(store,{type:'PERSON',displayName:'Investigação B',birthDate:'1981-01-01'});
+  selectAssistedForSession(store,session.id,other.id);
+  const eventsBefore=store.getState().events.length;
+  assert.throws(
+    ()=>startBranchingInvestigation(store,session.id,owner.id,'causa_raiz'),
+    /Assistido atual não corresponde/i,
+    'branching investigation start must not silently replace a different explicit assisted context'
+  );
+  assert.equal(store.getState().investigations.length,0);
+  assert.equal(store.getState().sessions[0].currentAssistedEntityId,other.id);
+  assert.equal(store.getState().events.length,eventsBefore);
+}
+
+{
   const store = fakeStore();
   const session = startSession(store); prepare(store, session.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Teste', birthDate:'1980-01-01' });
+  const other = createAssistedEntity(store, { type:'PERSON', displayName:'Outro contexto', birthDate:'1982-02-02' });
   const inv = startBranchingInvestigation(store, session.id, assisted.id, 'causa_raiz');
   assert.equal(currentProtocolNode(inv).id, 'q1');
+  selectAssistedForSession(store,session.id,other.id);
+  const nodeBefore=currentProtocolNode(store.getState().investigations.find((item)=>item.id===inv.id)).id;
+  const eventsBefore=store.getState().events.length;
+  assert.throws(()=>answerBranchingInvestigation(store,inv.id,'YES'),/Assistido atual não corresponde/i);
+  assert.equal(currentProtocolNode(store.getState().investigations.find((item)=>item.id===inv.id)).id,nodeBefore);
+  assert.equal(store.getState().events.length,eventsBefore,'rejected answer must not append history');
+  selectAssistedForSession(store,session.id,assisted.id);
   answerBranchingInvestigation(store, inv.id, 'YES');
   answerBranchingInvestigation(store, inv.id, 'YES');
   answerBranchingInvestigation(store, inv.id, 'YES');
@@ -41,6 +66,11 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   assert.equal(currentProtocolNode(completed).type, 'END');
   assert.equal(completed.protocolVersionId, 'causa_raiz_v1');
   const yesNodes = completed.answers.filter((item) => item.answer === 'YES').map((item) => item.nodeId);
+  selectAssistedForSession(store,session.id,other.id);
+  const findingsBefore=store.getState().findings.length;
+  assert.throws(()=>confirmBranchingFindings(store,inv.id,yesNodes.slice(0,1),'CAUSE'),/Assistido atual não corresponde/i);
+  assert.equal(store.getState().findings.length,findingsBefore,'rejected finding consolidation must not create findings');
+  selectAssistedForSession(store,session.id,assisted.id);
   const findings = confirmBranchingFindings(store, inv.id, yesNodes.slice(0,1), 'CAUSE');
   assert.equal(findings.length, 1);
   assert.equal(findings[0].classification, 'CAUSE');
@@ -93,6 +123,7 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const store = fakeStore();
   const first = startSession(store); prepare(store, first.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Continuidade', birthDate:'1985-05-05' });
+  const other = createAssistedEntity(store, { type:'PERSON', displayName:'Outro retorno', birthDate:'1986-06-06' });
   const inv = startBranchingInvestigation(store, first.id, assisted.id, 'causa_raiz');
   answerBranchingInvestigation(store, inv.id, 'YES');
   const nodeBefore = currentProtocolNode(store.getState().investigations.find((i) => i.id === inv.id)).id;
@@ -101,6 +132,12 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const second = startSession(store);
   assert.throws(() => resumeBranchingInvestigation(store, inv.id, second.id), /preparação/);
   prepare(store, second.id);
+  selectAssistedForSession(store,second.id,other.id);
+  const resumeEventsBefore=store.getState().events.filter((e)=>e.eventType==='INVESTIGATION_RESUMED').length;
+  assert.throws(()=>resumeBranchingInvestigation(store,inv.id,second.id),/Assistido atual não corresponde/i);
+  assert.equal(store.getState().investigations.find((i)=>i.id===inv.id).currentSessionId,first.id,'rejected resume must preserve investigation session');
+  assert.equal(store.getState().events.filter((e)=>e.eventType==='INVESTIGATION_RESUMED').length,resumeEventsBefore);
+  selectAssistedForSession(store,second.id,assisted.id);
   resumeBranchingInvestigation(store, inv.id, second.id);
   const resumed = store.getState().investigations.find((i) => i.id === inv.id);
   assert.equal(resumed.originSessionId, first.id);
