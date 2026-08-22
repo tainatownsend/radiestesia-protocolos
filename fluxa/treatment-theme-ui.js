@@ -1,7 +1,7 @@
 import { ensureTreatmentThemeLibrary,treatmentThemeById } from './treatment-theme-library.js';
 
 let enhancing=false;
-function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));}
 function normalize(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function enhanceTreatmentForm(){
   const form=document.querySelector('#treatment-form');if(!form||form.dataset.themeLibraryEnhanced)return;
@@ -36,7 +36,7 @@ function applySuggestion(item){
   const title=form.querySelector('[name="title"]');if(title&&!title.value)title.value=item.title;
   const section=targetComponent(form);if(!section)return;
   const name=section.querySelector('[name="componentName"]'),instructions=section.querySelector('[name="instructions"]');if(name)name.value=item.title;if(instructions)instructions.value=item.command;
-  form.dataset.treatmentTheme=item.theme;form.dataset.treatmentThemeSource=item.sourcePath;
+  form.dataset.treatmentTheme=item.theme;form.dataset.treatmentThemeSource=item.sourcePath;form.dataset.treatmentThemeSuggestion=item.id;
   let notice=form.querySelector('.treatment-theme-applied');if(!notice){notice=document.createElement('div');notice.className='notice treatment-theme-applied';form.prepend(notice);}notice.innerHTML=`<strong>Sugestão aplicada · ${esc(item.theme)}</strong><span>Revise o comando, escolha o gráfico/recurso e defina a duração apenas se fizer sentido.</span>`;
   section.scrollIntoView({behavior:'smooth',block:'center'});
 }
