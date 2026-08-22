@@ -11,6 +11,7 @@ const THEME_FILTERS=[
 ];
 function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 function normalize(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function searchTokens(value=''){return normalize(value).trim().split(/\s+/).filter(Boolean);}
 function currentAssisted(){const state=store.getState(),session=getOpenSession(state);return state.assistedEntities.find(a=>a.id===session?.currentAssistedEntityId)||null;}
 function witnessCopy(){const assisted=currentAssisted();if(!assisted)return 'Se você utiliza testemunho na sua prática, prepare o formato habitual antes de iniciar.';const birth=assisted.birthDate||assisted.dateOfBirth||assisted.details?.birthDate;return birth?`Dados disponíveis para o testemunho: ${assisted.displayName} + data de nascimento cadastrada. Use foto ou outro formato apenas se fizer parte da sua prática.`:`Se você utiliza testemunho, os dados de ${assisted.displayName} podem ser usados no formato habitual da sua prática.`;}
 function activeBuiltIn(id){const state=store.getState(),session=getOpenSession(state);return state.investigations.find(i=>i.kind==='BRANCHING'&&i.status==='IN_PROGRESS'&&i.assistedEntityId===session?.currentAssistedEntityId&&i.protocolId===id)||null;}
@@ -35,12 +36,12 @@ function renderCatalog(sheet,rootProtocols){
     <p class="empty catalog-empty" data-catalog-empty hidden>Nenhum protocolo corresponde a este filtro.</p>`;
 }
 function applyFilter(overlay){
-  const query=normalize(overlay.querySelector('[data-therapeutic-search]')?.value||'');
-  const theme=normalize(overlay.querySelector('.theme-chip.active')?.dataset.themeTerms||'');
+  const query=searchTokens(overlay.querySelector('[data-therapeutic-search]')?.value||'');
+  const theme=searchTokens(overlay.querySelector('.theme-chip.active')?.dataset.themeTerms||'');
   let visible=0;
-  overlay.querySelectorAll('[data-protocol-card]').forEach(card=>{const text=normalize(card.dataset.protocolSearchText||card.textContent);const queryOk=!query||text.includes(query);const themeOk=!theme||theme.split(/\s+/).some(term=>text.includes(term));card.hidden=!(queryOk&&themeOk);if(!card.hidden)visible++;});
+  overlay.querySelectorAll('[data-protocol-card]').forEach(card=>{const text=normalize(card.dataset.protocolSearchText||card.textContent);const queryOk=!query.length||query.every(term=>text.includes(term));const themeOk=!theme.length||theme.some(term=>text.includes(term));card.hidden=!(queryOk&&themeOk);if(!card.hidden)visible++;});
   overlay.querySelectorAll('[data-catalog-group]').forEach(group=>group.hidden=![...group.querySelectorAll('[data-protocol-card]')].some(c=>!c.hidden));
-  const featured=overlay.querySelector('.featured-protocol-grid');if(featured)featured.hidden=!!query||!!theme;
+  const featured=overlay.querySelector('.featured-protocol-grid');if(featured)featured.hidden=!!query.length||!!theme.length;
   overlay.querySelector('[data-catalog-empty]')?.toggleAttribute('hidden',visible>0);
 }
 async function enhanceChooser(){
