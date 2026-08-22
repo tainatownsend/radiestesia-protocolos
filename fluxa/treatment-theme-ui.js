@@ -2,7 +2,7 @@ import { ensureTreatmentThemeLibrary,treatmentThemeById,treatmentThemeLibrarySta
 import { matchesTreatmentThemeSearch } from './treatment-theme-parser.js';
 
 let enhancing=false;
-function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));}
+function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 function normalize(value=''){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function enhanceTreatmentForm(){const form=document.querySelector('#treatment-form');if(!form||form.dataset.themeLibraryEnhanced)return;const first=form.querySelector('[data-treatment-item]');if(!first)return;form.dataset.themeLibraryEnhanced='true';const panel=document.createElement('section');panel.className='treatment-theme-entry';panel.innerHTML='<div><p class="eyebrow">Tratamento por tema</p><strong>Comece de uma sugestão terapêutica</strong><span>Use os comandos da biblioteca original como ponto de partida e escolha os gráficos separadamente.</span></div><button type="button" class="btn secondary" data-open-treatment-theme>Ver sugestões</button>';first.before(panel);}
 function enhance(){if(enhancing)return;enhancing=true;try{enhanceTreatmentForm();}finally{enhancing=false;}}
