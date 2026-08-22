@@ -62,6 +62,18 @@ assert.equal(linked.selectedProtocolId, 'root_finance');
 assert.equal(linked.linkedInvestigationId, 'inv_9');
 assert.equal(store.getState().events.at(-1).eventType, 'ASSESSMENT_PROTOCOL_SELECTED');
 
+const generalAssessment = { id:'assess_general', kind:'GENERAL', sessionId:'ses_1', assistedEntityId:'ast_1', subject:'Frequência vibracional', result:'8500', createdAt:'2026-08-22T03:50:00Z' };
+const chainedStore = fakeStore({ ...baseState, assessments:[generalAssessment] });
+const chained = recordOrientingAssessment(chainedStore, {
+  sessionId:'ses_1', assistedEntityId:'ast_1', sourceAssessmentId:'assess_general', focusAreas:['patterns']
+}, catalog);
+assert.equal(chained.sourceAssessmentId, 'assess_general', 'A general measurement can explicitly hand off into an orienting assessment.');
+assert.equal(chainedStore.getState().assessments.find((item) => item.id === 'assess_general').followUpAssessmentId, chained.id, 'The source assessment should retain the forward link without being overwritten.');
+assert.equal(chainedStore.getState().events.at(-1).metadata.sourceAssessmentId, 'assess_general');
+assert.throws(() => recordOrientingAssessment(fakeStore({ ...baseState, assessments:[{...generalAssessment, sessionId:'other'}] }), {
+  sessionId:'ses_1', assistedEntityId:'ast_1', sourceAssessmentId:'assess_general', focusAreas:['patterns']
+}, catalog), /avaliação de origem/i, 'Cross-session assessment handoff must be blocked.');
+
 assert.throws(() => recordOrientingAssessment(fakeStore({...baseState, preparationRuns:[]}), {
   sessionId:'ses_1', assistedEntityId:'ast_1', focusAreas:['finance']
 }, catalog), /preparação/i, 'Assessment must preserve session-preparation safety.');
