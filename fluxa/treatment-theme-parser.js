@@ -4,6 +4,12 @@ export function normalizeTreatmentThemeText(value=''){
   return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 }
 
+export function matchesTreatmentThemeSearch(searchText='',query=''){
+  const haystack=normalizeTreatmentThemeText(searchText);
+  const terms=normalizeTreatmentThemeText(query).split(/\s+/).filter(Boolean);
+  return terms.every((term)=>haystack.includes(term));
+}
+
 export function inferTreatmentTheme(title='',command=''){
   const text=normalizeTreatmentThemeText(`${title} ${command}`);
   const rules=[
