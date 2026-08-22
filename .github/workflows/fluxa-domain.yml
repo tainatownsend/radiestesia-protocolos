@@ -43,6 +43,7 @@ jobs:
           node fluxa/storage-reference-import.test.mjs
           node fluxa/activity-library.test.mjs
           node fluxa/bulk-library.test.mjs
+          node fluxa/tool-usage.test.mjs
           node fluxa/treatment-planning.test.mjs
           node fluxa/administrative-treatment.test.mjs
           node fluxa/reiki-flex.test.mjs
