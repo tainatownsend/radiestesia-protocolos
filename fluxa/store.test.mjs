@@ -17,10 +17,10 @@ globalThis.localStorage=new MemoryStorage();
 function state(id, updatedAt=null){return {version:4,meta:updatedAt?{updatedAt}:{},sessions:[{id}],assistedEntities:[],events:[],treatments:[]};}
 
 localStorage.setItem('fluxa.mvp.v1',JSON.stringify({hello:'world'}));
-localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('backup')));
-localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('recovery')));
+localStorage.setItem('fluxa.mvp.v1.backup',JSON.stringify(state('backup','2026-08-20T09:59:00.000Z')));
+localStorage.setItem('fluxa.mvp.v1.recovery',JSON.stringify(state('recovery','2026-08-20T10:00:00.000Z')));
 const recovered=loadState();
-assert.equal(recovered.sessions[0].id,'recovery','structurally invalid primary should fall through to recovery snapshot');
+assert.equal(recovered.sessions[0].id,'recovery','structurally invalid primary should fall through to the newest valid recovery snapshot');
 assert.equal(recovered.version,5);
 assert.ok(Array.isArray(recovered.componentReviews));
 assert.ok(Array.isArray(recovered.customProtocols));
