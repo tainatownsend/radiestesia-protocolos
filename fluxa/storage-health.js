@@ -20,10 +20,20 @@ function storageAccessError(operation,error) {
   try { wrapped.cause=error; } catch (_) {}
   return wrapped;
 }
+function schemaVersion(value) {
+  if (value?.version == null) return null;
+  const version=Number(value.version);
+  return Number.isFinite(version)?version:null;
+}
+function hasUnsupportedFutureVersion(value) {
+  const version=schemaVersion(value);
+  return version!=null&&version>CURRENT_VERSION;
+}
 
 function looksLikeFluxaData(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  if (value.version != null && (!Number.isFinite(Number(value.version)) || Number(value.version) <= 0)) return false;
+  const version=schemaVersion(value);
+  if (value.version != null && (version==null || version <= 0 || version > CURRENT_VERSION)) return false;
   if (!REQUIRED_COLLECTIONS.every((key) => Array.isArray(value[key]))) return false;
   if (COLLECTIONS.some((key) => value[key] != null && !Array.isArray(value[key]))) return false;
   return true;
@@ -86,6 +96,7 @@ export function recoverLocalData() {
 }
 
 export function validateImportPayload(value) {
+  if (hasUnsupportedFutureVersion(value)) throw new Error(`Este backup foi criado por uma versão mais nova do Fluxa (schema ${schemaVersion(value)}). Atualize o Fluxa antes de importar para não perder dados.`);
   if (!looksLikeFluxaData(value)) throw new Error('Este arquivo não parece ser uma cópia válida do Fluxa.');
   return canonicalize(value);
 }
