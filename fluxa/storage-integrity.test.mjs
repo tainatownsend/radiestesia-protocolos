@@ -100,10 +100,10 @@ assert.throws(()=>validateStateReferences(base({
 assert.throws(()=>validateStateReferences(base({
   investigations:[{...rootInvestigation,assistedEntityId:'a2'}],assessments:handoffAssessments
 })),/investigação vinculada.*outro Assistido/i);
-assert.throws(()=>validateStateReferences(base({
+assert.equal(validateStateReferences(base({
   sessions:[{id:'s1',currentAssistedEntityId:'a1'},{id:'s2',currentAssistedEntityId:'a1'}],
   investigations:[{...rootInvestigation,currentSessionId:'s2'}],assessments:handoffAssessments
-})),/investigação vinculada.*outra sessão/i);
+})),true,'Assessment history remains valid after its linked investigation moves to a later current session.');
 assert.throws(()=>validateStateReferences(base({
   investigations:[{...rootInvestigation,protocolId:'p2'}],assessments:handoffAssessments
 })),/protocolo selecionado.*não corresponde/i);
