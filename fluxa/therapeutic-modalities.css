@@ -4,8 +4,110 @@
 .home-cockpit-context{position:relative;z-index:1;background:#EFF1EF;}
 body.fluxa-session-open .home-cockpit-context{background:#EFF1EF;}
 [data-therapy-settings]{margin-top:12px;}
-.therapy-composition{margin-bottom:16px;background:#F4F6F4;}
-.therapy-base{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid #CBD3D1;border-radius:14px;background:#E8EFED;color:#173F46;}
-.therapy-base strong{font-size:15px;}
-.therapy-base span{color:#606B6C;font-size:12px;text-align:right;}
-.therapy-composition>.muted{margin:14px 0 8px;font-size:13px;}
+
+/* Responsive system: one calm layout language across Home, Treatments, Assisted and Library. */
+html,body{max-width:100%;overflow-x:hidden;}
+main{width:min(100%,760px);padding-inline:clamp(16px,4vw,28px);}
+img,svg,canvas{max-width:100%;}
+.card,.hero-card,.notice-card,.sheet,.treatment-card{min-width:0;}
+h1,h2,h3,p,strong,span,label{overflow-wrap:anywhere;}
+.section-head{align-items:flex-start;}
+.button-row{align-items:center;}
+
+/* Session preparation should feel like a focused step, not a full-screen panel. */
+body.fluxa-session-open main>.hero-card{
+  min-height:0!important;
+  padding:clamp(20px,4vw,28px)!important;
+  display:grid!important;
+  gap:16px!important;
+  align-content:start!important;
+}
+body.fluxa-session-open main>.hero-card p{margin:0;max-width:34rem;}
+body.fluxa-session-open main>.hero-card .btn{margin-top:2px;}
+
+/* Timeline remains readable on narrow screens. */
+.timeline-item{grid-template-columns:52px 10px minmax(0,1fr);gap:9px;}
+.timeline-copy{min-width:0;}
+.timeline-copy strong,.timeline-copy span{overflow-wrap:anywhere;}
+
+/* Library: reduce repetitive card height and make large collections scannable. */
+[data-basic-tool-library]>.stack{gap:10px;}
+[data-basic-tool-library] [data-library-tool-id]{padding:13px 14px;border-radius:15px;box-shadow:none;}
+[data-basic-tool-library] [data-library-tool-id]>.section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin-bottom:0;align-items:center;}
+[data-basic-tool-library] [data-library-tool-id] .eyebrow{margin-bottom:3px;font-size:9px;}
+[data-basic-tool-library] [data-library-tool-id] h3{font-size:15px;line-height:1.2;}
+[data-basic-tool-library] [data-library-tool-id] .button-row{margin:0;display:flex;gap:4px;flex-wrap:nowrap;}
+[data-basic-tool-library] [data-library-tool-id] .btn.small{min-height:34px;padding:0 9px;font-size:11px;border-radius:9px;}
+[data-basic-tool-library] [data-library-tool-id]>p{margin:8px 0 0;font-size:12px;line-height:1.4;}
+[data-basic-tool-library] .library-tags{display:flex;flex-wrap:wrap;gap:5px;}
+
+/* Sheets/forms use the viewport without creating cramped controls. */
+.modal-backdrop{padding-inline:max(10px,env(safe-area-inset-left));}
+.sheet{width:min(100%,680px);max-height:min(88dvh,760px);overscroll-behavior:contain;}
+.field input,.field textarea,.field select{font-size:16px;}
+.duration-grid{grid-template-columns:minmax(0,1fr) minmax(130px,.8fr);}
+
+@media (min-width:760px){
+  main{width:min(100%,920px);padding-top:28px;}
+  [data-basic-tool-library]>.stack{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+  [data-basic-tool-library] [data-library-tool-id]{height:100%;}
+  .treatments-grid,.assisted-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+
+@media (min-width:1100px){
+  main{width:min(100%,1040px);}
+  [data-basic-tool-library]>.stack{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+
+@media (max-width:640px){
+  .app-shell{padding-bottom:calc(76px + env(safe-area-inset-bottom));}
+  main{padding-top:18px;padding-bottom:30px;}
+  .topbar{min-height:62px!important;padding:10px 16px!important;gap:8px!important;}
+  .brand{font-size:27px!important;}
+  .fluxa-brand-mark{width:25px!important;height:25px!important;}
+  .session-indicator{max-width:min(58vw,230px);min-height:32px;padding:6px 9px;font-size:10px;line-height:1.15;text-align:center;white-space:normal;}
+  h1{font-size:clamp(28px,8.8vw,36px);line-height:1.08;}
+  h2{font-size:20px;}
+  .lead{font-size:15px;line-height:1.45;}
+  .section{margin-top:20px;}
+  .section-head{gap:8px;flex-wrap:wrap;}
+  .section-head>div{min-width:0;flex:1 1 190px;}
+  .section-head>.btn{flex:0 0 auto;}
+  .hero-card{border-radius:20px;}
+  body.fluxa-session-open main>.hero-card{padding:20px!important;border-radius:20px!important;}
+  body.fluxa-session-open main>.hero-card h2{font-size:22px;}
+  body.fluxa-session-open main>.hero-card .btn{min-height:50px;}
+  .action-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .action-card{min-height:92px;padding:13px;}
+  .timeline-item{grid-template-columns:48px 9px minmax(0,1fr);gap:8px;}
+  .timeline-time{font-size:11px;}
+  .timeline-copy strong{font-size:13px;}
+  .timeline-copy span{font-size:12px;}
+  .button-row{gap:7px;}
+  .button-row .btn{flex:1 1 120px;}
+  .duration-grid{grid-template-columns:1fr;}
+  .sheet{max-height:90dvh;padding:16px;border-radius:22px 22px 14px 14px;}
+  .sheet-head{margin-bottom:14px;}
+  .bottom-nav{min-height:66px;padding-top:5px!important;}
+  .bottom-nav .nav-btn{min-height:48px!important;font-size:10px!important;padding:4px 2px!important;}
+  .bottom-nav-icon{width:19px!important;height:19px!important;}
+  [data-basic-tool-library]>.section-head{align-items:center;}
+  [data-basic-tool-library]>.section-head .btn{min-height:40px;}
+  [data-basic-tool-library] [data-library-tool-id]>.section-head{grid-template-columns:minmax(0,1fr) auto;}
+}
+
+@media (max-width:420px){
+  main{padding-inline:14px;}
+  .topbar{padding-inline:14px!important;}
+  .session-indicator{max-width:54vw;font-size:9.5px;}
+  h1{font-size:29px;}
+  .action-grid{grid-template-columns:1fr;}
+  .home-primary-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  [data-basic-tool-library] [data-library-tool-id]>.section-head{grid-template-columns:1fr;}
+  [data-basic-tool-library] [data-library-tool-id] .button-row{justify-content:flex-start;}
+  [data-basic-tool-library] [data-library-tool-id] .btn.small{flex:0 0 auto;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;}
+}
