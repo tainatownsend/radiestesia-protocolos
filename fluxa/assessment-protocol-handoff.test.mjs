@@ -47,9 +47,12 @@ const assessment = recordOrientingAssessment(store, {
 }, catalog);
 assert.equal(assessment.kind, 'ORIENTING');
 assert.equal(assessment.assistedEntityId, 'ast_1');
+assert.deepEqual(assessment.focusAreaLabels, ['Financeiro e prosperidade']);
+assert.equal(assessment.result, 'Financeiro e prosperidade', 'Existing session reports should receive a readable result instead of an empty assessment row.');
 assert.equal(assessment.protocolSuggestions[0].protocolId, 'root_finance');
 assert.equal(store.getState().assessments.length, 1, 'Orienting assessment must persist in the existing local assessment history.');
 assert.equal(store.getState().events.at(-1).eventType, 'ORIENTING_ASSESSMENT_RECORDED');
+assert.deepEqual(store.getState().events.at(-1).metadata.focusAreaLabels, ['Financeiro e prosperidade']);
 assert.equal(store.getState().findings, undefined, 'Assessment must not create findings or classify causes automatically.');
 
 const linked = linkOrientingAssessmentToProtocol(store, assessment.id, {
