@@ -52,6 +52,7 @@ jobs:
           node fluxa/custom-protocol-rules.test.mjs
           node fluxa/a11y-modal-isolation.test.mjs
           node fluxa/treatment-resume-ui.test.mjs
+          node fluxa/treatment-measurement-context.test.mjs
           node fluxa/ui-idempotency.test.mjs
           node fluxa/ux-conduction.test.mjs
           node fluxa/ux-post-merge-integration.test.mjs

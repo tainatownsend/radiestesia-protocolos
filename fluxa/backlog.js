@@ -113,8 +113,10 @@ export function resumeTreatmentPreservingDuration(store, treatmentId, input = {}
 
 export function recordStructuredFinalAssessment(store, input) {
   const state = store.getState();
-  requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação final.');
+  const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação final.');
   const treatment = state.treatments.find((item) => item.id === input.treatmentId); if (!treatment) throw new Error('Tratamento não encontrado.');
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de registrar a avaliação final.');
+  if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que está sendo avaliado.');
   const { frequency, imbalancePercent } = validateFinalAssessmentInput(input);
   const needsNewTreatment = Boolean(input.needsNewTreatment);
   const assessment = { id: store.makeId('assess'), treatmentId: treatment.id, sessionId: input.sessionId, assistedEntityId: treatment.assistedEntityId, frequency, imbalancePercent, needsNewTreatment, nextTreatmentWhen: input.nextTreatmentWhen?.trim() || null, notes: input.notes?.trim() || null, occurredAt: store.nowIso(), createdAt: store.nowIso() };

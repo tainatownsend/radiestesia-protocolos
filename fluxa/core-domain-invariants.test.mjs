@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   AssistedType, PREPARATION_STEPS,
   startSession, startPreparation, togglePreparationStep, completePreparation,
-  createAssistedEntity, startInvestigation, createTreatment, reviewTreatment, closeSession,
+  createAssistedEntity, selectAssistedForSession, startInvestigation, createTreatment, reviewTreatment, closeSession,
   startReiki, pauseReiki, recordReikiRetrospective, addSessionNote
 } from './domain.js';
 import { addTreatmentComponent } from './backlog.js';
@@ -39,6 +39,7 @@ function prepare(store, sessionId) {
   assert.throws(()=>createTreatment(store,{sessionId:session.id,assistedEntityId:assisted.id,title:'Teste',componentName:'A'}),/preparação/i);
 
   prepare(store,session.id);
+  selectAssistedForSession(store,session.id,assisted.id);
   const investigation=startInvestigation(store,session.id,assisted.id);
   assert.equal(investigation.status,'IN_PROGRESS');
   const { treatment }=createTreatment(store,{sessionId:session.id,assistedEntityId:assisted.id,title:'Teste',componentName:'A'});
@@ -55,6 +56,7 @@ function prepare(store, sessionId) {
   assert.throws(()=>reviewTreatment(store,{sessionId:later.id,treatmentId:treatment.id,verifiedComplete:false,imbalancePercent:15}),/preparação/i);
 
   prepare(store,later.id);
+  selectAssistedForSession(store,later.id,assisted.id);
   const added=addTreatmentComponent(store,{sessionId:later.id,treatmentId:treatment.id,name:'B'});
   assert.equal(added.name,'B');
   reviewTreatment(store,{sessionId:later.id,treatmentId:treatment.id,verifiedComplete:false,imbalancePercent:15});
