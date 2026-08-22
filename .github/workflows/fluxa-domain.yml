@@ -46,6 +46,7 @@ jobs:
           node fluxa/structured-preparation.test.mjs
           node fluxa/final-assessment-rules.test.mjs
           node fluxa/report-copy.test.mjs
+          node fluxa/session-report-data.test.mjs
           node fluxa/ui-idempotency.test.mjs
           node fluxa/ux-conduction.test.mjs
           node fluxa/ux-post-merge-integration.test.mjs
