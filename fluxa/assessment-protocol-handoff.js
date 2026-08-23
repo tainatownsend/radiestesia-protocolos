@@ -42,7 +42,11 @@ function orderedSuggestionNames(selected) {
 export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) {
   const selected = [...new Set(areaIds)].map((id) => areaById.get(id)).filter(Boolean);
   const names = orderedSuggestionNames(selected);
-  const byName = new Map(catalog.map((protocol) => [protocolNameKey(protocol.name), protocol]));
+  const byName = new Map();
+  for (const protocol of catalog) {
+    const key = protocolNameKey(protocol.name);
+    if (key && !byName.has(key)) byName.set(key, protocol);
+  }
   return names.map((name) => byName.get(protocolNameKey(name))).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
     protocolId: protocol.id,
     protocolName: protocol.name,
