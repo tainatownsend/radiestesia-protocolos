@@ -1,0 +1,8 @@
+.treatment-component-detail{max-width:760px;}
+.treatment-component-card{display:grid;gap:12px;}
+.treatment-component-graph{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid var(--border);}
+.treatment-component-graph:first-of-type{border-top:0;}
+.treatment-component-graph>div{min-width:0;}
+.treatment-component-graph p{margin:3px 0;}
+.treatment-component-graph small{display:block;color:var(--muted);font-size:11px;}
+@media(max-width:560px){.treatment-component-graph{align-items:stretch;flex-direction:column;}.treatment-component-graph .btn{width:100%;}}
