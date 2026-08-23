@@ -51,7 +51,7 @@ export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) 
   const byName = new Map();
   for (const protocol of catalog) {
     const key = protocolNameKey(protocol?.name);
-    if (!protocol?.id || !key || byName.has(key)) continue;
+    if (!protocol?.id || String(protocol.id).trim() === '' || !key || byName.has(key)) continue;
     byName.set(key, protocol);
   }
   return names.map((name) => byName.get(protocolNameKey(name))).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
