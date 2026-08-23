@@ -27,68 +27,17 @@ jobs:
           for file in fluxa/*.js fluxa/*.mjs; do
             node --check "$file"
           done
-      - name: Run Fluxa regression tests
+      - name: Run all Fluxa regression tests
         run: |
-          node fluxa/domain.test.mjs
-          node fluxa/core-domain-invariants.test.mjs
-          node fluxa/session-rules.test.mjs
-          node fluxa/store.test.mjs
-          node fluxa/runtime-persistence-integrity.test.mjs
-          node fluxa/protocol-engine.test.mjs
-          node fluxa/remaining.test.mjs
-          node fluxa/storage-health.test.mjs
-          node fluxa/storage-integrity.test.mjs
-          node fluxa/component-review-storage-integrity.test.mjs
-          node fluxa/component-replacement-storage-integrity.test.mjs
-          node fluxa/storage-reference-import.test.mjs
-          node fluxa/activity-library.test.mjs
-          node fluxa/bulk-library.test.mjs
-          node fluxa/tool-usage.test.mjs
-          node fluxa/treatment-planning.test.mjs
-          node fluxa/administrative-treatment.test.mjs
-          node fluxa/reiki-flex.test.mjs
-          node fluxa/reiki-lifecycle.test.mjs
-          node fluxa/follow-up-treatment.test.mjs
-          node fluxa/structured-preparation.test.mjs
-          node fluxa/final-assessment-rules.test.mjs
-          node fluxa/hawkins-measurement.test.mjs
-          node fluxa/report-copy.test.mjs
-          node fluxa/session-report-data.test.mjs
-          node fluxa/custom-protocol-rules.test.mjs
-          node fluxa/a11y-modal-isolation.test.mjs
-          node fluxa/treatment-resume-ui.test.mjs
-          node fluxa/treatment-resume-nested-graphs.test.mjs
-          node fluxa/treatment-measurement-context.test.mjs
-          node fluxa/ui-idempotency.test.mjs
-          node fluxa/ux-conduction.test.mjs
-          node fluxa/ux-post-merge-integration.test.mjs
-          node fluxa/ux-return-validation.test.mjs
-          node fluxa/daily-safety-regressions.test.mjs
-          node fluxa/offline-shell.test.mjs
-          node fluxa/home-brand-refresh.test.mjs
-          node fluxa/premium-brand-shell.test.mjs
-          node fluxa/premium-idle-home.test.mjs
-          node fluxa/therapeutic-catalog.test.mjs
-          node fluxa/root-protocol-parser.test.mjs
-          node fluxa/root-protocol-runtime.test.mjs
-          node fluxa/root-treatment-prefill.test.mjs
-          node fluxa/treatment-theme-library.test.mjs
-          node fluxa/treatment-theme-parser-quote-coverage.test.mjs
-          node fluxa/treatment-theme-storage.test.mjs
-          node fluxa/treatment-modality-storage.test.mjs
-          node fluxa/assessment-protocol-handoff.test.mjs
-          node fluxa/assessment-catalog-whitespace-id.test.mjs
-          node fluxa/assessment-protocol-separator-normalization.test.mjs
-          node fluxa/assessment-hawkins-handoff.test.mjs
-          node fluxa/therapeutic-discovery-completeness.test.mjs
-          node fluxa/assessment-focus-exclusivity.test.mjs
-          node fluxa/assessment-suggestion-integrity.test.mjs
-          node fluxa/treatment-continuity-provenance.test.mjs
-          node fluxa/divorce-energy-domain.test.mjs
-          node fluxa/treatment-resume-context.test.mjs
-          node fluxa/premium-treatments.test.mjs
-          node fluxa/premium-workflow.test.mjs
-          node fluxa/treatment-item-graphs.test.mjs
-          node fluxa/graph-starter-library.test.mjs
-          node fluxa/therapeutic-flow-refresh.test.mjs
-          node fluxa/static-smoke.test.mjs
+          set -euo pipefail
+          mapfile -t tests < <(find fluxa -maxdepth 1 -type f -name '*.test.mjs' -print | sort)
+          if [ "${#tests[@]}" -eq 0 ]; then
+            echo 'No Fluxa regression tests found.' >&2
+            exit 1
+          fi
+          printf 'Running %s Fluxa regression tests\n' "${#tests[@]}"
+          for test_file in "${tests[@]}"; do
+            echo "::group::$test_file"
+            node "$test_file"
+            echo '::endgroup::'
+          done
