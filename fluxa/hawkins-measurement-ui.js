@@ -4,7 +4,7 @@ import { hawkinsBaseline,recordHawkinsBaseline,linkTreatmentHawkinsBaseline,enri
 
 const store=createStore();let enhancing=false;let pendingTreatmentLink=null;let pendingFinalLink=null;
 const START_SELECTOR='[data-start-root-protocol],[data-start-root-by-title],[data-start-branching],[data-start-quick-investigation],[data-open-divorce-energy]';
-function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));}
+function esc(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 function context(){const state=store.getState(),session=getOpenSession(state),assisted=state.assistedEntities.find(item=>item.id===session?.currentAssistedEntityId);return {state,session,assisted,baseline:session&&assisted?hawkinsBaseline(state,session.id,assisted.id):null};}
 function baselineCard({session,assisted,baseline},compact=false,options={}){
   if(!session||!assisted)return '';
