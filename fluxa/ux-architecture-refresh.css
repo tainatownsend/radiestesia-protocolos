@@ -14,7 +14,7 @@
 }
 .workspace-nav-btn.active{background:var(--surface-2);color:var(--primary);}
 .workspace-nav-btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;}
-.workspace-nav-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.workspace-nav-btn span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.15;}
 .workspace-settings-button{
   width:40px;height:40px;display:grid;place-items:center;flex:0 0 auto;padding:0;border:1px solid rgba(102,137,140,.2);
   border-radius:50%;background:rgba(255,255,255,.62);color:var(--primary);
@@ -35,6 +35,8 @@
 .workspace-base-modality{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border-radius:14px;background:var(--surface-2);}
 .workspace-base-modality span{color:var(--muted);font-size:12px;text-align:right;}
 .workspace-settings-group .checklist{margin-top:0;}
+.workspace-data-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+main>.local-backup-action,main>[data-backup-reminder]{display:none!important;}
 
 .acervo-hero{display:grid;gap:14px;margin-top:22px;}
 .acervo-search{position:relative;}
@@ -71,6 +73,7 @@
 #investigation-chooser-overlay .therapeutic-protocol-card{padding:13px 14px;border-radius:14px;}
 #investigation-chooser-overlay .therapeutic-protocol-card h3{font-size:15px;}
 #investigation-chooser-overlay .therapeutic-protocol-card p{margin:3px 0 0;font-size:12px;line-height:1.4;}
+#investigation-chooser-overlay [data-hawkins-baseline-card]{margin:14px 0 4px;}
 
 .assisted-detail-refresh{display:grid;gap:18px;}
 .assisted-summary-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
@@ -114,7 +117,12 @@
   .acervo-card{min-height:118px;}
   .assisted-summary-card{grid-template-columns:1fr;}
   .session-live-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .workspace-data-actions{grid-template-columns:1fr;}
 }
 @media(min-width:700px){
-  .workspace-bottom-nav{left:50%;right:auto;width:min(720px,100%);transform:translateX(-50%);border-left:1px solid var(--border);border-right:1px solid var(--border);border-radius:18px 18px 0 0;padding-inline:max(20px,calc((100vw - 760px)/2));}
+  .workspace-bottom-nav{
+    left:50%;right:auto;width:min(720px,calc(100% - 32px));transform:translateX(-50%);
+    border:1px solid var(--border);border-bottom:0;border-radius:18px 18px 0 0;padding:8px 20px 10px;
+  }
+  .workspace-nav-btn{font-size:11px;}
 }
