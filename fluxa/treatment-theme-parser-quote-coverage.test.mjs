@@ -112,4 +112,14 @@ const metadataTrailingComma=parseTreatmentPlans(`META_TRAILING:C(
 assert.equal(metadataTrailingComma.length,1,'Trailing metadata followed by a valid final comma must remain discoverable.');
 assert.equal(metadataTrailingComma[0].theme,'Vida social e pertencimento');
 
+const whitespaceOnly=parseTreatmentPlans(`
+  '   ':P('Plano válido','Fortalecer carreira e trabalho'),
+  EMPTY_TITLE:P('   ','Fortalecer carreira e trabalho'),
+  EMPTY_COMMAND:{label:'Direção profissional',command:'\t  '},
+  VALID_AFTER_EMPTY:P('Direção profissional segura','Fortalecer carreira e reconhecimento')
+`,'empty-fields.js');
+assert.equal(whitespaceOnly.length,1,'Whitespace-only IDs, titles, or commands must not create unusable discovery entries.');
+assert.equal(whitespaceOnly[0].legacyId,'VALID_AFTER_EMPTY');
+assert.equal(whitespaceOnly[0].theme,'Carreira');
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
