@@ -78,6 +78,7 @@ jobs:
           node fluxa/treatment-modality-storage.test.mjs
           node fluxa/assessment-protocol-handoff.test.mjs
           node fluxa/assessment-catalog-whitespace-id.test.mjs
+          node fluxa/assessment-protocol-separator-normalization.test.mjs
           node fluxa/assessment-hawkins-handoff.test.mjs
           node fluxa/therapeutic-discovery-completeness.test.mjs
           node fluxa/assessment-focus-exclusivity.test.mjs
