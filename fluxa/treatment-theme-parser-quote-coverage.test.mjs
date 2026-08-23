@@ -65,4 +65,21 @@ assert.equal(quotedPlanKey[0].legacyId,'financial-plan');
 assert.equal(quotedPlanKey[0].id,'quoted-plan-key.js:financial-plan');
 assert.equal(quotedPlanKey[0].theme,'Financeiro');
 
+const quotedCallKey=parseTreatmentPlans(`"career-plan":P(
+  'Direção profissional consistente',
+  "Fortalecer carreira, trabalho e reconhecimento"
+)`,'quoted-call-key.js');
+assert.equal(quotedCallKey.length,1,'Quoted legacy plan keys must remain discoverable for P/C call-style plans.');
+assert.equal(quotedCallKey[0].legacyId,'career-plan');
+assert.equal(quotedCallKey[0].id,'quoted-call-key.js:career-plan');
+assert.equal(quotedCallKey[0].theme,'Carreira');
+
+const singleQuotedCallKey=parseTreatmentPlans(`'social plan':C(
+  "Pertencimento com segurança",
+  'Fortalecer confiança social e vínculos saudáveis'
+)`,'single-quoted-call-key.js');
+assert.equal(singleQuotedCallKey.length,1,'Single-quoted call-style plan IDs with spaces must remain discoverable.');
+assert.equal(singleQuotedCallKey[0].legacyId,'social plan');
+assert.equal(singleQuotedCallKey[0].theme,'Vida social e pertencimento');
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
