@@ -1,40 +1,38 @@
 import { createStore } from './store.js';
-import { sessionComponents, sessionHawkinsMeasurements, sessionTreatments } from './session-report-data.js';
+import { sessionHawkinsMeasurements, sessionTreatments } from './session-report-data.js';
 
 const store=createStore();
 let enhancing=false;
-const status={PLANNED:'Planejado',IN_PROGRESS:'Em andamento',COMPLETED:'Concluído',INTERRUPTED:'Interrompido',STOPPED:'Interrompido',REPLACED:'Substituído',RUNNING:'Em andamento',PAUSED:'Pausado',CANCELED:'Cancelado'};
-const reikiMode={IN_PERSON:'Presencial',PRESENTIAL:'Presencial',DISTANCE:'À distância',SELF:'Autoaplicação',SELF_APPLICATION:'Autoaplicação',OTHER:'Outro'};
+const status={PLANNED:'planejado',IN_PROGRESS:'em andamento',COMPLETED:'concluído',INTERRUPTED:'interrompido',STOPPED:'interrompido',REPLACED:'substituído',RUNNING:'em andamento',PAUSED:'pausado',CANCELED:'cancelado'};
+const reikiMode={IN_PERSON:'presencial',PRESENTIAL:'presencial',DISTANCE:'à distância',SELF:'autoaplicação',SELF_APPLICATION:'autoaplicação',OTHER:'outro formato'};
 function esc(value=''){return String(value).replace(/[&<>'\"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','\"':'&quot;'}[c]));}
 function fmt(iso){const time=new Date(iso||'').getTime();return Number.isFinite(time)?new Intl.DateTimeFormat('pt-BR',{dateStyle:'long'}).format(new Date(time)):'—';}
-function label(value){return value?(status[value]||'Registrado'):'';}
-function minutesFromSeconds(value){const seconds=Number(value);return Number.isFinite(seconds)&&seconds>=0?Math.round(seconds/60):null;}
-function objectiveOf(treatment){return treatment?.objective||treatment?.therapeuticObjective||'';}
-function hawkinsValue(measurement){const value=measurement?.hertz??measurement?.frequency??measurement?.result;return value==null||value===''?'—':String(value);}
-function hawkinsLabel(state,measurement){
-  if(measurement?.phase==='FINAL'){
-    const treatment=state.treatments.find((item)=>item.id===measurement.treatmentId);
-    return treatment?.title?`Frequência após tratamento · ${treatment.title}`:'Frequência após tratamento';
-  }
-  const linked=state.treatments.filter((item)=>item.hawkinsBaselineAssessmentId===measurement?.id);
-  return linked.length===1?`Frequência inicial · ${linked[0].title}`:'Frequência inicial da investigação';
-}
-function reportHtml(state,sessionId,assistedId){
+function fmtShort(iso){const time=new Date(iso||'').getTime();return Number.isFinite(time)?new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(time)):'—';}
+function hawkinsValue(measurement){const value=measurement?.hertz??measurement?.frequency??measurement?.result;const n=Number(value);return Number.isFinite(n)?n:null;}
+function treatmentTitle(treatment){return String(treatment?.title||'Tratamento').trim();}
+function nextReview(state,treatmentId){const times=(state.treatmentComponents||[]).filter((c)=>c.treatmentId===treatmentId&&c.status==='IN_PROGRESS').map((c)=>new Date(c.expectedEndAt||'').getTime()).filter(Number.isFinite);return times.length?new Date(Math.min(...times)).toISOString():null;}
+function shareText(state,sessionId,assistedId){
   const session=state.sessions.find((s)=>s.id===sessionId);const assisted=state.assistedEntities.find((a)=>a.id===assistedId);if(!session||!assisted)return null;
-  const assessments=(state.assessments||[]).filter((a)=>a.sessionId===sessionId&&a.assistedEntityId===assistedId&&a.kind!=='HAWKINS_FREQUENCY');
-  const hawkins=sessionHawkinsMeasurements(state,sessionId,assistedId);
+  const hawkins=sessionHawkinsMeasurements(state,sessionId,assistedId).slice().sort((a,b)=>new Date(a.occurredAt||a.createdAt||0)-new Date(b.occurredAt||b.createdAt||0));
+  const baseline=hawkins.find((a)=>a.phase==='BASELINE')||hawkins[0]||null;
+  const finals=hawkins.filter((a)=>a.phase==='FINAL');const final=finals[finals.length-1]||null;
+  const initialHz=hawkinsValue(baseline),finalHz=hawkinsValue(final);
   const treatments=sessionTreatments(state,sessionId).filter((t)=>t.assistedEntityId===assistedId);
   const reiki=(state.reikiApplications||[]).filter((r)=>r.sessionId===sessionId&&r.assistedEntityId===assistedId);
-  const components=(id)=>sessionComponents(state,sessionId,id);
-  const sections=[];
-  if(hawkins.length)sections.push(`<section><h2>Medições de Hawkins</h2><ul>${hawkins.map((a)=>`<li><strong>${esc(hawkinsLabel(state,a))}</strong>: ${esc(hawkinsValue(a))} Hz${a.imbalancePercent!=null?` · ${esc(a.imbalancePercent)}% de desequilíbrio`:''}</li>`).join('')}</ul></section>`);
-  if(assessments.length)sections.push(`<section><h2>Avaliações</h2><ul>${assessments.map((a)=>`<li>${esc(a.subject||'Avaliação')}: <strong>${esc(a.result??a.frequency??'')}</strong>${a.scale?` ${esc(a.scale)}`:''}${a.imbalancePercent!=null?` · ${esc(a.imbalancePercent)}% de desequilíbrio`:''}</li>`).join('')}</ul></section>`);
-  if(treatments.length)sections.push(`<section><h2>Tratamentos</h2>${treatments.map((t)=>{const objective=objectiveOf(t),items=components(t.id);return `<article><h3>${esc(t.title)}</h3>${objective?`<p><strong>Objetivo:</strong> ${esc(objective)}</p>`:''}<p class="muted">${esc(label(t.status))}</p>${items.length?`<ul>${items.map((c)=>`<li><strong>${esc(c.name)}</strong>${c.expectedEndAt?`<br><span class="muted">Revisão prevista: ${fmt(c.expectedEndAt)}</span>`:''}</li>`).join('')}</ul>`:''}</article>`;}).join('')}</section>`);
-  if(reiki.length)sections.push(`<section><h2>Reiki</h2><ul>${reiki.map((r)=>{const minutes=minutesFromSeconds(r.durationSeconds);return `<li>${esc(reikiMode[r.mode]||'Aplicação')} · ${esc(label(r.status))}${minutes!=null?` · ${minutes} min`:''}</li>`;}).join('')}</ul></section>`);
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resumo da sessão · ${esc(assisted.displayName)}</title><style>body{font-family:Inter,system-ui,-apple-system,sans-serif;max-width:760px;margin:40px auto;padding:0 24px;color:#202729;line-height:1.6}h1,h2,h3{color:#173F46}h1{font-size:28px}.brand{font-weight:800;color:#173F46}.muted{color:#606B6C}section{padding:18px 0;border-top:1px solid #CBD3D1}article{padding:14px 0}ul{padding-left:20px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}button{min-height:44px;padding:10px 16px;border-radius:12px;border:1px solid #173F46;background:#fff;color:#173F46;font:inherit}button.primary{background:#173F46;color:#fff}@media print{.actions{display:none}body{margin:0;max-width:none}}</style></head><body><p class="brand">Fluxa</p><h1>Resumo da sessão</h1><p><strong>${esc(assisted.displayName)}</strong></p><p class="muted">${fmt(session.startedAt)}</p><div class="actions"><button class="primary" onclick="window.print()">Imprimir / salvar em PDF</button><button id="share" hidden>Compartilhar</button></div>${sections.join('')||'<p class="muted">Nenhuma atividade terapêutica selecionada para este resumo.</p>'}
-  <p class="muted">Este resumo reúne apenas informações selecionadas para compartilhamento. Comandos dos componentes, anotações internas, investigações e achados permanecem somente no histórico técnico do Fluxa.</p><script>const b=document.querySelector('#share');if(navigator.share){b.hidden=false;b.onclick=async()=>{try{await navigator.share({title:document.title,text:document.body.innerText.replace('Imprimir / salvar em PDF','').replace('Compartilhar','')});}catch(e){}}}</script></body></html>`;
+  const lines=[`Fluxa · Resumo do atendimento`,`Assistido: ${assisted.displayName}`,`Data: ${fmt(session.startedAt)}`,''];
+  if(initialHz!=null)lines.push(`Frequência inicial de Hawkins: ${initialHz} Hz`);
+  if(finalHz!=null){const delta=initialHz==null?null:finalHz-initialHz;lines.push(`Frequência após o tratamento: ${finalHz} Hz${delta==null?'':` (${delta>=0?'+':''}${delta} Hz em relação ao início)`}`);}
+  if(initialHz!=null||finalHz!=null)lines.push('');
+  if(treatments.length){lines.push('Tratamentos:');treatments.forEach((t)=>{const review=nextReview(state,t.id);lines.push(`• ${treatmentTitle(t)} · ${status[t.status]||'registrado'}${review?` · próxima revisão: ${fmtShort(review)}`:''}`);});lines.push('');}
+  if(reiki.length){lines.push('Reiki:');reiki.forEach((r)=>{const mins=Number.isFinite(Number(r.durationSeconds))?Math.round(Number(r.durationSeconds)/60):null;lines.push(`• Aplicação ${reikiMode[r.mode]||''}${mins!=null?` · ${mins} min`:''}`.trim());});lines.push('');}
+  lines.push('Este é um resumo objetivo do atendimento. O registro técnico completo permanece no Fluxa.');
+  return lines.join('\n');
 }
-function open(sessionId,assistedId){const html=reportHtml(store.getState(),sessionId,assistedId);if(!html)return;const win=window.open('','_blank');if(!win){alert('Permita a abertura de uma nova janela para gerar o resumo.');return;}win.document.open();win.document.write(html);win.document.close();}
+function openShare(sessionId,assistedId){
+  const text=shareText(store.getState(),sessionId,assistedId);if(!text)return;
+  document.querySelector('#client-share-overlay')?.remove();
+  const wrap=document.createElement('div');wrap.id='client-share-overlay';wrap.className='modal-backdrop';wrap.innerHTML=`<section class="sheet client-share-sheet"><div class="sheet-head"><div><p class="eyebrow">Para compartilhar</p><h2>Resumo em texto</h2></div><button class="close-btn" type="button" data-close-client-share>×</button></div><p class="muted">Formato curto para copiar no WhatsApp, email ou outra mensagem.</p><textarea class="client-share-text" readonly>${esc(text)}</textarea><div class="button-row"><button class="btn primary" type="button" data-copy-client-share>Copiar texto</button><button class="btn secondary" type="button" data-native-client-share ${navigator.share?'':'hidden'}>Compartilhar</button></div></section>`;document.body.appendChild(wrap);
+}
 function enhanceButtons(){
   document.querySelectorAll('[data-session-report][data-assisted]').forEach((full)=>{
     if(full.parentElement?.querySelector(`[data-client-report][data-assisted="${CSS.escape(full.dataset.assisted)}"]`))return;
@@ -43,4 +41,9 @@ function enhanceButtons(){
 }
 function enhance(){if(enhancing)return;enhancing=true;try{enhanceButtons();}finally{enhancing=false;}}
 new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
-document.addEventListener('click',(event)=>{const b=event.target.closest('[data-client-report]');if(b){event.preventDefault();event.stopImmediatePropagation();open(b.dataset.session,b.dataset.assisted);}},true);
+document.addEventListener('click',async(event)=>{
+  const close=event.target.closest('[data-close-client-share]');if(close){document.querySelector('#client-share-overlay')?.remove();return;}
+  const copy=event.target.closest('[data-copy-client-share]');if(copy){const text=document.querySelector('.client-share-text')?.value||'';try{await navigator.clipboard.writeText(text);copy.textContent='Copiado';}catch(_){document.querySelector('.client-share-text')?.select();document.execCommand?.('copy');copy.textContent='Copiado';}return;}
+  const share=event.target.closest('[data-native-client-share]');if(share&&navigator.share){const text=document.querySelector('.client-share-text')?.value||'';try{await navigator.share({title:'Resumo do atendimento · Fluxa',text});}catch(_){}return;}
+  const b=event.target.closest('[data-client-report]');if(b){event.preventDefault();event.stopImmediatePropagation();openShare(b.dataset.session,b.dataset.assisted);}
+},true);
