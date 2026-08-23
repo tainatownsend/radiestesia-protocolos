@@ -47,10 +47,12 @@ function orderedSuggestionNames(selected) {
 }
 
 export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) {
-  const selected = [...new Set(areaIds)].map((id) => areaById.get(id)).filter(Boolean);
+  const safeAreaIds = Array.isArray(areaIds) ? areaIds : [];
+  const safeCatalog = Array.isArray(catalog) ? catalog : [];
+  const selected = [...new Set(safeAreaIds)].map((id) => areaById.get(id)).filter(Boolean);
   const names = orderedSuggestionNames(selected);
   const byName = new Map();
-  for (const protocol of catalog) {
+  for (const protocol of safeCatalog) {
     const key = protocolNameKey(protocol?.name);
     if (!protocol?.id || String(protocol.id).trim() === '' || !key || byName.has(key)) continue;
     byName.set(key, protocol);
@@ -79,7 +81,8 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   const sourceAssessment = input.sourceAssessmentId ? (state.assessments || []).find((item) => item.id === input.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
   if (input.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
   if (sourceAssessment?.followUpAssessmentId) throw new Error('Esta avaliação de origem já possui um próximo passo registrado.');
-  const focusAreas = [...new Set((input.focusAreas || []).filter((id) => areaById.has(id)))];
+  const rawFocusAreas = Array.isArray(input.focusAreas) ? input.focusAreas : [];
+  const focusAreas = [...new Set(rawFocusAreas.filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
   if (focusAreas.includes('unclear') && focusAreas.length > 1) throw new Error('“Ainda não está claro” deve ser usado sozinho, sem outras áreas selecionadas.');
   const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
