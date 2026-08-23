@@ -29,11 +29,22 @@ export function inferTreatmentTheme(title='',command=''){
   return rules.find(([,terms])=>terms.some(term=>text.includes(normalizeTreatmentThemeText(term))))?.[0]||'Outros temas';
 }
 
+function readObjectString(body,property){
+  const escaped=String(property).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const single=new RegExp(`(?:^|[,;\\n])\\s*${escaped}\\s*:\\s*'((?:\\\\.|[^'])*)'`);
+  const double=new RegExp(`(?:^|[,;\\n])\\s*${escaped}\\s*:\\s*"((?:\\\\.|[^"])*)"`);
+  return body.match(single)?.[1]??body.match(double)?.[1]??null;
+}
+
 export function parseTreatmentPlans(source,path){
   const items=[];
+  const seen=new Set();
   const add=(legacyId,title,command)=>{
     title=decode(title);command=decode(command);
     if(!title||!command)return;
+    const key=`${legacyId}\u0000${title}\u0000${command}`;
+    if(seen.has(key))return;
+    seen.add(key);
     const theme=inferTreatmentTheme(title,command);
     items.push({id:`${path}:${legacyId}`,legacyId,title,command,theme,sourcePath:path,search:normalizeTreatmentThemeText(`${title} ${command} ${theme}`)});
   };
@@ -51,5 +62,16 @@ export function parseTreatmentPlans(source,path){
     /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*"((?:\\.|[^"])*)"\s*,\s*command\s*:\s*'((?:\\.|[^'])*)'\s*\}/g
   ];
   for(const pattern of objectPatterns)for(const match of source.matchAll(pattern))add(match[1],match[2],match[3]);
+
+  // Legacy therapeutic content is not fully uniform: some object plans put
+  // command before label or keep harmless metadata between the two fields.
+  // Parse each flat object body as a fallback so those plans remain discoverable
+  // without changing treatment semantics or executing source code.
+  const objectBlocks=/([A-Za-z0-9_]+)\s*:\s*\{([^{}]*)\}/g;
+  for(const match of source.matchAll(objectBlocks)){
+    const label=readObjectString(match[2],'label');
+    const command=readObjectString(match[2],'command');
+    if(label!=null&&command!=null)add(match[1],label,command);
+  }
   return items;
 }
