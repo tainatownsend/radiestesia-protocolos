@@ -49,7 +49,10 @@ export function parseTreatmentPlans(source,path){
     const theme=inferTreatmentTheme(title,command);
     items.push({id:`${path}:${legacyId}`,legacyId,title,command,theme,sourcePath:path,search:normalizeTreatmentThemeText(`${title} ${command} ${theme}`)});
   };
-  const callBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*(?:C|P)\(\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*,\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*\)/g;
+  // Only the first two string arguments carry discovery semantics. Legacy P/C
+  // helpers may include additional scalar metadata after command; tolerate it
+  // without evaluating source code or changing the discovered treatment data.
+  const callBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*(?:C|P)\(\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*,\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")(?:\s*,\s*(?:(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")|(?:true|false|null|-?\d+(?:\.\d+)?)))*\s*\)/g;
   for(const match of source.matchAll(callBlocks)){
     const legacyId=match[1]??match[2]??match[3];
     const title=match[4]??match[5];
