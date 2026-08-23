@@ -36,6 +36,17 @@ assert.equal(normalizedPurpose[0]?.protocolName, '  PROPOSITO   E CAMINHO DE VID
 assert.equal(normalizedPurpose[0]?.reason, 'Propósito e caminho', 'Normalized name matching must preserve the correct assessment-area reason.');
 assert.equal(suggestProtocolsForAreas(['unclear'], normalizedCatalog)[0]?.protocolId, 'root_master_variant', 'Master-protocol fallback should remain discoverable when catalog naming differs only by accents/case/spacing.');
 
+const duplicateNormalizedCatalog = [
+  {id:'root_finance_primary',name:'Vida Financeira',category:'Temas essenciais'},
+  {id:'root_finance_duplicate',name:'  VIDA   FINANCEIRA  ',category:'Legacy duplicate'},
+  {id:'root_prosperity_primary',name:'Prosperidade e Abundância',category:'Investigações profundas'}
+];
+assert.deepEqual(
+  suggestProtocolsForAreas(['finance'], duplicateNormalizedCatalog).map((item) => item.protocolId),
+  ['root_finance_primary','root_prosperity_primary'],
+  'When normalized catalog labels collide, assessment handoff must preserve the first catalog entry instead of silently switching protocol identity.'
+);
+
 function fakeStore(initial) {
   let state = structuredClone(initial); let seq = 0;
   return {
