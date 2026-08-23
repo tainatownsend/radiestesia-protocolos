@@ -2,11 +2,17 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const ui=await readFile(new URL('./assessment-protocol-handoff-ui.js',import.meta.url),'utf8');
+const assessmentDialogFn=ui.slice(ui.indexOf('function assessmentDialog'),ui.indexOf('function generalAssessmentHandoff'));
 const startFn=ui.slice(ui.indexOf('function startSuggestedProtocol'),ui.indexOf('function openGeneralAssessmentFromCatalog'));
 
 assert.ok(ui.includes("from './hawkins-measurement.js'"),'assessment handoff must depend on Hawkins measurement rules');
 assert.ok(ui.includes('assessment-hawkins-baseline-form'),'suggested-protocol flow must expose a compact baseline form when needed');
 assert.ok(ui.includes('recordHawkinsBaseline'),'handoff baseline must use the shared local-first Hawkins domain helper');
+assert.ok(assessmentDialogFn.includes('source.sessionId !== session.id'),'general-assessment handoff must reject a source measurement from another session before rendering it');
+assert.ok(assessmentDialogFn.includes('source.assistedEntityId !== assisted.id'),'general-assessment handoff must reject a source measurement from another Assisted before rendering it');
+assert.ok(assessmentDialogFn.indexOf('source.sessionId !== session.id')<assessmentDialogFn.indexOf("const wrap = document.createElement('div')"),'source context validation must happen before the orienting-assessment overlay is rendered');
+assert.match(assessmentDialogFn,/if \(sourceAssessmentId && \(!source \|\| source\.sessionId !== session\.id \|\| source\.assistedEntityId !== assisted\.id\)\) \{[\s\S]*?sourceAssessmentId = null;[\s\S]*?return;/,'stale source handoff must clear transient source state and stop before rendering');
+assert.ok(assessmentDialogFn.includes('Esta medição pertence a outra sessão ou Assistido.'),'stale source handoff must explain why a new current-context measurement is required');
 assert.ok(startFn.includes('currentHawkinsBaseline()'),'suggested protocol start must verify the current prepared-session baseline');
 assert.match(startFn,/if\(!currentHawkinsBaseline\(\)\)\{[\s\S]*?return;/,'protocol start must stop before creating an investigation when the baseline is missing');
 const baselineGuard=startFn.indexOf('if(!currentHawkinsBaseline())');
