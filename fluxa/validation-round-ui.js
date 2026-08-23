@@ -114,14 +114,32 @@ function stopGraph(componentId, graphId) {
     return draft;
   });
 }
+function consolidateClosedSessionDocuments(sheet) {
+  const state=store.getState();
+  [...sheet.querySelectorAll('[data-session-report][data-assisted]')].forEach((full)=>{
+    if(full.closest('[data-assisted-document-actions]'))return;
+    const assistedId=full.dataset.assisted;
+    const parent=full.parentElement;
+    const share=parent?.querySelector(`[data-client-report][data-assisted="${CSS.escape(assistedId)}"]`);
+    if(!parent||!share)return;
+    const assisted=state.assistedEntities.find((item)=>item.id===assistedId);
+    const details=document.createElement('details');details.className='assisted-document-actions';details.dataset.assistedDocumentActions=assistedId;
+    const summary=document.createElement('summary');summary.innerHTML=`<span>${esc(assisted?.displayName||'Assistido')}</span><small>Relatório e resumo para compartilhar</small>`;
+    const actions=document.createElement('div');actions.className='assisted-document-buttons';
+    full.textContent='Relatório completo';share.textContent='Resumo para WhatsApp ou email';
+    parent.insertBefore(details,full);details.append(summary,actions);actions.append(full,share);
+  });
+}
 function enhanceClosedSessionScreen() {
   const sheet = [...document.querySelectorAll('.sheet')].find((node) => /Sessão encerrada|Encerramento registrado com segurança/i.test(node.textContent || ''));
-  if (!sheet || sheet.dataset.validationRoundSimplified) return;
+  if (!sheet) return;
+  consolidateClosedSessionDocuments(sheet);
+  if (sheet.dataset.validationRoundSimplified) return;
   sheet.dataset.validationRoundSimplified = 'true';
   const shareButtons = [...sheet.querySelectorAll('button')].filter((button) => /Resumo para compartilhar/i.test(button.textContent || ''));
-  shareButtons.forEach((button) => { button.textContent = 'Copiar resumo para WhatsApp ou email'; });
+  shareButtons.forEach((button) => { button.textContent = 'Resumo para WhatsApp ou email'; });
   const reportButtons = [...sheet.querySelectorAll('button')].filter((button) => /Relatório\s*·/i.test(button.textContent || ''));
-  reportButtons.forEach((button) => { button.textContent = button.textContent.replace(/^Relatório\s*·\s*/i, 'Relatório completo · '); });
+  reportButtons.forEach((button) => { button.textContent = 'Relatório completo'; });
 }
 function enhance() {
   if (enhancing) return;
