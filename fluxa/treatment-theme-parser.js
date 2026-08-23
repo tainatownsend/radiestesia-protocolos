@@ -1,7 +1,13 @@
 function decode(value=''){return String(value).replace(/\\n/g,'\n').replace(/\\'/g,"'").replace(/\\"/g,'"').replace(/\\\\/g,'\\');}
 
 export function normalizeTreatmentThemeText(value=''){
-  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[‐‑‒–—−/]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 
 export function matchesTreatmentThemeSearch(searchText='',query=''){
