@@ -58,7 +58,8 @@ export function parseTreatmentPlans(source,path){
   // Only the first two string arguments carry discovery semantics. Legacy P/C
   // helpers may include additional scalar metadata after command; tolerate it
   // without evaluating source code or changing the discovered treatment data.
-  const callBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*(?:C|P)\(\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*,\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")(?:\s*,\s*(?:(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")|(?:true|false|null|-?\d+(?:\.\d+)?)))*\s*\)/g;
+  // A final trailing comma is valid JavaScript and must not hide the plan.
+  const callBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*(?:C|P)\(\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*,\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")(?:\s*,\s*(?:(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")|(?:true|false|null|-?\d+(?:\.\d+)?)))*\s*,?\s*\)/g;
   for(const match of source.matchAll(callBlocks)){
     const legacyId=match[1]??match[2]??match[3];
     const title=match[4]??match[5];
