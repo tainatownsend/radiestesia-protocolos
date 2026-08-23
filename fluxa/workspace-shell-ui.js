@@ -87,7 +87,7 @@ function ensureWorkspaceNav() {
   document.body.classList.add('workspace-shell-ready');
 }
 function settingsIcon() {
-  return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></svg>';
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 3.4h4.6l.6 2.1c.5.2 1 .5 1.4.8l2.1-.6 2.3 4-1.6 1.5v1.6l1.6 1.5-2.3 4-2.1-.6c-.4.3-.9.6-1.4.8l-.6 2.1H9.7l-.6-2.1c-.5-.2-1-.5-1.4-.8l-2.1.6-2.3-4 1.6-1.5v-1.6L3.3 9.7l2.3-4 2.1.6c.4-.3.9-.6 1.4-.8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 function ensureSettingsButton() {
   const topbar = document.querySelector('.topbar');
@@ -97,7 +97,8 @@ function ensureSettingsButton() {
   button.className = 'workspace-settings-button';
   button.dataset.openWorkspaceSettings = 'true';
   button.setAttribute('aria-label', 'Configurações');
-  button.innerHTML = settingsIcon();
+  button.setAttribute('title', 'Configurações');
+  button.innerHTML = `${settingsIcon()}<span class="workspace-settings-label">Ajustes</span>`;
   topbar.appendChild(button);
 }
 function removeLibraryPreferences() {
