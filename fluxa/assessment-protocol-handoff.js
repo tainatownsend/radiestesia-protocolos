@@ -118,15 +118,19 @@ export function recordOrientingAssessment(store, input, catalog = []) {
 
 export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
   const state = store.getState();
-  const assessment = (state.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
+  const safeInput = input && typeof input === 'object' ? input : {};
+  const assessments = Array.isArray(state?.assessments) ? state.assessments : [];
+  const assessment = assessments.find((item) => item?.id === assessmentId && item.kind === 'ORIENTING');
   if (!assessment) throw new Error('Avaliação orientadora não encontrada.');
   const session = requirePreparedSessionState(state, assessment.sessionId, 'Conclua a preparação da sessão antes de vincular a avaliação a um protocolo.');
   if (session.currentAssistedEntityId !== assessment.assistedEntityId) throw new Error('A avaliação deve permanecer vinculada ao Assistido atual da sessão.');
 
-  const suggestion = (assessment.protocolSuggestions || []).find((item) => item.protocolId === input.protocolId);
+  const suggestions = Array.isArray(assessment.protocolSuggestions) ? assessment.protocolSuggestions : [];
+  const suggestion = suggestions.find((item) => item?.protocolId === safeInput.protocolId);
   if (!suggestion) throw new Error('O protocolo selecionado não pertence às sugestões desta avaliação.');
-  if (!input.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
-  const investigation = (state.investigations || []).find((item) => item.id === input.investigationId);
+  if (!safeInput.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
+  const investigations = Array.isArray(state?.investigations) ? state.investigations : [];
+  const investigation = investigations.find((item) => item?.id === safeInput.investigationId);
   if (!investigation || investigation.kind !== 'ROOT_PROTOCOL') throw new Error('A investigação vinculada não é um protocolo terapêutico válido.');
   if (investigation.protocolId !== suggestion.protocolId) throw new Error('A investigação vinculada não corresponde ao protocolo selecionado.');
   if (investigation.assistedEntityId !== assessment.assistedEntityId) throw new Error('A investigação vinculada pertence a outro Assistido.');
@@ -140,7 +144,8 @@ export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
   let updated = null;
   store.setState((current) => {
     const draft = structuredClone(current);
-    const target = (draft.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
+    const draftAssessments = Array.isArray(draft?.assessments) ? draft.assessments : [];
+    const target = draftAssessments.find((item) => item?.id === assessmentId && item.kind === 'ORIENTING');
     if (!target) return draft;
     target.selectedProtocolId = suggestion.protocolId;
     target.selectedProtocolName = suggestion.protocolName;
