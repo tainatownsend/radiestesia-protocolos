@@ -48,7 +48,7 @@ export function parseTreatmentPlans(source,path){
   const seen=new Set();
   const add=(legacyId,title,command)=>{
     legacyId=decode(legacyId);title=decode(title);command=decode(command);
-    if(!legacyId||!title||!command)return;
+    if(!legacyId.trim()||!title.trim()||!command.trim())return;
     const key=`${legacyId}\u0000${title}\u0000${command}`;
     if(seen.has(key))return;
     seen.add(key);
