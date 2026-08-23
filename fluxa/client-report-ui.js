@@ -20,12 +20,12 @@ function shareText(state,sessionId,assistedId){
   const treatments=sessionTreatments(state,sessionId).filter((t)=>t.assistedEntityId===assistedId);
   const reiki=(state.reikiApplications||[]).filter((r)=>r.sessionId===sessionId&&r.assistedEntityId===assistedId);
   const lines=[`Fluxa · Resumo do atendimento`,`Assistido: ${assisted.displayName}`,`Data: ${fmt(session.startedAt)}`,''];
-  if(initialHz!=null)lines.push(`Frequência inicial de Hawkins: ${initialHz} Hz`);
-  if(finalHz!=null){const delta=initialHz==null?null:finalHz-initialHz;lines.push(`Frequência após o tratamento: ${finalHz} Hz${delta==null?'':` (${delta>=0?'+':''}${delta} Hz em relação ao início)`}`);}
+  if(initialHz!=null)lines.push(`Frequência inicial da investigação (Hawkins): ${initialHz} Hz`);
+  if(finalHz!=null){const delta=initialHz==null?null:finalHz-initialHz;lines.push(`Frequência após tratamento (Hawkins): ${finalHz} Hz${delta==null?'':` (${delta>=0?'+':''}${delta} Hz em relação ao início)`}`);}
   if(initialHz!=null||finalHz!=null)lines.push('');
   if(treatments.length){lines.push('Tratamentos:');treatments.forEach((t)=>{const review=nextReview(state,t.id);lines.push(`• ${treatmentTitle(t)} · ${status[t.status]||'registrado'}${review?` · próxima revisão: ${fmtShort(review)}`:''}`);});lines.push('');}
   if(reiki.length){lines.push('Reiki:');reiki.forEach((r)=>{const mins=Number.isFinite(Number(r.durationSeconds))?Math.round(Number(r.durationSeconds)/60):null;lines.push(`• Aplicação ${reikiMode[r.mode]||''}${mins!=null?` · ${mins} min`:''}`.trim());});lines.push('');}
-  lines.push('Este é um resumo objetivo do atendimento. O registro técnico completo permanece no Fluxa.');
+  lines.push('Este é um resumo objetivo do atendimento. O histórico técnico do Fluxa mantém o registro completo.');
   return lines.join('\n');
 }
 function openShare(sessionId,assistedId){
