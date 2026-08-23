@@ -10,6 +10,9 @@ assert.equal(matchesTreatmentThemeSearch('Crenças de prosperidade e merecimento
 assert.equal(matchesTreatmentThemeSearch('Crenças de prosperidade e merecimento financeiro','MERECIMENTO prosperidade'),true,'Theme discovery should be order-insensitive and case-insensitive.');
 assert.equal(matchesTreatmentThemeSearch('Crenças de prosperidade e merecimento financeiro','prosperidade carreira'),false,'All explicit search terms should be present in the suggestion.');
 assert.equal(matchesTreatmentThemeSearch('Autoestima e amor-próprio','amor proprio'),true,'Theme discovery should remain accent-insensitive.');
+assert.equal(matchesTreatmentThemeSearch('Autoestima e amor próprio','amor-próprio'),true,'Theme discovery should treat hyphenated and spaced search wording as equivalent.');
+assert.equal(matchesTreatmentThemeSearch('Carreira / Profissional','carreira/profissional'),true,'Theme discovery should treat slash-separated and spaced wording as equivalent.');
+assert.equal(matchesTreatmentThemeSearch('Fim de ciclo — novo começo','ciclo-novo'),true,'Theme discovery should tolerate dash variants in free-text queries.');
 const categoryIndexed=parseTreatmentPlans("WORK:C('Produtividade consistente','Organizar trabalho e execução diária')",'synthetic.js')[0];
 assert.equal(categoryIndexed.theme,'Carreira');
 assert.equal(matchesTreatmentThemeSearch(categoryIndexed.search,'carreira'),true,'Free-text discovery must match the inferred theme label even when the source title/command only contains a synonym such as trabalho.');
