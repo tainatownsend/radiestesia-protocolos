@@ -24,6 +24,7 @@ export function updatePreparationDetails(store, runId, input = {}) {
   requireOpenPreparationSession(state, runId);
 
   const frequencyValue = String(input.frequencyValue ?? '').trim();
+  const frequencyScale = String(input.frequencyScale ?? '').trim();
   const protectionToolIds = Array.isArray(input.protectionToolIds) ? [...new Set(input.protectionToolIds.filter(Boolean))] : [];
   const protectionNotes = String(input.protectionNotes ?? '').trim();
   const permissionNotes = String(input.permissionNotes ?? '').trim();
@@ -38,7 +39,7 @@ export function updatePreparationDetails(store, runId, input = {}) {
     target.frequencyMeasurement = frequencyValue ? {
       value: frequencyValue,
       hertz: Number(String(frequencyValue).replace(',', '.')),
-      scale: 'Hz',
+      scale: frequencyScale || 'Hz',
       subject: 'THERAPIST',
       recordedAt: store.nowIso()
     } : null;
@@ -58,7 +59,7 @@ export function validateStructuredPreparation(state, runId) {
   if (!run.steps?.every((step) => step.completed)) {
     throw new Error('Conclua as quatro etapas da preparação antes de finalizar.');
   }
-  const therapistHertz = parseHawkinsHertz(run.frequencyMeasurement?.value);
+  const therapistHertz = parseHawkinsHertz(run.frequencyMeasurement?.hertz ?? run.frequencyMeasurement?.value);
   if (therapistHertz < THERAPIST_MIN_HAWKINS_HZ) {
     throw new Error(`Sua frequência vibracional está em ${therapistHertz} Hz. Para iniciar investigações ou tratamentos, registre uma frequência de pelo menos ${THERAPIST_MIN_HAWKINS_HZ} Hz.`);
   }
