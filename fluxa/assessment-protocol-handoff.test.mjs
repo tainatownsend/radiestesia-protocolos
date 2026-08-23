@@ -26,6 +26,16 @@ assert.deepEqual(
 assert.equal(suggestProtocolsForAreas(['unclear'], catalog)[0]?.protocolId, 'root_master', 'Unclear focus should route to the Master Root Cause Protocol.');
 assert.equal(suggestProtocolsForAreas([], catalog)[0]?.protocolId, 'root_master', 'An empty focus should also fall back to the Master Protocol at the suggestion layer.');
 
+const normalizedCatalog = [
+  {id:'root_purpose_variant',name:'  PROPOSITO   E CAMINHO DE VIDA  ',category:'Investigações profundas'},
+  {id:'root_master_variant',name:'protocolo mestre de causa raiz',category:'Protocolo Mestre'}
+];
+const normalizedPurpose = suggestProtocolsForAreas(['purpose'], normalizedCatalog);
+assert.equal(normalizedPurpose[0]?.protocolId, 'root_purpose_variant', 'Assessment handoff should tolerate accent, case, and harmless whitespace drift in catalog protocol names.');
+assert.equal(normalizedPurpose[0]?.protocolName, '  PROPOSITO   E CAMINHO DE VIDA  ', 'Suggestion snapshots must preserve the actual catalog protocol name after normalized matching.');
+assert.equal(normalizedPurpose[0]?.reason, 'Propósito e caminho', 'Normalized name matching must preserve the correct assessment-area reason.');
+assert.equal(suggestProtocolsForAreas(['unclear'], normalizedCatalog)[0]?.protocolId, 'root_master_variant', 'Master-protocol fallback should remain discoverable when catalog naming differs only by accents/case/spacing.');
+
 function fakeStore(initial) {
   let state = structuredClone(initial); let seq = 0;
   return {

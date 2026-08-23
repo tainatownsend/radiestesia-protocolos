@@ -18,6 +18,10 @@ export const ORIENTING_ASSESSMENT_AREAS = Object.freeze([
 
 const areaById = new Map(ORIENTING_ASSESSMENT_AREAS.map((area) => [area.id, area]));
 
+function protocolNameKey(value='') {
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+
 function orderedSuggestionNames(selected) {
   if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
   const names = [];
@@ -38,12 +42,12 @@ function orderedSuggestionNames(selected) {
 export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) {
   const selected = [...new Set(areaIds)].map((id) => areaById.get(id)).filter(Boolean);
   const names = orderedSuggestionNames(selected);
-  const byName = new Map(catalog.map((protocol) => [protocol.name, protocol]));
-  return names.map((name) => byName.get(name)).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
+  const byName = new Map(catalog.map((protocol) => [protocolNameKey(protocol.name), protocol]));
+  return names.map((name) => byName.get(protocolNameKey(name))).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
     protocolId: protocol.id,
     protocolName: protocol.name,
     category: protocol.category || 'Investigação',
-    reason: selected.find((area) => area.protocolNames.includes(protocol.name))?.label || 'Tema ainda não delimitado'
+    reason: selected.find((area) => area.protocolNames.some((name) => protocolNameKey(name) === protocolNameKey(protocol.name)))?.label || 'Tema ainda não delimitado'
   }));
 }
 
