@@ -36,6 +36,30 @@ assert.equal(normalizedPurpose[0]?.protocolName, '  PROPOSITO   E CAMINHO DE VID
 assert.equal(normalizedPurpose[0]?.reason, 'Propósito e caminho', 'Normalized name matching must preserve the correct assessment-area reason.');
 assert.equal(suggestProtocolsForAreas(['unclear'], normalizedCatalog)[0]?.protocolId, 'root_master_variant', 'Master-protocol fallback should remain discoverable when catalog naming differs only by accents/case/spacing.');
 
+const separatorVariantCatalog = [
+  {id:'root_career_dash',name:'Carreira—Profissional',category:'Temas essenciais'},
+  {id:'root_marriage_hyphen',name:'Casamento - Relacionamento',category:'Temas essenciais'}
+];
+assert.deepEqual(
+  suggestProtocolsForAreas(['career','relationship'], separatorVariantCatalog).map((item) => item.protocolId),
+  ['root_career_dash','root_marriage_hyphen'],
+  'Assessment handoff should treat slash, hyphen, and dash variants as equivalent separators without changing protocol identity.'
+);
+assert.equal(
+  suggestProtocolsForAreas(['career'], separatorVariantCatalog)[0]?.protocolName,
+  'Carreira—Profissional',
+  'Separator-equivalent matching must preserve the actual catalog protocol name in the suggestion snapshot.'
+);
+const separatorCollisionCatalog = [
+  {id:'root_career_first',name:'Carreira / Profissional',category:'Temas essenciais'},
+  {id:'root_career_second',name:'Carreira—Profissional',category:'Legacy duplicate'}
+];
+assert.equal(
+  suggestProtocolsForAreas(['career'], separatorCollisionCatalog)[0]?.protocolId,
+  'root_career_first',
+  'Separator-equivalent catalog collisions must preserve the first valid catalog identity deterministically.'
+);
+
 const duplicateNormalizedCatalog = [
   {id:'root_finance_primary',name:'Vida Financeira',category:'Temas essenciais'},
   {id:'root_finance_duplicate',name:'  VIDA   FINANCEIRA  ',category:'Legacy duplicate'},
