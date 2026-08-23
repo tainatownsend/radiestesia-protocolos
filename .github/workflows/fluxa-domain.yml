@@ -91,3 +91,4 @@ jobs:
           node fluxa/therapeutic-flow-refresh.test.mjs
           node fluxa/static-smoke.test.mjs
           node fluxa/ux-validation-hotfix.test.mjs
+          node fluxa/ux-architecture-refresh.test.mjs
