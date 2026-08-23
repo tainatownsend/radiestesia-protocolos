@@ -82,4 +82,17 @@ assert.equal(singleQuotedCallKey.length,1,'Single-quoted call-style plan IDs wit
 assert.equal(singleQuotedCallKey[0].legacyId,'social plan');
 assert.equal(singleQuotedCallKey[0].theme,'Vida social e pertencimento');
 
+const trailingMetadata=parseTreatmentPlans(`META_CALL:P(
+  'Prosperidade com consistência',
+  "Fortalecer dinheiro, prosperidade e capacidade de receber",
+  true,
+  30,
+  'legacy-note'
+)`,'trailing-metadata.js');
+assert.equal(trailingMetadata.length,1,'Harmless trailing scalar metadata must not hide a call-style treatment plan.');
+assert.equal(trailingMetadata[0].legacyId,'META_CALL');
+assert.equal(trailingMetadata[0].title,'Prosperidade com consistência');
+assert.equal(trailingMetadata[0].theme,'Financeiro');
+assert.equal(matchesTreatmentThemeSearch(trailingMetadata[0].search,'financeiro consistencia'),true);
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
