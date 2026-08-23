@@ -129,7 +129,7 @@ export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
   if (session.currentAssistedEntityId !== assessment.assistedEntityId) throw new Error('A avaliação deve permanecer vinculada ao Assistido atual da sessão.');
 
   const suggestions = Array.isArray(assessment.protocolSuggestions) ? assessment.protocolSuggestions : [];
-  const suggestion = suggestions.find((item) => item?.protocolId === safeInput.protocolId);
+  const suggestion = suggestions.find((item) => item?.protocolId === safeInput.protocolId && String(item.protocolId).trim() !== '');
   if (!suggestion) throw new Error('O protocolo selecionado não pertence às sugestões desta avaliação.');
   if (!safeInput.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
   const investigations = Array.isArray(state?.investigations) ? state.investigations : [];
