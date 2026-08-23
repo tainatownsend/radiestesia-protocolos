@@ -45,6 +45,16 @@ function fakeStore() {
 
 {
   const store = fakeStore();
+  updatePreparationDetails(store, 'prep_1', { frequencyValue:'399', protectionNotes:'Proteção manual' });
+  assert.throws(() => validateStructuredPreparation(store.getState(), 'prep_1'), /pelo menos 400 Hz/i);
+  assert.throws(() => completeStructuredPreparation(store, 'prep_1'), /pelo menos 400 Hz/i);
+  assert.equal(store.getState().preparationRuns[0].status, 'IN_PROGRESS');
+  updatePreparationDetails(store, 'prep_1', { frequencyValue:'400', protectionNotes:'Proteção manual' });
+  assert.equal(validateStructuredPreparation(store.getState(), 'prep_1'), true);
+}
+
+{
+  const store = fakeStore();
   updatePreparationDetails(store, 'prep_1', { frequencyValue:'9200', protectionToolIds:['tool_1','tool_1','tool_2'] });
   assert.equal(validateStructuredPreparation(store.getState(), 'prep_1'), true);
   assert.deepEqual(store.getState().preparationRuns[0].protection.toolIds, ['tool_1','tool_2']);
