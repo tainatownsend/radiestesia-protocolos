@@ -28,4 +28,24 @@ assert.equal(mixedObject.length,1,'Mixed quote styles inside object treatment pl
 assert.equal(mixedObject[0].legacyId,'OBJ');
 assert.equal(mixedObject[0].theme,'Financeiro');
 
+const reversedObject=parseTreatmentPlans('REV:{command:"Fortalecer autonomia profissional",label:"Direção e carreira"}','reversed-object.js');
+assert.equal(reversedObject.length,1,'Object treatment plans must remain discoverable when command appears before label.');
+assert.equal(reversedObject[0].legacyId,'REV');
+assert.equal(reversedObject[0].title,'Direção e carreira');
+assert.equal(reversedObject[0].theme,'Carreira');
+
+const metadataObject=parseTreatmentPlans(`META:{
+  label:'Prosperidade com segurança',
+  category:'finance',
+  enabled:true,
+  command:"Fortalecer prosperidade, dinheiro e capacidade de receber"
+}`,'metadata-object.js');
+assert.equal(metadataObject.length,1,'Harmless metadata between label and command must not hide a treatment plan.');
+assert.equal(metadataObject[0].legacyId,'META');
+assert.equal(metadataObject[0].theme,'Financeiro');
+assert.equal(matchesTreatmentThemeSearch(metadataObject[0].search,'financeiro segurança'),true);
+
+const duplicateFallback=parseTreatmentPlans('ONE:{label:"Carreira estável",command:"Fortalecer trabalho consistente"}','dedupe-object.js');
+assert.equal(duplicateFallback.length,1,'Fallback object parsing must not duplicate plans already matched by the strict parser.');
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
