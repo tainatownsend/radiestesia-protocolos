@@ -47,6 +47,19 @@ assert.deepEqual(
   'When normalized catalog labels collide, assessment handoff must preserve the first catalog entry instead of silently switching protocol identity.'
 );
 
+const invalidFirstDuplicateCatalog = [
+  {name:'Vida Financeira',category:'Malformed legacy row'},
+  null,
+  {id:'',name:'Prosperidade e Abundância',category:'Malformed legacy row'},
+  {id:'root_finance_valid',name:'  VIDA FINANCEIRA  ',category:'Temas essenciais'},
+  {id:'root_prosperity_valid',name:'Prosperidade e Abundância',category:'Investigações profundas'}
+];
+assert.deepEqual(
+  suggestProtocolsForAreas(['finance'], invalidFirstDuplicateCatalog).map((item) => item.protocolId),
+  ['root_finance_valid','root_prosperity_valid'],
+  'Malformed catalog rows must not shadow later valid protocols with the same normalized label.'
+);
+
 function fakeStore(initial) {
   let state = structuredClone(initial); let seq = 0;
   return {
