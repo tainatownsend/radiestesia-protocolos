@@ -6,10 +6,10 @@ const catalog = [
   { id:'root_finance', name:'Vida Financeira', category:'Temas essenciais' }
 ];
 
-assert.deepEqual(
-  suggestProtocolsForAreas('finance', catalog),
-  [],
-  'A malformed non-array focus payload must not be iterated as assessment area IDs.'
+assert.equal(
+  suggestProtocolsForAreas('finance', catalog)[0]?.protocolId,
+  'root_master',
+  'A malformed non-array focus payload must not be iterated as assessment area IDs and should retain the suggestion-layer master fallback.'
 );
 assert.deepEqual(
   suggestProtocolsForAreas(['finance'], null),
