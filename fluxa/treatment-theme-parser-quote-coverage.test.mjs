@@ -48,4 +48,21 @@ assert.equal(matchesTreatmentThemeSearch(metadataObject[0].search,'financeiro se
 const duplicateFallback=parseTreatmentPlans('ONE:{label:"Carreira estável",command:"Fortalecer trabalho consistente"}','dedupe-object.js');
 assert.equal(duplicateFallback.length,1,'Fallback object parsing must not duplicate plans already matched by the strict parser.');
 
+const quotedFields=parseTreatmentPlans(`JSON_PLAN:{
+  "label":"Pertencimento com segurança",
+  "command":"Fortalecer confiança social e pertencimento"
+}`,'quoted-fields.js');
+assert.equal(quotedFields.length,1,'JSON-style quoted label/command keys must remain discoverable.');
+assert.equal(quotedFields[0].legacyId,'JSON_PLAN');
+assert.equal(quotedFields[0].theme,'Vida social e pertencimento');
+
+const quotedPlanKey=parseTreatmentPlans(`"financial-plan":{
+  'label':'Receber com merecimento',
+  'command':'Fortalecer prosperidade e capacidade de receber'
+}`,'quoted-plan-key.js');
+assert.equal(quotedPlanKey.length,1,'Quoted legacy plan keys must remain discoverable.');
+assert.equal(quotedPlanKey[0].legacyId,'financial-plan');
+assert.equal(quotedPlanKey[0].id,'quoted-plan-key.js:financial-plan');
+assert.equal(quotedPlanKey[0].theme,'Financeiro');
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
