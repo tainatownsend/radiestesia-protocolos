@@ -66,6 +66,7 @@ export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) 
 }
 
 function addEvent(store, draft, input) {
+  if (!Array.isArray(draft.events)) draft.events = [];
   draft.events.push({
     id: store.makeId('evt'), eventType: input.eventType, entityType: input.entityType, entityId: input.entityId,
     sessionId: input.sessionId || null, assistedEntityId: input.assistedEntityId || null,
@@ -75,13 +76,15 @@ function addEvent(store, draft, input) {
 
 export function recordOrientingAssessment(store, input, catalog = []) {
   const state = store.getState();
-  const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação orientadora.');
+  const safeInput = input && typeof input === 'object' ? input : {};
+  const session = requirePreparedSessionState(state, safeInput.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação orientadora.');
   if (!session.currentAssistedEntityId) throw new Error('Escolha o Assistido antes de fazer a avaliação orientadora.');
-  if (input.assistedEntityId && input.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
-  const sourceAssessment = input.sourceAssessmentId ? (state.assessments || []).find((item) => item.id === input.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
-  if (input.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
+  if (safeInput.assistedEntityId && safeInput.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
+  const assessments = Array.isArray(state?.assessments) ? state.assessments : [];
+  const sourceAssessment = safeInput.sourceAssessmentId ? assessments.find((item) => item?.id === safeInput.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
+  if (safeInput.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
   if (sourceAssessment?.followUpAssessmentId) throw new Error('Esta avaliação de origem já possui um próximo passo registrado.');
-  const rawFocusAreas = Array.isArray(input.focusAreas) ? input.focusAreas : [];
+  const rawFocusAreas = Array.isArray(safeInput.focusAreas) ? safeInput.focusAreas : [];
   const focusAreas = [...new Set(rawFocusAreas.filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
   if (focusAreas.includes('unclear') && focusAreas.length > 1) throw new Error('“Ainda não está claro” deve ser usado sozinho, sem outras áreas selecionadas.');
@@ -94,7 +97,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
     id: store.makeId('assess'), kind:'ORIENTING', subject:'Avaliação orientadora', status:'COMPLETED',
     sessionId: session.id, assistedEntityId: session.currentAssistedEntityId,
     sourceAssessmentId: sourceAssessment?.id || null, focusAreas, focusAreaLabels,
-    result: focusAreaLabels.join(', '), notes: String(input.notes || '').trim() || null,
+    result: focusAreaLabels.join(', '), notes: String(safeInput.notes || '').trim() || null,
     protocolSuggestions: structuredClone(suggestions),
     selectedProtocolId:null, selectedProtocolName:null, linkedInvestigationId:null, occurredAt:now, createdAt:now, updatedAt:now
   };
@@ -103,7 +106,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
     if (!Array.isArray(draft.assessments)) draft.assessments = [];
     draft.assessments.push(assessment);
     if (assessment.sourceAssessmentId) {
-      const source = draft.assessments.find((item) => item.id === assessment.sourceAssessmentId);
+      const source = draft.assessments.find((item) => item?.id === assessment.sourceAssessmentId);
       if (source) { source.followUpAssessmentId = assessment.id; source.updatedAt = now; }
     }
     addEvent(store, draft, {
