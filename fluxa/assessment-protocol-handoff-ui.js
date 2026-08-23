@@ -115,6 +115,12 @@ function startSuggestedProtocol(button) {
   if (!protocolId || !session || !selectedAssessmentId) return;
   const selectedAssessment=(store.getState().assessments||[]).find((item)=>item.id===selectedAssessmentId&&item.kind==='ORIENTING');
   if(!selectedAssessment){assessmentId=null;alert('A avaliação orientadora não está mais disponível. Refaça a avaliação antes de iniciar o protocolo.');return;}
+  if(selectedAssessment.sessionId!==session.id||selectedAssessment.assistedEntityId!==session.currentAssistedEntityId){
+    close('#assessment-suggestions-overlay');
+    assessmentId=null;
+    alert('Esta avaliação pertence a outra sessão ou Assistido. Refaça a avaliação no contexto atual antes de iniciar um protocolo.');
+    return;
+  }
   if(!currentHawkinsBaseline()){
     alert('Registre a frequência vibracional de Hawkins em Hz antes de iniciar o protocolo.');
     document.querySelector('#assessment-hawkins-baseline-form [name="hertz"]')?.focus();
