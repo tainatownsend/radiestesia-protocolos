@@ -8,6 +8,7 @@ const FAVORITES_KEY = 'fluxa.toolFavorites';
 let section = 'home';
 let rootsReady = false;
 let resourceFilter = 'ALL';
+let selectedProtocolId = null;
 
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[c]));
@@ -56,6 +57,27 @@ function allProtocols() {
     ...roots.map((item) => ({ ...item, source:'Biblioteca terapêutica' }))
   ];
 }
+function protocolKey(item, index) {
+  return String(item.id || item.protocolId || item.slug || `protocol-${index}`);
+}
+function protocolByKey(key) {
+  return allProtocols().map((item, index) => ({ item, key:protocolKey(item, index) })).find((entry) => entry.key === key)?.item || null;
+}
+function protocolQuestions(protocol) {
+  const direct = Array.isArray(protocol?.questions) ? protocol.questions : [];
+  if (direct.length) return direct.map((item) => item?.text || item?.question || item?.label || '').filter(Boolean);
+  const found = [];
+  const walk = (node, depth = 0) => {
+    if (!node || depth > 5 || found.length >= 20) return;
+    if (Array.isArray(node)) { node.forEach((item) => walk(item, depth + 1)); return; }
+    if (typeof node !== 'object') return;
+    const text = node.question || node.questionText || (node.type === 'QUESTION' ? node.text : '') || node.prompt;
+    if (text && !found.includes(String(text))) found.push(String(text));
+    for (const value of Object.values(node)) walk(value, depth + 1);
+  };
+  walk(protocol);
+  return found.slice(0, 20);
+}
 function header(title, lead) {
   return `<div class="acervo-toolbar"><button type="button" class="btn ghost small acervo-back" data-acervo-back>← Acervo</button></div><p class="eyebrow">Acervo</p><h1>${esc(title)}</h1><p class="lead">${esc(lead)}</p>`;
 }
@@ -79,9 +101,15 @@ function assistedsView(state) {
   const items = activeAssisteds(state);
   return `${header('Assistidos', 'Cadastros e continuidade ficam no Acervo; durante a sessão o Fluxa continua pedindo o Assistido no contexto certo.')}${searchBox('Buscar assistido', 'assisteds')}<section class="section"><button class="btn primary wide" data-action="new-assisted">Novo assistido</button></section><section class="section acervo-list" data-acervo-list>${items.length ? items.map((item) => `<button type="button" class="acervo-row" data-assisted-detail="${esc(item.id)}" data-acervo-search-text="${esc(norm(`${item.displayName || ''} ${typeLabel(item.type)} ${item.details || ''}`))}"><span class="acervo-row-copy"><strong>${esc(item.displayName)}</strong><small>${esc(typeLabel(item.type))}</small></span><span class="muted">Ver histórico ›</span></button>`).join('') : '<div class="empty">Nenhum assistido cadastrado.</div>'}</section>`;
 }
+function protocolDetailView(protocol) {
+  if (!protocol) { selectedProtocolId = null; return protocolsView(); }
+  const questions = protocolQuestions(protocol);
+  return `<div class="acervo-toolbar"><button type="button" class="btn ghost small" data-acervo-protocol-back>← Protocolos</button></div><p class="eyebrow">${esc(protocol.category || 'Protocolo')}</p><h1>${esc(protocol.name || 'Protocolo')}</h1><p class="lead">${esc(protocol.description || 'Protocolo disponível no acervo terapêutico do Fluxa.')}</p><section class="section card protocol-detail-card"><div class="section-head"><div><p class="eyebrow">Fonte</p><h3>${esc(protocol.source || 'Fluxa')}</h3></div>${protocol.version ? `<span class="muted">Versão ${esc(protocol.version)}</span>` : ''}</div>${questions.length ? `<div class="protocol-detail-questions"><p class="eyebrow">Perguntas / etapas identificadas</p><ol>${questions.map((question) => `<li>${esc(question)}</li>`).join('')}</ol></div>` : '<p class="muted">Este protocolo é estruturado para uso dentro do fluxo de investigação. O conteúdo completo é aberto quando você o utiliza em uma sessão.</p>'}</section><section class="section"><button type="button" class="btn primary wide" data-acervo-use-protocol>Usar em uma investigação</button></section>`;
+}
 function protocolsView() {
+  if (selectedProtocolId) return protocolDetailView(protocolByKey(selectedProtocolId));
   const items = allProtocols().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'));
-  return `${header('Protocolos', 'Consulte o acervo por nome, finalidade ou categoria. A escolha do protocolo para uma sessão continua acontecendo pelo fluxo de investigação.')}${searchBox('Buscar protocolo ou tema', 'protocols')}<section class="section acervo-list" data-acervo-list>${items.length ? items.map((item) => `<article class="protocol-row" data-acervo-search-text="${esc(norm(`${item.name || ''} ${item.category || ''} ${item.description || ''} ${(item.tags || []).join?.(' ') || item.tags || ''}`))}"><div class="protocol-row-copy"><strong>${esc(item.name)}</strong><small>${esc(item.category || 'Protocolo')} · ${esc(item.description || item.source || '')}</small></div><span class="resource-kind">${esc(item.source || 'Fluxa')}</span></article>`).join('') : `<div class="empty">${rootsReady ? 'Nenhum protocolo disponível.' : 'Carregando biblioteca terapêutica…'}</div>`}</section>`;
+  return `${header('Protocolos', 'Consulte o acervo por nome, finalidade ou categoria. Toque em qualquer protocolo para abrir seus detalhes.')}${searchBox('Buscar protocolo ou tema', 'protocols')}<section class="section acervo-list" data-acervo-list>${items.length ? items.map((item, index) => `<button type="button" class="protocol-row" data-acervo-protocol="${esc(protocolKey(item, index))}" data-acervo-search-text="${esc(norm(`${item.name || ''} ${item.category || ''} ${item.description || ''} ${(item.tags || []).join?.(' ') || item.tags || ''}`))}"><span class="protocol-row-copy"><strong>${esc(item.name)}</strong><small>${esc(item.category || 'Protocolo')} · ${esc(item.description || item.source || '')}</small></span><span class="resource-kind">Abrir ›</span></button>`).join('') : `<div class="empty">${rootsReady ? 'Nenhum protocolo disponível.' : 'Carregando biblioteca terapêutica…'}</div>`}</section>`;
 }
 function resourcesView(state) {
   const items = activeTools(state);
@@ -134,13 +162,31 @@ document.addEventListener('click', (event) => {
   if (!button) return;
   if (button.dataset.acervoSection) {
     section = button.dataset.acervoSection;
+    selectedProtocolId = null;
     rerenderWorkspace();
     return;
   }
   if (button.dataset.acervoBack !== undefined) {
     section = 'home';
+    selectedProtocolId = null;
     resourceFilter = 'ALL';
     rerenderWorkspace();
+    return;
+  }
+  if (button.dataset.acervoProtocol) {
+    selectedProtocolId = button.dataset.acervoProtocol;
+    rerenderWorkspace();
+    return;
+  }
+  if (button.dataset.acervoProtocolBack !== undefined) {
+    selectedProtocolId = null;
+    rerenderWorkspace();
+    return;
+  }
+  if (button.dataset.acervoUseProtocol !== undefined) {
+    selectedProtocolId = null;
+    document.querySelector('[data-workspace-route="today"]')?.click();
+    requestAnimationFrame(() => document.querySelector('[data-action="investigate"]')?.click());
     return;
   }
   if (button.dataset.resourceFilter) {
