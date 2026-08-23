@@ -8,7 +8,7 @@ const index = await readFile(new URL('./index.html', import.meta.url), 'utf8');
 
 assert.match(shell, /data-open-workspace-settings/);
 assert.match(shell, /Configurações/);
-assert.match(shell, /M12 3\.4/,'Settings control should use a cog silhouette, not a sun/light-mode icon.');
+assert.match(shell, /M9\.7 3\.4h4\.6/,'Settings control should use a cog silhouette, not a sun/light-mode icon.');
 
 assert.match(session, /data-session-assisted-prompt/);
 assert.match(session, /Selecionar ou cadastrar Assistido/);
