@@ -31,8 +31,9 @@ export function inferTreatmentTheme(title='',command=''){
 
 function readObjectString(body,property){
   const escaped=String(property).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const single=new RegExp(`(?:^|[,;\\n])\\s*${escaped}\\s*:\\s*'((?:\\\\.|[^'])*)'`);
-  const double=new RegExp(`(?:^|[,;\\n])\\s*${escaped}\\s*:\\s*"((?:\\\\.|[^"])*)"`);
+  const key=`(?:${escaped}|'${escaped}'|"${escaped}")`;
+  const single=new RegExp(`(?:^|[,;\\n])\\s*${key}\\s*:\\s*'((?:\\\\.|[^'])*)'`);
+  const double=new RegExp(`(?:^|[,;\\n])\\s*${key}\\s*:\\s*"((?:\\\\.|[^"])*)"`);
   return body.match(single)?.[1]??body.match(double)?.[1]??null;
 }
 
@@ -40,8 +41,8 @@ export function parseTreatmentPlans(source,path){
   const items=[];
   const seen=new Set();
   const add=(legacyId,title,command)=>{
-    title=decode(title);command=decode(command);
-    if(!title||!command)return;
+    legacyId=decode(legacyId);title=decode(title);command=decode(command);
+    if(!legacyId||!title||!command)return;
     const key=`${legacyId}\u0000${title}\u0000${command}`;
     if(seen.has(key))return;
     seen.add(key);
@@ -64,14 +65,15 @@ export function parseTreatmentPlans(source,path){
   for(const pattern of objectPatterns)for(const match of source.matchAll(pattern))add(match[1],match[2],match[3]);
 
   // Legacy therapeutic content is not fully uniform: some object plans put
-  // command before label or keep harmless metadata between the two fields.
-  // Parse each flat object body as a fallback so those plans remain discoverable
-  // without changing treatment semantics or executing source code.
-  const objectBlocks=/([A-Za-z0-9_]+)\s*:\s*\{([^{}]*)\}/g;
+  // command before label, keep harmless metadata between fields, or use
+  // JSON-style quoted keys. Parse each flat object body as a fallback so those
+  // plans remain discoverable without changing treatment semantics or executing source code.
+  const objectBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*\{([^{}]*)\}/g;
   for(const match of source.matchAll(objectBlocks)){
-    const label=readObjectString(match[2],'label');
-    const command=readObjectString(match[2],'command');
-    if(label!=null&&command!=null)add(match[1],label,command);
+    const legacyId=match[1]??match[2]??match[3];
+    const label=readObjectString(match[4],'label');
+    const command=readObjectString(match[4],'command');
+    if(label!=null&&command!=null)add(legacyId,label,command);
   }
   return items;
 }
