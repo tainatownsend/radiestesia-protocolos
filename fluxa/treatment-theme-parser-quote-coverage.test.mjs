@@ -95,4 +95,21 @@ assert.equal(trailingMetadata[0].title,'Prosperidade com consistência');
 assert.equal(trailingMetadata[0].theme,'Financeiro');
 assert.equal(matchesTreatmentThemeSearch(trailingMetadata[0].search,'financeiro consistencia'),true);
 
+const trailingComma=parseTreatmentPlans(`TRAILING_COMMA:P(
+  'Direção profissional segura',
+  'Fortalecer carreira, trabalho e reconhecimento',
+)`,'trailing-comma.js');
+assert.equal(trailingComma.length,1,'A valid trailing comma must not hide a call-style treatment plan from discovery.');
+assert.equal(trailingComma[0].legacyId,'TRAILING_COMMA');
+assert.equal(trailingComma[0].theme,'Carreira');
+
+const metadataTrailingComma=parseTreatmentPlans(`META_TRAILING:C(
+  'Pertencimento com confiança',
+  'Fortalecer vínculos sociais saudáveis',
+  true,
+  'legacy-note',
+)`,'metadata-trailing-comma.js');
+assert.equal(metadataTrailingComma.length,1,'Trailing metadata followed by a valid final comma must remain discoverable.');
+assert.equal(metadataTrailingComma[0].theme,'Vida social e pertencimento');
+
 console.log('treatment-theme-parser-quote-coverage.test.mjs: ok');
