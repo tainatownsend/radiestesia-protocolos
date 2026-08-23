@@ -87,9 +87,14 @@ function enhanceCockpit(state, session) {
 function ensureAssistedPrompt(state, session) {
   const main = document.querySelector('#app > main:not([data-workspace-view])');
   if (!main) return;
+  const isSessionHome = main.querySelector(':scope > .eyebrow')?.textContent?.trim() === 'Sessão em andamento';
+  let prompt = main.querySelector('[data-session-assisted-prompt]');
+  if (!isSessionHome) {
+    prompt?.remove();
+    return;
+  }
   const prep = latestPreparation(state, session.id);
   const ready = prep?.status === 'COMPLETED';
-  let prompt = main.querySelector('[data-session-assisted-prompt]');
   if (!ready || session.currentAssistedEntityId) {
     prompt?.remove();
     return;
@@ -99,8 +104,10 @@ function ensureAssistedPrompt(state, session) {
     prompt.className = 'section card session-assisted-prompt';
     prompt.dataset.sessionAssistedPrompt = 'true';
     prompt.innerHTML = `<p class="eyebrow">Próximo passo</p><h2>Quem será atendido agora?</h2><p class="muted">Selecione um Assistido já cadastrado ou cadastre um novo sem sair da sessão.</p><button type="button" class="btn primary wide" data-action="choose-assisted">Selecionar ou cadastrar Assistido</button>`;
+    const cockpit = main.querySelector('[data-home-cockpit]');
     const timeline = [...main.querySelectorAll('.section')].find((section) => section.querySelector('h2')?.textContent?.trim() === 'Timeline da sessão');
-    if (timeline) timeline.before(prompt);
+    if (cockpit) cockpit.before(prompt);
+    else if (timeline) timeline.before(prompt);
     else main.prepend(prompt);
   }
 }
