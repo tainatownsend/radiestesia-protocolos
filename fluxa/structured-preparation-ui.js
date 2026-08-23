@@ -28,9 +28,8 @@ function ensureStructuredFields() {
   section.className = 'section card soft form-grid';
   section.dataset.prepStructured = 'true';
   section.innerHTML = `
-    <div><p class="eyebrow">Registro da preparação</p><h3>Dados desta sessão</h3><p class="muted">A frequência e a proteção ficam preservadas no histórico desta janela de trabalho.</p></div>
-    <div class="field"><label>Frequência vibracional medida</label><input data-prep-frequency value="${esc(run.frequencyMeasurement?.value || '')}" placeholder="Ex.: 8.500" inputmode="decimal"></div>
-    <div class="field"><label>Escala / unidade <span class="muted">(opcional)</span></label><input data-prep-frequency-scale value="${esc(run.frequencyMeasurement?.scale || '')}" placeholder="Ex.: Bovis"></div>
+    <div><p class="eyebrow">Preparação do terapeuta</p><h3>Confirme sua condição antes de atender</h3><p class="muted">Meça sua frequência vibracional de Hawkins. A sessão terapêutica só pode ser liberada a partir de 400 Hz.</p></div>
+    <div class="field"><label>Minha frequência vibracional de Hawkins</label><div class="hawkins-input"><input data-prep-frequency type="number" min="0.01" step="any" value="${esc(run.frequencyMeasurement?.value || '')}" placeholder="Ex.: 450" inputmode="decimal" required><b>Hz</b></div><small class="muted">Abaixo de 400 Hz, o Fluxa mantém a sessão aberta, mas bloqueia investigações e tratamentos até uma nova medição adequada.</small></div>
     ${tools.length ? `<fieldset class="field"><legend>Gráficos / recursos de proteção utilizados</legend><div class="checklist">${tools.map((tool) => `<label class="check-row"><input type="checkbox" data-prep-protection-tool value="${tool.id}" ${selected.has(tool.id) ? 'checked' : ''}><span>${esc(tool.name)}</span></label>`).join('')}</div></fieldset>` : ''}
     <div class="field"><label>Proteção utilizada / observações</label><textarea data-prep-protection-notes placeholder="Descreva a proteção quando não estiver cadastrada na Biblioteca">${esc(run.protection?.notes || '')}</textarea></div>
     <div class="field"><label>Mantra / permissão <span class="muted">(opcional)</span></label><textarea data-prep-permission-notes placeholder="Observação específica desta sessão">${esc(run.permissionNotes || '')}</textarea></div>`;
@@ -45,7 +44,6 @@ function collectAndSave() {
   if (!run || !section) return run;
   updatePreparationDetails(store, run.id, {
     frequencyValue: section.querySelector('[data-prep-frequency]')?.value,
-    frequencyScale: section.querySelector('[data-prep-frequency-scale]')?.value,
     protectionToolIds: [...section.querySelectorAll('[data-prep-protection-tool]:checked')].map((input) => input.value),
     protectionNotes: section.querySelector('[data-prep-protection-notes]')?.value,
     permissionNotes: section.querySelector('[data-prep-permission-notes]')?.value
@@ -86,5 +84,6 @@ document.addEventListener('click', (event) => {
     document.querySelector('[data-action="dismiss-sheet"]')?.click();
   } catch (error) {
     alert(error.message);
+    document.querySelector('[data-prep-frequency]')?.focus();
   }
 }, true);
