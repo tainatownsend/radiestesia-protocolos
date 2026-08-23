@@ -44,6 +44,11 @@ function assessmentDialog(sourceId = null) {
   if (!prepared(session, state)) { alert('Conclua a preparação da sessão antes de fazer a avaliação orientadora.'); sourceAssessmentId = null; return; }
   if (!assisted) { alert('Escolha o Assistido antes de fazer a avaliação orientadora.'); sourceAssessmentId = null; return; }
   const source = sourceAssessmentId ? (state.assessments || []).find((item) => item.id === sourceAssessmentId) : null;
+  if (sourceAssessmentId && (!source || source.sessionId !== session.id || source.assistedEntityId !== assisted.id)) {
+    sourceAssessmentId = null;
+    alert('Esta medição pertence a outra sessão ou Assistido. Registre uma nova medição no atendimento atual antes de usá-la para escolher um protocolo.');
+    return;
+  }
   const wrap = document.createElement('div');
   wrap.id = 'orienting-assessment-overlay';
   wrap.className = 'modal-backdrop';
