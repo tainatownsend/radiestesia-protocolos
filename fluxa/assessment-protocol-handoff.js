@@ -19,7 +19,13 @@ export const ORIENTING_ASSESSMENT_AREAS = Object.freeze([
 const areaById = new Map(ORIENTING_ASSESSMENT_AREAS.map((area) => [area.id, area]));
 
 function protocolNameKey(value='') {
-  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/\s*([/–—-])\s*/g,'$1')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 
 function orderedSuggestionNames(selected) {
