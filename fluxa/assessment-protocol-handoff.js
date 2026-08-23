@@ -23,7 +23,7 @@ function protocolNameKey(value='') {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'')
     .toLowerCase()
-    .replace(/\s*([/–—-])\s*/g,'$1')
+    .replace(/[-‐‑‒–—−/]+/g,' ')
     .replace(/\s+/g,' ')
     .trim();
 }
