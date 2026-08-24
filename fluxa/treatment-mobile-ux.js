@@ -38,8 +38,11 @@ function durationControls(row) {
 function syncPresetState(row) {
   const { value, unit } = durationControls(row);
   if (!value || !unit) return;
+  const currentValue = String(value.value || '');
+  const currentUnit = String(unit.value || '');
   row.querySelectorAll('[data-treatment-duration-preset]').forEach((button) => {
-    const matches = button.dataset.value === String(value.value || '') && button.dataset.unit === String(unit.value || '');
+    const isNoDeadline = button.dataset.value === '' && currentValue === '';
+    const matches = isNoDeadline || (button.dataset.value === currentValue && button.dataset.unit === currentUnit);
     button.classList.toggle('active', matches);
     button.setAttribute('aria-pressed', String(matches));
   });
@@ -128,9 +131,10 @@ function enhanceItem(item) {
   updateItemMeta(item);
 }
 function composeCounts(form) {
-  const items = form.querySelectorAll('[data-treatment-item]').length;
-  const commands = form.querySelectorAll('[data-treatment-command]').length;
-  const graphs = form.querySelectorAll('[data-treatment-graph]').length;
+  const management = form.id === 'treatment-item-management-form';
+  const items = management ? 1 : form.querySelectorAll('[data-treatment-item]').length;
+  const commands = form.querySelectorAll('[data-treatment-command],[data-manage-command]').length;
+  const graphs = form.querySelectorAll('[data-treatment-graph],[data-manage-graph]').length;
   return { items, commands, graphs };
 }
 function updateComposeSummary(form) {
@@ -160,7 +164,7 @@ function enhanceComposeFooter(form) {
   updateComposeSummary(form);
 }
 function autoCollapsePreviousItems(form) {
-  const items = [...form.querySelectorAll(':scope [data-treatment-items] > [data-treatment-item]')];
+  const items = [...form.querySelectorAll('[data-treatment-items] > [data-treatment-item]')];
   const previous = Number(form.dataset.mobileTreatmentItemCount || 0);
   if (items.length > previous && items.length > 1) {
     items.slice(0, -1).forEach((item) => setItemCollapsed(item, true));
@@ -184,6 +188,7 @@ function enhanceTreatmentForms() {
     manage.querySelectorAll('[data-manage-command]').forEach(enhanceCommand);
     manage.querySelectorAll('[data-manage-graph]').forEach(enhanceGraphRow);
     enhanceComposeFooter(manage);
+    updateComposeSummary(manage);
   }
 }
 function graphRowsHtml(component) {
@@ -243,10 +248,11 @@ document.addEventListener('click', (event) => {
   if (!button) return;
   if (button.dataset.treatmentDurationPreset !== undefined) {
     const row = button.closest('[data-mobile-treatment-graph]');
-    const { value, unit } = durationControls(row || document.createElement('div'));
+    if (!row) return;
+    const { value, unit } = durationControls(row);
     if (!value || !unit) return;
     value.value = button.dataset.value || '';
-    unit.value = button.dataset.unit || 'DAY';
+    if (button.dataset.unit) unit.value = button.dataset.unit;
     value.dispatchEvent(new Event('input', { bubbles:true }));
     unit.dispatchEvent(new Event('change', { bubbles:true }));
     syncPresetState(row);
