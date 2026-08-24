@@ -71,7 +71,9 @@ assert.deepEqual(openQuestions,[],'Protocol source questions should be binary wh
 const styles = [...index.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((m) => m[1]);
 assert.ok(styles.includes('ux-validation-hotfix.css'));
 assert.ok(styles.includes('validation-round-2.css'));
+assert.ok(styles.includes('idle-home-premium.css'),'Idle Home must remain part of the premium visual cascade.');
 assert.match(index, /validation-round-2-ui\.js/);
-assert.equal(styles.at(-1),'idle-home-premium.css','Idle Home must remain last in the visual cascade.');
+assert.equal(styles.at(-1),'visual-reconciliation.css','Visual reconciliation must remain last during identity validation.');
+assert.ok(styles.indexOf('idle-home-premium.css')<styles.indexOf('visual-reconciliation.css'),'The reconciliation layer must refine, not precede, Idle Home.');
 
 console.log('ux-validation-hotfix.test.mjs: ok');
