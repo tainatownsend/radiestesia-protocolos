@@ -32,4 +32,14 @@ assert.equal(
   'Negative suggestion limits should remain safely clamped to at least one suggestion.'
 );
 
+assert.doesNotThrow(
+  () => suggestProtocolsForAreas(['career','patterns'], catalog, Symbol('invalid-limit')),
+  'Non-convertible suggestion limits should not throw before returning a safe default.'
+);
+assert.equal(
+  suggestProtocolsForAreas(['career','patterns'], catalog, Symbol('invalid-limit')).length,
+  3,
+  'Non-convertible suggestion limits should fall back to the default of three.'
+);
+
 console.log('assessment-suggestion-limit-guard.test.mjs: ok');
