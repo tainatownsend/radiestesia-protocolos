@@ -78,9 +78,11 @@ export function parseTreatmentPlans(source,path){
 
   // Legacy therapeutic content is not fully uniform: some object plans put
   // command before label, keep harmless metadata between fields, or use
-  // JSON-style quoted keys. Parse each flat object body as a fallback so those
+  // JSON-style quoted keys. Parse each object body as a fallback so those
   // plans remain discoverable without changing treatment semantics or executing source code.
-  const objectBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*\{([^{}]*)\}/g;
+  // One level of nested metadata is tolerated because older catalogs sometimes
+  // keep presentation/configuration metadata in a small object between label and command.
+  const objectBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g;
   for(const match of source.matchAll(objectBlocks)){
     const legacyId=match[1]??match[2]??match[3];
     const label=readObjectString(match[4],'label');
