@@ -9,7 +9,7 @@ assert.match(source,/url\.origin===ROOT_URL\.origin&&url\.pathname\.startsWith\(
   'local Fluxa URL detection should follow the runtime deployment path');
 assert.doesNotMatch(source,/pathname\.includes\(['"]\/fluxa\/['"]\)/,
   'service worker must not hard-code the /fluxa/ deployment path');
-assert.match(source,/CACHE_NAME='fluxa-runtime-v3-runtime-scope-20260824'/,
-  'scope behavior changes should advance the runtime cache generation');
+assert.match(source,/CACHE_NAME='fluxa-runtime-v2-runtime-scope-20260824'/,
+  'scope behavior changes should advance the runtime cache generation while preserving the current cache family guard');
 
 console.log('service-worker-runtime-scope.test.mjs: ok');
