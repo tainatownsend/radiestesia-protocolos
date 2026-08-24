@@ -1,4 +1,4 @@
-const CACHE_NAME='fluxa-runtime-v3-runtime-scope-20260824';
+const CACHE_NAME='fluxa-runtime-v2-runtime-scope-20260824';
 const ROOT=new URL('./',self.location.href).href;
 const ROOT_URL=new URL(ROOT);
 const SCOPE_PATH=ROOT_URL.pathname;
