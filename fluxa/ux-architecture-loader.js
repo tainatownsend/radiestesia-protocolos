@@ -7,3 +7,4 @@ import './operational-pickers-ui.js';
 import './treatment-mobile-ux.js';
 import './preparation-mobile-ux.js';
 import './session-cockpit-close-ui.js';
+import './app-audit-fix.js';
