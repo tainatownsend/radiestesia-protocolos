@@ -24,7 +24,8 @@ assert.deepEqual(suggestions.map((item) => item.protocolId), ['career-valid']);
 assert.equal(suggestions[0].protocolName, 'Carreira / Profissional');
 
 const baseState = {
-  sessions:[{ id:'session-1', status:'PREPARED', currentAssistedEntityId:'assisted-1' }],
+  sessions:[{ id:'session-1', status:'OPEN', currentAssistedEntityId:'assisted-1' }],
+  preparationRuns:[{ id:'prep-1', sessionId:'session-1', status:'COMPLETED' }],
   assessments:[{
     id:'assessment-1', kind:'ORIENTING', sessionId:'session-1', assistedEntityId:'assisted-1',
     protocolSuggestions:[{ protocolId:'career-valid', protocolName:'   ' }],
