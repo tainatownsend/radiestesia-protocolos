@@ -7,6 +7,46 @@ let pickerFilter = 'ALL';
 let pickerQuery = '';
 let scheduled = false;
 
+function ensureStyles() {
+  if (document.querySelector('style[data-prep-mobile-ux-style]')) return;
+  const style = document.createElement('style');
+  style.dataset.prepMobileUxStyle = 'true';
+  style.textContent = `
+    .prep-resource-picker[data-prep-mobile-picker="true"] .prep-picker-row,
+    .prep-resource-picker[data-prep-mobile-picker="true"] .prep-selected-tools{display:none!important}
+    .prep-mobile-resource-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2)}
+    .prep-mobile-summary-copy{min-width:0;flex:1}
+    .prep-mobile-summary-copy strong{display:block;color:var(--primary-strong);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .prep-mobile-summary-copy small{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+    .prep-mobile-resource-summary .btn{flex:0 0 auto;min-height:36px}
+    .prep-mobile-picker-sheet{max-width:620px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+    .prep-mobile-picker-sheet>.muted{margin-bottom:10px}
+    .prep-mobile-filter-chips{display:flex;gap:7px;overflow-x:auto;padding:1px 0 8px;scrollbar-width:none}
+    .prep-mobile-filter-chips::-webkit-scrollbar{display:none}
+    .prep-mobile-filter-chip{flex:0 0 auto;min-height:34px;padding:0 11px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--muted);font-size:11px;font-weight:750}
+    .prep-mobile-filter-chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+    .prep-mobile-picker-results{display:grid;gap:6px;max-height:min(48dvh,480px);overflow:auto;overscroll-behavior:contain;padding:1px 0 4px}
+    .prep-mobile-picker-row{display:grid;grid-template-columns:36px minmax(0,1fr);gap:5px;align-items:center;border:1px solid var(--border);border-radius:12px;background:var(--surface);min-height:50px}
+    .prep-mobile-picker-row.selected{background:var(--surface-2);border-color:color-mix(in srgb,var(--secondary) 60%,var(--border))}
+    .prep-mobile-favorite{width:34px;height:34px;margin-left:2px;border:0;border-radius:50%;background:transparent;color:var(--border);font-size:18px}
+    .prep-mobile-favorite.active{color:var(--accent)}
+    .prep-mobile-pick-main{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;min-height:48px;padding:7px 10px 7px 4px;border:0;background:transparent;text-align:left;color:var(--text)}
+    .prep-mobile-pick-main span{min-width:0;flex:1}
+    .prep-mobile-pick-main strong{display:block;color:var(--primary-strong);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .prep-mobile-pick-main small{display:block;margin-top:2px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .prep-mobile-pick-main b{display:grid;place-items:center;width:26px;height:26px;flex:0 0 auto;border-radius:50%;background:var(--surface-2);color:var(--primary);font-size:14px}
+    .prep-mobile-picker-row.selected .prep-mobile-pick-main b{background:var(--primary);color:#fff}
+    .prep-mobile-picker-footer{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding:9px 0 calc(4px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,rgba(248,249,247,.82),var(--surface) 28%);z-index:3}
+    .prep-mobile-picker-footer small{color:var(--muted);font-size:11px}
+    @media(max-width:560px){
+      .prep-mobile-picker-sheet{height:min(82dvh,760px);display:flex;flex-direction:column}
+      .prep-mobile-picker-results{flex:1;max-height:none}
+      .prep-mobile-resource-summary{padding:9px 10px}
+    }
+  `;
+  const finalBrand = document.querySelector('link[href="idle-home-premium.css"]');
+  document.head.insertBefore(style, finalBrand || null);
+}
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[c]));
 }
@@ -179,6 +219,7 @@ function useUnlistedResource() {
   requestAnimationFrame(() => section.querySelector('[data-prep-unlisted-name]')?.focus());
 }
 function enhance() {
+  ensureStyles();
   enhancePreparationSummary();
   updateSummary();
 }
