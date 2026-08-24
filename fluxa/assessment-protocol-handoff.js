@@ -38,6 +38,12 @@ function usableProtocolName(value) {
   return typeof value === 'string' && value.trim() !== '';
 }
 
+function suggestionLimit(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed === 0) return 3;
+  return Math.max(1, Math.floor(parsed));
+}
+
 function orderedSuggestionNames(selected) {
   if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
   const names = [];
@@ -66,7 +72,7 @@ export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) 
     if (!usableProtocolId(protocol?.id) || !usableProtocolName(protocol?.name) || !key || byName.has(key)) continue;
     byName.set(key, protocol);
   }
-  const maxSuggestions = Math.max(1, Number(limit) || 3);
+  const maxSuggestions = suggestionLimit(limit);
   const seenProtocolIds = new Set();
   const suggestions = [];
   for (const name of names) {
