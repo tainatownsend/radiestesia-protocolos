@@ -93,3 +93,4 @@ jobs:
           node fluxa/ux-validation-hotfix.test.mjs
           node fluxa/ux-architecture-refresh.test.mjs
           node fluxa/treatment-mobile-ux.test.mjs
+          node fluxa/preparation-mobile-ux.test.mjs
