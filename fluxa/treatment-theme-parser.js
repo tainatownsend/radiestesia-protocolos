@@ -45,6 +45,7 @@ function readObjectString(body,property){
 }
 
 export function parseTreatmentPlans(source,path){
+  if(typeof source!=='string'||!source.trim())return [];
   const items=[];
   const seen=new Set();
   const add=(legacyId,title,command)=>{
