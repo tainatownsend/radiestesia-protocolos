@@ -81,4 +81,18 @@ assert.throws(
 );
 assert.equal(malformedInvestigationsStore.getState().events.length, 0, 'Rejected malformed investigation state must not append history.');
 
+const malformedInvestigationEntriesStore = fakeStore({ ...baseState, investigations:[null, undefined, investigation] });
+assert.throws(
+  () => linkOrientingAssessmentToProtocol(malformedInvestigationEntriesStore, 'assess_1', { protocolId:'root_finance', investigationId:undefined }),
+  /inicie ou retome a investigação/i,
+  'Null or undefined neighboring investigations must not turn a missing investigation ID into a property-access error.'
+);
+assert.equal(malformedInvestigationEntriesStore.getState().events.length, 0, 'Rejected missing investigation IDs must not append history.');
+
+const validInvestigationAfterMalformedEntriesStore = fakeStore({ ...baseState, investigations:[null, undefined, investigation] });
+const linkedAfterMalformedInvestigations = linkOrientingAssessmentToProtocol(validInvestigationAfterMalformedEntriesStore, 'assess_1', { protocolId:'root_finance', investigationId:'inv_1' });
+assert.equal(linkedAfterMalformedInvestigations?.linkedInvestigationId, 'inv_1', 'Malformed neighboring investigations must not hide a valid investigation later in the collection.');
+assert.equal(validInvestigationAfterMalformedEntriesStore.getState().events.length, 1, 'A valid link after malformed investigation neighbors should append exactly one history event.');
+assert.equal(validInvestigationAfterMalformedEntriesStore.getState().events[0].eventType, 'ASSESSMENT_PROTOCOL_SELECTED');
+
 console.log('assessment-protocol-link-shape-guard.test.mjs: ok');
