@@ -66,12 +66,22 @@ export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) 
     if (!usableProtocolId(protocol?.id) || !usableProtocolName(protocol?.name) || !key || byName.has(key)) continue;
     byName.set(key, protocol);
   }
-  return names.map((name) => byName.get(protocolNameKey(name))).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
-    protocolId: protocol.id,
-    protocolName: protocol.name,
-    category: protocol.category || 'Investigação',
-    reason: selected.find((area) => area.protocolNames.some((name) => protocolNameKey(name) === protocolNameKey(protocol.name)))?.label || 'Tema ainda não delimitado'
-  }));
+  const maxSuggestions = Math.max(1, Number(limit) || 3);
+  const seenProtocolIds = new Set();
+  const suggestions = [];
+  for (const name of names) {
+    const protocol = byName.get(protocolNameKey(name));
+    if (!protocol || seenProtocolIds.has(protocol.id)) continue;
+    seenProtocolIds.add(protocol.id);
+    suggestions.push({
+      protocolId: protocol.id,
+      protocolName: protocol.name,
+      category: protocol.category || 'Investigação',
+      reason: selected.find((area) => area.protocolNames.some((candidateName) => protocolNameKey(candidateName) === protocolNameKey(protocol.name)))?.label || 'Tema ainda não delimitado'
+    });
+    if (suggestions.length >= maxSuggestions) break;
+  }
+  return suggestions;
 }
 
 function addEvent(store, draft, input) {
