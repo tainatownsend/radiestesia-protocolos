@@ -34,6 +34,10 @@ function usableProtocolId(value) {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function usableProtocolName(value) {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
 function orderedSuggestionNames(selected) {
   if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
   const names = [];
@@ -59,7 +63,7 @@ export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) 
   const byName = new Map();
   for (const protocol of safeCatalog) {
     const key = protocolNameKey(protocol?.name);
-    if (!usableProtocolId(protocol?.id) || !key || byName.has(key)) continue;
+    if (!usableProtocolId(protocol?.id) || !usableProtocolName(protocol?.name) || !key || byName.has(key)) continue;
     byName.set(key, protocol);
   }
   return names.map((name) => byName.get(protocolNameKey(name))).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
@@ -134,7 +138,7 @@ export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
   if (session.currentAssistedEntityId !== assessment.assistedEntityId) throw new Error('A avaliação deve permanecer vinculada ao Assistido atual da sessão.');
 
   const suggestions = Array.isArray(assessment.protocolSuggestions) ? assessment.protocolSuggestions : [];
-  const suggestion = suggestions.find((item) => usableProtocolId(item?.protocolId) && item.protocolId === safeInput.protocolId);
+  const suggestion = suggestions.find((item) => usableProtocolId(item?.protocolId) && usableProtocolName(item?.protocolName) && item.protocolId === safeInput.protocolId);
   if (!suggestion) throw new Error('O protocolo selecionado não pertence às sugestões desta avaliação.');
   if (!safeInput.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
   const investigations = Array.isArray(state?.investigations) ? state.investigations : [];
