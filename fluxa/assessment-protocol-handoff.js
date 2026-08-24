@@ -39,7 +39,12 @@ function usableProtocolName(value) {
 }
 
 function suggestionLimit(value) {
-  const parsed = Number(value);
+  let parsed;
+  try {
+    parsed = Number(value);
+  } catch {
+    return 3;
+  }
   if (!Number.isFinite(parsed) || parsed === 0) return 3;
   return Math.max(1, Math.floor(parsed));
 }
