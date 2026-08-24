@@ -12,6 +12,7 @@ const assisted = read('./assisted-summary-ui.js');
 const pickers = read('./operational-pickers-ui.js');
 const cockpit = read('./session-cockpit-close-ui.js');
 const html = read('./index.html');
+const reconciliation = read('./visual-reconciliation.css');
 
 // Architecture loader: the refresh must remain a single ordered entry point.
 for (const moduleName of [
@@ -87,13 +88,27 @@ assert.match(cockpit, /Encerrar sessão com segurança/);
 // Shell wiring and visual cascade guardrails.
 assert.match(html, /src="ux-architecture-loader\.js"/);
 assert.match(html, /href="ux-architecture-refresh\.css"/);
+assert.match(html, /href="visual-reconciliation\.css"/);
 assert.ok(
   html.indexOf('ux-architecture-refresh.css') < html.indexOf('idle-home-premium.css'),
-  'Idle Home must remain the final visual authority after the architecture refresh.'
+  'Idle Home must remain able to refine architecture-specific presentation.'
+);
+assert.ok(
+  html.indexOf('idle-home-premium.css') < html.indexOf('visual-reconciliation.css'),
+  'Visual reconciliation must be the final style authority during the identity validation round.'
 );
 assert.ok(
   html.indexOf('ux-architecture-loader.js') < html.indexOf('validation-round-ui.js'),
   'Validation/polish layers must remain able to refine the architecture shell after it loads.'
 );
+
+// Deep Teal source-of-truth guardrails for the three validation surfaces.
+for (const token of ['#EFF1EF','#F8F9F7','#DEE4E1','#173F46','#102F35','#66898C','#C17C61','#202729','#606B6C','#CBD3D1']) {
+  assert.ok(reconciliation.includes(token), `Visual reconciliation must preserve approved Deep Teal token ${token}.`);
+}
+assert.match(reconciliation, /body\.fluxa-home-idle \.hero-card/, 'Idle Hoje must have a deliberate Deep Teal hero treatment.');
+assert.match(reconciliation, /topbar-session-open/, 'Open-session cockpit must retain a Deep Teal operational shell.');
+assert.match(reconciliation, /\.treatment-card/, 'Treatments must participate in the reconciled visual system.');
+assert.doesNotMatch(reconciliation, /font-family\s*:\s*Georgia/i, 'Fluxa brand treatment must not fall back to the improvised serif wordmark.');
 
 console.log('ux-architecture-refresh.test.mjs: ok');
