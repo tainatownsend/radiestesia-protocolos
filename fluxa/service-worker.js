@@ -1,5 +1,7 @@
-const CACHE_NAME='fluxa-runtime-v2-therapeutic-catalog-complete-20260821-therapeutic-flow-20260822-hawkins-20260822';
+const CACHE_NAME='fluxa-runtime-v3-runtime-scope-20260824';
 const ROOT=new URL('./',self.location.href).href;
+const ROOT_URL=new URL(ROOT);
+const SCOPE_PATH=ROOT_URL.pathname;
 const MAX_PRECACHE_ASSETS=300;
 const ROOT_PROTOCOL_SOURCES=new Set([
   new URL('../app.js',ROOT).href,
@@ -11,7 +13,7 @@ const ROOT_PROTOCOL_SOURCES=new Set([
   new URL('../protocols-v11-quick.js',ROOT).href
 ]);
 
-function isLocalFluxaUrl(url){return url.origin===self.location.origin&&url.pathname.includes('/fluxa/');}
+function isLocalFluxaUrl(url){return url.origin===ROOT_URL.origin&&url.pathname.startsWith(SCOPE_PATH);}
 function isFluxaSupportUrl(url){return isLocalFluxaUrl(url)||ROOT_PROTOCOL_SOURCES.has(url.href);}
 function addRef(set,ref,base){
   if(!ref||/^(https?:|data:|#|mailto:|tel:)/.test(ref))return;
