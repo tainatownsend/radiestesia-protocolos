@@ -1,7 +1,14 @@
 function decode(value=''){return String(value).replace(/\\n/g,'\n').replace(/\\'/g,"'").replace(/\\"/g,'"').replace(/\\\\/g,'\\');}
 
 export function normalizeTreatmentThemeText(value=''){
-  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[-‐‑‒–—−/]+/g,' ')
+    .replace(/[.,;:!?…'"“”‘’()[\]{}]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 
 export function matchesTreatmentThemeSearch(searchText='',query=''){
@@ -29,23 +36,55 @@ export function inferTreatmentTheme(title='',command=''){
   return rules.find(([,terms])=>terms.some(term=>text.includes(normalizeTreatmentThemeText(term))))?.[0]||'Outros temas';
 }
 
+function readObjectString(body,property){
+  const escaped=String(property).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const key=`(?:${escaped}|'${escaped}'|"${escaped}")`;
+  const single=new RegExp(`(?:^|[,;\\n])\\s*${key}\\s*:\\s*'((?:\\\\.|[^'])*)'`);
+  const double=new RegExp(`(?:^|[,;\\n])\\s*${key}\\s*:\\s*"((?:\\\\.|[^"])*)"`);
+  return body.match(single)?.[1]??body.match(double)?.[1]??null;
+}
+
 export function parseTreatmentPlans(source,path){
   const items=[];
+  const seen=new Set();
   const add=(legacyId,title,command)=>{
-    title=decode(title);command=decode(command);
-    if(!title||!command)return;
+    legacyId=decode(legacyId);title=decode(title);command=decode(command);
+    if(!legacyId.trim()||!title.trim()||!command.trim())return;
+    const key=`${legacyId}\u0000${title}\u0000${command}`;
+    if(seen.has(key))return;
+    seen.add(key);
     const theme=inferTreatmentTheme(title,command);
     items.push({id:`${path}:${legacyId}`,legacyId,title,command,theme,sourcePath:path,search:normalizeTreatmentThemeText(`${title} ${command} ${theme}`)});
   };
-  const callPatterns=[
-    /([A-Za-z0-9_]+)\s*:\s*(?:C|P)\(\s*'((?:\\.|[^'])*)'\s*,\s*'((?:\\.|[^'])*)'\s*\)/g,
-    /([A-Za-z0-9_]+)\s*:\s*(?:C|P)\(\s*"((?:\\.|[^"])*)"\s*,\s*"((?:\\.|[^"])*)"\s*\)/g
-  ];
-  for(const pattern of callPatterns)for(const match of source.matchAll(pattern))add(match[1],match[2],match[3]);
+  // Only the first two string arguments carry discovery semantics. Legacy P/C
+  // helpers may include additional scalar metadata after command; tolerate it
+  // without evaluating source code or changing the discovered treatment data.
+  // A final trailing comma is valid JavaScript and must not hide the plan.
+  const callBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*(?:C|P)\(\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*,\s*(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")(?:\s*,\s*(?:(?:'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")|(?:true|false|null|-?\d+(?:\.\d+)?)))*\s*,?\s*\)/g;
+  for(const match of source.matchAll(callBlocks)){
+    const legacyId=match[1]??match[2]??match[3];
+    const title=match[4]??match[5];
+    const command=match[6]??match[7];
+    add(legacyId,title,command);
+  }
   const objectPatterns=[
     /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*'((?:\\.|[^'])*)'\s*,\s*command\s*:\s*'((?:\\.|[^'])*)'\s*\}/g,
-    /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*"((?:\\.|[^"])*)"\s*,\s*command\s*:\s*"((?:\\.|[^"])*)"\s*\}/g
+    /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*"((?:\\.|[^"])*)"\s*,\s*command\s*:\s*"((?:\\.|[^"])*)"\s*\}/g,
+    /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*'((?:\\.|[^'])*)'\s*,\s*command\s*:\s*"((?:\\.|[^"])*)"\s*\}/g,
+    /([A-Za-z0-9_]+)\s*:\s*\{\s*label\s*:\s*"((?:\\.|[^"])*)"\s*,\s*command\s*:\s*'((?:\\.|[^'])*)'\s*\}/g
   ];
   for(const pattern of objectPatterns)for(const match of source.matchAll(pattern))add(match[1],match[2],match[3]);
+
+  // Legacy therapeutic content is not fully uniform: some object plans put
+  // command before label, keep harmless metadata between fields, or use
+  // JSON-style quoted keys. Parse each flat object body as a fallback so those
+  // plans remain discoverable without changing treatment semantics or executing source code.
+  const objectBlocks=/(?:([A-Za-z0-9_]+)|'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)")\s*:\s*\{([^{}]*)\}/g;
+  for(const match of source.matchAll(objectBlocks)){
+    const legacyId=match[1]??match[2]??match[3];
+    const label=readObjectString(match[4],'label');
+    const command=readObjectString(match[4],'command');
+    if(label!=null&&command!=null)add(legacyId,label,command);
+  }
   return items;
 }

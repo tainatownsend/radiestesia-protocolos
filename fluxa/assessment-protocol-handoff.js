@@ -18,6 +18,26 @@ export const ORIENTING_ASSESSMENT_AREAS = Object.freeze([
 
 const areaById = new Map(ORIENTING_ASSESSMENT_AREAS.map((area) => [area.id, area]));
 
+function protocolNameKey(value='') {
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[-‐‑‒–—−/]+/g,' ')
+    .replace(/[.,;:()[\]{}'‘’“”"?!…]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function usableProtocolId(value) {
+  if (typeof value === 'string') return value.trim() !== '';
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function usableProtocolName(value) {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
 function orderedSuggestionNames(selected) {
   if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
   const names = [];
@@ -36,18 +56,26 @@ function orderedSuggestionNames(selected) {
 }
 
 export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) {
-  const selected = [...new Set(areaIds)].map((id) => areaById.get(id)).filter(Boolean);
+  const safeAreaIds = Array.isArray(areaIds) ? areaIds : [];
+  const safeCatalog = Array.isArray(catalog) ? catalog : [];
+  const selected = [...new Set(safeAreaIds)].map((id) => areaById.get(id)).filter(Boolean);
   const names = orderedSuggestionNames(selected);
-  const byName = new Map(catalog.map((protocol) => [protocol.name, protocol]));
-  return names.map((name) => byName.get(name)).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
+  const byName = new Map();
+  for (const protocol of safeCatalog) {
+    const key = protocolNameKey(protocol?.name);
+    if (!usableProtocolId(protocol?.id) || !usableProtocolName(protocol?.name) || !key || byName.has(key)) continue;
+    byName.set(key, protocol);
+  }
+  return names.map((name) => byName.get(protocolNameKey(name))).filter(Boolean).slice(0, Math.max(1, Number(limit) || 3)).map((protocol) => ({
     protocolId: protocol.id,
     protocolName: protocol.name,
     category: protocol.category || 'Investigação',
-    reason: selected.find((area) => area.protocolNames.includes(protocol.name))?.label || 'Tema ainda não delimitado'
+    reason: selected.find((area) => area.protocolNames.some((name) => protocolNameKey(name) === protocolNameKey(protocol.name)))?.label || 'Tema ainda não delimitado'
   }));
 }
 
 function addEvent(store, draft, input) {
+  if (!Array.isArray(draft.events)) draft.events = [];
   draft.events.push({
     id: store.makeId('evt'), eventType: input.eventType, entityType: input.entityType, entityId: input.entityId,
     sessionId: input.sessionId || null, assistedEntityId: input.assistedEntityId || null,
@@ -57,13 +85,16 @@ function addEvent(store, draft, input) {
 
 export function recordOrientingAssessment(store, input, catalog = []) {
   const state = store.getState();
-  const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação orientadora.');
+  const safeInput = input && typeof input === 'object' ? input : {};
+  const session = requirePreparedSessionState(state, safeInput.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação orientadora.');
   if (!session.currentAssistedEntityId) throw new Error('Escolha o Assistido antes de fazer a avaliação orientadora.');
-  if (input.assistedEntityId && input.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
-  const sourceAssessment = input.sourceAssessmentId ? (state.assessments || []).find((item) => item.id === input.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
-  if (input.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
+  if (safeInput.assistedEntityId && safeInput.assistedEntityId !== session.currentAssistedEntityId) throw new Error('A avaliação deve pertencer ao Assistido atual da sessão.');
+  const assessments = Array.isArray(state?.assessments) ? state.assessments : [];
+  const sourceAssessment = safeInput.sourceAssessmentId ? assessments.find((item) => item?.id === safeInput.sourceAssessmentId && item.sessionId === session.id && item.assistedEntityId === session.currentAssistedEntityId) : null;
+  if (safeInput.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
   if (sourceAssessment?.followUpAssessmentId) throw new Error('Esta avaliação de origem já possui um próximo passo registrado.');
-  const focusAreas = [...new Set((input.focusAreas || []).filter((id) => areaById.has(id)))];
+  const rawFocusAreas = Array.isArray(safeInput.focusAreas) ? safeInput.focusAreas : [];
+  const focusAreas = [...new Set(rawFocusAreas.filter((id) => areaById.has(id)))];
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
   if (focusAreas.includes('unclear') && focusAreas.length > 1) throw new Error('“Ainda não está claro” deve ser usado sozinho, sem outras áreas selecionadas.');
   const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
@@ -75,7 +106,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
     id: store.makeId('assess'), kind:'ORIENTING', subject:'Avaliação orientadora', status:'COMPLETED',
     sessionId: session.id, assistedEntityId: session.currentAssistedEntityId,
     sourceAssessmentId: sourceAssessment?.id || null, focusAreas, focusAreaLabels,
-    result: focusAreaLabels.join(', '), notes: String(input.notes || '').trim() || null,
+    result: focusAreaLabels.join(', '), notes: String(safeInput.notes || '').trim() || null,
     protocolSuggestions: structuredClone(suggestions),
     selectedProtocolId:null, selectedProtocolName:null, linkedInvestigationId:null, occurredAt:now, createdAt:now, updatedAt:now
   };
@@ -84,7 +115,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
     if (!Array.isArray(draft.assessments)) draft.assessments = [];
     draft.assessments.push(assessment);
     if (assessment.sourceAssessmentId) {
-      const source = draft.assessments.find((item) => item.id === assessment.sourceAssessmentId);
+      const source = draft.assessments.find((item) => item?.id === assessment.sourceAssessmentId);
       if (source) { source.followUpAssessmentId = assessment.id; source.updatedAt = now; }
     }
     addEvent(store, draft, {
@@ -99,15 +130,19 @@ export function recordOrientingAssessment(store, input, catalog = []) {
 
 export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
   const state = store.getState();
-  const assessment = (state.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
+  const safeInput = input && typeof input === 'object' ? input : {};
+  const assessments = Array.isArray(state?.assessments) ? state.assessments : [];
+  const assessment = assessments.find((item) => item?.id === assessmentId && item.kind === 'ORIENTING');
   if (!assessment) throw new Error('Avaliação orientadora não encontrada.');
   const session = requirePreparedSessionState(state, assessment.sessionId, 'Conclua a preparação da sessão antes de vincular a avaliação a um protocolo.');
   if (session.currentAssistedEntityId !== assessment.assistedEntityId) throw new Error('A avaliação deve permanecer vinculada ao Assistido atual da sessão.');
 
-  const suggestion = (assessment.protocolSuggestions || []).find((item) => item.protocolId === input.protocolId);
+  const suggestions = Array.isArray(assessment.protocolSuggestions) ? assessment.protocolSuggestions : [];
+  const suggestion = suggestions.find((item) => usableProtocolId(item?.protocolId) && usableProtocolName(item?.protocolName) && item.protocolId === safeInput.protocolId);
   if (!suggestion) throw new Error('O protocolo selecionado não pertence às sugestões desta avaliação.');
-  if (!input.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
-  const investigation = (state.investigations || []).find((item) => item.id === input.investigationId);
+  if (!safeInput.investigationId) throw new Error('Inicie ou retome a investigação antes de registrar o vínculo com a avaliação.');
+  const investigations = Array.isArray(state?.investigations) ? state.investigations : [];
+  const investigation = investigations.find((item) => item?.id === safeInput.investigationId);
   if (!investigation || investigation.kind !== 'ROOT_PROTOCOL') throw new Error('A investigação vinculada não é um protocolo terapêutico válido.');
   if (investigation.protocolId !== suggestion.protocolId) throw new Error('A investigação vinculada não corresponde ao protocolo selecionado.');
   if (investigation.assistedEntityId !== assessment.assistedEntityId) throw new Error('A investigação vinculada pertence a outro Assistido.');
@@ -121,7 +156,8 @@ export function linkOrientingAssessmentToProtocol(store, assessmentId, input) {
   let updated = null;
   store.setState((current) => {
     const draft = structuredClone(current);
-    const target = (draft.assessments || []).find((item) => item.id === assessmentId && item.kind === 'ORIENTING');
+    const draftAssessments = Array.isArray(draft?.assessments) ? draft.assessments : [];
+    const target = draftAssessments.find((item) => item?.id === assessmentId && item.kind === 'ORIENTING');
     if (!target) return draft;
     target.selectedProtocolId = suggestion.protocolId;
     target.selectedProtocolName = suggestion.protocolName;

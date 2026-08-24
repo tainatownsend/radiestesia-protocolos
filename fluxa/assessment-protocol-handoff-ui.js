@@ -44,6 +44,11 @@ function assessmentDialog(sourceId = null) {
   if (!prepared(session, state)) { alert('Conclua a preparação da sessão antes de fazer a avaliação orientadora.'); sourceAssessmentId = null; return; }
   if (!assisted) { alert('Escolha o Assistido antes de fazer a avaliação orientadora.'); sourceAssessmentId = null; return; }
   const source = sourceAssessmentId ? (state.assessments || []).find((item) => item.id === sourceAssessmentId) : null;
+  if (sourceAssessmentId && (!source || source.sessionId !== session.id || source.assistedEntityId !== assisted.id)) {
+    sourceAssessmentId = null;
+    alert('Esta medição pertence a outra sessão ou Assistido. Registre uma nova medição no atendimento atual antes de usá-la para escolher um protocolo.');
+    return;
+  }
   const wrap = document.createElement('div');
   wrap.id = 'orienting-assessment-overlay';
   wrap.className = 'modal-backdrop';
@@ -115,6 +120,12 @@ function startSuggestedProtocol(button) {
   if (!protocolId || !session || !selectedAssessmentId) return;
   const selectedAssessment=(store.getState().assessments||[]).find((item)=>item.id===selectedAssessmentId&&item.kind==='ORIENTING');
   if(!selectedAssessment){assessmentId=null;alert('A avaliação orientadora não está mais disponível. Refaça a avaliação antes de iniciar o protocolo.');return;}
+  if(selectedAssessment.sessionId!==session.id||selectedAssessment.assistedEntityId!==session.currentAssistedEntityId){
+    close('#assessment-suggestions-overlay');
+    assessmentId=null;
+    alert('Esta avaliação pertence a outra sessão ou Assistido. Refaça a avaliação no contexto atual antes de iniciar um protocolo.');
+    return;
+  }
   if(!currentHawkinsBaseline()){
     alert('Registre a frequência vibracional de Hawkins em Hz antes de iniciar o protocolo.');
     document.querySelector('#assessment-hawkins-baseline-form [name="hertz"]')?.focus();

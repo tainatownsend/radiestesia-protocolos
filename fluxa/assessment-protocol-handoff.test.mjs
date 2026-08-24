@@ -26,6 +26,64 @@ assert.deepEqual(
 assert.equal(suggestProtocolsForAreas(['unclear'], catalog)[0]?.protocolId, 'root_master', 'Unclear focus should route to the Master Root Cause Protocol.');
 assert.equal(suggestProtocolsForAreas([], catalog)[0]?.protocolId, 'root_master', 'An empty focus should also fall back to the Master Protocol at the suggestion layer.');
 
+const normalizedCatalog = [
+  {id:'root_purpose_variant',name:'  PROPOSITO   E CAMINHO DE VIDA  ',category:'Investigações profundas'},
+  {id:'root_master_variant',name:'protocolo mestre de causa raiz',category:'Protocolo Mestre'}
+];
+const normalizedPurpose = suggestProtocolsForAreas(['purpose'], normalizedCatalog);
+assert.equal(normalizedPurpose[0]?.protocolId, 'root_purpose_variant', 'Assessment handoff should tolerate accent, case, and harmless whitespace drift in catalog protocol names.');
+assert.equal(normalizedPurpose[0]?.protocolName, '  PROPOSITO   E CAMINHO DE VIDA  ', 'Suggestion snapshots must preserve the actual catalog protocol name after normalized matching.');
+assert.equal(normalizedPurpose[0]?.reason, 'Propósito e caminho', 'Normalized name matching must preserve the correct assessment-area reason.');
+assert.equal(suggestProtocolsForAreas(['unclear'], normalizedCatalog)[0]?.protocolId, 'root_master_variant', 'Master-protocol fallback should remain discoverable when catalog naming differs only by accents/case/spacing.');
+
+const separatorVariantCatalog = [
+  {id:'root_career_dash',name:'Carreira—Profissional',category:'Temas essenciais'},
+  {id:'root_marriage_hyphen',name:'Casamento - Relacionamento',category:'Temas essenciais'}
+];
+assert.deepEqual(
+  suggestProtocolsForAreas(['career','relationship'], separatorVariantCatalog).map((item) => item.protocolId),
+  ['root_career_dash','root_marriage_hyphen'],
+  'Assessment handoff should treat slash, hyphen, and dash variants as equivalent separators without changing protocol identity.'
+);
+assert.equal(
+  suggestProtocolsForAreas(['career'], separatorVariantCatalog)[0]?.protocolName,
+  'Carreira—Profissional',
+  'Separator-equivalent matching must preserve the actual catalog protocol name in the suggestion snapshot.'
+);
+const separatorCollisionCatalog = [
+  {id:'root_career_first',name:'Carreira / Profissional',category:'Temas essenciais'},
+  {id:'root_career_second',name:'Carreira—Profissional',category:'Legacy duplicate'}
+];
+assert.equal(
+  suggestProtocolsForAreas(['career'], separatorCollisionCatalog)[0]?.protocolId,
+  'root_career_first',
+  'Separator-equivalent catalog collisions must preserve the first valid catalog identity deterministically.'
+);
+
+const duplicateNormalizedCatalog = [
+  {id:'root_finance_primary',name:'Vida Financeira',category:'Temas essenciais'},
+  {id:'root_finance_duplicate',name:'  VIDA   FINANCEIRA  ',category:'Legacy duplicate'},
+  {id:'root_prosperity_primary',name:'Prosperidade e Abundância',category:'Investigações profundas'}
+];
+assert.deepEqual(
+  suggestProtocolsForAreas(['finance'], duplicateNormalizedCatalog).map((item) => item.protocolId),
+  ['root_finance_primary','root_prosperity_primary'],
+  'When normalized catalog labels collide, assessment handoff must preserve the first catalog entry instead of silently switching protocol identity.'
+);
+
+const invalidFirstDuplicateCatalog = [
+  {name:'Vida Financeira',category:'Malformed legacy row'},
+  null,
+  {id:'',name:'Prosperidade e Abundância',category:'Malformed legacy row'},
+  {id:'root_finance_valid',name:'  VIDA FINANCEIRA  ',category:'Temas essenciais'},
+  {id:'root_prosperity_valid',name:'Prosperidade e Abundância',category:'Investigações profundas'}
+];
+assert.deepEqual(
+  suggestProtocolsForAreas(['finance'], invalidFirstDuplicateCatalog).map((item) => item.protocolId),
+  ['root_finance_valid','root_prosperity_valid'],
+  'Malformed catalog rows must not shadow later valid protocols with the same normalized label.'
+);
+
 function fakeStore(initial) {
   let state = structuredClone(initial); let seq = 0;
   return {
