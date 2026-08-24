@@ -1,4 +1,4 @@
-const CACHE_NAME='fluxa-runtime-v2-runtime-scope-20260824';
+const CACHE_NAME='fluxa-runtime-v2-therapeutic-catalog-complete-20260821-therapeutic-flow-20260822-hawkins-20260822-runtime-scope-20260824';
 const ROOT=new URL('./',self.location.href).href;
 const ROOT_URL=new URL(ROOT);
 const SCOPE_PATH=ROOT_URL.pathname;
