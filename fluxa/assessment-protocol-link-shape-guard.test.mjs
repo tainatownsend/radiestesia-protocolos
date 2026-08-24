@@ -39,6 +39,20 @@ assert.throws(
 );
 assert.equal(missingAssessmentStore.getState().events.length, 0, 'Rejected malformed assessment state must not append history.');
 
+const malformedAssessmentEntriesStore = fakeStore({ ...baseState, assessments:[null, undefined, assessment] });
+assert.throws(
+  () => linkOrientingAssessmentToProtocol(malformedAssessmentEntriesStore, undefined, { protocolId:'root_finance', investigationId:'inv_1' }),
+  /avaliação orientadora não encontrada/i,
+  'Null or undefined assessment entries must not turn a missing assessment ID into a property-access TypeError.'
+);
+assert.equal(malformedAssessmentEntriesStore.getState().events.length, 0, 'Rejected malformed assessment entries must not append history.');
+
+const validAfterMalformedEntriesStore = fakeStore({ ...baseState, assessments:[null, undefined, assessment] });
+const linkedAfterMalformedEntries = linkOrientingAssessmentToProtocol(validAfterMalformedEntriesStore, 'assess_1', { protocolId:'root_finance', investigationId:'inv_1' });
+assert.equal(linkedAfterMalformedEntries?.linkedInvestigationId, 'inv_1', 'Malformed neighboring entries must not hide a valid assessment later in the collection.');
+assert.equal(validAfterMalformedEntriesStore.getState().events.length, 1, 'A valid link after malformed neighboring entries should append exactly one history event.');
+assert.equal(validAfterMalformedEntriesStore.getState().events[0].eventType, 'ASSESSMENT_PROTOCOL_SELECTED');
+
 const nullInputStore = fakeStore(baseState);
 assert.throws(
   () => linkOrientingAssessmentToProtocol(nullInputStore, 'assess_1', null),
