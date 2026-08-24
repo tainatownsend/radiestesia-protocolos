@@ -49,4 +49,22 @@ assert.deepEqual(
   'Punctuation normalization must keep the first valid catalog identity when cosmetic label variants collide.'
 );
 
+const quotedCatalog = [
+  { id:'root_career_quoted', name:'“Carreira / Profissional”!', category:'Legacy import' },
+  { id:'root_purpose_quoted', name:'Propósito e Caminho de Vida…', category:'Legacy import' },
+  { id:'root_relationship_quoted', name:"'Casamento / Relacionamento'?", category:'Legacy import' }
+];
+
+assert.deepEqual(
+  suggestProtocolsForAreas(['career'], quotedCatalog).map((item) => item.protocolId),
+  ['root_career_quoted','root_purpose_quoted'],
+  'Assessment handoff should ignore quote, question, exclamation and ellipsis punctuation around otherwise equivalent protocol labels.'
+);
+
+assert.deepEqual(
+  suggestProtocolsForAreas(['relationship'], quotedCatalog).map((item) => item.protocolId),
+  ['root_relationship_quoted'],
+  'Relationship suggestions should tolerate quote punctuation introduced by imported legacy labels.'
+);
+
 console.log('assessment-protocol-separator-normalization.test.mjs: ok');
