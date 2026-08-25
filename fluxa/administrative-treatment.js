@@ -1,5 +1,6 @@
 import { EventType, TreatmentStatus } from './domain.js';
 import { treatmentComponentResolution } from './remaining.js';
+import { hawkinsFinalForTreatment, validateHawkinsHertz } from './hawkins-measurement.js';
 
 function addEvent(store, draft, input) {
   draft.events.push({
@@ -15,10 +16,21 @@ function addEvent(store, draft, input) {
   });
 }
 
+function validFinalHawkins(state, treatment) {
+  const assessment = hawkinsFinalForTreatment(state, treatment.id);
+  if (!assessment || assessment.assistedEntityId !== treatment.assistedEntityId) return null;
+  try {
+    return { assessment, hertz: validateHawkinsHertz(assessment.hertz ?? assessment.frequency) };
+  } catch (_) {
+    return null;
+  }
+}
+
 export function canCompleteTreatmentAdministratively(state, treatmentId) {
   const treatment = state.treatments.find((item) => item.id === treatmentId);
   if (!treatment || ![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(treatment.status)) return false;
-  return treatmentComponentResolution(state, treatmentId).readyForFinalAssessment;
+  if (!treatmentComponentResolution(state, treatmentId).readyForFinalAssessment) return false;
+  return Boolean(validFinalHawkins(state, treatment));
 }
 
 export function completeTreatmentAdministratively(store, treatmentId, input = {}) {
@@ -28,13 +40,16 @@ export function completeTreatmentAdministratively(store, treatmentId, input = {}
   if (!treatmentComponentResolution(state, treatmentId).readyForFinalAssessment) {
     throw new Error('Resolva todos os componentes antes de concluir administrativamente o tratamento.');
   }
+  const finalHawkins = validFinalHawkins(state, treatment);
+  if (!finalHawkins) {
+    throw new Error('Uma medição final de Hawkins válida do Assistido é obrigatória antes da conclusão administrativa.');
+  }
   if (!input.confirmNoMeasurement) {
     throw new Error('Confirme que nenhuma nova medição está sendo realizada neste registro administrativo.');
   }
 
   const now = store.nowIso();
-  const assessments = (state.assessments || []).filter((item) => item.treatmentId === treatmentId).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-  const latestAssessment = assessments[0] || null;
+  const { assessment: latestAssessment, hertz } = finalHawkins;
 
   store.setState((current) => {
     const draft = structuredClone(current);
@@ -43,6 +58,9 @@ export function completeTreatmentAdministratively(store, treatmentId, input = {}
     target.completedAt = now;
     target.updatedAt = now;
     target.completedAdministratively = true;
+    target.hawkinsFinalAssessmentId = latestAssessment.id;
+    target.hawkinsFinalHertz = hertz;
+    target.hawkinsFinalRecordedAt = latestAssessment.occurredAt || latestAssessment.createdAt || now;
     addEvent(store, draft, {
       eventType: EventType.TREATMENT_COMPLETED,
       entityType: 'Treatment',
@@ -52,7 +70,8 @@ export function completeTreatmentAdministratively(store, treatmentId, input = {}
       metadata: {
         administrative: true,
         measurementPerformedNow: false,
-        finalAssessmentId: latestAssessment?.id || null,
+        finalAssessmentId: latestAssessment.id,
+        hawkinsHertz: hertz,
         notes: input.notes?.trim() || null
       }
     });
