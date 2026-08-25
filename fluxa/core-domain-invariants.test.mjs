@@ -100,10 +100,14 @@ function baseline(store,sessionId,assistedEntityId,hertz=450){
   const session=startSession(store);
   const a=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Reiki A',birthDate:'1980-01-01'});
   const b=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Reiki B',birthDate:'1981-01-01'});
+  store.setState((state)=>{const draft=structuredClone(state);draft.settings.therapeuticModalities={enabled:['REIKI']};return draft;});
+  prepare(store,session.id);
+  selectAssistedForSession(store,session.id,a.id);
   assert.throws(()=>startReiki(store,session.id,'missing'),/assistido válido/i);
   const first=startReiki(store,session.id,a.id);
   assert.equal(startReiki(store,session.id,a.id).id,first.id,'same Reiki context should remain idempotent');
   pauseReiki(store,first.id);
+  selectAssistedForSession(store,session.id,b.id);
   assert.throws(
     ()=>startReiki(store,session.id,b.id),
     /já existe uma aplicação de Reiki ativa/i,
