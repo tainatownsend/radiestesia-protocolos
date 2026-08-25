@@ -5,7 +5,7 @@
 .topbar{
   min-height:76px!important;
   padding:14px max(24px,calc((100vw - var(--audit-max))/2))!important;
-  display:flex!important;
+  display:grid!important;
   flex-wrap:nowrap!important;
   align-items:center!important;
   justify-content:flex-start!important;
