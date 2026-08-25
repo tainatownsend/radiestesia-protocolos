@@ -80,11 +80,45 @@ function baseState() {
 {
   const state = baseState();
   state.treatmentComponents[0].status = 'COMPLETED';
-  state.assessments.push({ id:'fa1', treatmentId:'t1', createdAt:'2026-08-20T00:50:00.000Z', imbalancePercent:10, needsNewTreatment:true, nextTreatmentWhen:'em 7 dias' });
+  state.assessments.push({ id:'fa1', treatmentId:'t1', sessionId:'s1', assistedEntityId:'a1', frequency:'520', createdAt:'2026-08-20T00:50:00.000Z', occurredAt:'2026-08-20T00:50:00.000Z', imbalancePercent:10, needsNewTreatment:true, nextTreatmentWhen:'em 7 dias' });
   const store = makeStore(state);
   completeTreatmentAfterFinalAssessment(store, 't1', 's1');
   assert.equal(store.getState().treatments[0].status, 'COMPLETED');
+  assert.equal(store.getState().treatments[0].hawkinsFinalHertz, 520, 'treatment completion must persist final Hawkins on the treatment');
+  assert.equal(store.getState().assessments[0].kind, 'HAWKINS_FREQUENCY', 'final assessment must be normalized as Hawkins in the domain');
+  assert.equal(store.getState().assessments[0].phase, 'FINAL');
   assert.equal(store.getState().events.at(-1).eventType, 'TREATMENT_COMPLETED');
+  assert.equal(store.getState().events.at(-1).metadata.hawkinsHertz, 520);
+}
+
+{
+  const state = baseState();
+  state.treatmentComponents[0].status = 'COMPLETED';
+  state.assessments.push({ id:'fa1', treatmentId:'t1', sessionId:'s1', assistedEntityId:'a1', frequency:'', createdAt:'2026-08-20T00:50:00.000Z', occurredAt:'2026-08-20T00:50:00.000Z', imbalancePercent:10, needsNewTreatment:false });
+  const store = makeStore(state);
+  const eventsBefore = store.getState().events.length;
+  assert.throws(
+    () => completeTreatmentAfterFinalAssessment(store, 't1', 's1'),
+    /Hawkins|frequência vibracional/i,
+    'treatment completion must reject a final assessment without valid Hawkins frequency'
+  );
+  assert.equal(store.getState().treatments[0].status, 'IN_PROGRESS');
+  assert.equal(store.getState().events.length, eventsBefore, 'rejected final Hawkins must not append completion history');
+}
+
+{
+  const state = baseState();
+  state.treatmentComponents[0].status = 'COMPLETED';
+  state.assessments.push({ id:'fa1', treatmentId:'t1', sessionId:'s_other', assistedEntityId:'a1', frequency:'500', createdAt:'2026-08-20T00:50:00.000Z', occurredAt:'2026-08-20T00:50:00.000Z', imbalancePercent:10, needsNewTreatment:false });
+  const store = makeStore(state);
+  const eventsBefore = store.getState().events.length;
+  assert.throws(
+    () => completeTreatmentAfterFinalAssessment(store, 't1', 's1'),
+    /sessão e ao Assistido atuais/i,
+    'final Hawkins must belong to the session that is completing the treatment'
+  );
+  assert.equal(store.getState().treatments[0].status, 'IN_PROGRESS');
+  assert.equal(store.getState().events.length, eventsBefore);
 }
 
 {
@@ -92,7 +126,7 @@ function baseState() {
   state.assistedEntities.push({id:'a2',type:'PERSON',displayName:'Outra pessoa',birthDate:'1991-01-01',members:[],archivedAt:null});
   state.sessions[0].currentAssistedEntityId='a2';
   state.treatmentComponents[0].status='COMPLETED';
-  state.assessments.push({id:'fa1',treatmentId:'t1',createdAt:'2026-08-20T00:50:00.000Z',imbalancePercent:10,needsNewTreatment:false});
+  state.assessments.push({id:'fa1',treatmentId:'t1',sessionId:'s1',assistedEntityId:'a1',frequency:'500',createdAt:'2026-08-20T00:50:00.000Z',occurredAt:'2026-08-20T00:50:00.000Z',imbalancePercent:10,needsNewTreatment:false});
   const store=makeStore(state);
   const eventsBefore=store.getState().events.length;
   assert.throws(
@@ -108,7 +142,7 @@ function baseState() {
   const state = baseState();
   state.preparationRuns=[];
   state.treatmentComponents[0].status='COMPLETED';
-  state.assessments.push({ id:'fa1', treatmentId:'t1', createdAt:'2026-08-20T00:50:00.000Z' });
+  state.assessments.push({ id:'fa1', treatmentId:'t1', sessionId:'s1', assistedEntityId:'a1', frequency:'500', createdAt:'2026-08-20T00:50:00.000Z', occurredAt:'2026-08-20T00:50:00.000Z' });
   const store=makeStore(state);
   assert.throws(()=>completeTreatmentAfterFinalAssessment(store,'t1','s1'),/preparação/);
 }
