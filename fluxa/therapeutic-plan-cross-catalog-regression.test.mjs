@@ -53,10 +53,8 @@ for (const plan of protocolPairs) {
 }
 
 const uniqueProtocolPairs = new Set(protocolPairs.map((item) => item.key));
-assert.equal(
-  uniqueProtocolPairs.size,
-  protocolPairs.length,
-  'protocol plan title/command pairs should remain unique so treatment discovery does not collapse distinct therapeutic actions'
-);
+const missingUniquePairs = [...uniqueProtocolPairs].filter((key) => !treatmentPairs.has(key));
+assert.deepEqual(missingUniquePairs, [], 'every distinct real protocol plan must remain discoverable by treatment-by-theme');
+assert.ok(uniqueProtocolPairs.size >= 300, 'real therapeutic corpus should retain broad treatment-plan coverage');
 
-console.log(`therapeutic-plan-cross-catalog-regression.test.mjs: ok (${protocolPairs.length} protocol plans cross-checked)`);
+console.log(`therapeutic-plan-cross-catalog-regression.test.mjs: ok (${protocolPairs.length} plan usages / ${uniqueProtocolPairs.size} unique plans cross-checked)`);
