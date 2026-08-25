@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'fluxa-*'
+      - 'fluxa/**'
     paths:
       - 'fluxa/**'
       - '.github/workflows/fluxa-domain.yml'
