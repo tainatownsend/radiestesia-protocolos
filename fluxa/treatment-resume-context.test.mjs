@@ -6,6 +6,7 @@ function buildState(overrides = {}) {
   return {
     sessions: [],
     preparationRuns: [],
+    assessments: [],
     treatments: [{
       id: 'trt_1', assistedEntityId: 'ast_1', title: 'Tratamento interrompido',
       status: TreatmentStatus.INTERRUPTED, interruptedAt: '2026-08-21T10:00:00.000Z',
@@ -83,7 +84,12 @@ assert.equal(store.getState().events.length, 0, 'blocked resumes must not create
 
 store = makeStore(buildState({
   sessions: [{ id: 'ses_1', status: 'OPEN', currentAssistedEntityId: 'ast_1' }],
-  preparationRuns: [{ id: 'prep_1', sessionId: 'ses_1', status: 'COMPLETED' }]
+  preparationRuns: [{ id: 'prep_1', sessionId: 'ses_1', status: 'COMPLETED' }],
+  assessments: [{
+    id: 'assess_hawkins_1', kind: 'HAWKINS_FREQUENCY', phase: 'BASELINE',
+    sessionId: 'ses_1', assistedEntityId: 'ast_1', hertz: 510,
+    occurredAt: '2026-08-22T09:55:00.000Z'
+  }]
 }));
 resumeTreatmentPreservingDuration(store, 'trt_1', { preserveRemainingDuration: true });
 
@@ -108,6 +114,8 @@ assert.equal(resumedEvent.sessionId, 'ses_1');
 assert.equal(resumedEvent.assistedEntityId, 'ast_1');
 assert.equal(resumedEvent.entityId, 'trt_1');
 assert.equal(resumedEvent.metadata.pauseMs, 24 * 60 * 60 * 1000);
+assert.equal(resumedEvent.metadata.hawkinsBaselineAssessmentId, 'assess_hawkins_1');
+assert.equal(resumedEvent.metadata.hawkinsBaselineHertz, 510);
 
 const rescheduledEvent = state.events.find((event) => event.eventType === BacklogEventType.COMPONENT_RESCHEDULED);
 assert.ok(rescheduledEvent, 'duration preservation must remain auditable');

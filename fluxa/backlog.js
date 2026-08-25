@@ -1,6 +1,7 @@
 import { EventType, TreatmentStatus, createAssistedEntity, validateAssistedEntityInput } from './domain.js';
 import { validateFinalAssessmentInput } from './final-assessment-rules.js';
 import { requirePreparedSessionState } from './session-rules.js';
+import { requireHawkinsBaseline } from './hawkins-measurement.js';
 
 function addEvent(store, draft, input) {
   const event = {
@@ -120,6 +121,7 @@ export function resumeTreatmentPreservingDuration(store, treatmentId, input = {}
   requirePreparedSessionState(state, session.id, 'Conclua a preparação da sessão antes de retomar o tratamento.');
   if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de retomá-lo.');
   if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que você tentou retomar.');
+  const baseline = requireHawkinsBaseline(state, { sessionId: session.id, assistedEntityId: treatment.assistedEntityId });
 
   const resumedAt = store.nowIso();
   const interruptedAt = treatment.interruptedAt ? new Date(treatment.interruptedAt).getTime() : null;
@@ -136,7 +138,7 @@ export function resumeTreatmentPreservingDuration(store, treatmentId, input = {}
         if (item.expectedEndAt || graphDeadlinesShifted) addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_RESCHEDULED, entityType: 'TreatmentComponent', entityId: item.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { treatmentId, expectedEndAt: item.expectedEndAt || null, pauseMs, graphDeadlinesShifted } });
       }
     });
-    addEvent(store, draft, { eventType: EventType.TREATMENT_RESUMED, entityType: 'Treatment', entityId: target.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { preserveRemainingDuration: input.preserveRemainingDuration !== false, pauseMs } });
+    addEvent(store, draft, { eventType: EventType.TREATMENT_RESUMED, entityType: 'Treatment', entityId: target.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { preserveRemainingDuration: input.preserveRemainingDuration !== false, pauseMs, hawkinsBaselineAssessmentId: baseline.id, hawkinsBaselineHertz: baseline.hertz } });
     return draft;
   });
 }
