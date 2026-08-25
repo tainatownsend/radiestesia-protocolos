@@ -1,4 +1,5 @@
 import { EventType, TreatmentStatus } from './domain.js';
+import { requireHawkinsBaseline } from './hawkins-measurement.js';
 
 function addEvent(store, draft, input) {
   const event = {
@@ -113,6 +114,7 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
   if (session.currentAssistedEntityId && session.currentAssistedEntityId !== treatment.assistedEntityId) {
     throw new Error('O Assistido atual não corresponde ao tratamento planejado que você tentou iniciar.');
   }
+  const baseline = requireHawkinsBaseline(state, { sessionId, assistedEntityId:treatment.assistedEntityId });
   const plannedComponents = state.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.PLANNED);
   if (!plannedComponents.length) throw new Error('Adicione ao menos um componente antes de iniciar o tratamento planejado.');
   const now = store.nowIso();
@@ -124,6 +126,9 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
     target.status = TreatmentStatus.IN_PROGRESS;
     target.originSessionId = target.originSessionId || sessionId;
     target.startedAt = now;
+    target.hawkinsBaselineAssessmentId = baseline.id;
+    target.hawkinsBaselineHertz = baseline.hertz;
+    target.hawkinsBaselineRecordedAt = baseline.occurredAt;
     target.updatedAt = now;
     activeSession.currentAssistedEntityId = target.assistedEntityId;
     activeSession.updatedAt = now;
@@ -144,7 +149,7 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
     addEvent(store, draft, {
       eventType: EventType.TREATMENT_STARTED, entityType: 'Treatment', entityId: target.id,
       sessionId, assistedEntityId: target.assistedEntityId,
-      metadata: { title: target.title, fromPlanned: true, componentCount: components.length }
+      metadata: { title: target.title, fromPlanned: true, componentCount: components.length, hawkinsBaselineAssessmentId:baseline.id, hawkinsBaselineHertz:baseline.hertz }
     });
     return draft;
   });
