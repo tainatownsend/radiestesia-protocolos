@@ -10,9 +10,11 @@
 }
 body{background:var(--fx-bg)!important;color:var(--fx-text)!important;}
 .brand,h1,h2,h3{color:var(--fx-primary-strong)!important;}
-.eyebrow{color:var(--fx-primary)!important;}.lead,.muted{color:var(--fx-muted)!important;}
+/* Small text uses the strong token; the luminous primary remains a decorative/state color. */
+.eyebrow{color:var(--fx-primary-strong)!important;}.lead,.muted{color:var(--fx-muted)!important;}
 .topbar{background:color-mix(in srgb,var(--fx-surface) 88%,transparent)!important;border-bottom-color:var(--fx-border)!important;}
-.topbar-session-open{background:linear-gradient(120deg,var(--fx-primary-strong),var(--fx-primary))!important;}
+/* Session chrome keeps white controls on a dark, contrast-safe field while retaining a subtle theme tint. */
+.topbar-session-open{background:linear-gradient(120deg,var(--fx-primary-strong),color-mix(in srgb,var(--fx-primary) 18%,var(--fx-primary-strong)))!important;}
 .workspace-bottom-nav{background:color-mix(in srgb,var(--fx-surface) 94%,transparent)!important;border-color:var(--fx-border)!important;}
 .workspace-nav-btn{color:var(--fx-muted)!important}.workspace-nav-btn.active{background:var(--fx-primary-soft)!important;color:var(--fx-primary-strong)!important;}
 .card,.workspace-history-row,.acervo-row,.resource-row,.protocol-row,.therapy-row,.assisted-current-row,.investigation-entry-card,.assisted-document-actions,.timer-card,.sheet{background:var(--fx-surface)!important;border-color:var(--fx-border)!important;box-shadow:var(--fx-shadow)!important;}
