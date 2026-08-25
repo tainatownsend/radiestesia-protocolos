@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
-import { AssistedType, createAssistedEntity, selectAssistedForSession, startSession } from './domain.js';
+import { AssistedType, createAssistedEntity, selectAssistedForSession, startPreparation, startSession, togglePreparationStep, completePreparation } from './domain.js';
 import { ReikiMode, startFlexibleReiki, pauseFlexibleReiki, resumeFlexibleReiki, completeFlexibleReiki } from './reiki-flex.js';
 
 class MemoryStorage {
@@ -13,6 +13,13 @@ globalThis.localStorage=new MemoryStorage();
 
 const store=createStore();
 const assisted=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Pessoa Reiki',birthDate:'1990-01-01'});
+assert.throws(
+  ()=>startFlexibleReiki(store,{assistedEntityId:assisted.id,mode:ReikiMode.DISTANCE}),
+  /Habilite Reiki/i,
+  'new outside-session Reiki must respect configured therapeutic modalities at the domain layer'
+);
+assert.equal(store.getState().reikiApplications.length,0,'rejected Reiki start must not create application history');
+store.setState((state)=>{const draft=structuredClone(state);draft.settings.therapeuticModalities={enabled:['REIKI']};return draft;});
 const app=startFlexibleReiki(store,{assistedEntityId:assisted.id,mode:ReikiMode.DISTANCE});
 assert.equal(app.sessionId,null);
 assert.equal(app.mode,ReikiMode.DISTANCE);
@@ -37,6 +44,15 @@ selectAssistedForSession(store,session.id,other.id);
 const countBefore=store.getState().reikiApplications.length;
 assert.throws(
   ()=>startFlexibleReiki(store,{sessionId:session.id,assistedEntityId:sessionOwner.id,mode:ReikiMode.IN_PERSON}),
+  /preparação da sessão/i,
+  'session Reiki must not start before the session preparation is completed'
+);
+assert.equal(store.getState().reikiApplications.length,countBefore,'rejected unprepared session Reiki must not create an application');
+const prep=startPreparation(store,session.id);
+for(const step of prep.steps) togglePreparationStep(store,prep.id,step.key);
+completePreparation(store,prep.id);
+assert.throws(
+  ()=>startFlexibleReiki(store,{sessionId:session.id,assistedEntityId:sessionOwner.id,mode:ReikiMode.IN_PERSON}),
   /Assistido atual não corresponde/i,
   'session Reiki must not start for a different assisted entity than the explicit session context'
 );
@@ -57,8 +73,9 @@ assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionAp
 assert.equal(store.getState().events.length,eventsBeforeResume,'rejected resume must not append history');
 
 selectAssistedForSession(store,session.id,sessionOwner.id);
+store.setState((state)=>{const draft=structuredClone(state);draft.settings.therapeuticModalities={enabled:[]};return draft;});
 resumeFlexibleReiki(store,sessionApp.id);
-assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id).status,'RUNNING');
+assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id).status,'RUNNING','existing Reiki must remain resumable after modality is disabled so it can be concluded safely');
 completeFlexibleReiki(store,sessionApp.id,'sessão alinhada');
 
 console.log('reiki-flex.test.mjs: ok');
