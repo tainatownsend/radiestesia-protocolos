@@ -5,6 +5,7 @@ import {
   createAssistedEntity, selectAssistedForSession, startInvestigation, createTreatment, reviewTreatment, closeSession,
   startReiki, pauseReiki, recordReikiRetrospective, addSessionNote
 } from './domain.js';
+import { recordHawkinsBaseline } from './hawkins-measurement.js';
 import { addTreatmentComponent } from './backlog.js';
 
 function makeStore() {
@@ -29,6 +30,10 @@ function prepare(store, sessionId) {
   for(const step of PREPARATION_STEPS) togglePreparationStep(store,run.id,step.key);
   completePreparation(store,run.id);
 }
+function baseline(store,sessionId,assistedEntityId,hertz=450){
+  selectAssistedForSession(store,sessionId,assistedEntityId);
+  return recordHawkinsBaseline(store,{sessionId,assistedEntityId,hertz});
+}
 
 {
   const store=makeStore();
@@ -40,9 +45,13 @@ function prepare(store, sessionId) {
 
   prepare(store,session.id);
   selectAssistedForSession(store,session.id,assisted.id);
+  assert.throws(()=>startInvestigation(store,session.id,assisted.id),/Hawkins|frequência vibracional/i);
+  assert.throws(()=>createTreatment(store,{sessionId:session.id,assistedEntityId:assisted.id,title:'Teste',componentName:'A'}),/Hawkins|frequência vibracional/i);
+  baseline(store,session.id,assisted.id,465);
   const investigation=startInvestigation(store,session.id,assisted.id);
   assert.equal(investigation.status,'IN_PROGRESS');
   const { treatment }=createTreatment(store,{sessionId:session.id,assistedEntityId:assisted.id,title:'Teste',componentName:'A'});
+  assert.equal(treatment.hawkinsBaselineHertz,465);
   assert.throws(()=>reviewTreatment(store,{sessionId:session.id,treatmentId:treatment.id,verifiedComplete:true,imbalancePercent:20}),/revisão dos componentes.*avaliação final/i);
   assert.equal(store.getState().treatments.find((item)=>item.id===treatment.id).status,'IN_PROGRESS','legacy review must not complete treatment');
   assert.throws(()=>reviewTreatment(store,{sessionId:session.id,treatmentId:treatment.id,verifiedComplete:false,imbalancePercent:101}),/0% e 100%/i);
@@ -78,6 +87,7 @@ function prepare(store, sessionId) {
   const a=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Assistido A',birthDate:'1980-01-01'});
   const b=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Assistido B',birthDate:'1981-01-01'});
   store.setState((state)=>{const draft=structuredClone(state);draft.findings.push({id:'finding_b',assistedEntityId:b.id,investigationId:'inv_b',status:'IDENTIFIED',title:'Achado B'});return draft;});
+  baseline(store,session.id,a.id,470);
   assert.throws(
     ()=>createTreatment(store,{sessionId:session.id,assistedEntityId:a.id,findingIds:['finding_b'],title:'Inválido',componentName:'A'}),
     /pertencer ao assistido selecionado/i
