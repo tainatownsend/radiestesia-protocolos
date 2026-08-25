@@ -158,14 +158,17 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   assert.throws(()=>resumeBranchingInvestigation(store,inv.id,second.id),/Assistido atual não corresponde/i);
   assert.equal(store.getState().investigations.find((i)=>i.id===inv.id).currentSessionId,first.id,'rejected resume must preserve investigation session');
   assert.equal(store.getState().events.filter((e)=>e.eventType==='INVESTIGATION_RESUMED').length,resumeEventsBefore);
-  selectAssistedForSession(store,second.id,assisted.id);
+  const secondBaseline=measureBaseline(store,second.id,assisted.id,470);
   resumeBranchingInvestigation(store, inv.id, second.id);
   const resumed = store.getState().investigations.find((i) => i.id === inv.id);
   assert.equal(resumed.originSessionId, first.id);
   assert.equal(resumed.currentSessionId, second.id);
   assert.equal(currentProtocolNode(resumed).id, nodeBefore, 'resume must preserve the exact current node');
   assert.equal(store.getState().sessions.find((s) => s.id === second.id).currentAssistedEntityId, assisted.id);
-  assert.ok(store.getState().events.some((e) => e.eventType === 'INVESTIGATION_RESUMED' && e.sessionId === second.id));
+  const resumeEvent=store.getState().events.find((e)=>e.eventType==='INVESTIGATION_RESUMED'&&e.sessionId===second.id);
+  assert.ok(resumeEvent);
+  assert.equal(resumeEvent.metadata.hawkinsBaselineAssessmentId,secondBaseline.id);
+  assert.equal(resumeEvent.metadata.hawkinsBaselineHertz,470);
 }
 
 console.log('Fluxa protocol engine tests: OK');

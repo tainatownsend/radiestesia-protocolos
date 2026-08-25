@@ -10,11 +10,25 @@ new MutationObserver(()=>queueMicrotask(enhance)).observe(document.body,{childLi
 function renderPicker(items,status=treatmentThemeLibraryStatus()){const themes=[...new Set(items.map(item=>item.theme))],wrap=document.createElement('div'),partial=status.count>0&&!status.complete;wrap.id='treatment-theme-overlay';wrap.className='modal-backdrop';wrap.innerHTML=`<section class="sheet treatment-theme-sheet"><div class="sheet-head"><div><p class="eyebrow">Tratamentos por tema</p><h2>Escolha um ponto de partida</h2><p class="muted">Sugestões terapêuticas. O tópico e o comando serão preenchidos; o gráfico continua sendo uma escolha separada.</p></div><button class="close-btn" data-close-treatment-theme>×</button></div>${partial?`<div class="notice" role="status" data-treatment-theme-incomplete><strong>Biblioteca parcialmente carregada</strong><span>Algumas sugestões não ficaram disponíveis nesta tentativa. Você pode usar as que já carregaram ou tentar completar a biblioteca novamente.</span><button type="button" class="btn secondary small" data-retry-treatment-theme>Carregar novamente</button></div>`:''}<label class="field"><span>Buscar sugestão</span><input type="search" data-treatment-theme-search placeholder="Ex.: prosperidade, carreira, autoestima…"></label><div class="theme-chips"><button type="button" class="theme-chip active" data-treatment-theme-filter="">Todos</button>${themes.map(theme=>`<button type="button" class="theme-chip" data-treatment-theme-filter="${esc(theme)}">${esc(theme)}</button>`).join('')}</div><div class="treatment-theme-list">${items.map(item=>`<article class="treatment-theme-card" data-treatment-theme-card data-theme="${esc(item.theme)}" data-search="${esc(item.search||normalize(`${item.title} ${item.command} ${item.theme}`))}"><div><p class="eyebrow">${esc(item.theme)}</p><h3>${esc(item.title)}</h3><p>${esc(item.command)}</p></div><button type="button" class="btn secondary" data-apply-treatment-theme="${esc(item.id)}">Usar sugestão</button></article>`).join('')}</div><div class="empty" data-treatment-theme-empty hidden>Nenhuma sugestão encontrada.</div></section>`;document.body.appendChild(wrap);}
 function filterPicker(overlay){const query=overlay.querySelector('[data-treatment-theme-search]')?.value||'',theme=overlay.querySelector('[data-treatment-theme-filter].active')?.dataset.treatmentThemeFilter||'';let visible=0;overlay.querySelectorAll('[data-treatment-theme-card]').forEach(card=>{const show=matchesTreatmentThemeSearch(card.dataset.search||'',query)&&(!theme||card.dataset.theme===theme);card.hidden=!show;if(show)visible++;});overlay.querySelector('[data-treatment-theme-empty]')?.toggleAttribute('hidden',visible>0);}
 function targetItem(form){let items=[...form.querySelectorAll('[data-treatment-items] > [data-treatment-item]')],item=items.find(row=>!row.querySelector('[name="itemLabel"]')?.value&&!row.querySelector('[name="commandText"]')?.value);if(item)return item;form.querySelector('[data-add-treatment-item]')?.click();items=[...form.querySelectorAll('[data-treatment-items] > [data-treatment-item]')];return items.at(-1)||null;}
+function syncTreatmentLevelThemeProvenance(form,item){
+  if(form.dataset.treatmentThemeMixed==='true')return;
+  const existing=String(form.dataset.treatmentThemeSuggestion||'').trim();
+  if(existing&&existing!==String(item.id)){
+    form.dataset.treatmentThemeMixed='true';
+    delete form.dataset.treatmentTheme;
+    delete form.dataset.treatmentThemeSource;
+    delete form.dataset.treatmentThemeSuggestion;
+    return;
+  }
+  form.dataset.treatmentTheme=item.theme;
+  form.dataset.treatmentThemeSource=item.sourcePath;
+  form.dataset.treatmentThemeSuggestion=item.id;
+}
 function applySuggestion(item){
   const form=document.querySelector('#treatment-form');if(!form||!item)return;const title=form.querySelector('[name="title"]');if(title&&!title.value)title.value=item.title;
   const section=targetItem(form);if(!section)return;const itemLabel=section.querySelector('[name="itemLabel"]'),command=section.querySelector('[name="commandText"]');if(itemLabel)itemLabel.value=item.title;if(command)command.value=item.command;
   section.dataset.treatmentTheme=item.theme;section.dataset.treatmentThemeSource=item.sourcePath;section.dataset.treatmentThemeSuggestion=item.id;
-  form.dataset.treatmentTheme=item.theme;form.dataset.treatmentThemeSource=item.sourcePath;form.dataset.treatmentThemeSuggestion=item.id;
+  syncTreatmentLevelThemeProvenance(form,item);
   let notice=form.querySelector('.treatment-theme-applied');if(!notice){notice=document.createElement('div');notice.className='notice treatment-theme-applied';form.prepend(notice);}notice.innerHTML=`<strong>Sugestão aplicada · ${esc(item.theme)}</strong><span>A origem fica preservada neste item. Revise o tópico e o comando; depois escolha ao menos um gráfico.</span>`;section.scrollIntoView({behavior:'smooth',block:'center'});
 }
 async function loadPicker(button){button.disabled=true;try{const items=await ensureTreatmentThemeLibrary(),status=treatmentThemeLibraryStatus();document.querySelector('#treatment-theme-overlay')?.remove();renderPicker(items,status);}catch(error){alert(error.message);}finally{button.disabled=false;}}

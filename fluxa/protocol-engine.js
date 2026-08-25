@@ -125,6 +125,7 @@ export function answerBranchingInvestigation(store, investigationId, answer) {
     if (!investigation) return draft;
     const session = requirePreparedSessionState(draft, investigation.currentSessionId, 'Conclua a preparação da sessão antes de continuar a investigação.');
     requireInvestigationAssistedContext(session, investigation.assistedEntityId, 'responder');
+    requireHawkinsBaseline(draft, { sessionId:investigation.currentSessionId, assistedEntityId:investigation.assistedEntityId });
     const node = currentProtocolNode(investigation);
     if (!node || node.type !== 'QUESTION') return draft;
     const nextId = answer === 'YES' ? node.yes : node.no;
@@ -154,6 +155,7 @@ export function resumeBranchingInvestigation(store, investigationId, sessionId) 
   const investigation = state.investigations.find((item) => item.id === investigationId && item.kind === 'BRANCHING' && item.status === 'IN_PROGRESS');
   if (!investigation) throw new Error('Investigação não disponível para retomada.');
   requireInvestigationAssistedContext(session, investigation.assistedEntityId, 'retomar', true);
+  const baseline = requireHawkinsBaseline(state, { sessionId, assistedEntityId:investigation.assistedEntityId });
   store.setState((current) => {
     const draft = structuredClone(current);
     const target = draft.investigations.find((item) => item.id === investigationId);
@@ -161,7 +163,8 @@ export function resumeBranchingInvestigation(store, investigationId, sessionId) 
       target.currentSessionId = sessionId;
       target.updatedAt = store.nowIso();
       addEvent(store, draft, { eventType:EventType.INVESTIGATION_RESUMED, entityType:'Investigation', entityId:target.id,
-        sessionId, assistedEntityId:target.assistedEntityId, metadata:{ originSessionId:target.originSessionId, branching:true } });
+        sessionId, assistedEntityId:target.assistedEntityId, metadata:{ originSessionId:target.originSessionId, branching:true,
+          hawkinsBaselineAssessmentId:baseline.id, hawkinsBaselineHertz:baseline.hertz } });
     }
     const activeSession = draft.sessions.find((item) => item.id === sessionId);
     if (activeSession) activeSession.currentAssistedEntityId = target.assistedEntityId;
