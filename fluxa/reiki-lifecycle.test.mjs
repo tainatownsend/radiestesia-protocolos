@@ -13,6 +13,7 @@ class MemoryStorage {
 globalThis.localStorage=new MemoryStorage();
 
 const store=createStore();
+store.setState((state)=>{const draft=structuredClone(state);draft.settings.therapeuticModalities={enabled:['REIKI']};return draft;});
 const assisted=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Pessoa Reiki',birthDate:'1990-01-01'});
 const first=startFlexibleReiki(store,{assistedEntityId:assisted.id,mode:ReikiMode.DISTANCE});
 assert.equal(activeReikiApplication(store.getState()).id,first.id);
