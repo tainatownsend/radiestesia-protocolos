@@ -69,21 +69,22 @@ globalThis.localStorage = new MemoryStorage();
 }
 
 {
+  globalThis.localStorage = new MemoryStorage();
   const store = createStore();
   const session = startSession(store);
   const preparation = startPreparation(store, session.id);
   for (const step of PREPARATION_STEPS) togglePreparationStep(store, preparation.id, step.key);
   completePreparation(store, preparation.id);
-  const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa correta', birthDate:'1980-01-01' });
-  const other = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Outra pessoa', birthDate:'1982-01-01' });
+  const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa com medição inválida', birthDate:'1980-01-01' });
   selectAssistedForSession(store,session.id,assisted.id);
   recordHawkinsBaseline(store,{sessionId:session.id,assistedEntityId:assisted.id,hertz:470});
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:assisted.id, title:'Tratamento protegido', componentName:'Componente' });
   stopTreatmentComponent(store, component.id, { sessionId:session.id, reason:'Resolvido' });
   closeSession(store,session.id);
-  store.setState((state) => { const draft=structuredClone(state); draft.assessments.push({ id:'wrong_assisted_final', kind:HAWKINS_KIND, phase:HawkinsPhase.FINAL, treatmentId:treatment.id, assistedEntityId:other.id, hertz:500, occurredAt:'2026-08-20T12:00:00.000Z', createdAt:'2026-08-20T12:00:00.000Z' }); return draft; });
-  assert.equal(canCompleteTreatmentAdministratively(store.getState(), treatment.id), false, 'final Hawkins from another assisted must never unlock completion');
+  store.setState((state) => { const draft=structuredClone(state); draft.assessments.push({ id:'invalid_final', kind:HAWKINS_KIND, phase:HawkinsPhase.FINAL, treatmentId:treatment.id, assistedEntityId:assisted.id, hertz:0, frequency:'0', occurredAt:'2026-08-20T12:00:00.000Z', createdAt:'2026-08-20T12:00:00.000Z' }); return draft; });
+  assert.equal(canCompleteTreatmentAdministratively(store.getState(), treatment.id), false, 'invalid final Hawkins must never unlock administrative completion');
   assert.throws(()=>completeTreatmentAdministratively(store,treatment.id,{confirmNoMeasurement:true}),/Hawkins.*obrigatória/i);
+  assert.equal(store.getState().treatments.find((item)=>item.id===treatment.id).status,TreatmentStatus.IN_PROGRESS);
 }
 
 console.log('administrative-treatment.test.mjs: ok');
