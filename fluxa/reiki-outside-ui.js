@@ -11,8 +11,14 @@ function close() { if (timerHandle) clearInterval(timerHandle); timerHandle=null
 function dialog(html) { close(); const wrap=document.createElement('div'); wrap.id='reiki-outside-overlay'; wrap.className='modal-backdrop'; wrap.innerHTML=html; document.body.appendChild(wrap); }
 function active() { return store.getState().reikiApplications.find((item) => !item.sessionId && ['RUNNING','PAUSED'].includes(item.status)) || null; }
 function reikiConfigured(state=store.getState()) { return Array.isArray(state?.settings?.therapeuticModalities?.enabled) && state.settings.therapeuticModalities.enabled.includes('REIKI'); }
+function syncLegacyRetrospectiveAction() {
+  const button=document.querySelector('[data-action="reiki-retro"]');
+  const section=button?.closest('.section');
+  if(section) section.toggleAttribute('hidden',!reikiConfigured());
+}
 
 function ensureAction() {
+  syncLegacyRetrospectiveAction();
   const main=document.querySelector('main');
   if (!main || main.querySelector('.eyebrow')?.textContent?.trim() !== 'Hoje') return;
   if (store.getState().sessions.some((item) => item.status === 'OPEN')) { main.querySelector('[data-reiki-outside]')?.remove(); return; }
@@ -25,6 +31,7 @@ function ensureAction() {
 }
 
 function startDialog() {
+  if(!reikiConfigured()) return;
   const items=store.getState().assistedEntities.filter(i=>!i.archivedAt).sort((a,b)=>a.displayName.localeCompare(b.displayName,'pt-BR'));
   dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Reiki</p><h2>Nova aplicação</h2></div><button class="close-btn" data-reiki-outside-close>×</button></div><form id="reiki-outside-start" class="form-grid"><div class="field"><label>Assistido</label><select name="assistedEntityId" required><option value="">Selecione</option>${items.map(i=>`<option value="${i.id}">${esc(i.displayName)}</option>`).join('')}</select></div><div class="field"><label>Modo</label><select name="mode">${options()}</select></div><button class="btn primary wide" type="submit">Iniciar aplicação</button></form></section>`);
 }
@@ -39,5 +46,5 @@ function timerDialog(id) {
 function finishDialog(id) { dialog(`<section class="sheet"><div class="sheet-head"><div><p class="eyebrow">Concluir Reiki</p><h2>Finalizar aplicação</h2></div><button class="close-btn" data-reiki-outside-close>×</button></div><form id="reiki-outside-finish" data-reiki="${id}" class="form-grid"><div class="field"><label>Observações</label><textarea name="notes"></textarea></div><button class="btn primary wide" type="submit">Concluir aplicação</button></form></section>`); }
 
 new MutationObserver(ensureAction).observe(document.body,{childList:true,subtree:true}); queueMicrotask(ensureAction); store.subscribe(()=>queueMicrotask(ensureAction));
-document.addEventListener('click',(event)=>{ const b=event.target.closest('button'); if(!b)return; if(b.dataset.reikiOutsideOpen!==undefined){ const current=active(); current?timerDialog(current.id):startDialog(); } else if(b.dataset.reikiOutsideClose!==undefined) close(); else if(b.dataset.reikiOutsidePause){ pauseFlexibleReiki(store,b.dataset.reikiOutsidePause); timerDialog(b.dataset.reikiOutsidePause); } else if(b.dataset.reikiOutsideResume){ try{resumeFlexibleReiki(store,b.dataset.reikiOutsideResume);timerDialog(b.dataset.reikiOutsideResume);}catch(e){alert(e.message);} } else if(b.dataset.reikiOutsideFinish) finishDialog(b.dataset.reikiOutsideFinish); },true);
-document.addEventListener('submit',(event)=>{ const form=event.target; if(form.id==='reiki-outside-start'){event.preventDefault();const d=new FormData(form);try{const app=startFlexibleReiki(store,{assistedEntityId:d.get('assistedEntityId'),mode:d.get('mode')||ReikiMode.OTHER});timerDialog(app.id);}catch(e){alert(e.message);}} else if(form.id==='reiki-outside-finish'){event.preventDefault();const d=new FormData(form);try{completeFlexibleReiki(store,form.dataset.reiki,d.get('notes'));close();}catch(e){alert(e.message);}} },true);
+document.addEventListener('click',(event)=>{ const b=event.target.closest('button'); if(!b)return; if(b.dataset.action==='reiki-retro'&&!reikiConfigured()){event.preventDefault();event.stopImmediatePropagation();return;} if(b.dataset.reikiOutsideOpen!==undefined){ const current=active(); if(!current&&!reikiConfigured()){event.preventDefault();event.stopImmediatePropagation();return;} current?timerDialog(current.id):startDialog(); } else if(b.dataset.reikiOutsideClose!==undefined) close(); else if(b.dataset.reikiOutsidePause){ pauseFlexibleReiki(store,b.dataset.reikiOutsidePause); timerDialog(b.dataset.reikiOutsidePause); } else if(b.dataset.reikiOutsideResume){ try{resumeFlexibleReiki(store,b.dataset.reikiOutsideResume);timerDialog(b.dataset.reikiOutsideResume);}catch(e){alert(e.message);} } else if(b.dataset.reikiOutsideFinish) finishDialog(b.dataset.reikiOutsideFinish); },true);
+document.addEventListener('submit',(event)=>{ const form=event.target; if(form.id==='reiki-retro-form'&&!reikiConfigured()){event.preventDefault();event.stopImmediatePropagation();document.querySelector('[data-action="dismiss-sheet"]')?.click();return;} if(form.id==='reiki-outside-start'){event.preventDefault();if(!reikiConfigured())return;const d=new FormData(form);try{const app=startFlexibleReiki(store,{assistedEntityId:d.get('assistedEntityId'),mode:d.get('mode')||ReikiMode.OTHER});timerDialog(app.id);}catch(e){alert(e.message);}} else if(form.id==='reiki-outside-finish'){event.preventDefault();const d=new FormData(form);try{completeFlexibleReiki(store,form.dataset.reiki,d.get('notes'));close();}catch(e){alert(e.message);}} },true);
