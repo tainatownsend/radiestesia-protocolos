@@ -113,6 +113,7 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   const assessments = Array.isArray(state?.assessments) ? state.assessments : [];
   const sourceAssessment = safeInput.sourceAssessmentId ? assessments.find((item) => item?.id === safeInput.sourceAssessmentId && item?.sessionId === session.id && item?.assistedEntityId === session.currentAssistedEntityId) : null;
   if (safeInput.sourceAssessmentId && !sourceAssessment) throw new Error('A avaliação de origem não pertence ao atendimento atual.');
+  if (sourceAssessment && sourceAssessment.kind !== 'GENERAL') throw new Error('A avaliação de origem deve ser uma medição geral registrada no atendimento atual.');
   if (sourceAssessment?.followUpAssessmentId) throw new Error('Esta avaliação de origem já possui um próximo passo registrado.');
   const rawFocusAreas = Array.isArray(safeInput.focusAreas) ? safeInput.focusAreas : [];
   const focusAreas = [...new Set(rawFocusAreas.filter((id) => areaById.has(id)))];
