@@ -1,1 +1,0 @@
-PR #72 responsive-shell intent has been reconciled into PR #95 as the single validation branch. This marker exists only to make the supersession explicit during the final UX validation round.
