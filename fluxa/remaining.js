@@ -1,6 +1,7 @@
 import { EventType, TreatmentStatus } from './domain.js';
 import { validateAssistedInput } from './backlog.js';
 import { requirePreparedSessionState } from './session-rules.js';
+import { enrichFinalHawkinsAssessment, validateHawkinsHertz } from './hawkins-measurement.js';
 
 export const RemainingEventType = Object.freeze({
   COMPONENT_REVIEWED: 'COMPONENT_REVIEWED',
@@ -206,8 +207,13 @@ export function completeTreatmentAfterFinalAssessment(store, treatmentId, sessio
   const resolution = treatmentComponentResolution(state, treatmentId);
   if (!resolution.readyForFinalAssessment) throw new Error('Resolva todos os componentes antes de concluir o tratamento.');
   const assessments = Array.isArray(state.assessments) ? state.assessments : [];
-  const assessment = [...assessments].filter((item) => item.treatmentId === treatmentId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const assessment = [...assessments].filter((item) => item.treatmentId === treatmentId).sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0];
   if (!assessment) throw new Error('Registre a avaliação final antes de concluir o tratamento.');
+  if (assessment.sessionId !== sessionId || assessment.assistedEntityId !== treatment.assistedEntityId) {
+    throw new Error('A avaliação final deve pertencer à sessão e ao Assistido atuais.');
+  }
+  validateHawkinsHertz(assessment.frequency ?? assessment.hertz);
+  const finalAssessment = enrichFinalHawkinsAssessment(store, assessment.id);
 
   store.setState((current) => {
     const draft = structuredClone(current);
@@ -223,10 +229,11 @@ export function completeTreatmentAfterFinalAssessment(store, treatmentId, sessio
       sessionId,
       assistedEntityId: target.assistedEntityId,
       metadata: {
-        finalAssessmentId: assessment.id,
-        imbalancePercent: assessment.imbalancePercent,
-        needsNewTreatment: assessment.needsNewTreatment,
-        nextTreatmentWhen: assessment.nextTreatmentWhen || null
+        finalAssessmentId: finalAssessment.id,
+        hawkinsHertz: finalAssessment.hertz,
+        imbalancePercent: finalAssessment.imbalancePercent,
+        needsNewTreatment: finalAssessment.needsNewTreatment,
+        nextTreatmentWhen: finalAssessment.nextTreatmentWhen || null
       }
     });
     return draft;
