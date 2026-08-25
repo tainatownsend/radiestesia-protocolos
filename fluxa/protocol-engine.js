@@ -1,5 +1,6 @@
 import { EventType } from './domain.js';
 import { requirePreparedSessionState } from './session-rules.js';
+import { requireHawkinsBaseline } from './hawkins-measurement.js';
 
 function addEvent(store, draft, input) {
   draft.events.push({
@@ -96,6 +97,7 @@ export function startBranchingInvestigation(store, sessionId, assistedEntityId, 
   const assisted = state.assistedEntities.find((item) => item.id === assistedEntityId && !item.archivedAt);
   if (!assisted) throw new Error('Selecione um assistido válido.');
   requireInvestigationAssistedContext(session, assistedEntityId, 'iniciar', true);
+  requireHawkinsBaseline(state, { sessionId, assistedEntityId });
   const protocol = protocolById(protocolId);
   if (!protocol) throw new Error('Protocolo não encontrado.');
   const investigation = {
