@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
 import { AssistedType, TreatmentStatus, PREPARATION_STEPS, createAssistedEntity, selectAssistedForSession, startSession, startPreparation, togglePreparationStep, completePreparation } from './domain.js';
+import { recordHawkinsBaseline } from './hawkins-measurement.js';
 import { createPlannedTreatment, addPlannedTreatmentComponent, startPlannedTreatment } from './treatment-planning.js';
 
 class MemoryStorage {
@@ -16,6 +17,11 @@ function prepare(store, sessionId) {
   const run = startPreparation(store, sessionId);
   for (const step of PREPARATION_STEPS) togglePreparationStep(store, run.id, step.key);
   completePreparation(store, run.id);
+}
+
+function recordBaseline(store, sessionId, assistedEntityId, hertz = 450) {
+  selectAssistedForSession(store, sessionId, assistedEntityId);
+  return recordHawkinsBaseline(store, { sessionId, assistedEntityId, hertz });
 }
 
 {
@@ -67,11 +73,15 @@ function prepare(store, sessionId) {
   const session = startSession(store);
   assert.throws(() => startPlannedTreatment(store, planned.id, session.id), /preparação/);
   prepare(store, session.id);
+  assert.throws(() => startPlannedTreatment(store, planned.id, session.id), /Hawkins|frequência vibracional/i, 'planned treatment start must require same-session Hawkins baseline');
+  const baseline = recordBaseline(store, session.id, assisted.id, 480);
   startPlannedTreatment(store, planned.id, session.id);
   const started = store.getState().treatments.find((item) => item.id === planned.id);
   assert.equal(started.status, TreatmentStatus.IN_PROGRESS);
   assert.equal(started.originSessionId, session.id);
   assert.ok(started.startedAt);
+  assert.equal(started.hawkinsBaselineAssessmentId, baseline.id);
+  assert.equal(started.hawkinsBaselineHertz, 480);
   assert.equal(store.getState().sessions.find((item) => item.id === session.id).currentAssistedEntityId, assisted.id);
   const componentsAfter = store.getState().treatmentComponents.filter((item) => item.treatmentId === planned.id);
   assert.ok(componentsAfter.every((item) => item.status === TreatmentStatus.IN_PROGRESS));
@@ -79,6 +89,8 @@ function prepare(store, sessionId) {
   assert.ok(componentsAfter[0].expectedEndAt);
   assert.equal(componentsAfter[0].toolSnapshot.name, 'Gráfico A original');
   assert.equal(componentsAfter[1].expectedEndAt, null);
+  const startEvent = store.getState().events.find((item) => item.eventType === 'TREATMENT_STARTED' && item.entityId === planned.id);
+  assert.equal(startEvent.metadata.hawkinsBaselineHertz, 480);
 }
 
 {
@@ -95,6 +107,8 @@ function prepare(store, sessionId) {
   assert.equal(store.getState().events.length,eventsBefore,'rejected start must not create treatment/component events');
 
   selectAssistedForSession(store,session.id,owner.id);
+  assert.throws(()=>startPlannedTreatment(store,planned.id,session.id),/Hawkins|frequência vibracional/i,'planned treatment must not start after assisted selection until Hawkins baseline exists');
+  recordBaseline(store,session.id,owner.id,510);
   startPlannedTreatment(store,planned.id,session.id);
   assert.equal(store.getState().treatments.find((item)=>item.id===planned.id).status,TreatmentStatus.IN_PROGRESS);
 }
