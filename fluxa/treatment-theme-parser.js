@@ -14,7 +14,7 @@ export function normalizeTreatmentThemeText(value=''){
 export function matchesTreatmentThemeSearch(searchText='',query=''){
   const haystack=normalizeTreatmentThemeText(searchText);
   const terms=normalizeTreatmentThemeText(query).split(/\s+/).filter(Boolean);
-  return terms.every((term)=>haystack.includes(term));
+  return terms.every((term)=>matchesThemeTerm(haystack,term));
 }
 
 function matchesThemeTerm(text,term=''){
