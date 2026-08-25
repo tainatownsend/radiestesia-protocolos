@@ -179,6 +179,9 @@ function baseline(store, sessionId, assistedEntityId, hertz = 450) {
   const store = fakeStore();
   const session = startSession(store);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Rita', birthDate:'1970-05-05' });
+  store.setState((state)=>{const draft=structuredClone(state);draft.settings={...(draft.settings||{}),therapeuticModalities:{enabled:['REIKI']}};return draft;});
+  prepare(store,session.id);
+  selectAssistedForSession(store,session.id,person.id);
   const app = startReiki(store, session.id, person.id);
   store.advance(10 * 60 * 1000);
   pauseReiki(store, app.id);
