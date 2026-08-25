@@ -8,3 +8,4 @@ import './treatment-mobile-ux.js';
 import './preparation-mobile-ux.js';
 import './session-cockpit-close-ui.js';
 import './app-audit-fix.js';
+import './theme-system-ui.js';
