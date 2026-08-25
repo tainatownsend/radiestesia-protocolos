@@ -17,6 +17,12 @@ function markMixedTreatmentProvenance(form){
   delete form.dataset.treatmentThemeSource;
   delete form.dataset.treatmentThemeSuggestion;
 }
+function clearItemThemeProvenance(item){
+  if(!item)return;
+  delete item.dataset.treatmentTheme;
+  delete item.dataset.treatmentThemeSource;
+  delete item.dataset.treatmentThemeSuggestion;
+}
 function syncTreatmentLevelThemeProvenance(form,item){
   if(form.dataset.treatmentThemeMixed==='true')return;
   const existing=String(form.dataset.treatmentThemeSuggestion||'').trim();
@@ -39,9 +45,16 @@ async function loadPicker(button){button.disabled=true;try{const items=await ens
 document.addEventListener('input',event=>{
   if(event.target.matches('[data-treatment-theme-search]')){filterPicker(event.target.closest('#treatment-theme-overlay'));return;}
   const item=event.target.closest?.('#treatment-form [data-treatment-item]');
-  if(!item||item.dataset.treatmentThemeSuggestion)return;
-  if(!String(event.target.value||'').trim())return;
+  if(!item)return;
   const form=item.closest('#treatment-form');
+  const editsSuggestedText=event.target.matches?.('[name="itemLabel"],[name="commandText"]')&&item.dataset.treatmentThemeSuggestion;
+  if(editsSuggestedText){
+    clearItemThemeProvenance(item);
+    markMixedTreatmentProvenance(form);
+    return;
+  }
+  if(item.dataset.treatmentThemeSuggestion)return;
+  if(!String(event.target.value||'').trim())return;
   if(form?.dataset.treatmentThemeSuggestion)markMixedTreatmentProvenance(form);
 });
 document.addEventListener('click',async event=>{const button=event.target.closest('button');if(!button)return;if(button.dataset.openTreatmentTheme!==undefined||button.dataset.retryTreatmentTheme!==undefined){await loadPicker(button);return;}if(button.dataset.closeTreatmentTheme!==undefined){document.querySelector('#treatment-theme-overlay')?.remove();return;}if(button.dataset.treatmentThemeFilter!==undefined){const overlay=button.closest('#treatment-theme-overlay');overlay?.querySelectorAll('[data-treatment-theme-filter]').forEach(x=>x.classList.toggle('active',x===button));filterPicker(overlay);return;}if(button.dataset.applyTreatmentTheme){const item=treatmentThemeById(button.dataset.applyTreatmentTheme);document.querySelector('#treatment-theme-overlay')?.remove();applySuggestion(item);}},true);
