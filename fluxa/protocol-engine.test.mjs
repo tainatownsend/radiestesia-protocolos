@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { startSession, closeSession, createAssistedEntity, selectAssistedForSession, startPreparation, togglePreparationStep, completePreparation, PREPARATION_STEPS } from './domain.js';
+import { recordHawkinsBaseline } from './hawkins-measurement.js';
 import { PROTOCOL_LIBRARY, startBranchingInvestigation, resumeBranchingInvestigation, answerBranchingInvestigation, currentProtocolNode, confirmBranchingFindings } from './protocol-engine.js';
 
 function makeState() {
@@ -13,6 +14,14 @@ function prepare(store, sessionId) {
   const run = startPreparation(store, sessionId);
   for (const step of PREPARATION_STEPS) togglePreparationStep(store, run.id, step.key);
   completePreparation(store, run.id);
+}
+function measureBaseline(store, sessionId, assistedEntityId, hertz=450) {
+  selectAssistedForSession(store, sessionId, assistedEntityId);
+  return recordHawkinsBaseline(store, { sessionId, assistedEntityId, hertz });
+}
+function startMeasured(store, sessionId, assistedEntityId, protocolId) {
+  measureBaseline(store, sessionId, assistedEntityId);
+  return startBranchingInvestigation(store, sessionId, assistedEntityId, protocolId);
 }
 
 assert.ok(PROTOCOL_LIBRARY.length >= 4);
@@ -28,10 +37,22 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
 }
 
 {
+  const store = fakeStore();
+  const session = startSession(store); prepare(store, session.id);
+  const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Sem Hawkins', birthDate:'1980-01-01' });
+  selectAssistedForSession(store, session.id, assisted.id);
+  const eventsBefore = store.getState().events.length;
+  assert.throws(() => startBranchingInvestigation(store, session.id, assisted.id, 'causa_raiz'), /Hawkins/i);
+  assert.equal(store.getState().investigations.length, 0, 'missing Hawkins baseline must not create an investigation');
+  assert.equal(store.getState().events.length, eventsBefore, 'rejected investigation start must not append history');
+}
+
+{
   const store=fakeStore();
   const session=startSession(store);prepare(store,session.id);
   const owner=createAssistedEntity(store,{type:'PERSON',displayName:'Investigação A',birthDate:'1980-01-01'});
   const other=createAssistedEntity(store,{type:'PERSON',displayName:'Investigação B',birthDate:'1981-01-01'});
+  measureBaseline(store,session.id,owner.id);
   selectAssistedForSession(store,session.id,other.id);
   const eventsBefore=store.getState().events.length;
   assert.throws(
@@ -49,7 +70,7 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const session = startSession(store); prepare(store, session.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Teste', birthDate:'1980-01-01' });
   const other = createAssistedEntity(store, { type:'PERSON', displayName:'Outro contexto', birthDate:'1982-02-02' });
-  const inv = startBranchingInvestigation(store, session.id, assisted.id, 'causa_raiz');
+  const inv = startMeasured(store, session.id, assisted.id, 'causa_raiz');
   assert.equal(currentProtocolNode(inv).id, 'q1');
   selectAssistedForSession(store,session.id,other.id);
   const nodeBefore=currentProtocolNode(store.getState().investigations.find((item)=>item.id===inv.id)).id;
@@ -82,7 +103,7 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const store = fakeStore();
   const session = startSession(store); prepare(store, session.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Teste 2', birthDate:'1980-01-01' });
-  const inv = startBranchingInvestigation(store, session.id, assisted.id, 'investigacao_inicial');
+  const inv = startMeasured(store, session.id, assisted.id, 'investigacao_inicial');
   answerBranchingInvestigation(store, inv.id, 'NO');
   const completed = store.getState().investigations.find((item) => item.id === inv.id);
   assert.equal(completed.status, 'COMPLETED');
@@ -94,7 +115,7 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const store = fakeStore();
   const session = startSession(store); prepare(store, session.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Completa', birthDate:'1992-02-02' });
-  const inv = startBranchingInvestigation(store, session.id, assisted.id, 'investigacao_completa');
+  const inv = startMeasured(store, session.id, assisted.id, 'investigacao_completa');
   for (const answer of ['YES','YES','YES','YES','NO','NO']) {
     answerBranchingInvestigation(store, inv.id, answer);
     if (store.getState().investigations.find((i)=>i.id===inv.id).status === 'COMPLETED') break;
@@ -109,7 +130,7 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const store = fakeStore();
   const session = startSession(store); prepare(store, session.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Específico', birthDate:'1991-01-01' });
-  const inv = startBranchingInvestigation(store, session.id, assisted.id, 'protocolo_especifico');
+  const inv = startMeasured(store, session.id, assisted.id, 'protocolo_especifico');
   answerBranchingInvestigation(store, inv.id, 'YES');
   answerBranchingInvestigation(store, inv.id, 'YES');
   answerBranchingInvestigation(store, inv.id, 'NO');
@@ -124,7 +145,7 @@ assert.equal(new Set(PROTOCOL_LIBRARY.map((p) => p.versionId)).size, PROTOCOL_LI
   const first = startSession(store); prepare(store, first.id);
   const assisted = createAssistedEntity(store, { type:'PERSON', displayName:'Continuidade', birthDate:'1985-05-05' });
   const other = createAssistedEntity(store, { type:'PERSON', displayName:'Outro retorno', birthDate:'1986-06-06' });
-  const inv = startBranchingInvestigation(store, first.id, assisted.id, 'causa_raiz');
+  const inv = startMeasured(store, first.id, assisted.id, 'causa_raiz');
   answerBranchingInvestigation(store, inv.id, 'YES');
   const nodeBefore = currentProtocolNode(store.getState().investigations.find((i) => i.id === inv.id)).id;
   closeSession(store, first.id, { endedAt:store.nowIso() });
