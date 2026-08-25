@@ -23,6 +23,24 @@ assert.match(ui,/draft\.settings\.appearance\.theme=theme/,'Chosen theme must pe
 assert.match(css,/--fx-primary:#24A79A/,'Fresh Energy must retain the approved luminous aqua primary.');
 assert.match(css,/--fx-accent:#F08D79/,'Fresh Energy must retain the approved coral accent.');
 assert.match(css,/--fx-sun:#F4CA55/,'Fresh Energy must retain a restrained sunny accent.');
+assert.match(css,/\.btn\.primary\{background:var\(--fx-action\)!important;color:#fff!important/,'White-text primary actions must use the contrast-safe semantic action token.');
+assert.match(css,/hero-card \.hero-btn\{background:var\(--fx-action\)!important;color:#fff!important/,'The idle Home CTA must use the same accessible action token.');
+
+function rgb(hex){const value=hex.replace('#','');return [0,2,4].map((offset)=>parseInt(value.slice(offset,offset+2),16)/255);}
+function luminance(hex){const [r,g,b]=rgb(hex).map((value)=>value<=0.03928?value/12.92:((value+0.055)/1.055)**2.4);return 0.2126*r+0.7152*g+0.0722*b;}
+function contrast(a,b){const [high,low]=[luminance(a),luminance(b)].sort((x,y)=>y-x);return (high+0.05)/(low+0.05);}
+const themeBlocks=[
+  ['FRESH_ENERGY',css.match(/:root,\[data-fluxa-theme="FRESH_ENERGY"\]\{([^}]*)\}/)?.[1]],
+  ['MORNING_LIGHT',css.match(/\[data-fluxa-theme="MORNING_LIGHT"\]\{([^}]*)\}/)?.[1]],
+  ['GENTLE_FLOW',css.match(/\[data-fluxa-theme="GENTLE_FLOW"\]\{([^}]*)\}/)?.[1]]
+];
+for(const [theme,block] of themeBlocks){
+  assert.ok(block,`${theme} token block must exist.`);
+  const action=block.match(/--fx-action:(#[0-9A-Fa-f]{6})/)?.[1];
+  assert.ok(action,`${theme} must define a semantic action token.`);
+  assert.ok(contrast(action,'#FFFFFF')>=4.5,`${theme} white-text action contrast must meet WCAG AA for normal text.`);
+}
+
 assert.match(css,/body\.fluxa-home-idle \.hero-card/,'Theme system must cover the idle Home hero.');
 assert.match(css,/\.treatment-card/,'Theme system must cover treatments.');
 assert.match(css,/:focus-visible/,'Theme system must preserve visible keyboard focus.');
