@@ -68,10 +68,15 @@ function baseline(store, sessionId, assistedEntityId, hertz = 450) {
   const later = startSession(store);
   assert.throws(() => resumeInvestigation(store, inv.id, later.id), /preparação/i, 'quick investigation resume requires preparation');
   prepare(store, later.id);
+  const laterBaseline = baseline(store, later.id, person.id, 470);
   resumeInvestigation(store, inv.id, later.id);
   const current = store.getState().investigations.find((item) => item.id === inv.id);
   assert.equal(current.originSessionId, session.id);
   assert.equal(current.currentSessionId, later.id);
+  assert.equal(current.hawkinsBaselineAssessmentId, measurement.id, 'resume must preserve the original investigation baseline');
+  assert.equal(current.currentHawkinsBaselineAssessmentId, laterBaseline.id, 'resume must store the current-session baseline separately');
+  const resumedEvent = store.getState().events.find((item) => item.eventType === 'INVESTIGATION_RESUMED' && item.entityId === inv.id && item.sessionId === later.id);
+  assert.equal(resumedEvent.metadata.hawkinsBaselineHertz, 470, 'resume history must include the new session Hawkins provenance');
 }
 
 {
