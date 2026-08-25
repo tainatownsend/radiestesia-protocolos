@@ -5,6 +5,7 @@ import {
   createTreatment, interruptTreatment, reviewTreatment, startReiki, pauseReiki, resumeReiki, completeReiki,
   TreatmentStatus, PREPARATION_STEPS
 } from './domain.js';
+import { recordHawkinsBaseline } from './hawkins-measurement.js';
 import {
   correctForgottenSessionClose, addTreatmentComponent, replaceTreatmentComponent,
   resumeTreatmentPreservingDuration, recordStructuredFinalAssessment, validateAssistedInput,
@@ -37,6 +38,10 @@ function prepare(store, sessionId) {
   for (const step of PREPARATION_STEPS) togglePreparationStep(store, run.id, step.key);
   completePreparation(store, run.id);
 }
+function baseline(store, sessionId, assistedEntityId, hertz = 450) {
+  selectAssistedForSession(store, sessionId, assistedEntityId);
+  return recordHawkinsBaseline(store, { sessionId, assistedEntityId, hertz });
+}
 
 {
   const store = fakeStore();
@@ -52,7 +57,11 @@ function prepare(store, sessionId) {
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Maria', birthDate:'1980-01-01' });
   assert.throws(() => startInvestigation(store, session.id, person.id), /preparação/i, 'quick investigation start requires preparation');
   prepare(store, session.id);
+  assert.throws(() => startInvestigation(store, session.id, person.id), /Hawkins|frequência vibracional/i, 'quick investigation start requires Hawkins baseline in the domain');
+  const measurement = baseline(store, session.id, person.id, 430);
   const inv = startInvestigation(store, session.id, person.id);
+  assert.equal(inv.hawkinsBaselineAssessmentId, measurement.id);
+  assert.equal(inv.hawkinsBaselineHertz, 430);
   answerInvestigation(store, inv.id, 'YES');
   closeSession(store, session.id, { endedAt:'2026-08-19T11:00:00.000Z' });
   store.setNow('2026-08-19T15:00:00.000Z');
@@ -92,7 +101,13 @@ function prepare(store, sessionId) {
   );
   prepare(store, session.id);
   selectAssistedForSession(store,session.id,person.id);
+  assert.throws(() => createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Teste', componentName:'Gráfico A' }), /Hawkins|frequência vibracional/i, 'direct treatment creation requires Hawkins baseline');
+  const measurement = baseline(store, session.id, person.id, 470);
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Teste', componentName:'Gráfico A', durationValue:2, durationUnit:'HOUR' });
+  assert.equal(treatment.hawkinsBaselineAssessmentId, measurement.id);
+  assert.equal(treatment.hawkinsBaselineHertz, 470);
+  const startedEvent=store.getState().events.find(item=>item.eventType==='TREATMENT_STARTED'&&item.entityId===treatment.id);
+  assert.equal(startedEvent.metadata.hawkinsBaselineHertz,470);
   store.advance(30 * 60 * 1000);
   interruptTreatment(store, treatment.id, 'pausa');
   const beforeResume = store.getState().treatmentComponents.find((item) => item.id === component.id).expectedEndAt;
@@ -107,6 +122,7 @@ function prepare(store, sessionId) {
   const session = startSession(store);
   prepare(store, session.id);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Lia', birthDate:'1985-03-03' });
+  baseline(store,session.id,person.id,455);
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Multi', componentName:'Original', durationValue:1, durationUnit:'DAY' });
   const extra = addTreatmentComponent(store, { sessionId:session.id, treatmentId:treatment.id, name:'Segundo', durationValue:2, durationUnit:'DAY' });
   const replacement = replaceTreatmentComponent(store, component.id, { sessionId:session.id, name:'Substituto', durationValue:3, durationUnit:'DAY' });
@@ -125,7 +141,7 @@ function prepare(store, sessionId) {
     /preparação/i
   );
   prepare(store, session.id);
-  selectAssistedForSession(store,session.id,person.id);
+  baseline(store,session.id,person.id,500);
   const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
   assert.throws(
     () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'', imbalancePercent:15 }),
@@ -138,8 +154,8 @@ function prepare(store, sessionId) {
     'final assessment imbalance is required in the domain'
   );
   recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'6500', imbalancePercent:15, needsNewTreatment:true, nextTreatmentWhen:'em 7 dias' });
-  assert.equal(store.getState().assessments.length, 1);
-  assert.equal(store.getState().assessments[0].needsNewTreatment, true);
+  assert.equal(store.getState().assessments.length, 2);
+  assert.equal(store.getState().assessments.at(-1).needsNewTreatment, true);
 }
 
 {
@@ -147,7 +163,7 @@ function prepare(store, sessionId) {
   const session = startSession(store);
   prepare(store, session.id);
   const person = createAssistedEntity(store, { type:'PERSON', displayName:'Joana', birthDate:'1988-06-06' });
-  selectAssistedForSession(store,session.id,person.id);
+  baseline(store,session.id,person.id,440);
   const inv = startInvestigation(store, session.id, person.id);
   answerInvestigation(store, inv.id, 'YES');
   answerInvestigation(store, inv.id, 'NO');

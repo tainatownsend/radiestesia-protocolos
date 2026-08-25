@@ -3,8 +3,9 @@ import { createStore } from './store.js';
 import {
   AssistedType, TreatmentStatus, PREPARATION_STEPS,
   closeSession, completePreparation, createAssistedEntity, createTreatment,
-  startPreparation, startSession, togglePreparationStep
+  selectAssistedForSession, startPreparation, startSession, togglePreparationStep
 } from './domain.js';
+import { recordHawkinsBaseline } from './hawkins-measurement.js';
 import { stopTreatmentComponent } from './backlog.js';
 import { canCompleteTreatmentAdministratively, completeTreatmentAdministratively } from './administrative-treatment.js';
 
@@ -24,6 +25,8 @@ globalThis.localStorage = new MemoryStorage();
   for (const step of PREPARATION_STEPS) togglePreparationStep(store, preparation.id, step.key);
   completePreparation(store, preparation.id);
   const assisted = createAssistedEntity(store, { type:AssistedType.PERSON, displayName:'Pessoa administrativa', birthDate:'1980-01-01' });
+  selectAssistedForSession(store,session.id,assisted.id);
+  recordHawkinsBaseline(store,{sessionId:session.id,assistedEntityId:assisted.id,hertz:460});
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:assisted.id, title:'Tratamento administrativo', componentName:'Componente', durationValue:1, durationUnit:'DAY' });
   assert.equal(canCompleteTreatmentAdministratively(store.getState(), treatment.id), false);
   stopTreatmentComponent(store, component.id, { sessionId:session.id, reason:'Resolvido anteriormente' });
