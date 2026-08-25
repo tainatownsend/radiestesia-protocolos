@@ -102,13 +102,16 @@ assert.ok(
   'Validation/polish layers must remain able to refine the architecture shell after it loads.'
 );
 
-// Deep Teal source-of-truth guardrails for the three validation surfaces.
+// Deep Teal source-of-truth guardrails for the validation surfaces.
 for (const token of ['#EFF1EF','#F8F9F7','#DEE4E1','#173F46','#102F35','#66898C','#C17C61','#202729','#606B6C','#CBD3D1']) {
   assert.ok(reconciliation.includes(token), `Visual reconciliation must preserve approved Deep Teal token ${token}.`);
 }
 assert.match(reconciliation, /body\.fluxa-home-idle \.hero-card/, 'Idle Hoje must have a deliberate Deep Teal hero treatment.');
 assert.match(reconciliation, /topbar-session-open/, 'Open-session cockpit must retain a Deep Teal operational shell.');
 assert.match(reconciliation, /\.treatment-card/, 'Treatments must participate in the reconciled visual system.');
+assert.match(reconciliation, /:focus-visible[\s\S]*outline:3px solid var\(--fluxa-coral\)/, 'Keyboard focus must remain visibly anchored in the approved palette.');
+assert.match(reconciliation, /@media\(prefers-reduced-motion:reduce\)/, 'The staged premium visual system must respect reduced-motion preferences.');
+assert.match(reconciliation, /transition-duration:\.01ms!important/, 'Reduced-motion mode must suppress decorative transitions without hiding state changes.');
 assert.doesNotMatch(reconciliation, /font-family\s*:\s*Georgia/i, 'Fluxa brand treatment must not fall back to the improvised serif wordmark.');
 
 console.log('ux-architecture-refresh.test.mjs: ok');
