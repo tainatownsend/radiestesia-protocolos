@@ -1,6 +1,7 @@
 import { createStore } from './store.js';
 import { EventType, getOpenSession } from './domain.js';
 import { requirePreparedSessionState, requirePreparedAssistedSessionState } from './session-rules.js';
+import { requireHawkinsBaseline } from './hawkins-measurement.js';
 import { parseRootProtocols, applyRootProtocolMutations, finalizeRootProtocols } from './root-protocol-parser.mjs';
 
 const store=createStore();
@@ -47,19 +48,23 @@ export function activeRootProtocol(protocolId,assistedEntityId){return store.get
 export function startRootProtocol(protocolId){
   const state=store.getState(),session=getOpenSession(state);if(!session)throw new Error('Abra uma sessão antes de investigar.');
   requirePreparedSessionState(state,session.id,'Conclua a preparação da sessão antes de iniciar uma investigação.');if(!session.currentAssistedEntityId)throw new Error('Escolha o Assistido antes de iniciar.');
+  const baseline=requireHawkinsBaseline(state,{sessionId:session.id,assistedEntityId:session.currentAssistedEntityId});
   const protocol=rootProtocolById(protocolId);if(!protocol)throw new Error('Protocolo não encontrado.');
-  const inv={id:store.makeId('inv'),kind:'ROOT_PROTOCOL',originSessionId:session.id,currentSessionId:session.id,assistedEntityId:session.currentAssistedEntityId,protocolId:protocol.id,protocolVersionId:protocol.versionId,protocolSnapshot:structuredClone(protocol),status:'IN_PROGRESS',currentNodeId:protocol.startNodeId,answers:[],path:[protocol.startNodeId],startedAt:store.nowIso(),completedAt:null,endNodeId:null,updatedAt:store.nowIso()};
-  store.setState(current=>{const draft=structuredClone(current);draft.investigations.push(inv);addEvent(draft,{eventType:EventType.INVESTIGATION_STARTED,entityType:'Investigation',entityId:inv.id,sessionId:session.id,assistedEntityId:inv.assistedEntityId,metadata:{protocolName:protocol.name,protocolVersionId:protocol.versionId,rootLibrary:true}});return draft;});return inv;
+  const inv={id:store.makeId('inv'),kind:'ROOT_PROTOCOL',originSessionId:session.id,currentSessionId:session.id,assistedEntityId:session.currentAssistedEntityId,protocolId:protocol.id,protocolVersionId:protocol.versionId,protocolSnapshot:structuredClone(protocol),status:'IN_PROGRESS',currentNodeId:protocol.startNodeId,answers:[],path:[protocol.startNodeId],hawkinsBaselineAssessmentId:baseline.id,hawkinsBaselineHertz:baseline.hertz,startedAt:store.nowIso(),completedAt:null,endNodeId:null,updatedAt:store.nowIso()};
+  store.setState(current=>{const draft=structuredClone(current);draft.investigations.push(inv);addEvent(draft,{eventType:EventType.INVESTIGATION_STARTED,entityType:'Investigation',entityId:inv.id,sessionId:session.id,assistedEntityId:inv.assistedEntityId,metadata:{protocolName:protocol.name,protocolVersionId:protocol.versionId,rootLibrary:true,hawkinsBaselineAssessmentId:baseline.id,hawkinsBaselineHertz:baseline.hertz}});return draft;});return inv;
 }
 export function resumeRootProtocol(investigationId){
   const state=store.getState(),session=getOpenSession(state);if(!session)throw new Error('Abra uma sessão antes de retomar.');requirePreparedSessionState(state,session.id,'Conclua a preparação da sessão antes de retomar a investigação.');
   const inv=state.investigations.find(i=>i.id===investigationId&&i.kind==='ROOT_PROTOCOL'&&i.status==='IN_PROGRESS');if(!inv)throw new Error('Investigação não disponível para retomada.');
-  store.setState(current=>{const draft=structuredClone(current),target=draft.investigations.find(i=>i.id===investigationId);if(target.currentSessionId!==session.id){target.currentSessionId=session.id;target.updatedAt=store.nowIso();addEvent(draft,{eventType:EventType.INVESTIGATION_RESUMED,entityType:'Investigation',entityId:target.id,sessionId:session.id,assistedEntityId:target.assistedEntityId,metadata:{originSessionId:target.originSessionId,rootLibrary:true}});}const s=draft.sessions.find(x=>x.id===session.id);if(s)s.currentAssistedEntityId=target.assistedEntityId;return draft;});return investigationId;
+  requirePreparedAssistedSessionState(state,session.id,inv.assistedEntityId,'Volte para o Assistido desta investigação antes de retomar.');
+  const baseline=requireHawkinsBaseline(state,{sessionId:session.id,assistedEntityId:inv.assistedEntityId});
+  store.setState(current=>{const draft=structuredClone(current),target=draft.investigations.find(i=>i.id===investigationId);if(target.currentSessionId!==session.id){target.currentSessionId=session.id;target.updatedAt=store.nowIso();addEvent(draft,{eventType:EventType.INVESTIGATION_RESUMED,entityType:'Investigation',entityId:target.id,sessionId:session.id,assistedEntityId:target.assistedEntityId,metadata:{originSessionId:target.originSessionId,rootLibrary:true,hawkinsBaselineAssessmentId:baseline.id,hawkinsBaselineHertz:baseline.hertz}});}return draft;});return investigationId;
 }
 export function answerRootProtocol(investigationId,answer){
   if(!['YES','NO'].includes(answer))throw new Error('Resposta inválida.');
   store.setState(current=>{const draft=structuredClone(current),inv=draft.investigations.find(i=>i.id===investigationId&&i.kind==='ROOT_PROTOCOL'&&i.status==='IN_PROGRESS');if(!inv)return draft;
     requirePreparedAssistedSessionState(draft,inv.currentSessionId,inv.assistedEntityId,'Volte para o Assistido desta investigação antes de continuar.');
+    requireHawkinsBaseline(draft,{sessionId:inv.currentSessionId,assistedEntityId:inv.assistedEntityId});
     const node=currentRootNode(inv);if(!node||node.type!=='QUESTION')return draft;const payload={nodeId:node.id,questionTextSnapshot:node.text,answer,answeredAt:store.nowIso(),sectionSnapshot:node.section||'',legacyPlanTag:node.legacyPlanTag||null,legacyPlanTitle:node.legacyPlanTitle||null,legacyPlanCommand:node.legacyPlanCommand||null};
     const existing=inv.answers.find(a=>a.nodeId===node.id);if(existing)Object.assign(existing,payload);else inv.answers.push(payload);const nextId=answer==='YES'?node.yes:node.no;inv.currentNodeId=nextId;inv.path.push(nextId);const next=currentRootNode(inv);if(!next)throw new Error('O protocolo contém um caminho inválido.');
     if(next.type==='END'){inv.status='COMPLETED';inv.completedAt=store.nowIso();inv.endNodeId=next.id;addEvent(draft,{eventType:EventType.INVESTIGATION_COMPLETED,entityType:'Investigation',entityId:inv.id,sessionId:inv.currentSessionId,assistedEntityId:inv.assistedEntityId,metadata:{protocolName:inv.protocolSnapshot.name,rootLibrary:true}});}inv.updatedAt=store.nowIso();return draft;});
