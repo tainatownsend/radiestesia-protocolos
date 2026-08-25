@@ -1,4 +1,5 @@
 import { requireHawkinsBaseline } from './hawkins-measurement.js';
+import { isReikiEnabled } from './reiki-modality.js';
 
 export const SessionStatus = Object.freeze({ OPEN: 'OPEN', CLOSED: 'CLOSED' });
 export const TreatmentStatus = Object.freeze({ PLANNED: 'PLANNED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'COMPLETED', INTERRUPTED: 'INTERRUPTED' });
@@ -159,7 +160,12 @@ export function treatmentNeedsReview(state, treatment) { if (!treatment || treat
 function activeElapsedMs(application, now = Date.now()) { return (application.intervals || []).reduce((total, interval) => { const start = new Date(interval.startedAt).getTime(); const end = interval.endedAt ? new Date(interval.endedAt).getTime() : now; return total + Math.max(0, end - start); }, 0); }
 export function reikiElapsedSeconds(application, now = Date.now()) { return Math.floor(activeElapsedMs(application, now) / 1000); }
 export function startReiki(store, sessionId, assistedEntityId) {
-  const state = store.getState(); requireOpenSession(state, sessionId); if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
+  const state = store.getState();
+  if (!isReikiEnabled(state)) throw new Error('Habilite Reiki nas terapias da prática antes de iniciar uma nova aplicação.');
+  const session = requirePreparedSession(state, sessionId);
+  if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido da sessão antes de iniciar Reiki.');
+  if (session.currentAssistedEntityId !== assistedEntityId) throw new Error('O Assistido atual não corresponde à aplicação de Reiki desta sessão.');
   const existing = state.reikiApplications.find((item) => ['RUNNING','PAUSED'].includes(item.status));
   if (existing) {
     if (existing.sessionId === sessionId && existing.assistedEntityId === assistedEntityId) return existing;
