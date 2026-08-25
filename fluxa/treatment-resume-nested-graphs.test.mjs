@@ -5,6 +5,7 @@ function makeStore(){
   let state={
     sessions:[{id:'s1',status:'OPEN',currentAssistedEntityId:'a1'}],
     preparationRuns:[{id:'p1',sessionId:'s1',status:'COMPLETED'}],
+    assessments:[{id:'h1',kind:'HAWKINS_FREQUENCY',phase:'BASELINE',sessionId:'s1',assistedEntityId:'a1',hertz:495,occurredAt:'2026-08-22T13:55:00.000Z'}],
     treatments:[{id:'t1',assistedEntityId:'a1',status:'INTERRUPTED',interruptedAt:'2026-08-22T12:00:00.000Z'}],
     treatmentComponents:[{
       id:'c1',treatmentId:'t1',status:'INTERRUPTED',expectedEndAt:'2026-08-23T12:00:00.000Z',
@@ -37,5 +38,8 @@ assert.equal(component.commands[0].graphApplications[1].expectedEndAt,null,'no-d
 const rescheduled=state.events.find(event=>event.eventType==='COMPONENT_RESCHEDULED');
 assert.equal(rescheduled.metadata.pauseMs,2*60*60*1000);
 assert.equal(rescheduled.metadata.graphDeadlinesShifted,1,'reschedule history must record the shifted nested graph count');
+const resumed=state.events.find(event=>event.eventType==='TREATMENT_RESUMED');
+assert.equal(resumed.metadata.hawkinsBaselineAssessmentId,'h1');
+assert.equal(resumed.metadata.hawkinsBaselineHertz,495);
 
 console.log('treatment-resume-nested-graphs.test.mjs: ok');
