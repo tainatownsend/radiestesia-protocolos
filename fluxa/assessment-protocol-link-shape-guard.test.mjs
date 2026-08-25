@@ -39,6 +39,20 @@ assert.throws(
 );
 assert.equal(missingAssessmentStore.getState().events.length, 0, 'Rejected malformed assessment state must not append history.');
 
+const malformedAssessmentEntriesStore = fakeStore({ ...baseState, assessments:[null, undefined, assessment] });
+assert.throws(
+  () => linkOrientingAssessmentToProtocol(malformedAssessmentEntriesStore, undefined, { protocolId:'root_finance', investigationId:'inv_1' }),
+  /avaliação orientadora não encontrada/i,
+  'Null or undefined assessment entries must not turn a missing assessment ID into a property-access TypeError.'
+);
+assert.equal(malformedAssessmentEntriesStore.getState().events.length, 0, 'Rejected malformed assessment entries must not append history.');
+
+const validAfterMalformedEntriesStore = fakeStore({ ...baseState, assessments:[null, undefined, assessment] });
+const linkedAfterMalformedEntries = linkOrientingAssessmentToProtocol(validAfterMalformedEntriesStore, 'assess_1', { protocolId:'root_finance', investigationId:'inv_1' });
+assert.equal(linkedAfterMalformedEntries?.linkedInvestigationId, 'inv_1', 'Malformed neighboring entries must not hide a valid assessment later in the collection.');
+assert.equal(validAfterMalformedEntriesStore.getState().events.length, 1, 'A valid link after malformed neighboring entries should append exactly one history event.');
+assert.equal(validAfterMalformedEntriesStore.getState().events[0].eventType, 'ASSESSMENT_PROTOCOL_SELECTED');
+
 const nullInputStore = fakeStore(baseState);
 assert.throws(
   () => linkOrientingAssessmentToProtocol(nullInputStore, 'assess_1', null),
@@ -66,5 +80,19 @@ assert.throws(
   'Malformed local investigation collections should fail closed instead of throwing Array.find TypeError.'
 );
 assert.equal(malformedInvestigationsStore.getState().events.length, 0, 'Rejected malformed investigation state must not append history.');
+
+const malformedInvestigationEntriesStore = fakeStore({ ...baseState, investigations:[null, undefined, investigation] });
+assert.throws(
+  () => linkOrientingAssessmentToProtocol(malformedInvestigationEntriesStore, 'assess_1', { protocolId:'root_finance', investigationId:undefined }),
+  /inicie ou retome a investigação/i,
+  'Null or undefined neighboring investigations must not turn a missing investigation ID into a property-access error.'
+);
+assert.equal(malformedInvestigationEntriesStore.getState().events.length, 0, 'Rejected missing investigation IDs must not append history.');
+
+const validInvestigationAfterMalformedEntriesStore = fakeStore({ ...baseState, investigations:[null, undefined, investigation] });
+const linkedAfterMalformedInvestigations = linkOrientingAssessmentToProtocol(validInvestigationAfterMalformedEntriesStore, 'assess_1', { protocolId:'root_finance', investigationId:'inv_1' });
+assert.equal(linkedAfterMalformedInvestigations?.linkedInvestigationId, 'inv_1', 'Malformed neighboring investigations must not hide a valid investigation later in the collection.');
+assert.equal(validInvestigationAfterMalformedEntriesStore.getState().events.length, 1, 'A valid link after malformed investigation neighbors should append exactly one history event.');
+assert.equal(validInvestigationAfterMalformedEntriesStore.getState().events[0].eventType, 'ASSESSMENT_PROTOCOL_SELECTED');
 
 console.log('assessment-protocol-link-shape-guard.test.mjs: ok');

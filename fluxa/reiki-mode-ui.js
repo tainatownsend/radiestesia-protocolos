@@ -1,5 +1,6 @@
 import { createStore } from './store.js';
 import { ReikiMode, ReikiModeLabel } from './reiki-flex.js';
+import { isReikiEnabled } from './reiki-modality.js';
 
 const store=createStore();
 let pendingStartButton=null;
@@ -37,12 +38,21 @@ function enhanceRetroMode(){
   field.innerHTML=`<label>Modo da aplicação</label><select name="reikiMode">${options(ReikiMode.DISTANCE)}</select>`;
   form.querySelector('.field')?.after(field);
 }
-function enhance(){enhanceRetroMode();}
-new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);
+function enhanceSessionAvailability(){
+  const enabled=isReikiEnabled(store.getState());
+  document.querySelectorAll('[data-action="reiki"]').forEach((button)=>{
+    button.hidden=!enabled;
+    if(enabled)button.removeAttribute('aria-hidden');else button.setAttribute('aria-hidden','true');
+  });
+  if(!enabled)closeStartDialog();
+}
+function enhance(){enhanceRetroMode();enhanceSessionAvailability();}
+new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});queueMicrotask(enhance);store.subscribe(()=>queueMicrotask(enhance));
 
 document.addEventListener('click',(event)=>{
   const close=event.target.closest('[data-reiki-session-start-close]');if(close){event.preventDefault();event.stopImmediatePropagation();closeStartDialog();return;}
   const reiki=event.target.closest('[data-action="reiki"]');if(!reiki)return;
+  if(!isReikiEnabled(store.getState())){event.preventDefault();event.stopImmediatePropagation();closeStartDialog();return;}
   if(bypassStart){bypassStart=false;return;}
   event.preventDefault();event.stopImmediatePropagation();startDialog(reiki);
 },true);
@@ -51,6 +61,7 @@ document.addEventListener('submit',(event)=>{
   const form=event.target;
   if(form.id==='reiki-session-start-form'){
     event.preventDefault();event.stopImmediatePropagation();
+    if(!isReikiEnabled(store.getState())){closeStartDialog();return;}
     const data=new FormData(form);const mode=data.get('mode')||ReikiMode.DISTANCE;const treatmentId=data.get('treatmentId')||null;
     saveMode(mode);const button=pendingStartButton;const before=new Set(store.getState().reikiApplications.map(i=>i.id));closeStartDialog();
     if(!button)return;bypassStart=true;button.click();
