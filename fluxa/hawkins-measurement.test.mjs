@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { validateHawkinsHertz,recordHawkinsBaseline,hawkinsBaseline,linkTreatmentHawkinsBaseline,enrichFinalHawkinsAssessment,HAWKINS_KIND,HawkinsPhase } from './hawkins-measurement.js';
+import { validateHawkinsHertz,recordHawkinsBaseline,hawkinsBaseline,requireHawkinsBaseline,linkTreatmentHawkinsBaseline,enrichFinalHawkinsAssessment,HAWKINS_KIND,HawkinsPhase } from './hawkins-measurement.js';
 
 function makeStore(){
   let n=0;let state={sessions:[{id:'s1',status:'OPEN',currentAssistedEntityId:'a1'}],assistedEntities:[{id:'a1',displayName:'A',archivedAt:null},{id:'a2',displayName:'B',archivedAt:null}],preparationRuns:[{id:'p1',sessionId:'s1',status:'COMPLETED'}],assessments:[],treatments:[],events:[]};
@@ -12,9 +12,11 @@ assert.equal(validateHawkinsHertz('540.5'),540.5);
 for(const value of ['',0,-10,'abc'])assert.throws(()=>validateHawkinsHertz(value),/Hawkins em Hz/);
 
 const store=makeStore();
+assert.throws(()=>requireHawkinsBaseline(store.getState(),{sessionId:'s1',assistedEntityId:'a1'}),/Hawkins/i,'missing baseline must be rejected by the reusable domain guard');
 const baseline=recordHawkinsBaseline(store,{sessionId:'s1',assistedEntityId:'a1',hertz:'540'});
 assert.equal(baseline.kind,HAWKINS_KIND);assert.equal(baseline.phase,HawkinsPhase.BASELINE);assert.equal(baseline.hertz,540);assert.equal(baseline.scale,'Hz');
 assert.equal(hawkinsBaseline(store.getState(),'s1','a1').id,baseline.id);
+assert.equal(requireHawkinsBaseline(store.getState(),{sessionId:'s1',assistedEntityId:'a1'}).id,baseline.id);
 assert.equal(recordHawkinsBaseline(store,{sessionId:'s1',assistedEntityId:'a1',hertz:'600'}).id,baseline.id,'baseline in the same prepared session must be immutable/idempotent');
 assert.equal(store.getState().assessments.length,1);
 assert.throws(()=>recordHawkinsBaseline(store,{sessionId:'s1',assistedEntityId:'a2',hertz:500}),/Assistido correto/);
@@ -38,6 +40,9 @@ assert.ok(index.includes('hawkins-measurement.css')&&index.includes('hawkins-mea
 assert.ok(index.indexOf('hawkins-measurement-ui.js')<index.indexOf('treatment-create-ui.js'),'Hawkins submit guard must load before treatment creation');
 assert.ok(ui.includes('data-hawkins-baseline-form'),'investigation and treatment flows must expose a baseline entry');
 assert.ok(ui.includes('data-start-planned-treatment'),'planned treatment start must also require a baseline');
+assert.ok(ui.includes("button.dataset.action==='investigate'"),'legacy investigation entry must also be intercepted before it can bypass Hawkins');
+assert.ok(ui.includes('data-resume-legacy-investigation'),'legacy investigation must resume only after the baseline is recorded');
+assert.ok(ui.includes('openLegacyInvestigationBaseline'),'legacy investigation entry must provide an actionable baseline form instead of a dead-end alert');
 assert.ok(ui.includes('Frequência vibracional de Hawkins (Hz)'),'final assessment must explicitly identify Hawkins Hz');
 assert.ok(ui.includes('enrichFinalHawkinsAssessment'),'final treatment measurement must be linked without replacing legacy fields');
 console.log('hawkins-measurement.test.mjs: ok');
