@@ -25,6 +25,9 @@ assert.match(css,/--fx-accent:#F08D79/,'Fresh Energy must retain the approved co
 assert.match(css,/--fx-sun:#F4CA55/,'Fresh Energy must retain a restrained sunny accent.');
 assert.match(css,/\.btn\.primary\{background:var\(--fx-action\)!important;color:#fff!important/,'White-text primary actions must use the contrast-safe semantic action token.');
 assert.match(css,/hero-card \.hero-btn\{background:var\(--fx-action\)!important;color:#fff!important/,'The idle Home CTA must use the same accessible action token.');
+assert.match(css,/\.eyebrow\{color:var\(--fx-primary-strong\)!important/,'Small eyebrow text must use the strong theme token rather than the luminous decorative primary.');
+assert.match(css,/\.topbar-session-open\{background:linear-gradient\(120deg,var\(--fx-primary-strong\),color-mix\(in srgb,var\(--fx-primary\) 18%,var\(--fx-primary-strong\)\)\)!important;\}/,'Open-session chrome must keep white controls on a dark theme-derived field.');
+assert.doesNotMatch(css,/\.topbar-session-open\{background:linear-gradient\(120deg,var\(--fx-primary-strong\),var\(--fx-primary\)\)/,'Session chrome must not fade directly into the low-contrast luminous primary.');
 
 function rgb(hex){const value=hex.replace('#','');return [0,2,4].map((offset)=>parseInt(value.slice(offset,offset+2),16)/255);}
 function luminance(hex){const [r,g,b]=rgb(hex).map((value)=>value<=0.03928?value/12.92:((value+0.055)/1.055)**2.4);return 0.2126*r+0.7152*g+0.0722*b;}
@@ -37,8 +40,11 @@ const themeBlocks=[
 for(const [theme,block] of themeBlocks){
   assert.ok(block,`${theme} token block must exist.`);
   const action=block.match(/--fx-action:(#[0-9A-Fa-f]{6})/)?.[1];
+  const strong=block.match(/--fx-primary-strong:(#[0-9A-Fa-f]{6})/)?.[1];
   assert.ok(action,`${theme} must define a semantic action token.`);
+  assert.ok(strong,`${theme} must define a strong semantic text token.`);
   assert.ok(contrast(action,'#FFFFFF')>=4.5,`${theme} white-text action contrast must meet WCAG AA for normal text.`);
+  assert.ok(contrast(strong,'#FFFFFF')>=4.5,`${theme} strong theme token must safely support white text in session chrome.`);
 }
 
 assert.match(css,/body\.fluxa-home-idle \.hero-card/,'Theme system must cover the idle Home hero.');
