@@ -1,3 +1,5 @@
+import { isReikiEnabled } from './reiki-modality.js';
+
 export const ReikiMode = Object.freeze({
   IN_PERSON: 'IN_PERSON',
   DISTANCE: 'DISTANCE',
@@ -50,10 +52,18 @@ function requireSessionContext(state, sessionId, assistedEntityId, action) {
   return session;
 }
 
+function requireNewReikiEligibility(state, sessionId = null) {
+  if (!isReikiEnabled(state)) throw new Error('Habilite Reiki nas terapias da prática antes de iniciar uma nova aplicação.');
+  if (!sessionId) return;
+  const prepared = (state.preparationRuns || []).some((run) => run.sessionId === sessionId && run.status === 'COMPLETED');
+  if (!prepared) throw new Error('Conclua a preparação da sessão antes de iniciar Reiki.');
+}
+
 export function startFlexibleReiki(store, input) {
   const state = store.getState();
   requireAssisted(state, input.assistedEntityId);
   const sessionId = input.sessionId || null;
+  requireNewReikiEligibility(state, sessionId);
   if (sessionId) requireSessionContext(state, sessionId, input.assistedEntityId, 'start');
   const existing = state.reikiApplications.find((item) => ['RUNNING','PAUSED'].includes(item.status));
   if (existing) throw new Error('Já existe uma aplicação de Reiki ativa. Conclua ou retome a aplicação atual antes de iniciar outra.');
