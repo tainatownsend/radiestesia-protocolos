@@ -18,6 +18,9 @@ assert.match(css,/@media\(min-width:700px\) and \(max-width:1180px\)/,'The premi
 assert.match(css,/@media\(max-width:390px\)[\s\S]*?\.home-primary-actions\{grid-template-columns:1fr!important/,'Very narrow phones must stack primary session actions.');
 assert.match(css,/\.timeline-item\{grid-template-columns:minmax\(42px,54px\) 10px minmax\(0,1fr\)!important/,'Timeline text must retain a shrinkable content column.');
 assert.match(css,/\.field input,\.field textarea,\.field select\{font-size:16px!important;\}/,'Mobile form controls must avoid browser zoom caused by undersized text.');
+assert.match(css,/\.modal-backdrop\{[^}]*env\(safe-area-inset-left\)[^}]*env\(safe-area-inset-right\)[^}]*env\(safe-area-inset-bottom\)/,'Modal surfaces must respect device safe areas.');
+assert.match(css,/\.workspace-bottom-nav\{bottom:max\(8px,env\(safe-area-inset-bottom\)\)!important/,'Mobile bottom navigation must sit above the home indicator safe area.');
+assert.match(css,/body:has\(input:focus,textarea:focus,select:focus,\[contenteditable="true"\]:focus\) \.workspace-bottom-nav\{opacity:0!important;pointer-events:none!important/,'Focused mobile fields must yield bottom-navigation space to the virtual keyboard.');
 assert.match(js,/memory\.set\(key,input\.value\)/,'Hawkins input value must survive DOM refreshes while the user types.');
 assert.match(js,/MutationObserver\(\(\)=>queueMicrotask\(restore\)\)/,'Hawkins input restoration must follow UI re-renders.');
 assert.match(reikiOutside,/syncLegacyRetrospectiveAction/,'The idle Home must hide legacy Reiki entry points when Reiki is not configured.');
