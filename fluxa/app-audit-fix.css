@@ -98,6 +98,22 @@ body.fluxa-home-idle [data-home-recent-actions],body.fluxa-home-idle .home-idle-
 .session-assisted-prompt{margin-top:20px!important;padding:20px!important;border-radius:20px!important;}
 body:has(.topbar-session-open) main>.section:last-of-type{margin-bottom:28px;}
 
+/* Objective responsive hardening staged for mobile/iPad validation. */
+html,body{max-width:100%;overflow-x:hidden;}
+main,.workspace-view,.card,.hero-card,.sheet,.treatment-card,.home-cockpit{min-width:0;}
+h1,h2,h3,p,strong,span,label{overflow-wrap:anywhere;}
+.section-head,.section-head>div,.topbar>*{min-width:0;}
+.sheet{width:min(100%,760px)!important;max-height:min(90dvh,820px)!important;overscroll-behavior:contain;}
+.field input,.field textarea,.field select{max-width:100%;}
+.timeline-item{grid-template-columns:minmax(42px,54px) 10px minmax(0,1fr)!important;}
+.timeline-copy{min-width:0;}
+
+@media(min-width:700px) and (max-width:1180px){
+  main,.workspace-view{width:min(100%,920px)!important;padding-inline:28px!important;}
+  .sheet{width:min(92vw,780px)!important;}
+  .home-primary-actions{max-width:720px;margin-inline:auto;}
+}
+
 @media(max-width:699px){
   .topbar{min-height:66px!important;padding:10px 14px!important;gap:8px!important;}
   .session-indicator{max-width:42vw!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:11px!important;padding-inline:9px!important;}
@@ -108,4 +124,13 @@ body:has(.topbar-session-open) main>.section:last-of-type{margin-bottom:28px;}
   .hawkins-measurement-card form{grid-template-columns:1fr!important;}
   .hawkins-measurement-card form .btn{width:100%!important;}
   [data-prep-structured]>.field,[data-prep-structured]>.check-row,[data-prep-structured]>.prep-unlisted-fields{padding:14px!important;}
+  .field input,.field textarea,.field select{font-size:16px!important;}
+  .section-head{gap:8px;flex-wrap:wrap;}
+  .sheet{max-height:92dvh!important;}
+  .timeline-item{grid-template-columns:46px 9px minmax(0,1fr)!important;gap:8px!important;}
+}
+
+@media(max-width:390px){
+  .home-primary-actions{grid-template-columns:1fr!important;gap:7px!important;}
+  .session-indicator{max-width:50vw!important;font-size:9.5px!important;}
 }
