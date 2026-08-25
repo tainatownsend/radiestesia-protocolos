@@ -17,6 +17,13 @@ export function matchesTreatmentThemeSearch(searchText='',query=''){
   return terms.every((term)=>haystack.includes(term));
 }
 
+function matchesThemeTerm(text,term=''){
+  const normalized=normalizeTreatmentThemeText(term);
+  if(!normalized)return false;
+  if(normalized.length<=3)return (` ${text} `).includes(` ${normalized} `);
+  return text.includes(normalized);
+}
+
 export function inferTreatmentTheme(title='',command=''){
   const text=normalizeTreatmentThemeText(`${title} ${command}`);
   const rules=[
@@ -33,7 +40,7 @@ export function inferTreatmentTheme(title='',command=''){
     ['Ciclos e transições',['encerramento','fechamento','transição','transicao','mudança','mudanca','novo ciclo','fim de ciclo','decisão','decisao']],
     ['Energia e padrões',['energ','vínculo','vinculo','cordão','cordao','padrão','padrao','kárm','karm','voto','pacto','crença','crenca']]
   ];
-  return rules.find(([,terms])=>terms.some(term=>text.includes(normalizeTreatmentThemeText(term))))?.[0]||'Outros temas';
+  return rules.find(([,terms])=>terms.some(term=>matchesThemeTerm(text,term)))?.[0]||'Outros temas';
 }
 
 function readObjectString(body,property){
