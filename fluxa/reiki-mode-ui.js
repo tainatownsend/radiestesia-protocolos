@@ -1,6 +1,7 @@
 import { createStore } from './store.js';
 import { ReikiMode, ReikiModeLabel } from './reiki-flex.js';
 import { isReikiEnabled } from './reiki-modality.js';
+import { requireSessionReikiStart } from './reiki-session-guard.js';
 
 const store=createStore();
 let pendingStartButton=null;
@@ -14,6 +15,14 @@ function options(selected){return Object.entries(ReikiModeLabel).map(([key,label
 function activeTreatments(){
   const state=store.getState();const session=state.sessions.find((s)=>s.status==='OPEN');const assistedId=session?.currentAssistedEntityId;
   return (state.treatments||[]).filter((t)=>t.assistedEntityId===assistedId&&['PLANNED','IN_PROGRESS','INTERRUPTED'].includes(t.status));
+}
+function currentSessionReikiContext(){
+  const state=store.getState();const session=(state.sessions||[]).find((item)=>item.status==='OPEN');
+  return {state,sessionId:session?.id||null,assistedEntityId:session?.currentAssistedEntityId||null};
+}
+function validateCurrentSessionReiki(){
+  const {state,sessionId,assistedEntityId}=currentSessionReikiContext();
+  return requireSessionReikiStart(state,{sessionId,assistedEntityId});
 }
 function closeStartDialog(){document.querySelector('#reiki-session-start-overlay')?.remove();pendingStartButton=null;}
 function startDialog(button){
@@ -52,7 +61,7 @@ new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true
 document.addEventListener('click',(event)=>{
   const close=event.target.closest('[data-reiki-session-start-close]');if(close){event.preventDefault();event.stopImmediatePropagation();closeStartDialog();return;}
   const reiki=event.target.closest('[data-action="reiki"]');if(!reiki)return;
-  if(!isReikiEnabled(store.getState())){event.preventDefault();event.stopImmediatePropagation();closeStartDialog();return;}
+  try{validateCurrentSessionReiki();}catch(error){event.preventDefault();event.stopImmediatePropagation();closeStartDialog();alert(error.message);return;}
   if(bypassStart){bypassStart=false;return;}
   event.preventDefault();event.stopImmediatePropagation();startDialog(reiki);
 },true);
@@ -61,7 +70,7 @@ document.addEventListener('submit',(event)=>{
   const form=event.target;
   if(form.id==='reiki-session-start-form'){
     event.preventDefault();event.stopImmediatePropagation();
-    if(!isReikiEnabled(store.getState())){closeStartDialog();return;}
+    try{validateCurrentSessionReiki();}catch(error){closeStartDialog();alert(error.message);return;}
     const data=new FormData(form);const mode=data.get('mode')||ReikiMode.DISTANCE;const treatmentId=data.get('treatmentId')||null;
     saveMode(mode);const button=pendingStartButton;const before=new Set(store.getState().reikiApplications.map(i=>i.id));closeStartDialog();
     if(!button)return;bypassStart=true;button.click();
