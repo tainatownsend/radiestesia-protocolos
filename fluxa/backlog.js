@@ -91,7 +91,16 @@ export function addTreatmentComponent(store, input) {
 }
 
 export function stopTreatmentComponent(store, componentId, input = {}) {
-  store.setState((state) => { const draft = structuredClone(state); const component = draft.treatmentComponents.find((item) => item.id === componentId); if (!component || ![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(component.status)) return draft; const treatment = draft.treatments.find((item) => item.id === component.treatmentId); const now = store.nowIso(); component.status = 'STOPPED'; component.stoppedAt = now; component.updatedAt = now; addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_STOPPED, entityType: 'TreatmentComponent', entityId: component.id, sessionId: input.sessionId || null, assistedEntityId: treatment?.assistedEntityId || null, metadata: { treatmentId: component.treatmentId, name: component.name, reason: input.reason?.trim() || null } }); return draft; });
+  const state = store.getState();
+  const component = state.treatmentComponents.find((item) => item.id === componentId && [TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(item.status));
+  if (!component) return;
+  const treatment = state.treatments.find((item) => item.id === component.treatmentId);
+  if (input.sessionId) {
+    const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de alterar componentes do tratamento.');
+    if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de alterar seus componentes.');
+    if (!treatment || session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que você tentou alterar.');
+  }
+  store.setState((current) => { const draft = structuredClone(current); const target = draft.treatmentComponents.find((item) => item.id === componentId); if (!target || ![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(target.status)) return draft; const targetTreatment = draft.treatments.find((item) => item.id === target.treatmentId); const now = store.nowIso(); target.status = 'STOPPED'; target.stoppedAt = now; target.updatedAt = now; addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_STOPPED, entityType: 'TreatmentComponent', entityId: target.id, sessionId: input.sessionId || null, assistedEntityId: targetTreatment?.assistedEntityId || null, metadata: { treatmentId: target.treatmentId, name: target.name, reason: input.reason?.trim() || null } }); return draft; });
 }
 
 export function replaceTreatmentComponent(store, componentId, input) {
