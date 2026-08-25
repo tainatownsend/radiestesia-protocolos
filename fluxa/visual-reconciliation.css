@@ -57,6 +57,15 @@ body{background:var(--fluxa-bg);color:var(--fluxa-text);}
 .action-card,.investigation-entry-card{min-height:96px;}
 .binary-btn{min-height:76px;}
 
+/* Keyboard focus is explicit without changing pointer/touch presentation. */
+:where(.btn,.close-btn,.workspace-settings-button,.workspace-nav-btn,.acervo-chip,.picker-filter-chip,.assisted-detail-tab,.action-card,.investigation-entry-card,input,textarea,select):focus-visible{
+  outline:3px solid var(--fluxa-coral);
+  outline-offset:3px;
+}
+.topbar-session-open :where(.workspace-settings-button,.session-indicator button,.brand-button):focus-visible{
+  outline-color:#F8F9F7;
+}
+
 /* Core surfaces: fewer administrative outlines, more deliberate hierarchy. */
 .card,.workspace-history-row,.acervo-row,.resource-row,.protocol-row,.therapy-row,.assisted-current-row,
 .investigation-entry-card,.assisted-document-actions,.timer-card{
@@ -153,6 +162,11 @@ body:has(.topbar-session-open) main .hero-card p{color:var(--fluxa-muted);}
 .modal-backdrop{background:rgba(16,47,53,.42);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
 .sheet{background:#F8F9F7;box-shadow:0 24px 70px rgba(16,47,53,.24);}
 .close-btn{background:rgba(222,228,225,.44);border-color:rgba(203,211,209,.82);}
+
+/* Respect platform motion preferences while keeping state changes immediate and legible. */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
 
 @media(max-width:560px){
   .topbar{min-height:62px;padding-block:11px;}
