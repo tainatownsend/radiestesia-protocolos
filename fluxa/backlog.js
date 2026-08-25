@@ -77,9 +77,13 @@ export function correctForgottenSessionClose(store, sessionId, endedAt, confirma
 
 export function addTreatmentComponent(store, input) {
   const state = store.getState();
-  if (input.sessionId) requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de alterar componentes do tratamento.');
   const treatment = state.treatments.find((item) => item.id === input.treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
   if (!treatment) throw new Error('Tratamento não disponível para adicionar componente.');
+  if (input.sessionId) {
+    const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de alterar componentes do tratamento.');
+    if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de alterar seus componentes.');
+    if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que você tentou alterar.');
+  }
   const now = store.nowIso();
   const component = { id: store.makeId('cmp'), treatmentId: treatment.id, type: input.type || 'TOOL', name: input.name?.trim() || 'Componente terapêutico', instructions: input.instructions?.trim() || null, status: TreatmentStatus.IN_PROGRESS, startedAt: input.startedAt || now, durationValue: Number(input.durationValue) || null, durationUnit: input.durationUnit || null, expectedEndAt: addDuration(input.startedAt || now, input.durationValue, input.durationUnit), completedAt: null, interruptedAt: null, stoppedAt: null, replacedByComponentId: null, createdAt: now, updatedAt: now };
   store.setState((current) => { const draft = structuredClone(current); draft.treatmentComponents.push(component); addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_ADDED, entityType: 'TreatmentComponent', entityId: component.id, sessionId: input.sessionId || null, assistedEntityId: treatment.assistedEntityId, metadata: { treatmentId: treatment.id, name: component.name, expectedEndAt: component.expectedEndAt } }); return draft; });
