@@ -61,16 +61,47 @@ assert.equal(store.getState().sessions.find((item)=>item.id===session.id).curren
 
 selectAssistedForSession(store,session.id,sessionOwner.id);
 const sessionApp=startFlexibleReiki(store,{sessionId:session.id,assistedEntityId:sessionOwner.id,mode:ReikiMode.IN_PERSON});
+const startedSnapshot=structuredClone(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id));
+selectAssistedForSession(store,session.id,other.id);
+const eventsBeforeRejectedPause=store.getState().events.length;
+assert.throws(
+  ()=>pauseFlexibleReiki(store,sessionApp.id),
+  /Assistido atual não corresponde/i,
+  'running session Reiki must not pause while the session points at a different assisted entity'
+);
+assert.deepEqual(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id),startedSnapshot,'rejected flexible pause must preserve the application');
+assert.equal(store.getState().events.length,eventsBeforeRejectedPause,'rejected flexible pause must not append history');
+
+const eventsBeforeRejectedComplete=store.getState().events.length;
+assert.throws(
+  ()=>completeFlexibleReiki(store,sessionApp.id,'contexto incorreto'),
+  /Assistido atual não corresponde/i,
+  'running session Reiki must not complete while the session points at a different assisted entity'
+);
+assert.deepEqual(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id),startedSnapshot,'rejected flexible completion must preserve the application');
+assert.equal(store.getState().events.length,eventsBeforeRejectedComplete,'rejected flexible completion must not append history');
+
+selectAssistedForSession(store,session.id,sessionOwner.id);
 pauseFlexibleReiki(store,sessionApp.id);
 selectAssistedForSession(store,session.id,other.id);
+const pausedSnapshot=structuredClone(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id));
 const eventsBeforeResume=store.getState().events.length;
 assert.throws(
   ()=>resumeFlexibleReiki(store,sessionApp.id),
   /Assistido atual não corresponde/i,
   'paused session Reiki must not resume while the session points at a different assisted entity'
 );
-assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id).status,'PAUSED');
+assert.deepEqual(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id),pausedSnapshot,'rejected resume must preserve the application');
 assert.equal(store.getState().events.length,eventsBeforeResume,'rejected resume must not append history');
+
+const eventsBeforePausedComplete=store.getState().events.length;
+assert.throws(
+  ()=>completeFlexibleReiki(store,sessionApp.id,'ainda incorreto'),
+  /Assistido atual não corresponde/i,
+  'paused session Reiki must not complete while the session points at a different assisted entity'
+);
+assert.deepEqual(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id),pausedSnapshot,'rejected paused completion must preserve the application');
+assert.equal(store.getState().events.length,eventsBeforePausedComplete,'rejected paused completion must not append history');
 
 selectAssistedForSession(store,session.id,sessionOwner.id);
 store.setState((state)=>{const draft=structuredClone(state);draft.settings.therapeuticModalities={enabled:[]};return draft;});
