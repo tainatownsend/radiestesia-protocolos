@@ -228,7 +228,30 @@ export function resumeReiki(store, applicationId) {
     return draft;
   });
 }
-export function completeReiki(store, applicationId, notes = '') { store.setState((state) => { const draft = structuredClone(state); const app = draft.reikiApplications.find((item) => item.id === applicationId && ['RUNNING', 'PAUSED'].includes(item.status)); if (!app) return draft; if (app.status === 'RUNNING') { const interval = [...app.intervals].reverse().find((item) => !item.endedAt); if (interval) interval.endedAt = store.nowIso(); } app.status = 'COMPLETED'; app.endedAt = store.nowIso(); app.notes = notes.trim() || null; app.durationSeconds = reikiElapsedSeconds(app, new Date(app.endedAt).getTime()); app.updatedAt = store.nowIso(); addEvent(store, draft, { eventType: EventType.REIKI_COMPLETED, entityType: 'ReikiApplication', entityId: app.id, sessionId: app.sessionId, assistedEntityId: app.assistedEntityId, metadata: { durationSeconds: app.durationSeconds } }); return draft; }); }
+export function completeReiki(store, applicationId, notes = '') {
+  const state = store.getState();
+  const current = state.reikiApplications.find((item) => item.id === applicationId && ['RUNNING', 'PAUSED'].includes(item.status));
+  if (!current) return;
+  const session = requireOpenSession(state, current.sessionId);
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido da aplicação de Reiki antes de concluir.');
+  if (session.currentAssistedEntityId !== current.assistedEntityId) throw new Error('O Assistido atual não corresponde à aplicação de Reiki que está sendo concluída.');
+  store.setState((source) => {
+    const draft = structuredClone(source);
+    const app = draft.reikiApplications.find((item) => item.id === applicationId && ['RUNNING', 'PAUSED'].includes(item.status));
+    if (!app) return draft;
+    if (app.status === 'RUNNING') {
+      const interval = [...app.intervals].reverse().find((item) => !item.endedAt);
+      if (interval) interval.endedAt = store.nowIso();
+    }
+    app.status = 'COMPLETED';
+    app.endedAt = store.nowIso();
+    app.notes = notes.trim() || null;
+    app.durationSeconds = reikiElapsedSeconds(app, new Date(app.endedAt).getTime());
+    app.updatedAt = store.nowIso();
+    addEvent(store, draft, { eventType: EventType.REIKI_COMPLETED, entityType: 'ReikiApplication', entityId: app.id, sessionId: app.sessionId, assistedEntityId: app.assistedEntityId, metadata: { durationSeconds: app.durationSeconds } });
+    return draft;
+  });
+}
 export function recordReikiRetrospective(store, input) {
   const state = store.getState(); if (!getAssisted(state, input.assistedEntityId)) throw new Error('Selecione um assistido válido.');
   const seconds = Math.max(0, Number(input.durationMinutes || 0) * 60); const occurredAt = input.occurredAt || store.nowIso(); const ended = new Date(occurredAt); const started = new Date(ended.getTime() - seconds * 1000);
