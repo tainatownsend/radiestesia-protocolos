@@ -12,6 +12,12 @@ function savePending(id){memoryPending=id;try{sessionStorage.setItem(KEY,id);}ca
 function clearPending(){memoryPending=null;try{sessionStorage.removeItem(KEY);}catch(_){} }
 function preparedSession(state=store.getState()){const session=getOpenSession(state);if(!session)return null;return latestPreparation(state,session.id)?.status==='COMPLETED'?session:null;}
 function clickAfterRender(selector,attempt=0){const node=document.querySelector(selector);if(node){node.click();return true;}if(attempt<60)requestAnimationFrame(()=>clickAfterRender(selector,attempt+1));return false;}
+function latestOpenInvestigationForCurrentAssisted(state){
+  const session=getOpenSession(state);const assistedId=session?.currentAssistedEntityId;if(!assistedId)return null;
+  return [...(state.investigations||[])]
+    .filter((item)=>item.assistedEntityId===assistedId&&item.status==='IN_PROGRESS')
+    .sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')))[0]||null;
+}
 function openExactInvestigation(inv,session){
   selectAssistedForSession(store,session.id,inv.assistedEntityId);
   if(inv.kind==='BRANCHING'){
@@ -27,4 +33,4 @@ function openExactInvestigation(inv,session){
 }
 function attemptResume(){if(processing)return;const id=readPending();if(!id)return;const state=store.getState();const inv=(state.investigations||[]).find((item)=>item.id===id);if(!inv||inv.status!=='IN_PROGRESS'){clearPending();return;}const session=preparedSession(state);if(!session)return;processing=true;clearPending();try{openExactInvestigation(inv,session);}catch(error){alert(error.message);}finally{setTimeout(()=>{processing=false;},0);}}
 store.subscribe(()=>queueMicrotask(attemptResume));queueMicrotask(attemptResume);
-document.addEventListener('click',(event)=>{const button=event.target.closest?.('[data-continuity-investigation]');if(!button)return;event.preventDefault();event.stopImmediatePropagation();const id=button.dataset.continuityInvestigation;const state=store.getState();const inv=(state.investigations||[]).find((item)=>item.id===id&&item.status==='IN_PROGRESS');if(!inv)return;savePending(id);const session=getOpenSession(state);if(!session){document.querySelector('[data-action="start-session"]')?.click();return;}if(latestPreparation(state,session.id)?.status!=='COMPLETED'){document.querySelector('[data-action="open-preparation"]')?.click();return;}attemptResume();},true);
+document.addEventListener('click',(event)=>{const button=event.target.closest?.('[data-continuity-investigation],[data-home-resume-investigation]');if(!button)return;event.preventDefault();event.stopImmediatePropagation();const state=store.getState();const id=button.dataset.continuityInvestigation||latestOpenInvestigationForCurrentAssisted(state)?.id;if(!id)return;const inv=(state.investigations||[]).find((item)=>item.id===id&&item.status==='IN_PROGRESS');if(!inv)return;savePending(id);const session=getOpenSession(state);if(!session){document.querySelector('[data-action="start-session"]')?.click();return;}if(latestPreparation(state,session.id)?.status!=='COMPLETED'){document.querySelector('[data-action="open-preparation"]')?.click();return;}attemptResume();},true);
