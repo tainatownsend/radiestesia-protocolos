@@ -148,6 +148,7 @@ export function recordStructuredFinalAssessment(store, input) {
   const state = store.getState();
   const session = requirePreparedSessionState(state, input.sessionId, 'Conclua a preparação da sessão antes de registrar a avaliação final.');
   const treatment = state.treatments.find((item) => item.id === input.treatmentId); if (!treatment) throw new Error('Tratamento não encontrado.');
+  if (![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(treatment.status)) throw new Error('A avaliação final só pode ser registrada para tratamento em andamento ou interrompido.');
   if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de registrar a avaliação final.');
   if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que está sendo avaliado.');
   const components = state.treatmentComponents.filter((item) => item.treatmentId === treatment.id);
