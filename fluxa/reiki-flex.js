@@ -100,8 +100,12 @@ export function startFlexibleReiki(store, input) {
 }
 
 export function pauseFlexibleReiki(store, applicationId) {
-  store.setState((state) => {
-    const draft = structuredClone(state);
+  const state = store.getState();
+  const application = state.reikiApplications.find((item) => item.id === applicationId && item.status === 'RUNNING');
+  if (!application) return;
+  if (application.sessionId) requireSessionContext(state, application.sessionId, application.assistedEntityId, 'pause');
+  store.setState((current) => {
+    const draft = structuredClone(current);
     const app = draft.reikiApplications.find((item) => item.id === applicationId && item.status === 'RUNNING');
     if (!app) return draft;
     const interval = [...(app.intervals || [])].reverse().find((item) => !item.endedAt);
@@ -141,6 +145,7 @@ export function completeFlexibleReiki(store, applicationId, notes = '') {
   const state = store.getState();
   const application = state.reikiApplications.find((item) => item.id === applicationId && ['RUNNING','PAUSED'].includes(item.status));
   if (!application) throw new Error('Aplicação de Reiki não disponível para conclusão.');
+  if (application.sessionId) requireSessionContext(state, application.sessionId, application.assistedEntityId, 'complete');
   store.setState((current) => {
     const draft = structuredClone(current);
     const app = draft.reikiApplications.find((item) => item.id === applicationId);
