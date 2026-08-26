@@ -195,6 +195,8 @@ export function archiveAssistedEntity(store, assistedEntityId, reason = '') {
 }
 
 export function canRunFinalAssessment(state, treatmentId) {
+  const treatment = state.treatments.find((item) => item.id === treatmentId);
+  if (!treatment || ![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(treatment.status)) return false;
   return treatmentComponentResolution(state, treatmentId).readyForFinalAssessment;
 }
 
