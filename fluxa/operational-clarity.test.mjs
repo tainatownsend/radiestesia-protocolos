@@ -3,6 +3,7 @@ import fs from 'node:fs';
 
 const root = new URL('.', import.meta.url);
 const ui = fs.readFileSync(new URL('./operational-clarity-ui.js', root), 'utf8');
+const continuity = fs.readFileSync(new URL('./continuity-resume-ui.js', root), 'utf8');
 const css = fs.readFileSync(new URL('./operational-clarity.css', root), 'utf8');
 const index = fs.readFileSync(new URL('./index.html', root), 'utf8');
 
@@ -13,6 +14,9 @@ assert.match(ui, /data-operational-status/, 'Treatment cards need a concise stat
 assert.match(ui, /hawkinsBaselineHertz/, 'Final assessment should surface the linked Hawkins baseline when available.');
 assert.match(ui, /data-next-cycle-field/, 'Next-cycle timing must be conditional.');
 assert.match(ui, /Concluir tratamento/, 'Final assessment should end with one concise completion action.');
+assert.match(ui, /homeResumeInvestigation/, 'Investigation recommendations must expose the resume action hook.');
+assert.match(continuity, /\[data-continuity-investigation\],\[data-home-resume-investigation\]/, 'Operational investigation recommendations must reuse the safe continuity resume handler.');
+assert.match(continuity, /latestOpenInvestigationForCurrentAssisted/, 'The safe handoff must resolve the current Assisted exact open investigation before resume.');
 assert.match(css, /\[data-treatment-filters\][\s\S]*overflow-x:\s*auto/, 'Treatment filters should stay compact and horizontally scrollable on mobile.');
 assert.match(css, /\.oc-treatment-status/, 'Treatment status guidance must have a dedicated visual surface.');
 assert.match(index, /operational-clarity\.css/, 'Operational clarity stylesheet must be loaded.');
