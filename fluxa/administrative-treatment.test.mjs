@@ -39,6 +39,7 @@ globalThis.localStorage = new MemoryStorage();
   );
   assert.equal(store.getState().treatments.find((item) => item.id === treatment.id).status, TreatmentStatus.IN_PROGRESS);
 
+  const finalRecordedAt = store.nowIso();
   const finalAssessment = {
     id:'final_admin',
     kind:HAWKINS_KIND,
@@ -48,8 +49,8 @@ globalThis.localStorage = new MemoryStorage();
     assistedEntityId:assisted.id,
     hertz:525,
     frequency:'525',
-    occurredAt:'2026-08-20T11:00:00.000Z',
-    createdAt:'2026-08-20T11:00:00.000Z'
+    occurredAt:finalRecordedAt,
+    createdAt:finalRecordedAt
   };
   store.setState((state) => { const draft=structuredClone(state); draft.assessments.push(finalAssessment); return draft; });
   assert.equal(canCompleteTreatmentAdministratively(store.getState(), treatment.id), true);
@@ -81,7 +82,8 @@ globalThis.localStorage = new MemoryStorage();
   const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:assisted.id, title:'Tratamento protegido', componentName:'Componente' });
   stopTreatmentComponent(store, component.id, { sessionId:session.id, reason:'Resolvido' });
   closeSession(store,session.id);
-  store.setState((state) => { const draft=structuredClone(state); draft.assessments.push({ id:'invalid_final', kind:HAWKINS_KIND, phase:HawkinsPhase.FINAL, treatmentId:treatment.id, assistedEntityId:assisted.id, hertz:0, frequency:'0', occurredAt:'2026-08-20T12:00:00.000Z', createdAt:'2026-08-20T12:00:00.000Z' }); return draft; });
+  const invalidRecordedAt = store.nowIso();
+  store.setState((state) => { const draft=structuredClone(state); draft.assessments.push({ id:'invalid_final', kind:HAWKINS_KIND, phase:HawkinsPhase.FINAL, treatmentId:treatment.id, assistedEntityId:assisted.id, hertz:0, frequency:'0', occurredAt:invalidRecordedAt, createdAt:invalidRecordedAt }); return draft; });
   assert.equal(canCompleteTreatmentAdministratively(store.getState(), treatment.id), false, 'invalid final Hawkins must never unlock administrative completion');
   assert.throws(()=>completeTreatmentAdministratively(store,treatment.id,{confirmNoMeasurement:true}),/Hawkins.*obrigatória/i);
   assert.equal(store.getState().treatments.find((item)=>item.id===treatment.id).status,TreatmentStatus.IN_PROGRESS);
