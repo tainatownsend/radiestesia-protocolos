@@ -107,6 +107,7 @@ export function stopTreatmentComponent(store, componentId, input = {}) {
 export function replaceTreatmentComponent(store, componentId, input) {
   const state = store.getState(); const old = state.treatmentComponents.find((item) => item.id === componentId);
   if (!old) throw new Error('Componente original não encontrado.');
+  if (![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(old.status)) throw new Error('Componente não disponível para substituição; selecione um componente ativo.');
   const replacement = addTreatmentComponent(store, { ...input, treatmentId: old.treatmentId });
   store.setState((current) => { const draft = structuredClone(current); const original = draft.treatmentComponents.find((item) => item.id === componentId); const treatment = draft.treatments.find((item) => item.id === original.treatmentId); const now = store.nowIso(); original.status = 'REPLACED'; original.stoppedAt = now; original.replacedByComponentId = replacement.id; original.updatedAt = now; addEvent(store, draft, { eventType: BacklogEventType.COMPONENT_REPLACED, entityType: 'TreatmentComponent', entityId: original.id, sessionId: input.sessionId || null, assistedEntityId: treatment?.assistedEntityId || null, metadata: { treatmentId: original.treatmentId, replacementComponentId: replacement.id, originalName: original.name, replacementName: replacement.name } }); return draft; });
   return replacement;
