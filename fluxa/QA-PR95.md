@@ -85,3 +85,5 @@ Enviar:
 8. no iPad, ao menos um screenshot em retrato e um em paisagem.
 
 Se nenhum critério de reprovação ocorrer e o CI estiver verde no merge result contra o `main` atual, a PR pode sair de draft para merge.
+
+<!-- Preview refresh marker: mobile validation round 4, 2026-08-25. Documentation-only change; no runtime behavior changed. -->
