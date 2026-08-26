@@ -12,7 +12,7 @@ function makeStore(currentAssistedEntityId){
     events:[],preparationRuns:[{id:'p1',sessionId:'s1',status:'COMPLETED'}],closingRuns:[],
     investigations:[],findings:[],
     treatments:[{id:'t1',assistedEntityId:'a1',status:'IN_PROGRESS',title:'Tratamento A'}],
-    treatmentComponents:[],componentReviews:[],treatmentReviews:[],assessments:[],reikiApplications:[],tools:[],customProtocols:[],settings:{}
+    treatmentComponents:[{id:'c1',treatmentId:'t1',name:'Componente concluído',status:'COMPLETED'}],componentReviews:[],treatmentReviews:[],assessments:[],reikiApplications:[],tools:[],customProtocols:[],settings:{}
   };
   return {
     getState:()=>state,
