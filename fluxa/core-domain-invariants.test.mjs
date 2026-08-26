@@ -122,6 +122,7 @@ function baseline(store,sessionId,assistedEntityId,hertz=450){
   const session=startSession(store);
   const assisted=createAssistedEntity(store,{type:AssistedType.PERSON,displayName:'Notas',birthDate:'1980-01-01'});
   assert.throws(()=>addSessionNote(store,session.id,'missing','Teste'),/assistido válido/i);
+  selectAssistedForSession(store,session.id,assisted.id);
   addSessionNote(store,session.id,assisted.id,'Nota válida');
   assert.equal(store.getState().events.filter((event)=>event.eventType==='NOTE_CREATED').length,1);
   closeSession(store,session.id);
