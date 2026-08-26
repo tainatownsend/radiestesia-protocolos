@@ -17,6 +17,7 @@ export const ORIENTING_ASSESSMENT_AREAS = Object.freeze([
 ]);
 
 const areaById = new Map(ORIENTING_ASSESSMENT_AREAS.map((area) => [area.id, area]));
+const MASTER_PROTOCOL_NAME = 'Protocolo Mestre de Causa Raiz';
 
 function protocolNameKey(value='') {
   return String(value)
@@ -50,11 +51,11 @@ function suggestionLimit(value) {
 }
 
 function orderedSuggestionNames(selected) {
-  if (!selected.length || selected.some((area) => area.id === 'unclear')) return ['Protocolo Mestre de Causa Raiz'];
+  if (!selected.length || selected.some((area) => area.id === 'unclear')) return [MASTER_PROTOCOL_NAME];
   const names = [];
   if (selected.length <= 2) {
     for (const area of selected) for (const name of area.protocolNames) if (!names.includes(name)) names.push(name);
-    return names.length ? names : ['Protocolo Mestre de Causa Raiz'];
+    return names.length ? names : [MASTER_PROTOCOL_NAME];
   }
   const maxDepth = Math.max(0, ...selected.map((area) => area.protocolNames.length));
   for (let depth = 0; depth < maxDepth; depth += 1) {
@@ -63,7 +64,7 @@ function orderedSuggestionNames(selected) {
       if (name && !names.includes(name)) names.push(name);
     }
   }
-  return names.length ? names : ['Protocolo Mestre de Causa Raiz'];
+  return names.length ? names : [MASTER_PROTOCOL_NAME];
 }
 
 export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) {
@@ -91,6 +92,15 @@ export function suggestProtocolsForAreas(areaIds = [], catalog = [], limit = 3) 
       reason: selected.find((area) => area.protocolNames.some((candidateName) => protocolNameKey(candidateName) === protocolNameKey(protocol.name)))?.label || 'Tema ainda não delimitado'
     });
     if (suggestions.length >= maxSuggestions) break;
+  }
+  if (!suggestions.length && selected.length && !selected.some((area) => area.id === 'unclear')) {
+    const master = byName.get(protocolNameKey(MASTER_PROTOCOL_NAME));
+    if (master) suggestions.push({
+      protocolId: master.id,
+      protocolName: master.name,
+      category: master.category || 'Investigação',
+      reason: 'Fallback para investigação de causa raiz'
+    });
   }
   return suggestions;
 }
@@ -120,8 +130,8 @@ export function recordOrientingAssessment(store, input, catalog = []) {
   if (!focusAreas.length) throw new Error('Selecione pelo menos uma área ou marque que o tema ainda não está claro.');
   if (focusAreas.includes('unclear') && focusAreas.length > 1) throw new Error('“Ainda não está claro” deve ser usado sozinho, sem outras áreas selecionadas.');
   const focusAreaLabels = focusAreas.map((id) => areaById.get(id)?.label).filter(Boolean);
-  const suggestionLimit = focusAreas.includes('unclear') ? 1 : Math.min(6, Math.max(3, focusAreas.length));
-  const suggestions = suggestProtocolsForAreas(focusAreas, catalog, suggestionLimit);
+  const maxSuggestions = focusAreas.includes('unclear') ? 1 : Math.min(6, Math.max(3, focusAreas.length));
+  const suggestions = suggestProtocolsForAreas(focusAreas, catalog, maxSuggestions);
   if (!suggestions.length) throw new Error('A biblioteca terapêutica ainda não está disponível. Tente novamente em instantes.');
   const now = store.nowIso();
   const assessment = {
