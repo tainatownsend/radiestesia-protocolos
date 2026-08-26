@@ -1,0 +1,103 @@
+/* Mobile reconciliation from real-device PR #95 validation. Loaded last. */
+
+/* The idle Home is intentionally action-first. Historical activity lives in Histórico. */
+body.fluxa-home-idle .home-recent-history-hidden{display:none!important;}
+
+/* Session header: preserve brand contrast and keep controls on one usable row. */
+.topbar:has(.session-indicator) .brand,
+.topbar:has(.session-indicator) .brand-button{color:#fff!important;opacity:1!important;}
+.topbar:has(.session-indicator) .brand svg,
+.topbar:has(.session-indicator) .brand-button svg{color:#d7f1eb!important;stroke:currentColor!important;opacity:1!important;}
+
+@media(max-width:699px){
+  /* Real-device sheets: one scrolling surface, no content clipped under Safari chrome. */
+  .modal-backdrop{align-items:flex-start!important;padding:12px max(10px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))!important;overflow:auto!important;}
+  .sheet{
+    width:calc(100vw - max(20px,env(safe-area-inset-left) + env(safe-area-inset-right)))!important;
+    max-width:none!important;
+    max-height:calc(100dvh - 24px)!important;
+    margin:auto!important;
+    padding:16px!important;
+    border-radius:24px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    scroll-padding-top:88px!important;
+    scroll-padding-bottom:28px!important;
+  }
+  .sheet-head{top:-16px!important;margin:-16px -16px 16px!important;padding:16px!important;min-height:76px!important;border-radius:24px 24px 0 0!important;}
+  .sheet-head h2{font-size:clamp(24px,7vw,32px)!important;line-height:1.08!important;}
+  .sheet .close-btn{flex:0 0 52px!important;width:52px!important;height:52px!important;}
+
+  /* Preparation: compact the four required checkpoints instead of rendering giant cards. */
+  .prep-mobile-reconciled>.checklist{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:10px 0 14px!important;}
+  .prep-mobile-reconciled>.checklist .check-row{min-height:54px!important;padding:10px 11px!important;border-radius:14px!important;gap:8px!important;align-items:center!important;}
+  .prep-mobile-reconciled>.checklist .check-row input{width:22px!important;height:22px!important;}
+  .prep-mobile-reconciled>.checklist .check-row span{font-size:12px!important;line-height:1.25!important;word-break:normal!important;overflow-wrap:normal!important;}
+  .prep-mobile-reconciled [data-prep-structured]{gap:12px!important;}
+  .prep-mobile-reconciled [data-prep-structured]>div:first-child{padding:4px 2px 0!important;}
+  .prep-mobile-reconciled [data-prep-structured]>.field,
+  .prep-mobile-reconciled [data-prep-structured]>.check-row,
+  .prep-mobile-reconciled [data-prep-structured]>.prep-unlisted-fields{padding:14px!important;border-radius:16px!important;}
+  .prep-mobile-reconciled .hawkins-input{min-height:58px!important;}
+  .prep-mobile-reconciled .prep-search-launch{min-height:50px!important;}
+
+  /* Hawkins uses one readable component on every flow. */
+  .hawkins-measurement-card{padding:14px!important;border-radius:16px!important;gap:12px!important;}
+  .hawkins-measurement-card form{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;}
+  .hawkins-measurement-card form .btn{width:100%!important;min-height:54px!important;}
+  .hawkins-input{width:100%!important;min-width:0!important;}
+  .hawkins-input input{font-size:18px!important;}
+
+  /* Quick triage should fit in the viewport without a mostly-empty white canvas. */
+  .premium-workflow-protocol .question-panel{min-height:clamp(280px,46dvh,420px)!important;padding:24px 12px 18px!important;}
+  .premium-workflow-protocol .question-panel h1{font-size:clamp(30px,8vw,44px)!important;line-height:1.08!important;}
+  .premium-workflow-protocol .binary-actions{position:static!important;margin-top:10px!important;gap:10px!important;}
+  .premium-workflow-protocol .binary-btn{min-height:74px!important;font-size:24px!important;}
+
+  /* Finding classification: always full-width below the finding, never a one-character column. */
+  #findings-form .check-row,
+  #branch-findings-form .check-row{display:grid!important;grid-template-columns:34px minmax(0,1fr)!important;gap:10px 12px!important;align-items:start!important;}
+  #findings-form .check-row>span,
+  #branch-findings-form .check-row>span{min-width:0!important;word-break:normal!important;overflow-wrap:normal!important;}
+  #findings-form .finding-classification-inline,
+  #branch-findings-form .finding-classification-inline{
+    grid-column:1/-1!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    width:100%!important;
+    min-width:0!important;
+    gap:7px!important;
+    margin-top:4px!important;
+    padding:10px 12px!important;
+  }
+  #findings-form .finding-classification-inline>.muted,
+  #branch-findings-form .finding-classification-inline>.muted{
+    display:block!important;width:100%!important;max-width:none!important;min-width:0!important;
+    white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important;overflow:visible!important;
+    font-size:12px!important;line-height:1.25!important;
+  }
+  #findings-form .finding-classification-inline select,
+  #branch-findings-form .finding-classification-inline select{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;min-height:48px!important;}
+
+  /* Treatment composer: footer belongs to document flow on phones, never floats over fields. */
+  #treatment-form.mobile-treatment-compose,
+  #treatment-item-management-form.mobile-treatment-compose{padding-bottom:8px!important;}
+  #treatment-form .mobile-treatment-compose-footer,
+  #treatment-item-management-form .mobile-treatment-compose-footer{
+    position:static!important;inset:auto!important;transform:none!important;
+    display:grid!important;grid-template-columns:1fr!important;gap:10px!important;
+    width:100%!important;margin:16px 0 0!important;padding:12px!important;
+    border:1px solid var(--fx-border,#dceae5)!important;border-radius:16px!important;
+    background:var(--fx-surface,#fff)!important;box-shadow:none!important;
+  }
+  .mobile-treatment-compose-summary{display:block!important;text-align:left!important;}
+  .mobile-treatment-compose-footer .btn{width:100%!important;min-height:54px!important;}
+
+  /* Bottom nav remains inside the app safe area and never overlaps sheet content. */
+  body:has(.modal-backdrop) .workspace-bottom-nav{visibility:hidden!important;pointer-events:none!important;}
+}
+
+@media(max-width:390px){
+  .prep-mobile-reconciled>.checklist{grid-template-columns:1fr!important;}
+}
