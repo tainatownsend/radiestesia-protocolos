@@ -278,6 +278,8 @@ export function recordReikiRetrospective(store, input) {
 }
 export function addSessionNote(store, sessionId, assistedEntityId, body) {
   const text = String(body || '').trim(); if (!text) return;
-  const state = store.getState(); requireOpenSession(state, sessionId); if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
+  const state = store.getState(); const session = requireOpenSession(state, sessionId); if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido da sessão antes de adicionar uma anotação.');
+  if (session.currentAssistedEntityId !== assistedEntityId) throw new Error('O Assistido atual não corresponde à anotação que você tentou registrar.');
   store.setState((source) => { const draft = structuredClone(source); addEvent(store, draft, { eventType: EventType.NOTE_CREATED, entityType: 'Note', entityId: store.makeId('note'), sessionId, assistedEntityId, metadata: { body: text } }); return draft; });
 }
