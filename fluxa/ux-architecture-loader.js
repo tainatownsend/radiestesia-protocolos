@@ -10,3 +10,4 @@ import './session-cockpit-close-ui.js';
 import './app-audit-fix.js';
 import './theme-system-ui.js';
 import './validation-round-3-ui.js';
+import './validation-round-4-ui.js';
