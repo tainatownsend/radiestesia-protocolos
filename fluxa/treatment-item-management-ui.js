@@ -1,7 +1,6 @@
 import { createStore } from './store.js';
 import { getOpenSession } from './domain.js';
-import { addTreatmentComponent,replaceTreatmentComponent } from './backlog.js';
-import { enrichComponentWithTreatmentItem } from './treatment-item-graphs.js';
+import { addStructuredTreatmentComponent,replaceStructuredTreatmentComponent } from './treatment-item-operations.js';
 
 const store=createStore();
 const esc=(value='')=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -21,4 +20,4 @@ window.addEventListener('click',event=>{const b=event.target.closest?.('button')
   if(b.dataset.manageAddGraph!==undefined){event.preventDefault();const command=b.closest('[data-manage-command]'),box=command.querySelector('[data-manage-graphs]'),n=box.querySelectorAll('[data-manage-graph]').length+1;box.insertAdjacentHTML('beforeend',graphRow(n));return;}
   if(b.dataset.manageRemoveGraph!==undefined){event.preventDefault();const command=b.closest('[data-manage-command]');b.closest('[data-manage-graph]')?.remove();command.querySelectorAll('[data-manage-graph]').forEach((row,i)=>{const l=row.querySelector('label');if(l)l.textContent=`Gráfico ${i+1}`;});}
 },true);
-window.addEventListener('submit',event=>{const form=event.target;if(form?.id!=='treatment-item-management-form')return;event.preventDefault();event.stopImmediatePropagation();try{const session=getOpenSession(store.getState());if(!session)throw new Error('Abra e prepare uma sessão antes de alterar o tratamento.');const item=read(form),base={sessionId:session.id,treatmentId:form.dataset.treatment,name:item.itemLabel,instructions:item.commands.map(c=>c.text).join('\n'),durationValue:null,durationUnit:'DAY'};const component=form.dataset.replace?replaceTreatmentComponent(store,form.dataset.replace,base):addTreatmentComponent(store,base);enrichComponentWithTreatmentItem(store,component.id,item);document.querySelector('#treatment-item-management-overlay')?.remove();document.querySelector('#backlog-overlay')?.remove();}catch(error){alert(error.message);}},true);
+window.addEventListener('submit',event=>{const form=event.target;if(form?.id!=='treatment-item-management-form')return;event.preventDefault();event.stopImmediatePropagation();try{const session=getOpenSession(store.getState());if(!session)throw new Error('Abra e prepare uma sessão antes de alterar o tratamento.');const item=read(form),component={sessionId:session.id,treatmentId:form.dataset.treatment,name:item.itemLabel,instructions:item.commands.map(c=>c.text).join('\n'),durationValue:null,durationUnit:'DAY'};if(form.dataset.replace)replaceStructuredTreatmentComponent(store,form.dataset.replace,{component,item});else addStructuredTreatmentComponent(store,{component,item});document.querySelector('#treatment-item-management-overlay')?.remove();document.querySelector('#backlog-overlay')?.remove();}catch(error){alert(error.message);}},true);
