@@ -1,3 +1,4 @@
+// Preview refresh marker: mobile validation round 4.
 const STYLE='validation-round-4.css';
 function ensureStyle(){if(document.querySelector(`link[href="${STYLE}"]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=STYLE;document.head.appendChild(l);}
 function normalizeText(node){return String(node?.textContent||'').replace(/\s+/g,' ').trim();}
