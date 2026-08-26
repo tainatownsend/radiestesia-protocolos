@@ -147,7 +147,15 @@ function baseline(store, sessionId, assistedEntityId, hertz = 450) {
   );
   prepare(store, session.id);
   baseline(store,session.id,person.id,500);
-  const { treatment } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
+  const { treatment, component } = createTreatment(store, { sessionId:session.id, assistedEntityId:person.id, title:'Final', componentName:'A', durationValue:1, durationUnit:'HOUR' });
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    const target = draft.treatmentComponents.find((item) => item.id === component.id);
+    target.status = TreatmentStatus.COMPLETED;
+    target.completedAt = store.nowIso();
+    target.updatedAt = store.nowIso();
+    return draft;
+  });
   assert.throws(
     () => recordStructuredFinalAssessment(store, { sessionId:session.id, treatmentId:treatment.id, frequency:'', imbalancePercent:15 }),
     /frequência vibracional/i,
