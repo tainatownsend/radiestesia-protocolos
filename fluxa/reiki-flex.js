@@ -46,7 +46,10 @@ function requireAssisted(state, assistedEntityId) {
 function requireSessionContext(state, sessionId, assistedEntityId, action) {
   const session = state.sessions.find((item) => item.id === sessionId && item.status === 'OPEN');
   if (!session) throw new Error(action === 'resume' ? 'Reabra uma sessão para retomar esta aplicação vinculada à sessão.' : 'A sessão informada não está aberta.');
-  if (session.currentAssistedEntityId && session.currentAssistedEntityId !== assistedEntityId) {
+  if (!session.currentAssistedEntityId) {
+    throw new Error('Selecione o Assistido da aplicação de Reiki nesta sessão.');
+  }
+  if (session.currentAssistedEntityId !== assistedEntityId) {
     throw new Error('O Assistido atual não corresponde à aplicação de Reiki desta sessão.');
   }
   return session;
