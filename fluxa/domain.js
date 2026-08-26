@@ -209,7 +209,25 @@ export function startReiki(store, sessionId, assistedEntityId) {
   const now = store.nowIso(); const application = { id: store.makeId('reiki'), sessionId, assistedEntityId, status: 'RUNNING', startedAt: now, endedAt: null, durationSeconds: null, notes: null, intervals: [{ id: store.makeId('int'), startedAt: now, endedAt: null }], createdAt: now, updatedAt: now };
   store.setState((current) => { const draft = structuredClone(current); draft.reikiApplications.push(application); addEvent(store, draft, { eventType: EventType.REIKI_STARTED, entityType: 'ReikiApplication', entityId: application.id, sessionId, assistedEntityId }); return draft; }); return application;
 }
-export function pauseReiki(store, applicationId) { store.setState((state) => { const draft = structuredClone(state); const app = draft.reikiApplications.find((item) => item.id === applicationId && item.status === 'RUNNING'); if (!app) return draft; const interval = [...app.intervals].reverse().find((item) => !item.endedAt); if (interval) interval.endedAt = store.nowIso(); app.status = 'PAUSED'; app.updatedAt = store.nowIso(); addEvent(store, draft, { eventType: EventType.REIKI_PAUSED, entityType: 'ReikiApplication', entityId: app.id, sessionId: app.sessionId, assistedEntityId: app.assistedEntityId }); return draft; }); }
+export function pauseReiki(store, applicationId) {
+  const state = store.getState();
+  const current = state.reikiApplications.find((item) => item.id === applicationId && item.status === 'RUNNING');
+  if (!current) return;
+  const session = requireOpenSession(state, current.sessionId);
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido da aplicação de Reiki antes de pausar.');
+  if (session.currentAssistedEntityId !== current.assistedEntityId) throw new Error('O Assistido atual não corresponde à aplicação de Reiki que está sendo pausada.');
+  store.setState((source) => {
+    const draft = structuredClone(source);
+    const app = draft.reikiApplications.find((item) => item.id === applicationId && item.status === 'RUNNING');
+    if (!app) return draft;
+    const interval = [...app.intervals].reverse().find((item) => !item.endedAt);
+    if (interval) interval.endedAt = store.nowIso();
+    app.status = 'PAUSED';
+    app.updatedAt = store.nowIso();
+    addEvent(store, draft, { eventType: EventType.REIKI_PAUSED, entityType: 'ReikiApplication', entityId: app.id, sessionId: app.sessionId, assistedEntityId: app.assistedEntityId });
+    return draft;
+  });
+}
 export function resumeReiki(store, applicationId) {
   const state = store.getState();
   const app = state.reikiApplications.find((item) => item.id === applicationId && item.status === 'PAUSED');
