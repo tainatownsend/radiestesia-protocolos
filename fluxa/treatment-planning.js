@@ -111,7 +111,10 @@ export function startPlannedTreatment(store, treatmentId, sessionId) {
   if (!treatment) throw new Error('Tratamento planejado não encontrado.');
   const assisted = state.assistedEntities.find((item) => item.id === treatment.assistedEntityId && !item.archivedAt);
   if (!assisted) throw new Error('O assistido deste tratamento não está disponível.');
-  if (session.currentAssistedEntityId && session.currentAssistedEntityId !== treatment.assistedEntityId) {
+  if (!session.currentAssistedEntityId) {
+    throw new Error('Selecione o Assistido do tratamento planejado antes de iniciá-lo.');
+  }
+  if (session.currentAssistedEntityId !== treatment.assistedEntityId) {
     throw new Error('O Assistido atual não corresponde ao tratamento planejado que você tentou iniciar.');
   }
   const baseline = requireHawkinsBaseline(state, { sessionId, assistedEntityId:treatment.assistedEntityId });
