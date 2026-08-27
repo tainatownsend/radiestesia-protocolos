@@ -148,7 +148,27 @@ export function createTreatment(store, input) {
   const component = { id: store.makeId('cmp'), treatmentId: treatment.id, type: 'TOOL', name: input.componentName?.trim() || 'Componente terapêutico', instructions: input.instructions?.trim() || null, status: TreatmentStatus.IN_PROGRESS, startedAt, durationValue: Number(input.durationValue) || null, durationUnit: input.durationUnit || null, expectedEndAt: addDuration(startedAt, input.durationValue, input.durationUnit), completedAt: null, interruptedAt: null, createdAt: store.nowIso(), updatedAt: store.nowIso() };
   store.setState((current) => { const draft = structuredClone(current); draft.treatments.push(treatment); draft.treatmentComponents.push(component); for (const findingId of treatment.findingIds) { const finding = draft.findings.find((item) => item.id === findingId); if (finding) finding.status = 'TREATED'; } addEvent(store, draft, { eventType: EventType.TREATMENT_CREATED, entityType: 'Treatment', entityId: treatment.id, sessionId: input.sessionId, assistedEntityId: input.assistedEntityId, metadata: { title: treatment.title, hawkinsBaselineAssessmentId: baseline.id, hawkinsBaselineHertz: baseline.hertz } }); addEvent(store, draft, { eventType: EventType.TREATMENT_STARTED, entityType: 'Treatment', entityId: treatment.id, sessionId: input.sessionId, assistedEntityId: input.assistedEntityId, metadata: { title: treatment.title, hawkinsBaselineAssessmentId: baseline.id, hawkinsBaselineHertz: baseline.hertz } }); addEvent(store, draft, { eventType: EventType.COMPONENT_STARTED, entityType: 'TreatmentComponent', entityId: component.id, sessionId: input.sessionId, assistedEntityId: input.assistedEntityId, metadata: { treatmentId: treatment.id, name: component.name, expectedEndAt: component.expectedEndAt } }); return draft; }); return { treatment, component };
 }
-export function interruptTreatment(store, treatmentId, reason = '') { store.setState((state) => { const draft = structuredClone(state); const treatment = draft.treatments.find((item) => item.id === treatmentId); if (!treatment || treatment.status !== TreatmentStatus.IN_PROGRESS) return draft; treatment.status = TreatmentStatus.INTERRUPTED; treatment.interruptedAt = store.nowIso(); treatment.updatedAt = store.nowIso(); draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.IN_PROGRESS).forEach((item) => { item.status = TreatmentStatus.INTERRUPTED; item.interruptedAt = store.nowIso(); item.updatedAt = store.nowIso(); }); addEvent(store, draft, { eventType: EventType.TREATMENT_INTERRUPTED, entityType: 'Treatment', entityId: treatment.id, assistedEntityId: treatment.assistedEntityId, metadata: { reason: reason.trim() || null } }); return draft; }); }
+export function interruptTreatment(store, treatmentId, reason = '') {
+  const state = store.getState();
+  const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
+  if (!treatment) return;
+  const openSession = getOpenSession(state);
+  if (!openSession) throw new Error('Abra e prepare uma sessão antes de interromper o tratamento.');
+  const session = requirePreparedSession(state, openSession.id);
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de interrompê-lo.');
+  if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que você tentou interromper.');
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const target = draft.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
+    if (!target) return draft;
+    target.status = TreatmentStatus.INTERRUPTED;
+    target.interruptedAt = store.nowIso();
+    target.updatedAt = store.nowIso();
+    draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.IN_PROGRESS).forEach((item) => { item.status = TreatmentStatus.INTERRUPTED; item.interruptedAt = store.nowIso(); item.updatedAt = store.nowIso(); });
+    addEvent(store, draft, { eventType: EventType.TREATMENT_INTERRUPTED, entityType: 'Treatment', entityId: target.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { reason: reason.trim() || null } });
+    return draft;
+  });
+}
 export function resumeTreatment(store, treatmentId) {
   const state = store.getState();
   const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.INTERRUPTED);
