@@ -132,7 +132,7 @@ export function answerInvestigation(store, investigationId, answer) {
   store.setState((source) => { const draft = structuredClone(source); const investigation = draft.investigations.find((item) => item.id === investigationId); if (!investigation || investigation.status !== 'IN_PROGRESS') return draft; const question = investigation.protocolSnapshot.questions[investigation.currentIndex]; const existing = investigation.answers.find((item) => item.questionId === question.id); if (existing) { existing.answer = answer; existing.answeredAt = store.nowIso(); } else investigation.answers.push({ questionId: question.id, questionTextSnapshot: question.text, answer, answeredAt: store.nowIso() }); if (investigation.currentIndex < investigation.protocolSnapshot.questions.length - 1) investigation.currentIndex += 1; else { investigation.status = 'COMPLETED'; investigation.completedAt = store.nowIso(); addEvent(store, draft, { eventType: EventType.INVESTIGATION_COMPLETED, entityType: 'Investigation', entityId: investigation.id, sessionId: investigation.currentSessionId, assistedEntityId: investigation.assistedEntityId, metadata: { protocolName: investigation.protocolSnapshot.name } }); } investigation.updatedAt = store.nowIso(); return draft; });
 }
 export function confirmFindings(store, investigationId, questionIds) {
-  const state = store.getState(); const sourceInvestigation = state.investigations.find((item) => item.id === investigationId && item.status === 'COMPLETED'); if (!sourceInvestigation) return []; requirePreparedSession(state, sourceInvestigation.currentSessionId); const created = [];
+  const state = store.getState(); const sourceInvestigation = state.investigations.find((item) => item.id === investigationId && item.status === 'COMPLETED'); if (!sourceInvestigation) return []; const session = requirePreparedSession(state, sourceInvestigation.currentSessionId); if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido da investigação antes de confirmar os achados.'); if (session.currentAssistedEntityId !== sourceInvestigation.assistedEntityId) throw new Error('O Assistido atual não corresponde à investigação cujos achados estão sendo confirmados.'); const created = [];
   store.setState((source) => { const draft = structuredClone(source); const investigation = draft.investigations.find((item) => item.id === investigationId); if (!investigation || investigation.status !== 'COMPLETED') return draft; for (const questionId of questionIds) { const answer = investigation.answers.find((item) => item.questionId === questionId && item.answer === 'YES'); if (!answer) continue; const duplicate = draft.findings.find((item) => item.investigationId === investigationId && item.sourceQuestionId === questionId && item.status !== 'DISMISSED'); if (duplicate) { created.push(duplicate); continue; } const finding = { id: store.makeId('find'), assistedEntityId: investigation.assistedEntityId, investigationId, sourceQuestionId: questionId, classification: 'FACTOR_RELEVANT', title: answer.questionTextSnapshot, status: 'IDENTIFIED', createdAt: store.nowIso() }; draft.findings.push(finding); created.push(finding); addEvent(store, draft, { eventType: EventType.FINDING_IDENTIFIED, entityType: 'Finding', entityId: finding.id, sessionId: investigation.currentSessionId, assistedEntityId: investigation.assistedEntityId, metadata: { title: finding.title } }); } return draft; }); return created;
 }
 
@@ -148,7 +148,27 @@ export function createTreatment(store, input) {
   const component = { id: store.makeId('cmp'), treatmentId: treatment.id, type: 'TOOL', name: input.componentName?.trim() || 'Componente terapêutico', instructions: input.instructions?.trim() || null, status: TreatmentStatus.IN_PROGRESS, startedAt, durationValue: Number(input.durationValue) || null, durationUnit: input.durationUnit || null, expectedEndAt: addDuration(startedAt, input.durationValue, input.durationUnit), completedAt: null, interruptedAt: null, createdAt: store.nowIso(), updatedAt: store.nowIso() };
   store.setState((current) => { const draft = structuredClone(current); draft.treatments.push(treatment); draft.treatmentComponents.push(component); for (const findingId of treatment.findingIds) { const finding = draft.findings.find((item) => item.id === findingId); if (finding) finding.status = 'TREATED'; } addEvent(store, draft, { eventType: EventType.TREATMENT_CREATED, entityType: 'Treatment', entityId: treatment.id, sessionId: input.sessionId, assistedEntityId: input.assistedEntityId, metadata: { title: treatment.title, hawkinsBaselineAssessmentId: baseline.id, hawkinsBaselineHertz: baseline.hertz } }); addEvent(store, draft, { eventType: EventType.TREATMENT_STARTED, entityType: 'Treatment', entityId: treatment.id, sessionId: input.sessionId, assistedEntityId: input.assistedEntityId, metadata: { title: treatment.title, hawkinsBaselineAssessmentId: baseline.id, hawkinsBaselineHertz: baseline.hertz } }); addEvent(store, draft, { eventType: EventType.COMPONENT_STARTED, entityType: 'TreatmentComponent', entityId: component.id, sessionId: input.sessionId, assistedEntityId: input.assistedEntityId, metadata: { treatmentId: treatment.id, name: component.name, expectedEndAt: component.expectedEndAt } }); return draft; }); return { treatment, component };
 }
-export function interruptTreatment(store, treatmentId, reason = '') { store.setState((state) => { const draft = structuredClone(state); const treatment = draft.treatments.find((item) => item.id === treatmentId); if (!treatment || treatment.status !== TreatmentStatus.IN_PROGRESS) return draft; treatment.status = TreatmentStatus.INTERRUPTED; treatment.interruptedAt = store.nowIso(); treatment.updatedAt = store.nowIso(); draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.IN_PROGRESS).forEach((item) => { item.status = TreatmentStatus.INTERRUPTED; item.interruptedAt = store.nowIso(); item.updatedAt = store.nowIso(); }); addEvent(store, draft, { eventType: EventType.TREATMENT_INTERRUPTED, entityType: 'Treatment', entityId: treatment.id, assistedEntityId: treatment.assistedEntityId, metadata: { reason: reason.trim() || null } }); return draft; }); }
+export function interruptTreatment(store, treatmentId, reason = '') {
+  const state = store.getState();
+  const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
+  if (!treatment) return;
+  const openSession = getOpenSession(state);
+  if (!openSession) throw new Error('Abra e prepare uma sessão antes de interromper o tratamento.');
+  const session = requirePreparedSession(state, openSession.id);
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido do tratamento antes de interrompê-lo.');
+  if (session.currentAssistedEntityId !== treatment.assistedEntityId) throw new Error('O Assistido atual não corresponde ao tratamento que você tentou interromper.');
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const target = draft.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.IN_PROGRESS);
+    if (!target) return draft;
+    target.status = TreatmentStatus.INTERRUPTED;
+    target.interruptedAt = store.nowIso();
+    target.updatedAt = store.nowIso();
+    draft.treatmentComponents.filter((item) => item.treatmentId === treatmentId && item.status === TreatmentStatus.IN_PROGRESS).forEach((item) => { item.status = TreatmentStatus.INTERRUPTED; item.interruptedAt = store.nowIso(); item.updatedAt = store.nowIso(); });
+    addEvent(store, draft, { eventType: EventType.TREATMENT_INTERRUPTED, entityType: 'Treatment', entityId: target.id, sessionId: session.id, assistedEntityId: target.assistedEntityId, metadata: { reason: reason.trim() || null } });
+    return draft;
+  });
+}
 export function resumeTreatment(store, treatmentId) {
   const state = store.getState();
   const treatment = state.treatments.find((item) => item.id === treatmentId && item.status === TreatmentStatus.INTERRUPTED);
@@ -278,6 +298,8 @@ export function recordReikiRetrospective(store, input) {
 }
 export function addSessionNote(store, sessionId, assistedEntityId, body) {
   const text = String(body || '').trim(); if (!text) return;
-  const state = store.getState(); requireOpenSession(state, sessionId); if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
+  const state = store.getState(); const session = requireOpenSession(state, sessionId); if (!getAssisted(state, assistedEntityId)) throw new Error('Selecione um assistido válido.');
+  if (!session.currentAssistedEntityId) throw new Error('Selecione o Assistido da sessão antes de adicionar uma anotação.');
+  if (session.currentAssistedEntityId !== assistedEntityId) throw new Error('O Assistido atual não corresponde à anotação que você tentou registrar.');
   store.setState((source) => { const draft = structuredClone(source); addEvent(store, draft, { eventType: EventType.NOTE_CREATED, entityType: 'Note', entityId: store.makeId('note'), sessionId, assistedEntityId, metadata: { body: text } }); return draft; });
 }

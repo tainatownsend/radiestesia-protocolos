@@ -1,0 +1,146 @@
+/* Operational clarity pass: guide the work without changing Fluxa's domain model. */
+
+[data-home-cockpit] .home-cockpit-next {
+  border: 1px solid rgba(23, 63, 70, .14);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(232, 247, 242, .72);
+}
+[data-home-cockpit] .home-next-copy h1 { margin-bottom: 6px; }
+[data-home-cockpit] .home-next-action { margin-top: 14px; }
+[data-home-cockpit] .home-next-action .btn { width: 100%; }
+
+[data-treatment-filters] { margin-block: 14px 18px; }
+[data-treatment-filters] .button-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 2px 2px 8px;
+  scrollbar-width: none;
+}
+[data-treatment-filters] .button-row::-webkit-scrollbar { display: none; }
+[data-treatment-filters] [data-treatment-filter] {
+  flex: 0 0 auto;
+  min-height: 42px;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding-inline: 15px;
+}
+
+.oc-treatment-status {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  margin: 14px 0;
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: #F1F7F4;
+  border: 1px solid rgba(23, 63, 70, .10);
+}
+.oc-treatment-status .oc-status-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  background: #DDF2EA;
+  color: #173F46;
+  font-weight: 800;
+}
+.oc-treatment-status strong,
+.oc-treatment-status span,
+.oc-treatment-status small { display: block; }
+.oc-treatment-status span,
+.oc-treatment-status small {
+  margin-top: 3px;
+  color: #5C6E6A;
+  line-height: 1.35;
+}
+.oc-treatment-status small { font-size: .82rem; }
+
+.treatment-card .button-row { align-items: stretch; }
+.treatment-card .oc-more-actions {
+  position: relative;
+  flex: 1 1 100%;
+}
+.treatment-card .oc-more-actions > summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  color: #526764;
+  font-weight: 700;
+  border-radius: 12px;
+}
+.treatment-card .oc-more-actions > summary::-webkit-details-marker { display: none; }
+.treatment-card .oc-more-actions[open] > summary { background: #F2F5F3; }
+.treatment-card .oc-destructive-action {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid rgba(135, 80, 71, .34);
+  background: transparent;
+  color: #875047;
+}
+.treatment-card [data-final-cycle] { font-weight: 800; }
+.treatment-card .oc-treatment-status + .button-row { margin-top: 0; }
+.treatment-card.oc-focus-treatment {
+  outline: 3px solid rgba(87, 193, 167, .32);
+  outline-offset: 3px;
+}
+
+.oc-final-form { gap: 18px; }
+.oc-final-baseline {
+  padding: 15px;
+  border-radius: 16px;
+  background: #F1F7F4;
+  border: 1px solid rgba(23, 63, 70, .10);
+}
+.oc-final-baseline .eyebrow,
+.oc-current-heading .eyebrow,
+.oc-decision-heading .eyebrow { margin-bottom: 5px; }
+.oc-baseline-value {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: baseline;
+}
+.oc-baseline-value span { color: #5C6E6A; }
+.oc-baseline-value strong { color: #173F46; white-space: nowrap; }
+.oc-final-baseline small {
+  display: block;
+  margin-top: 8px;
+  color: #667672;
+  line-height: 1.4;
+}
+.oc-current-heading,
+.oc-decision-heading {
+  padding-top: 2px;
+}
+.oc-current-heading strong,
+.oc-decision-heading strong { display: block; font-size: 1.05rem; color: #173F46; }
+.oc-decision-heading > span {
+  display: block;
+  margin-top: 5px;
+  color: #667672;
+  line-height: 1.4;
+}
+.oc-final-form [data-next-cycle-field][hidden] { display: none !important; }
+.oc-final-form .check-row {
+  border-radius: 15px;
+  background: #FAFBFA;
+}
+.oc-final-form button[type="submit"] { margin-top: 4px; }
+
+@media (max-width: 700px) {
+  body.fluxa-session-open .topbar {
+    min-height: auto;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: 12px;
+  }
+  [data-home-cockpit] .home-cockpit-next { padding: 16px; }
+  .oc-treatment-status { margin-block: 12px; }
+}

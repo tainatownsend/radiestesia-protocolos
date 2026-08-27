@@ -24,8 +24,29 @@ export function requireHawkinsBaseline(state,input={}){
   if(!baseline)throw new Error('Registre a frequência vibracional inicial de Hawkins antes de iniciar a investigação ou o tratamento.');
   return baseline;
 }
+export function treatmentActivityCutoff(state,treatmentId){
+  const treatment=(state.treatments||[]).find(item=>item.id===treatmentId);
+  const components=(state.treatmentComponents||[]).filter(item=>item.treatmentId===treatmentId);
+  const values=[
+    treatment?.startedAt,treatment?.interruptedAt,treatment?.resumedAt,
+    ...components.flatMap(item=>[item.createdAt,item.startedAt,item.interruptedAt,item.completedAt,item.stoppedAt])
+  ];
+  let latest=null;
+  for(const value of values){
+    const time=new Date(value||'').getTime();
+    if(Number.isFinite(time)&&(latest==null||time>latest))latest=time;
+  }
+  return latest;
+}
+export function assessmentIsCurrentForTreatment(state,treatmentId,assessment){
+  if(!assessment||assessment.treatmentId!==treatmentId)return false;
+  const occurredAt=new Date(assessment.occurredAt||assessment.createdAt||'').getTime();
+  if(!Number.isFinite(occurredAt))return false;
+  const cutoff=treatmentActivityCutoff(state,treatmentId);
+  return cutoff==null||occurredAt>=cutoff;
+}
 export function hawkinsFinalForTreatment(state,treatmentId){
-  return [...(state.assessments||[])].filter(item=>item.kind===HAWKINS_KIND&&item.phase===HawkinsPhase.FINAL&&item.treatmentId===treatmentId).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0]||null;
+  return [...(state.assessments||[])].filter(item=>item.kind===HAWKINS_KIND&&item.phase===HawkinsPhase.FINAL&&assessmentIsCurrentForTreatment(state,treatmentId,item)).sort((a,b)=>String(b.occurredAt||b.createdAt||'').localeCompare(String(a.occurredAt||a.createdAt||'')))[0]||null;
 }
 export function recordHawkinsBaseline(store,input={}){
   const state=store.getState();matchingAssistedSession(state,input.sessionId,input.assistedEntityId);

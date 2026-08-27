@@ -73,8 +73,15 @@ function recordBaseline(store, sessionId, assistedEntityId, hertz = 450) {
   const session = startSession(store);
   assert.throws(() => startPlannedTreatment(store, planned.id, session.id), /preparação/);
   prepare(store, session.id);
+  const eventsBeforeMissingAssisted = store.getState().events.length;
+  assert.throws(() => startPlannedTreatment(store, planned.id, session.id), /Selecione o Assistido/i, 'planned treatment start must require an explicit current Assisted');
+  assert.equal(store.getState().sessions.find((item) => item.id === session.id).currentAssistedEntityId, null, 'rejected start must not select the Assisted implicitly');
+  assert.equal(store.getState().treatments.find((item) => item.id === planned.id).status, TreatmentStatus.PLANNED);
+  assert.equal(store.getState().events.length, eventsBeforeMissingAssisted, 'missing Assisted rejection must not write treatment/component history');
+
+  selectAssistedForSession(store, session.id, assisted.id);
   assert.throws(() => startPlannedTreatment(store, planned.id, session.id), /Hawkins|frequência vibracional/i, 'planned treatment start must require same-session Hawkins baseline');
-  const baseline = recordBaseline(store, session.id, assisted.id, 480);
+  const baseline = recordHawkinsBaseline(store, { sessionId:session.id, assistedEntityId:assisted.id, hertz:480 });
   startPlannedTreatment(store, planned.id, session.id);
   const started = store.getState().treatments.find((item) => item.id === planned.id);
   assert.equal(started.status, TreatmentStatus.IN_PROGRESS);

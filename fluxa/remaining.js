@@ -1,7 +1,7 @@
 import { EventType, TreatmentStatus } from './domain.js';
 import { validateAssistedInput } from './backlog.js';
 import { requirePreparedSessionState } from './session-rules.js';
-import { enrichFinalHawkinsAssessment, validateHawkinsHertz } from './hawkins-measurement.js';
+import { assessmentIsCurrentForTreatment, enrichFinalHawkinsAssessment, validateHawkinsHertz } from './hawkins-measurement.js';
 
 export const RemainingEventType = Object.freeze({
   COMPONENT_REVIEWED: 'COMPONENT_REVIEWED',
@@ -195,6 +195,8 @@ export function archiveAssistedEntity(store, assistedEntityId, reason = '') {
 }
 
 export function canRunFinalAssessment(state, treatmentId) {
+  const treatment = state.treatments.find((item) => item.id === treatmentId);
+  if (!treatment || ![TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(treatment.status)) return false;
   return treatmentComponentResolution(state, treatmentId).readyForFinalAssessment;
 }
 
@@ -207,8 +209,8 @@ export function completeTreatmentAfterFinalAssessment(store, treatmentId, sessio
   const resolution = treatmentComponentResolution(state, treatmentId);
   if (!resolution.readyForFinalAssessment) throw new Error('Resolva todos os componentes antes de concluir o tratamento.');
   const assessments = Array.isArray(state.assessments) ? state.assessments : [];
-  const assessment = [...assessments].filter((item) => item.treatmentId === treatmentId).sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0];
-  if (!assessment) throw new Error('Registre a avaliação final antes de concluir o tratamento.');
+  const assessment = [...assessments].filter((item) => assessmentIsCurrentForTreatment(state, treatmentId, item)).sort((a, b) => String(b.occurredAt || b.createdAt || '').localeCompare(String(a.occurredAt || a.createdAt || '')))[0];
+  if (!assessment) throw new Error('Registre uma nova avaliação final após a atividade mais recente do tratamento.');
   if (assessment.sessionId !== sessionId || assessment.assistedEntityId !== treatment.assistedEntityId) {
     throw new Error('A avaliação final deve pertencer à sessão e ao Assistido atuais.');
   }
