@@ -10,17 +10,17 @@ export function validateHawkinsHertz(value){
   if(!raw||!Number.isFinite(hertz)||hertz<=0)throw new Error('Registre a frequência vibracional de Hawkins em Hz com um valor maior que zero.');
   return hertz;
 }
-function matchingAssistedSession(state,sessionId,assistedEntityId){
+function matchingAssistedSession(state,sessionId,assistedEntityId,{requireEntity=true}={}){
   const session=requirePreparedSessionState(state,sessionId,'Conclua a preparação da sessão antes de registrar a medição de Hawkins.');
   if(!assistedEntityId||session.currentAssistedEntityId!==assistedEntityId)throw new Error('Selecione o Assistido correto antes de registrar a medição de Hawkins.');
-  if(!(state.assistedEntities||[]).some(item=>item.id===assistedEntityId&&!item.archivedAt))throw new Error('Assistido não encontrado para esta medição.');
+  if(requireEntity&&!(state.assistedEntities||[]).some(item=>item.id===assistedEntityId&&!item.archivedAt))throw new Error('Assistido não encontrado para esta medição.');
   return session;
 }
 export function hawkinsBaseline(state,sessionId,assistedEntityId){
   return [...(state.assessments||[])].filter(item=>item.kind===HAWKINS_KIND&&item.phase===HawkinsPhase.BASELINE&&item.sessionId===sessionId&&item.assistedEntityId===assistedEntityId).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0]||null;
 }
 export function requireHawkinsBaseline(state,input={}){
-  matchingAssistedSession(state,input.sessionId,input.assistedEntityId);
+  matchingAssistedSession(state,input.sessionId,input.assistedEntityId,{requireEntity:false});
   const baseline=hawkinsBaseline(state,input.sessionId,input.assistedEntityId);
   if(!baseline)throw new Error('Registre a frequência vibracional inicial de Hawkins antes de iniciar a investigação ou o tratamento.');
   return baseline;
