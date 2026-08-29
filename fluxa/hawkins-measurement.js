@@ -20,6 +20,7 @@ export function hawkinsBaseline(state,sessionId,assistedEntityId){
   return [...(state.assessments||[])].filter(item=>item.kind===HAWKINS_KIND&&item.phase===HawkinsPhase.BASELINE&&item.sessionId===sessionId&&item.assistedEntityId===assistedEntityId).sort((a,b)=>String(b.occurredAt||'').localeCompare(String(a.occurredAt||'')))[0]||null;
 }
 export function requireHawkinsBaseline(state,input={}){
+  matchingAssistedSession(state,input.sessionId,input.assistedEntityId);
   const baseline=hawkinsBaseline(state,input.sessionId,input.assistedEntityId);
   if(!baseline)throw new Error('Registre a frequência vibracional inicial de Hawkins antes de iniciar a investigação ou o tratamento.');
   return baseline;
