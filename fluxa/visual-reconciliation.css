@@ -1,0 +1,187 @@
+/* Fluxa Visual Identity Reconciliation candidate.
+   Scope: visual language only. Keep in draft until subjective mobile/iPad/desktop validation. */
+:root{
+  --fluxa-bg:#EFF1EF;
+  --fluxa-surface:#F8F9F7;
+  --fluxa-surface-soft:#DEE4E1;
+  --fluxa-teal:#173F46;
+  --fluxa-teal-deep:#102F35;
+  --fluxa-teal-muted:#66898C;
+  --fluxa-coral:#C17C61;
+  --fluxa-text:#202729;
+  --fluxa-muted:#606B6C;
+  --fluxa-border:#CBD3D1;
+  --fluxa-shadow-sm:0 8px 26px rgba(16,47,53,.07);
+  --fluxa-shadow-lg:0 18px 54px rgba(16,47,53,.14);
+  --fluxa-touch:48px;
+}
+
+/* Brand shell: calm, methodical and recognizably Deep Teal. */
+body{background:var(--fluxa-bg);color:var(--fluxa-text);}
+.brand{
+  font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:26px;font-weight:760;letter-spacing:-.045em;color:var(--fluxa-teal-deep);
+}
+.topbar{
+  min-height:68px;padding-block:13px;
+  background:rgba(239,241,239,.9);
+  border-bottom:1px solid rgba(203,211,209,.58);
+  box-shadow:0 1px 0 rgba(255,255,255,.55) inset;
+}
+.topbar-session-open{
+  background:linear-gradient(135deg,var(--fluxa-teal-deep),var(--fluxa-teal));
+  border-bottom-color:rgba(255,255,255,.1);
+  box-shadow:0 10px 34px rgba(16,47,53,.18);
+}
+.topbar-session-open .brand{color:#F8F9F7;}
+.topbar-session-open .session-indicator{
+  background:rgba(255,255,255,.1);color:#F8F9F7;border:1px solid rgba(255,255,255,.14);
+}
+.topbar-session-open .session-indicator::before{background:#D7E1DE;box-shadow:0 0 0 4px rgba(215,225,222,.1);}
+
+/* Navigation: quieter chrome, stronger active identity. */
+.workspace-bottom-nav{
+  background:rgba(248,249,247,.94)!important;
+  border-color:rgba(203,211,209,.7)!important;
+  box-shadow:0 -12px 34px rgba(16,47,53,.055);
+}
+.workspace-nav-btn{font-weight:680!important;color:#6A7474!important;min-height:var(--fluxa-touch)!important;}
+.workspace-nav-btn.active{
+  background:rgba(102,137,140,.13)!important;color:var(--fluxa-teal)!important;
+}
+.workspace-nav-btn.active svg{stroke-width:1.8;}
+
+/* One-handed work: operational controls keep reliable touch targets without looking bulky. */
+.btn,.close-btn,.workspace-settings-button,.acervo-chip,.picker-filter-chip,.assisted-detail-tab{min-height:var(--fluxa-touch);}
+.btn.small{min-height:44px;}
+.action-card,.investigation-entry-card{min-height:96px;}
+.binary-btn{min-height:76px;}
+
+/* Keyboard focus is explicit without changing pointer/touch presentation. */
+:where(.btn,.close-btn,.workspace-settings-button,.workspace-nav-btn,.acervo-chip,.picker-filter-chip,.assisted-detail-tab,.action-card,.investigation-entry-card,input,textarea,select):focus-visible{
+  outline:3px solid var(--fluxa-coral);
+  outline-offset:3px;
+}
+.topbar-session-open :where(.workspace-settings-button,.session-indicator button,.brand-button):focus-visible{
+  outline-color:#F8F9F7;
+}
+
+/* Core surfaces: fewer administrative outlines, more deliberate hierarchy. */
+.card,.workspace-history-row,.acervo-row,.resource-row,.protocol-row,.therapy-row,.assisted-current-row,
+.investigation-entry-card,.assisted-document-actions,.timer-card{
+  border-color:rgba(203,211,209,.74);
+  box-shadow:var(--fluxa-shadow-sm);
+}
+.card,.workspace-history-row,.acervo-row,.resource-row,.protocol-row,.therapy-row,.assisted-current-row{
+  background:rgba(248,249,247,.98);
+}
+.card.soft,.metric,.assisted-summary-metric,.session-live-stat,.session-close-item{
+  background:rgba(222,228,225,.58);
+}
+.eyebrow{color:var(--fluxa-teal-muted);font-weight:760;letter-spacing:.095em;}
+h1,h2,h3{color:var(--fluxa-teal-deep);}
+.lead,.muted{color:var(--fluxa-muted);}
+
+.btn{font-weight:720;box-shadow:none;}
+.btn.primary{
+  background:linear-gradient(135deg,var(--fluxa-teal),var(--fluxa-teal-deep));
+  border-color:transparent;color:#fff;box-shadow:0 8px 20px rgba(16,47,53,.12);
+}
+.btn.primary:hover{background:var(--fluxa-teal-deep);}
+.btn.secondary{background:rgba(248,249,247,.94);border-color:rgba(203,211,209,.85);}
+.field input,.field textarea,.field select{
+  min-height:var(--fluxa-touch);background:rgba(248,249,247,.98);border-color:rgba(203,211,209,.86);
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--fluxa-teal-muted);box-shadow:0 0 0 3px rgba(102,137,140,.13);
+}
+
+/* 1) Idle Hoje: reintroduce the approved Deep Teal hero instead of a generic white SaaS card. */
+body.fluxa-home-idle .hero-card{
+  border:1px solid rgba(255,255,255,.08)!important;
+  background:
+    radial-gradient(circle at 88% 12%,rgba(102,137,140,.26),transparent 38%),
+    linear-gradient(145deg,var(--fluxa-teal-deep),var(--fluxa-teal))!important;
+  color:#F8F9F7!important;
+  box-shadow:var(--fluxa-shadow-lg)!important;
+}
+body.fluxa-home-idle .hero-card::before{width:0!important;background:transparent!important;}
+body.fluxa-home-idle .hero-card .hero-eyebrow{color:#C7D7D3!important;}
+body.fluxa-home-idle .hero-card h2{color:#fff!important;font-weight:650;}
+body.fluxa-home-idle .hero-card p:not(.eyebrow){color:#D7E1DE!important;}
+body.fluxa-home-idle .hero-card .hero-btn{
+  background:#F8F9F7!important;color:var(--fluxa-teal-deep)!important;
+  box-shadow:0 8px 22px rgba(8,30,34,.16)!important;
+}
+body.fluxa-home-idle .notice-card{
+  border-color:rgba(193,124,97,.24)!important;
+  background:rgba(248,243,240,.86)!important;
+}
+body.fluxa-home-idle .home-idle-secondary .btn{color:var(--fluxa-teal)!important;}
+
+/* 2) Open-session cockpit: Deep Teal carries the operational context; stats stay calm and glanceable. */
+.topbar-session-open + main .hero-card,
+body:has(.topbar-session-open) main .hero-card{
+  border-color:rgba(203,211,209,.62);
+  background:linear-gradient(180deg,rgba(248,249,247,.98),rgba(242,245,243,.98));
+  color:var(--fluxa-text);
+  box-shadow:var(--fluxa-shadow-sm);
+}
+body:has(.topbar-session-open) main .hero-card h1,
+body:has(.topbar-session-open) main .hero-card h2{color:var(--fluxa-teal-deep);}
+body:has(.topbar-session-open) main .hero-card p{color:var(--fluxa-muted);}
+.session-live-stats{gap:9px;}
+.session-live-stat{
+  min-height:76px;padding:13px 12px;border:1px solid rgba(203,211,209,.72);
+  box-shadow:none;
+}
+.session-live-stat strong{color:var(--fluxa-teal-deep);font-size:18px;}
+.session-live-stat span{font-size:10.5px;letter-spacing:.01em;}
+
+/* 3) Tratamentos: longitudinal work should feel composed, not like stacked admin forms. */
+.treatment-card{
+  overflow:hidden;border-color:rgba(203,211,209,.7);
+  background:linear-gradient(180deg,#F8F9F7 0%,#F4F6F4 100%);
+  box-shadow:var(--fluxa-shadow-sm);
+}
+.treatment-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--fluxa-teal-muted);opacity:.82;
+}
+.treatment-card .status-pill{
+  border-color:rgba(102,137,140,.2);background:rgba(102,137,140,.1);color:var(--fluxa-teal);
+}
+.treatment-card .status-interrupted{
+  border-color:rgba(193,124,97,.2);background:rgba(193,124,97,.11);color:#7D4D3E;
+}
+.treatment-card .status-completed{
+  border-color:rgba(203,211,209,.7);background:rgba(222,228,225,.56);color:var(--fluxa-muted);
+}
+
+/* Sheets: quieter backdrop + elevated working surface. */
+.modal-backdrop{background:rgba(16,47,53,.42);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+.sheet{background:#F8F9F7;box-shadow:0 24px 70px rgba(16,47,53,.24);}
+.close-btn{background:rgba(222,228,225,.44);border-color:rgba(203,211,209,.82);}
+
+/* Respect platform motion preferences while keeping state changes immediate and legible. */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+
+@media(max-width:560px){
+  .topbar{min-height:62px;padding-block:11px;}
+  .brand{font-size:24px;}
+  main{padding-inline:14px;}
+  body.fluxa-home-idle .hero-card{padding:20px 18px 18px!important;}
+  .session-live-stat{min-height:70px;}
+  .treatment-card{border-radius:17px;}
+  .workspace-bottom-nav{padding-inline:max(8px,env(safe-area-inset-left))!important;}
+  .workspace-nav-btn{padding-inline:2px!important;}
+}
+
+@media(min-width:700px) and (max-width:1100px){
+  main{width:min(100%,820px);padding-inline:24px;}
+  .topbar{padding-inline:max(24px,env(safe-area-inset-left));}
+  .session-live-stats{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .sheet{width:min(92vw,720px);}
+}

@@ -13,7 +13,10 @@ const worker=await readFile(new URL('./service-worker.js',import.meta.url),'utf8
 assert.ok(index.includes('therapeutic-flow-refresh.css'),'therapeutic flow CSS must load');
 assert.ok(index.includes('therapeutic-modalities-ui.js'),'therapeutic modality UI must load');
 assert.ok(index.indexOf('data-reset.js')<index.indexOf('src="app.js"'),'one-time reset must execute before app state loads');
-assert.equal([...index.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]).at(-1),'idle-home-premium.css','idle premium layer must remain last');
+const styles=[...index.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]);
+assert.ok(styles.includes('idle-home-premium.css'),'idle premium layer must remain in the visual cascade');
+assert.equal(styles.at(-1),'visual-reconciliation.css','visual reconciliation must remain the final visual authority during identity validation');
+assert.ok(styles.indexOf('idle-home-premium.css')<styles.indexOf('visual-reconciliation.css'),'visual reconciliation must refine the premium idle Home rather than be overwritten by it');
 
 for(const key of ['fluxa.mvp.v1','fluxa.mvp.v1.backup','fluxa.mvp.v1.recovery'])assert.ok(reset.includes(key),`reset must clear ${key}`);
 assert.ok(reset.includes('fluxa.validation-reset.2026-08-22.v2'),'reset must be versioned and one-time');
@@ -55,6 +58,11 @@ assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/,'Home must 
 assert.match(css,/\.sheet>\.sheet-head\s*\{[\s\S]*?background:#F8F9F7/,'sheet headers must use an opaque surface while scrolling');
 assert.match(css,/box-shadow:0 -24px 0 24px #F8F9F7/,'sheet header must cover the scroll gap above it');
 assert.ok(!/\.sheet>\.sheet-head\s*\{[^}]*background:\s*rgba\(/s.test(css),'sheet header background must not be translucent');
+assert.match(css,/html,body\{max-width:100%;overflow-x:hidden;\}/,'responsive shell must prevent accidental horizontal scrolling');
+assert.match(css,/max-height:min\(90dvh,780px\)/,'sheets must respect the dynamic mobile viewport');
+assert.match(css,/@media\(min-width:760px\) and \(max-width:1180px\)/,'iPad/tablet widths require an explicit layout range');
+assert.match(css,/@media\(max-width:390px\)[\s\S]*?\.home-primary-actions\{grid-template-columns:1fr/,'very narrow phones must stack the three primary actions');
+assert.match(css,/\.timeline-item\{grid-template-columns:minmax\(42px,54px\) 10px minmax\(0,1fr\)/,'timeline content must retain a shrinkable text column');
 assert.ok(worker.includes('therapeutic-catalog-complete-20260821-therapeutic-flow-20260822'),'offline shell cache must refresh while preserving the catalog completion marker');
 
 console.log('therapeutic-flow-refresh.test.mjs: ok');

@@ -1,0 +1,64 @@
+/* Fluxa theme system — visual tokens only. Fresh Energy is the default. */
+:root,[data-fluxa-theme="FRESH_ENERGY"]{
+  --fx-bg:#F5FCF8;--fx-surface:#FFFFFF;--fx-surface-soft:#DCF6EF;--fx-primary:#24A79A;--fx-primary-strong:#15544F;--fx-action:#15544F;--fx-primary-soft:#C8F1E8;--fx-accent:#F08D79;--fx-focus:#A85E4C;--fx-sun:#F4CA55;--fx-text:#1D4544;--fx-muted:#566F6B;--fx-border:#DCEAE5;--fx-hero-a:#C8F1E8;--fx-hero-b:#FFF0B9;--fx-shadow:0 10px 30px rgba(31,95,88,.09);
+}
+[data-fluxa-theme="MORNING_LIGHT"]{
+  --fx-bg:#FFFAF0;--fx-surface:#FFFEF9;--fx-surface-soft:#EAF4ED;--fx-primary:#4E8C80;--fx-primary-strong:#28534B;--fx-action:#28534B;--fx-primary-soft:#D8EEE4;--fx-accent:#EE9B7D;--fx-focus:#9D624F;--fx-sun:#EFC96B;--fx-text:#24423C;--fx-muted:#5E716A;--fx-border:#E5E4D8;--fx-hero-a:#D8EEE4;--fx-hero-b:#F7E4D3;--fx-shadow:0 10px 30px rgba(47,75,67,.085);
+}
+[data-fluxa-theme="GENTLE_FLOW"]{
+  --fx-bg:#F8FAF7;--fx-surface:#FFFFFF;--fx-surface-soft:#E8F3F2;--fx-primary:#5B9DA0;--fx-primary-strong:#315A5D;--fx-action:#315A5D;--fx-primary-soft:#D7EFF0;--fx-accent:#EFAA91;--fx-focus:#9B6653;--fx-sun:#EAD284;--fx-text:#29474A;--fx-muted:#5E7375;--fx-border:#E0E8E5;--fx-hero-a:#D7EFF0;--fx-hero-b:#EEE4F3;--fx-shadow:0 10px 30px rgba(49,90,93,.08);
+}
+
+/* Bridge every historical Fluxa color role into the selected palette.
+   This is intentionally token-based: old and new UI layers now react together. */
+:root,[data-fluxa-theme]{
+  --bg:var(--fx-bg);
+  --surface:var(--fx-surface);
+  --surface-2:var(--fx-surface-soft);
+  --primary:var(--fx-action);
+  --primary-strong:var(--fx-primary-strong);
+  --secondary:var(--fx-primary);
+  --accent:var(--fx-accent);
+  --text:var(--fx-text);
+  --muted:var(--fx-muted);
+  --border:var(--fx-border);
+  --fluxa-bg:var(--fx-bg);
+  --fluxa-surface:var(--fx-surface);
+  --fluxa-surface-soft:var(--fx-surface-soft);
+  --fluxa-teal:var(--fx-action);
+  --fluxa-teal-deep:var(--fx-primary-strong);
+  --fluxa-teal-muted:var(--fx-primary);
+  --fluxa-coral:var(--fx-accent);
+  --fluxa-text:var(--fx-text);
+  --fluxa-muted:var(--fx-muted);
+  --fluxa-border:var(--fx-border);
+  --fluxa-shadow-sm:var(--fx-shadow);
+}
+
+html{background:var(--fx-bg)!important;}
+body{background:var(--fx-bg)!important;color:var(--fx-text)!important;}
+.brand,h1,h2,h3{color:var(--fx-primary-strong)!important;}
+/* Small text uses the strong token; the luminous primary remains a decorative/state color. */
+.eyebrow{color:var(--fx-primary-strong)!important;}.lead,.muted{color:var(--fx-muted)!important;}
+.topbar{background:color-mix(in srgb,var(--fx-surface) 88%,transparent)!important;border-bottom-color:var(--fx-border)!important;}
+/* Session chrome keeps white controls on a dark, contrast-safe field while retaining a subtle theme tint. */
+.topbar-session-open{background:linear-gradient(120deg,var(--fx-primary-strong),color-mix(in srgb,var(--fx-primary) 18%,var(--fx-primary-strong)))!important;}
+.workspace-bottom-nav{background:color-mix(in srgb,var(--fx-surface) 94%,transparent)!important;border-color:var(--fx-border)!important;}
+.workspace-nav-btn{color:var(--fx-muted)!important}.workspace-nav-btn.active{background:var(--fx-primary-soft)!important;color:var(--fx-primary-strong)!important;}
+.card,.workspace-history-row,.acervo-row,.resource-row,.protocol-row,.therapy-row,.assisted-current-row,.investigation-entry-card,.assisted-document-actions,.timer-card,.sheet{background:var(--fx-surface)!important;border-color:var(--fx-border)!important;box-shadow:var(--fx-shadow)!important;}
+.card.soft,.metric,.assisted-summary-metric,.session-live-stat,.session-close-item{background:var(--fx-surface-soft)!important;}
+/* Keep luminous theme primaries for identity and state; white-text actions use a contrast-safe action token. */
+.btn.primary{background:var(--fx-action)!important;color:#fff!important;border-color:transparent!important;}
+.btn.primary:hover{background:var(--fx-primary-strong)!important}.btn.secondary{background:var(--fx-surface)!important;border-color:var(--fx-border)!important;color:var(--fx-primary-strong)!important;}
+.field input,.field textarea,.field select,.hawkins-input{background:var(--fx-surface)!important;border-color:var(--fx-border)!important;color:var(--fx-text)!important;}
+.field input:focus,.field textarea:focus,.field select:focus,.hawkins-input:focus-within{border-color:var(--fx-primary)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--fx-primary) 17%,transparent)!important;}
+:where(.btn,.close-btn,.workspace-settings-button,.workspace-nav-btn,.acervo-chip,.picker-filter-chip,.assisted-detail-tab,.action-card,.investigation-entry-card,input,textarea,select):focus-visible{outline:3px solid var(--fx-focus)!important;outline-offset:3px;}
+body.fluxa-home-idle .hero-card{background:radial-gradient(circle at 87% 10%,rgba(255,255,255,.5),transparent 34%),linear-gradient(120deg,var(--fx-hero-a),var(--fx-hero-b))!important;color:var(--fx-primary-strong)!important;border-color:color-mix(in srgb,var(--fx-primary) 12%,var(--fx-border))!important;box-shadow:0 16px 42px color-mix(in srgb,var(--fx-primary) 15%,transparent)!important;}
+body.fluxa-home-idle .hero-card h2,body.fluxa-home-idle .hero-card p,body.fluxa-home-idle .hero-card .hero-eyebrow{color:var(--fx-primary-strong)!important;}
+body.fluxa-home-idle .hero-card .hero-btn{background:var(--fx-action)!important;color:#fff!important;}
+body.fluxa-home-idle .notice-card{background:color-mix(in srgb,var(--fx-accent) 9%,var(--fx-surface))!important;border-color:color-mix(in srgb,var(--fx-accent) 28%,var(--fx-border))!important;}
+.treatment-card{background:linear-gradient(180deg,var(--fx-surface),color-mix(in srgb,var(--fx-primary-soft) 28%,var(--fx-surface)))!important;border-color:var(--fx-border)!important;}
+.treatment-card::before{background:var(--fx-primary)!important}.treatment-card .status-pill{background:var(--fx-primary-soft)!important;color:var(--fx-primary-strong)!important;border-color:transparent!important;}
+.modal-backdrop{background:color-mix(in srgb,var(--fx-primary-strong) 32%,transparent)!important;}
+.theme-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.theme-option{position:relative;display:grid;gap:8px;padding:12px;border:1px solid var(--fx-border);border-radius:15px;background:var(--fx-surface);cursor:pointer}.theme-option:has(input:checked){border-color:var(--fx-primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--fx-primary) 18%,transparent)}.theme-option input{position:absolute;opacity:0;pointer-events:none}.theme-option strong{font-size:12px;color:var(--fx-primary-strong)}.theme-option small{font-size:10px;color:var(--fx-muted);line-height:1.35}.theme-swatches{display:flex;gap:4px}.theme-swatches i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.05)}.theme-default-badge{display:inline-flex;width:max-content;padding:3px 6px;border-radius:999px;background:var(--fx-primary-soft);color:var(--fx-primary-strong);font-size:9px;font-weight:800}
+@media(max-width:560px){.theme-picker{grid-template-columns:1fr}.theme-option{grid-template-columns:auto 1fr;align-items:center}.theme-option .theme-swatches{grid-row:1 / span 2}}
