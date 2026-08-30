@@ -6,8 +6,12 @@ const read=(name)=>fs.readFileSync(new URL(name,root),'utf8');
 const ui=read('./theme-system-ui.js');
 const css=read('./theme-system.css');
 const loader=read('./ux-architecture-loader.js');
+const workspace=read('./workspace-shell-ui.js');
 
 assert.match(loader,/theme-system-ui\.js/,'Theme system must load through the PR #95 architecture layer.');
+assert.ok(loader.indexOf("theme-system-ui.js")<loader.indexOf("workspace-shell-ui.js"),'Theme listener must register before workspace settings so stopImmediatePropagation cannot swallow theme persistence.');
+assert.match(workspace,/stopImmediatePropagation\(\)/,'Regression fixture: workspace settings still owns the form lifecycle, so loader order is required for theme persistence.');
+assert.match(ui,/document\.documentElement\.dataset\.fluxaTheme=safe/,'Changing a palette must immediately update the root theme attribute.');
 assert.match(ui,/const DEFAULT_THEME='FRESH_ENERGY'/,'Fresh Energy must be the default theme.');
 for(const theme of ['FRESH_ENERGY','MORNING_LIGHT','GENTLE_FLOW']){
   assert.match(ui,new RegExp(theme),`Theme UI must expose ${theme}.`);
@@ -20,6 +24,19 @@ assert.match(ui,/Fresh Energy/);
 assert.match(ui,/Morning Light/);
 assert.match(ui,/Gentle Flow/);
 assert.match(ui,/draft\.settings\.appearance\.theme=theme/,'Chosen theme must persist locally in app settings.');
+
+// The palette must drive both modern --fx-* tokens and every historical role used by Fluxa CSS.
+for(const [role,token] of [
+  ['--bg','--fx-bg'],['--surface','--fx-surface'],['--surface-2','--fx-surface-soft'],
+  ['--primary','--fx-action'],['--primary-strong','--fx-primary-strong'],['--secondary','--fx-primary'],
+  ['--accent','--fx-accent'],['--text','--fx-text'],['--muted','--fx-muted'],['--border','--fx-border'],
+  ['--fluxa-bg','--fx-bg'],['--fluxa-surface','--fx-surface'],['--fluxa-surface-soft','--fx-surface-soft'],
+  ['--fluxa-teal','--fx-action'],['--fluxa-teal-deep','--fx-primary-strong'],['--fluxa-teal-muted','--fx-primary'],
+  ['--fluxa-coral','--fx-accent'],['--fluxa-text','--fx-text'],['--fluxa-muted','--fx-muted'],['--fluxa-border','--fx-border']
+]){
+  assert.match(css,new RegExp(`${role.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}:var\\(${token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\)`),`${role} must follow ${token} so legacy/final visual layers recolor with the selected palette.`);
+}
+assert.match(css,/html\{background:var\(--fx-bg\)!important;\}/,'The document canvas must change with the selected palette, not only individual cards.');
 assert.match(css,/--fx-primary:#24A79A/,'Fresh Energy must retain the approved luminous aqua primary.');
 assert.match(css,/--fx-accent:#F08D79/,'Fresh Energy must retain the approved coral accent.');
 assert.match(css,/--fx-sun:#F4CA55/,'Fresh Energy must retain a restrained sunny accent.');
@@ -38,17 +55,23 @@ const themeBlocks=[
   ['MORNING_LIGHT',css.match(/\[data-fluxa-theme="MORNING_LIGHT"\]\{([^}]*)\}/)?.[1]],
   ['GENTLE_FLOW',css.match(/\[data-fluxa-theme="GENTLE_FLOW"\]\{([^}]*)\}/)?.[1]]
 ];
+const seenSignatures=new Set();
 for(const [theme,block] of themeBlocks){
   assert.ok(block,`${theme} token block must exist.`);
   const action=block.match(/--fx-action:(#[0-9A-Fa-f]{6})/)?.[1];
   const strong=block.match(/--fx-primary-strong:(#[0-9A-Fa-f]{6})/)?.[1];
   const muted=block.match(/--fx-muted:(#[0-9A-Fa-f]{6})/)?.[1];
   const focus=block.match(/--fx-focus:(#[0-9A-Fa-f]{6})/)?.[1];
-  assert.ok(action&&strong&&muted&&focus,`${theme} must define action, strong, muted and focus semantic tokens.`);
+  const bg=block.match(/--fx-bg:(#[0-9A-Fa-f]{6})/)?.[1];
+  const heroB=block.match(/--fx-hero-b:(#[0-9A-Fa-f]{6})/)?.[1];
+  assert.ok(action&&strong&&muted&&focus&&bg&&heroB,`${theme} must define action, strong, muted, focus, background and hero tokens.`);
   assert.ok(contrast(action,'#FFFFFF')>=4.5,`${theme} white-text action contrast must meet WCAG AA for normal text.`);
   assert.ok(contrast(strong,'#FFFFFF')>=4.5,`${theme} strong theme token must safely support white text in session chrome.`);
   assert.ok(contrast(muted,'#FFFFFF')>=4.5,`${theme} muted text must remain readable at small sizes on light surfaces.`);
   assert.ok(contrast(focus,'#FFFFFF')>=3,`${theme} focus indicator must retain at least 3:1 contrast on light surfaces.`);
+  const signature=[action,bg,heroB].join('|');
+  assert.ok(!seenSignatures.has(signature),`${theme} must be visually distinct from the other palettes.`);
+  seenSignatures.add(signature);
 }
 
 assert.match(css,/body\.fluxa-home-idle \.hero-card/,'Theme system must cover the idle Home hero.');
