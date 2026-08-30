@@ -8,6 +8,34 @@
 [data-fluxa-theme="GENTLE_FLOW"]{
   --fx-bg:#F8FAF7;--fx-surface:#FFFFFF;--fx-surface-soft:#E8F3F2;--fx-primary:#5B9DA0;--fx-primary-strong:#315A5D;--fx-action:#315A5D;--fx-primary-soft:#D7EFF0;--fx-accent:#EFAA91;--fx-focus:#9B6653;--fx-sun:#EAD284;--fx-text:#29474A;--fx-muted:#5E7375;--fx-border:#E0E8E5;--fx-hero-a:#D7EFF0;--fx-hero-b:#EEE4F3;--fx-shadow:0 10px 30px rgba(49,90,93,.08);
 }
+
+/* Bridge every historical Fluxa color role into the selected palette.
+   This is intentionally token-based: old and new UI layers now react together. */
+:root,[data-fluxa-theme]{
+  --bg:var(--fx-bg);
+  --surface:var(--fx-surface);
+  --surface-2:var(--fx-surface-soft);
+  --primary:var(--fx-action);
+  --primary-strong:var(--fx-primary-strong);
+  --secondary:var(--fx-primary);
+  --accent:var(--fx-accent);
+  --text:var(--fx-text);
+  --muted:var(--fx-muted);
+  --border:var(--fx-border);
+  --fluxa-bg:var(--fx-bg);
+  --fluxa-surface:var(--fx-surface);
+  --fluxa-surface-soft:var(--fx-surface-soft);
+  --fluxa-teal:var(--fx-action);
+  --fluxa-teal-deep:var(--fx-primary-strong);
+  --fluxa-teal-muted:var(--fx-primary);
+  --fluxa-coral:var(--fx-accent);
+  --fluxa-text:var(--fx-text);
+  --fluxa-muted:var(--fx-muted);
+  --fluxa-border:var(--fx-border);
+  --fluxa-shadow-sm:var(--fx-shadow);
+}
+
+html{background:var(--fx-bg)!important;}
 body{background:var(--fx-bg)!important;color:var(--fx-text)!important;}
 .brand,h1,h2,h3{color:var(--fx-primary-strong)!important;}
 /* Small text uses the strong token; the luminous primary remains a decorative/state color. */
