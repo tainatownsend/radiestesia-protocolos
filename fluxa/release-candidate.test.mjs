@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 
 const root = new URL('.', import.meta.url);
@@ -29,5 +30,9 @@ assert.match(css, /@media\(min-width:700px\)/, 'Tablet and desktop layout must b
 assert.match(css, /@media\(max-width:380px\)/, 'Narrow-phone layout must be explicit.');
 assert.match(css, /prefers-reduced-motion:reduce/, 'Motion preferences must be respected.');
 assert.match(css, /forced-colors:active/, 'Forced-colors users must retain visible controls.');
+
+const picker = fs.readFileSync(new URL('./tool-picker-search-ui.js', root), 'utf8');
+const pickerSyntax = spawnSync(process.execPath, ['--input-type=module', '--check'], { input:picker, encoding:'utf8' });
+assert.equal(pickerSyntax.status, 0, `Library picker must parse as a browser module: ${pickerSyntax.stderr}`);
 
 console.log('release-candidate.test.mjs: ok');
