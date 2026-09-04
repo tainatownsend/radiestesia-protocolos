@@ -53,7 +53,8 @@ function ensureSheetBody(sheet) {
     body = document.createElement('div');
     body.className = 'fx-sheet-body';
     const header = sheet.querySelector(':scope > .sheet-head');
-    header?.after(body);
+    if (header) header.after(body);
+    else sheet.prepend(body);
   }
 
   const directChildren = [...sheet.children];
