@@ -61,11 +61,18 @@ body.fluxa-home-idle .hero-card.fx-visual-hero p:not(.eyebrow){font-size:14px}
 .fx-compact-notice{
   position:relative;
   display:grid;
-  grid-template-columns:34px minmax(0,1fr);
+  grid-template-columns:34px minmax(0,1fr) auto;
   column-gap:12px;
   padding:14px 16px!important;
 }
-.fx-compact-notice>*:not(.fx-notice-mark){grid-column:2}
+.fx-compact-notice>*:not(.fx-notice-mark):not(.btn){grid-column:2}
+.fx-compact-notice>.btn{
+  grid-column:3;
+  grid-row:1/5;
+  align-self:center;
+  width:auto!important;
+  min-width:140px;
+}
 .fx-notice-mark{
   grid-column:1;
   grid-row:1/5;
@@ -78,6 +85,7 @@ body.fluxa-home-idle .hero-card.fx-visual-hero p:not(.eyebrow){font-size:14px}
   color:#8B5544;
   font-weight:850;
 }
+body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet]{display:none}
 
 /* Shared modal shell. Header and footer stay fixed; only the body scrolls. */
 .modal-backdrop.fx-backdrop{
@@ -374,6 +382,7 @@ body.fluxa-home-idle .hero-card.fx-visual-hero p:not(.eyebrow){font-size:14px}
   .fx-hero-art{height:122px}
   body.fluxa-home-idle .hero-card.fx-visual-hero h2{max-width:16ch;font-size:23px}
   .fx-compact-notice{grid-template-columns:30px minmax(0,1fr);column-gap:10px}
+  .fx-compact-notice>.btn{grid-column:2;grid-row:auto;width:100%!important;margin-top:8px}
   .fx-notice-mark{width:28px;height:28px}
   .fx-shell-header :is(h1,h2,h3){font-size:22px}
   .fx-journey{margin-top:1px}
