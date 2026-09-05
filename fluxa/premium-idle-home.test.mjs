@@ -7,7 +7,8 @@ const home=fs.readFileSync(new URL('./home-refresh-ui.js',import.meta.url),'utf8
 const app=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8');
 
 const styles=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]);
-assert.equal(styles.at(-1),'idle-home-premium.css','Idle Home refinement must stay last in the visual cascade.');
+assert.equal(styles.at(-1),'release-candidate.css','Release candidate must own the final visual cascade.');
+assert.ok(styles.indexOf('idle-home-premium.css') < styles.indexOf('release-candidate.css'),'Release candidate must extend the idle Home refinement.');
 assert.ok(styles.indexOf('brand-shell.css')<styles.indexOf('idle-home-premium.css'));
 assert.ok(css.includes('body.fluxa-home-idle main>:is(.eyebrow,h1,.lead){display:none;}'),'Idle Home must remove redundant page-level copy.');
 assert.ok(css.includes('body.fluxa-home-idle .hero-card'),'Idle Home must keep one compact dominant session card.');
