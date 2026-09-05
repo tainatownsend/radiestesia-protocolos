@@ -291,6 +291,31 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
   transform:translateY(-50%);
 }
 
+/* Long preparation choices stay available without turning the ritual into a catalogue. */
+.searchable-checklist{gap:10px!important}
+.checklist-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center}
+.checklist-controls .checklist-toggle{grid-column:1/2;grid-row:1;width:auto!important;min-height:48px!important;margin:0!important}
+.checklist-selection-status{grid-column:2;grid-row:1;color:var(--fx-sea);font-size:12px;font-weight:750;text-align:right}
+.checklist-controls .checklist-search{grid-column:1/-1;min-height:48px;margin:0}
+.prep-protection-list{max-height:248px;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+.prep-protection-list .check-row{min-height:52px;padding:10px 12px}
+.fx-inline-error{margin:2px 0 0;padding:12px 14px;border:1px solid rgba(183,120,98,.42);border-radius:13px;background:#F8ECE7;color:#633D31;font-size:14px;font-weight:720;line-height:1.45}
+
+/* Protocol groups and findings reveal complexity only when it is needed. */
+.catalog-sections{display:grid;gap:10px}
+.catalog-group{margin:0!important;border:1px solid var(--fx-line);border-radius:15px;background:#fff;overflow:hidden}
+.catalog-group>.section-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin:0!important;padding:15px 16px;cursor:pointer;list-style:none}
+.catalog-group>.section-head::-webkit-details-marker{display:none}
+.catalog-group>.section-head::after{content:'';grid-column:2;grid-row:1;width:8px;height:8px;margin-left:7px;border-right:2px solid var(--fx-sea);border-bottom:2px solid var(--fx-sea);transform:rotate(45deg);transition:transform .16s ease}
+.catalog-group[open]>.section-head::after{transform:rotate(225deg)}
+.catalog-group>.section-head>.muted{grid-column:2;grid-row:1;margin-right:20px}
+.catalog-group>.catalog-list{padding:0 14px 8px}
+.therapeutic-protocol-card p:not(.eyebrow){display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.root-finding-choice>p,.root-finding-choice>select{display:none}
+.root-finding-choice:has(input:checked)>p,.root-finding-choice:has(input:checked)>select{display:block}
+.thematic-prefill-notice{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;padding:12px 14px!important}
+.thematic-prefill-notice span{margin:0!important;font-size:13px;line-height:1.4}
+
 /* Investigation and Hawkins screens keep the decision in the first viewport. */
 .fx-shell[data-fx-stage='investigate'] .question-panel{
   min-height:clamp(190px,34dvh,330px)!important;
@@ -390,6 +415,12 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
   .fx-shell[data-fx-stage='investigate'] .question-panel{min-height:190px!important;padding:18px 0!important}
   .fx-shell[data-fx-stage='investigate'] .question-panel h1{font-size:clamp(25px,7vw,31px)}
   .fx-sheet-footer .binary-btn{min-height:56px!important}
+  .checklist-controls{grid-template-columns:1fr}
+  .checklist-controls .checklist-toggle,.checklist-selection-status{grid-column:1;grid-row:auto;width:100%!important}
+  .checklist-selection-status{text-align:left}
+  .therapeutic-protocol-card{grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important}
+  .therapeutic-protocol-card .btn{width:auto!important;min-width:72px!important;padding-inline:12px!important}
+  .thematic-prefill-notice{grid-template-columns:1fr;gap:3px}
 }
 
 @media(max-width:380px){
@@ -399,7 +430,7 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
 }
 
 @media(prefers-reduced-motion:reduce){
-  .fx-progress-track::after,.fx-hero-art img,.fx-choice-card{transition:none!important}
+  .fx-progress-track::after,.fx-hero-art img,.fx-choice-card,.catalog-group>.section-head::after{transition:none!important}
 }
 
 @media(forced-colors:active){

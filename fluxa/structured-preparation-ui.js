@@ -31,7 +31,7 @@ function ensureStructuredFields() {
     <div><p class="eyebrow">Registro da preparação</p><h3>Dados desta sessão</h3><p class="muted">A frequência e a proteção ficam preservadas no histórico desta janela de trabalho.</p></div>
     <div class="field"><label>Frequência vibracional medida</label><input data-prep-frequency value="${esc(run.frequencyMeasurement?.value || '')}" placeholder="Ex.: 8.500" inputmode="decimal"></div>
     <div class="field"><label>Escala / unidade <span class="muted">(opcional)</span></label><input data-prep-frequency-scale value="${esc(run.frequencyMeasurement?.scale || '')}" placeholder="Ex.: Bovis"></div>
-    ${tools.length ? `<fieldset class="field"><legend>Gráficos / recursos de proteção utilizados</legend><div class="checklist">${tools.map((tool) => `<label class="check-row"><input type="checkbox" data-prep-protection-tool value="${tool.id}" ${selected.has(tool.id) ? 'checked' : ''}><span>${esc(tool.name)}</span></label>`).join('')}</div></fieldset>` : ''}
+    ${tools.length ? `<fieldset class="field prep-protection-field"><legend>Proteção utilizada</legend><div class="checklist prep-protection-list">${tools.map((tool) => `<label class="check-row"><input type="checkbox" data-prep-protection-tool value="${tool.id}" aria-label="${esc(tool.name)}" ${selected.has(tool.id) ? 'checked' : ''}><span>${esc(tool.name)}</span></label>`).join('')}</div></fieldset>` : ''}
     <div class="field"><label>Proteção utilizada / observações</label><textarea data-prep-protection-notes placeholder="Descreva a proteção quando não estiver cadastrada na Biblioteca">${esc(run.protection?.notes || '')}</textarea></div>
     <div class="field"><label>Mantra / permissão <span class="muted">(opcional)</span></label><textarea data-prep-permission-notes placeholder="Observação específica desta sessão">${esc(run.permissionNotes || '')}</textarea></div>`;
 
@@ -53,6 +53,43 @@ function collectAndSave() {
   return store.getState().preparationRuns.find((item) => item.id === run.id);
 }
 
+function clearPreparationError(section = document.querySelector('[data-prep-structured]')) {
+  section?.querySelector('[data-prep-error]')?.remove();
+}
+
+function showPreparationError(section, message = '') {
+  clearPreparationError(section);
+  const protectionError = /prote[cç][aã]o|gr[aá]fico|recurso/i.test(message);
+  const frequencyError = /frequ[eê]ncia|medi[cç][aã]o/i.test(message);
+  const target = protectionError
+    ? section.querySelector('.prep-protection-field') || section.querySelector('[data-prep-protection-notes]')?.closest('.field')
+    : frequencyError
+      ? section.querySelector('[data-prep-frequency]')?.closest('.field')
+      : section;
+  const alert = document.createElement('div');
+  alert.className = 'fx-inline-error';
+  alert.dataset.prepError = 'true';
+  alert.setAttribute('role', 'alert');
+  alert.textContent = protectionError
+    ? 'Registre uma proteção: escolha um recurso da Biblioteca ou descreva o que utilizou.'
+    : message || 'Revise os dados destacados antes de continuar.';
+  target?.before(alert);
+
+  if (protectionError) {
+    const reveal = section.querySelector('[data-toggle-tool-checklist][aria-expanded="false"]');
+    reveal?.click();
+  }
+  requestAnimationFrame(() => {
+    alert.scrollIntoView({ block:'center', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    const focusTarget = protectionError
+      ? section.querySelector('[data-toggle-tool-checklist], [data-prep-protection-notes]')
+      : frequencyError
+        ? section.querySelector('[data-prep-frequency]')
+        : null;
+    focusTarget?.focus({ preventScroll:true });
+  });
+}
+
 function enhance() {
   if (enhancing) return;
   enhancing = true;
@@ -65,12 +102,14 @@ queueMicrotask(enhance);
 let saveTimer = null;
 document.addEventListener('input', (event) => {
   if (!event.target.closest('[data-prep-structured]')) return;
+  clearPreparationError(event.target.closest('[data-prep-structured]'));
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { try { collectAndSave(); } catch (_) {} }, 250);
 }, true);
 
 document.addEventListener('change', (event) => {
   if (!event.target.closest('[data-prep-structured]')) return;
+  clearPreparationError(event.target.closest('[data-prep-structured]'));
   try { collectAndSave(); } catch (_) {}
 }, true);
 
@@ -85,6 +124,7 @@ document.addEventListener('click', (event) => {
     completeStructuredPreparation(store, run.id);
     document.querySelector('[data-action="dismiss-sheet"]')?.click();
   } catch (error) {
-    alert(error.message);
+    const section = document.querySelector('[data-prep-structured]');
+    if (section) showPreparationError(section, error.message);
   }
 }, true);
