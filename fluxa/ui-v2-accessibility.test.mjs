@@ -4,6 +4,7 @@ import { mobileSheet } from './ui-v2/components/mobile-sheet.js';
 
 const source = fs.readFileSync(new URL('./ui-v2/components/mobile-sheet.js', import.meta.url), 'utf8');
 const composer = fs.readFileSync(new URL('./ui-v2/treatment/treatment-composer.js', import.meta.url), 'utf8');
+const finalAssessment = fs.readFileSync(new URL('./ui-v2/treatment/final-assessment.js', import.meta.url), 'utf8');
 const newAssisted = fs.readFileSync(new URL('./ui-v2/library/new-assisted-sheet.js', import.meta.url), 'utf8');
 const html = mobileSheet({
   eyebrow:'Sessão', title:'Teste', body:'<p>Conteúdo</p>', primaryLabel:'Continuar', secondaryLabel:'Voltar',
@@ -26,5 +27,6 @@ assert.match(source, /sheet\.focus\?\.\(\{ preventScroll: true \}\)/);
 assert.match(source, /event\.preventDefault\(\)/);
 assert.doesNotMatch(composer, /data-v2-treatment-draft="title"[^>]*data-v2-autofocus/);
 assert.doesNotMatch(newAssisted, /data-v2-library-person-name[^>]*data-v2-autofocus/);
+assert.doesNotMatch(finalAssessment, /<input[^>]*data-v2-autofocus/,'Final assessment must not summon the iOS keyboard when its sheet opens.');
 
 console.log('ui-v2-accessibility.test.mjs: ok');
