@@ -6,6 +6,7 @@ import {
   answerTriage,
   beginSession,
   beginTriage,
+  closeCurrentSessionV2,
   completeSessionReiki,
   confirmInvestigationFindings,
   createAndSelectPerson,
@@ -22,6 +23,7 @@ import {
   startSessionReiki,
   stepBackTriage,
 } from './state/actions.js';
+import { deriveHistoryModel } from './history/history-model.js';
 import { deriveV2Model } from './state/selectors.js';
 import { fixtureFromLocation } from './testing/fixtures.js';
 
@@ -29,7 +31,13 @@ const root = document.querySelector('#fluxa-v2-root');
 const params = new URLSearchParams(globalThis.location?.search || '');
 const liveMode = params.get('mode') === 'live';
 const store = liveMode ? createStore() : null;
-let model = liveMode ? deriveV2Model(store.getState()) : { ...fixtureFromLocation(), source: 'fixture' };
+
+function deriveLiveModel() {
+  const state = store.getState();
+  return { ...deriveV2Model(state), ...deriveHistoryModel(state) };
+}
+
+let model = liveMode ? deriveLiveModel() : { ...fixtureFromLocation(), source: 'fixture', historySessions: [], safeClose: null, latestClosedSession: null };
 
 function blankGraph() {
   return { graphName: '', durationValue: '', durationUnit: 'DAY' };
@@ -52,13 +60,15 @@ const ui = {
   activeTreatmentId: null,
   reviewComponentId: null,
   treatmentDraft: blankTreatmentDraft(),
+  justClosedSessionId: null,
+  historySessionId: null,
 };
 let opener = null;
 let renderQueued = false;
 let focusAfterRender = false;
 
 function render({ focusDialog = false } = {}) {
-  if (liveMode) model = deriveV2Model(store.getState());
+  if (liveMode) model = deriveLiveModel();
   root.innerHTML = renderAppShell(model, ui);
   document.body.dataset.v2SheetOpen = ui.sheet ? 'true' : 'false';
   document.body.style.overflow = ui.sheet ? 'hidden' : '';
@@ -208,6 +218,8 @@ function performNext(source) {
   clearInlineError();
   try {
     if (model.nextActionCode === 'START_SESSION') {
+      ui.justClosedSessionId = null;
+      ui.historySessionId = null;
       beginSession(store);
       openSheet('preparation', source);
       return;
@@ -247,7 +259,7 @@ function handlePrimary() {
         protectionNotes: root.querySelector('[data-v2-prep-protection]')?.value,
         permissionNotes: root.querySelector('[data-v2-prep-permission]')?.value,
       });
-      const nextModel = deriveV2Model(store.getState());
+      const nextModel = deriveLiveModel();
       if (nextModel.prepared) {
         ui.sheet = nextModel.assistedSelected ? (nextModel.hawkinsReady ? null : 'hawkins') : 'assisted';
         scheduleRender({ focusDialog: Boolean(ui.sheet) });
@@ -282,9 +294,11 @@ function handlePrimary() {
 
     if (ui.sheet === 'findings') {
       const selected = [...root.querySelectorAll('[data-v2-finding-choice]:checked')].map((input) => input.value);
-      if (model.findingsInvestigationId) confirmInvestigationFindings(store, model.findingsInvestigationId, selected);
-      const nextModel = deriveV2Model(store.getState());
-      const findingIds = (nextModel.treatmentFindings || []).map((item) => item.id);
+      const created = model.findingsInvestigationId
+        ? confirmInvestigationFindings(store, model.findingsInvestigationId, selected)
+        : [];
+      const nextModel = deriveLiveModel();
+      const findingIds = created.map((item) => item.id);
       model = nextModel;
       if (findingIds.length) openTreatmentComposer(null, findingIds);
       else {
@@ -302,7 +316,7 @@ function handlePrimary() {
         permissionToDismantle: outcome === 'complete',
         notes: root.querySelector('[data-v2-review-notes]')?.value || '',
       });
-      const nextModel = deriveV2Model(store.getState());
+      const nextModel = deriveLiveModel();
       const treatment = nextModel.treatments.find((item) => item.id === ui.activeTreatmentId);
       model = nextModel;
       ui.reviewComponentId = null;
@@ -330,6 +344,18 @@ function handlePrimary() {
       const mode = root.querySelector('input[name="reikiMode"]:checked')?.value || 'IN_PERSON';
       startSessionReiki(store, mode);
       scheduleRender({ focusDialog: true });
+      return;
+    }
+
+    if (ui.sheet === 'closing') {
+      const sessionId = closeCurrentSessionV2(store, {
+        confirmation: root.querySelector('[data-v2-closing-confirmation]')?.value || '',
+      });
+      ui.sheet = null;
+      ui.route = 'today';
+      ui.historySessionId = null;
+      ui.justClosedSessionId = sessionId;
+      scheduleRender();
     }
   } catch (error) {
     showInlineError(error);
@@ -360,6 +386,7 @@ root.addEventListener('click', (event) => {
   if (route) {
     ui.route = route.dataset.v2Route;
     ui.sheet = null;
+    if (ui.route !== 'history') ui.historySessionId = null;
     ui.error = '';
     render();
     return;
@@ -367,6 +394,13 @@ root.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-v2-close-sheet]')) {
     closeSheet();
+    return;
+  }
+
+  if (event.target.closest('[data-v2-closing-reiki]')) {
+    ui.sheet = 'reiki';
+    ui.error = '';
+    render({ focusDialog: true });
     return;
   }
 
@@ -398,7 +432,7 @@ root.addEventListener('click', (event) => {
     clearInlineError();
     try {
       answerTriage(store, model.investigation.id, triageAnswer.dataset.v2TriageAnswer);
-      const nextModel = deriveV2Model(store.getState());
+      const nextModel = deriveLiveModel();
       ui.sheet = nextModel.nextActionCode === 'FINDINGS' ? 'findings'
         : (nextModel.nextActionCode === 'TRIAGE' ? 'triage' : null);
       scheduleRender({ focusDialog: Boolean(ui.sheet) });
@@ -510,6 +544,22 @@ root.addEventListener('click', (event) => {
     return;
   }
 
+  const historySession = event.target.closest('[data-v2-history-session]');
+  if (historySession) {
+    ui.route = 'history';
+    ui.sheet = null;
+    ui.historySessionId = historySession.dataset.v2HistorySession;
+    ui.error = '';
+    render();
+    return;
+  }
+
+  if (event.target.closest('[data-v2-history-back]')) {
+    ui.historySessionId = null;
+    render();
+    return;
+  }
+
   const action = event.target.closest('[data-v2-preview-action]');
   if (!action) return;
   opener = action;
@@ -534,6 +584,10 @@ root.addEventListener('click', (event) => {
   }
   if (name === 'reiki') {
     openSheet('reiki', action);
+    return;
+  }
+  if (name === 'close-session') {
+    openSheet('closing', action);
   }
 });
 
