@@ -38,9 +38,18 @@ export function mobileSheet({
   `;
 }
 
+function isVisibleFocusTarget(element) {
+  if (!element || element.hidden || element.getAttribute('aria-hidden') === 'true') return false;
+  if (element.closest?.('[hidden], [aria-hidden="true"]')) return false;
+  // offsetParent is null for controls inside display:none/visibility-collapsed branches in the
+  // sheet. Keep the guard feature-detected so lightweight test doubles are not rejected.
+  if ('offsetParent' in element && element.offsetParent === null && element !== globalThis.document?.activeElement) return false;
+  return true;
+}
+
 function focusableIn(sheet) {
-  return [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')]
-    .filter((element) => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+  return [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], summary, [contenteditable="true"], [tabindex]:not([tabindex="-1"])')]
+    .filter(isVisibleFocusTarget);
 }
 
 export function focusSheet(root) {
