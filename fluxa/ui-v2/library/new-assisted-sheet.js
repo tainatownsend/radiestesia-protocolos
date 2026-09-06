@@ -6,7 +6,7 @@ export function newAssistedSheet(model, ui) {
       <p class="v2-copy">Cadastre a pessoa no Acervo sem alterar o Assistido atual da sessão.</p>
       <label class="v2-field">
         <span>Nome completo</span>
-        <input type="text" autocomplete="name" data-v2-library-person-name data-v2-autofocus placeholder="Nome da pessoa">
+        <input type="text" autocomplete="name" data-v2-library-person-name placeholder="Nome da pessoa">
       </label>
       <label class="v2-field">
         <span>Data de nascimento</span>
