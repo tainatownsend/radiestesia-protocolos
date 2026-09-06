@@ -58,7 +58,6 @@ export function sessionCockpit(model) {
         ${indicator('Preparação', model.prepared ? 'Concluída' : 'Pendente', model.prepared)}
         ${indicator('Hawkins', hawkins, model.hawkinsReady)}
         ${indicator('Tratamentos ativos', String(model.activeTreatments ?? 0), (model.activeTreatments ?? 0) > 0)}
-        ${model.reiki ? indicator('Reiki', model.reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento') : ''}
         <p class="v2-session-activity">${esc(sessionActivity)}</p>
       </section>
 
