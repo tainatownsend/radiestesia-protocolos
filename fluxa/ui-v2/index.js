@@ -253,6 +253,12 @@ function performNext(source) {
     if (model.nextActionCode === 'TRIAGE') return openSheet('triage', source);
     if (model.nextActionCode === 'FINDINGS') return openSheet('findings', source);
     if (model.nextActionCode === 'COMPOSE_TREATMENT') return openTreatmentComposer(source, (model.treatmentFindings || []).map((item) => item.id));
+    if (model.nextActionCode === 'REIKI_CONTEXT') {
+      if (!model.nextActionAssistedId) throw new Error('Não foi possível restaurar o Assistido da aplicação de Reiki.');
+      selectSessionAssisted(store, model.nextActionAssistedId);
+      openSheet('reiki', source);
+      return;
+    }
     if (model.nextActionCode === 'REIKI_ACTIVE') return openSheet('reiki', source);
     if (['TREATMENT_FINAL', 'TREATMENT_REVIEW', 'TREATMENT_WORKSPACE'].includes(model.nextActionCode)) {
       const treatment = treatmentById(model.nextActionTreatmentId);
@@ -519,10 +525,18 @@ root.addEventListener('click', (event) => {
     return;
   }
 
-  if (event.target.closest('[data-v2-closing-reiki]')) {
-    ui.sheet = 'reiki';
-    ui.error = '';
-    render({ focusDialog: true });
+  const closingReiki = event.target.closest('[data-v2-closing-reiki]');
+  if (closingReiki) {
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      if (model.reiki?.assistedEntityId && !model.reiki.belongsToCurrentAssisted) {
+        selectSessionAssisted(store, model.reiki.assistedEntityId);
+      }
+      openSheet('reiki', closingReiki);
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
 
