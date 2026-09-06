@@ -1,0 +1,118 @@
+:root {
+  --v2-visual-viewport-height: 100dvh;
+  --v2-keyboard-inset: 0px;
+}
+
+.v2-overlay {
+  min-height: 0;
+  height: var(--v2-visual-viewport-height, 100dvh);
+  max-height: 100dvh;
+}
+
+.v2-sheet {
+  max-height: calc(var(--v2-visual-viewport-height, 100dvh) - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
+}
+
+.v2-sheet__body {
+  overflow-x: hidden;
+  scroll-padding-top: var(--v2-space-3);
+  scroll-padding-bottom: calc(var(--v2-touch-primary) + var(--v2-space-5));
+}
+
+.v2-field,
+.v2-choice-card,
+.v2-check-row,
+.v2-treatment-graph {
+  scroll-margin-block: var(--v2-space-4);
+}
+
+body[data-v2-keyboard-open="true"] .v2-overlay {
+  padding-bottom: var(--v2-space-2);
+}
+
+body[data-v2-keyboard-open="true"] .v2-sheet__footer {
+  padding-bottom: var(--v2-space-3);
+}
+
+body[data-v2-keyboard-open="true"] .v2-sheet__body {
+  scroll-padding-bottom: calc(var(--v2-touch-primary) + var(--v2-space-6));
+}
+
+@media (max-width: 767px) {
+  .v2-field input,
+  .v2-field textarea,
+  .v2-field select,
+  .v2-library-search input[type="search"] {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 430px) {
+  .v2-header {
+    gap: var(--v2-space-2);
+    padding-inline: var(--v2-space-3);
+  }
+
+  .v2-brand span {
+    display: none;
+  }
+
+  .v2-header-actions {
+    gap: var(--v2-space-1);
+  }
+
+  .v2-context-chip {
+    max-width: 96px;
+  }
+
+  .v2-settings-trigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .v2-title {
+    max-width: 100%;
+  }
+
+  .v2-sheet__header h2,
+  .v2-treatment-card h2,
+  .v2-history-session-card__head h2 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 390px) {
+  .v2-sheet__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .v2-sheet__footer > span[aria-hidden="true"] {
+    display: none;
+  }
+
+  .v2-sheet__footer .v2-binary-actions {
+    width: 100%;
+  }
+
+  .v2-sheet__footer > .v2-btn,
+  .v2-sheet__footer > .v2-file-button {
+    width: 100%;
+  }
+}
+
+@media (max-height: 700px) {
+  .v2-overlay {
+    padding-top: var(--v2-space-1);
+    padding-bottom: var(--v2-space-1);
+  }
+
+  .v2-sheet__header {
+    min-height: 56px;
+    padding-block: var(--v2-space-2);
+  }
+
+  .v2-sheet__body {
+    padding-top: var(--v2-space-3);
+    padding-bottom: var(--v2-space-3);
+  }
+}
