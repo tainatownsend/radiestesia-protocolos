@@ -33,7 +33,22 @@ function heading(title, copy) {
 }
 
 function search(placeholder) {
-  return `<label class="v2-field v2-library-search"><span class="sr-only">Buscar</span><input type="search" data-v2-library-search placeholder="${esc(placeholder)}" autocomplete="off"></label>`;
+  return `
+    <style>
+      .v2-library-search-empty { display: none; }
+      .v2-library-list:has([data-v2-library-search-text]):not(:has([data-v2-library-search-text]:not([hidden]))) .v2-library-search-empty { display: block; }
+    </style>
+    <label class="v2-field v2-library-search"><span class="sr-only">Buscar</span><input type="search" data-v2-library-search placeholder="${esc(placeholder)}" autocomplete="off"></label>
+  `;
+}
+
+function filteredEmpty(hasItems) {
+  return hasItems ? `
+    <div class="v2-card v2-card--soft v2-library-search-empty" role="status" aria-live="polite">
+      <strong>Nenhum resultado encontrado</strong>
+      <p class="v2-copy">Revise os termos da busca.</p>
+    </div>
+  ` : '';
 }
 
 function home(model) {
@@ -69,6 +84,7 @@ function assisteds(model) {
             <span class="v2-library-kind">${esc(item.typeLabel)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum Assistido cadastrado.</div>'}
+        ${filteredEmpty(items.length > 0)}
       </section>
     </div>
   `;
@@ -87,6 +103,7 @@ function protocols(model) {
             <span class="v2-library-kind">${esc(item.source)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum protocolo disponível.</div>'}
+        ${filteredEmpty(items.length > 0)}
       </section>
     </div>
   `;
@@ -105,6 +122,7 @@ function resources(model) {
             <span class="v2-library-kind">${esc(item.typeLabel)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum recurso cadastrado.</div>'}
+        ${filteredEmpty(items.length > 0)}
       </section>
     </div>
   `;
