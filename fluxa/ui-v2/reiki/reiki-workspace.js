@@ -1,15 +1,8 @@
 import { mobileSheet } from '../components/mobile-sheet.js';
+import { formatElapsed } from './reiki-ticker.js';
 
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
-}
-
-function duration(seconds = 0) {
-  const total = Math.max(0, Number(seconds) || 0);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const secs = Math.floor(total % 60);
-  return hours ? `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}` : `${minutes}:${String(secs).padStart(2, '0')}`;
 }
 
 export function reikiWorkspace(model, ui) {
@@ -28,9 +21,9 @@ export function reikiWorkspace(model, ui) {
     const isCurrentContext = reiki.belongsToCurrentSession && reiki.belongsToCurrentAssisted;
     const body = `
       <div class="v2-reiki-workspace">
-        <section class="v2-reiki-timer" aria-live="polite">
+        <section class="v2-reiki-timer" role="timer" aria-label="Tempo decorrido da aplicação de Reiki" data-v2-reiki-timer data-v2-reiki-running="${reiki.status === 'RUNNING'}" data-v2-reiki-elapsed-seconds="${Math.max(0, Number(reiki.elapsedSeconds) || 0)}">
           <span class="v2-status-pill" data-status="${esc(reiki.status)}">${reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento'}</span>
-          <strong>${esc(duration(reiki.elapsedSeconds))}</strong>
+          <strong data-v2-reiki-elapsed>${esc(formatElapsed(reiki.elapsedSeconds))}</strong>
           <span>${esc(reiki.modeLabel)} · ${esc(reiki.assistedName)}</span>
         </section>
         ${isCurrentContext ? '<p class="v2-helper">Esta aplicação está vinculada à sessão e ao Assistido atuais.</p>' : '<div class="v2-inline-error" role="alert">A aplicação ativa pertence a outro contexto. Volte ao Assistido correto antes de alterá-la.</div>'}
