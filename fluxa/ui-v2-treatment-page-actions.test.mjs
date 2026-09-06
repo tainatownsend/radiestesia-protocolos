@@ -53,13 +53,16 @@ assert.equal(isContinuityLocked('INVESTIGATE'), false);
 
 const noSessionHtml = treatmentPage({ sessionOpen:false, assistedSelected:false, hawkinsReady:false, treatments:[] });
 assert.match(noSessionHtml,/Abra uma sessão para entrar no contexto do Assistido/);
+assert.match(noSessionHtml,/data-v2-route="today">Abrir sessão em Hoje/,'No-session empty state must provide a direct recovery path to Hoje.');
 assert.doesNotMatch(noSessionHtml,/Nenhum tratamento para este Assistido/,'No-session state must not pretend an assisted context exists.');
 
 const noAssistedHtml = treatmentPage({ sessionOpen:true, assistedSelected:false, hawkinsReady:false, treatments:[] });
 assert.match(noAssistedHtml,/Selecione o Assistido da sessão/);
+assert.match(noAssistedHtml,/data-v2-route="today">Selecionar em Hoje/,'Missing-assisted empty state must provide a direct recovery path to Hoje.');
 assert.doesNotMatch(noAssistedHtml,/Nenhum tratamento para este Assistido/);
 
 const emptyAssistedHtml = treatmentPage({ ...base, treatments:[] });
 assert.match(emptyAssistedHtml,/Nenhum tratamento para Marina/);
+assert.doesNotMatch(emptyAssistedHtml,/data-v2-route="today"/,'Ready empty treatment state should rely on the existing Novo tratamento action instead of duplicating navigation.');
 
 console.log('ui-v2-treatment-page-actions.test.mjs: ok');
