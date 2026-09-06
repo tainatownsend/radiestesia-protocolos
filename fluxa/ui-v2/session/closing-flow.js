@@ -16,6 +16,11 @@ export function closingFlow(model, ui) {
   const openInvestigationCount = Math.max(0, Number(summary.investigationOpened || 0) - Number(summary.investigationCompleted || 0));
   const fallbackPendingFindings = Array.isArray(model.findings) ? model.findings.length : 0;
   const pendingFindingCount = Math.max(0, Number(summary.pendingFindingCount ?? fallbackPendingFindings) || 0);
+  const recoveryBlocker = openInvestigationCount
+    ? summary.openInvestigationBlocker
+    : (pendingFindingCount ? summary.pendingFindingBlocker : null);
+  const recoveryAssistedId = recoveryBlocker?.assistedEntityId || '';
+  const recoveryAssistedName = recoveryBlocker?.assistedName || '';
   const hasBlocker = Boolean(reikiBlocker || openInvestigationCount || pendingFindingCount);
   const body = `
     <div class="v2-closing-review">
@@ -46,11 +51,11 @@ export function closingFlow(model, ui) {
       ` : ''}
 
       ${openInvestigationCount ? `
-        <div class="v2-inline-error" role="alert"><strong>${openInvestigationCount === 1 ? 'Há uma investigação em andamento' : `Há ${openInvestigationCount} investigações em andamento`}</strong><span>Conclua a investigação aberta antes de encerrar para não perder a continuidade do atendimento.</span></div>
+        <div class="v2-inline-error" role="alert"><strong>${openInvestigationCount === 1 ? 'Há uma investigação em andamento' : `Há ${openInvestigationCount} investigações em andamento`}</strong><span>Conclua ${recoveryAssistedName ? `a investigação de ${esc(recoveryAssistedName)}` : 'a investigação aberta'} antes de encerrar para não perder a continuidade do atendimento.</span></div>
       ` : ''}
 
       ${pendingFindingCount ? `
-        <div class="v2-inline-error" role="alert"><strong>${pendingFindingCount === 1 ? 'Há 1 achado aguardando revisão' : `Há ${pendingFindingCount} achados aguardando revisão`}</strong><span>Revise os achados da investigação antes de encerrar a sessão.</span></div>
+        <div class="v2-inline-error" role="alert"><strong>${pendingFindingCount === 1 ? 'Há 1 achado aguardando revisão' : `Há ${pendingFindingCount} achados aguardando revisão`}</strong><span>Revise ${recoveryAssistedName ? `os achados de ${esc(recoveryAssistedName)}` : 'os achados da investigação'} antes de encerrar a sessão.</span></div>
       ` : ''}
 
       ${!hasBlocker ? `
@@ -73,7 +78,7 @@ export function closingFlow(model, ui) {
   } else if (openInvestigationCount || pendingFindingCount) {
     footerHtml = `
       <span aria-hidden="true"></span>
-      <button class="v2-btn v2-btn--primary" type="button" data-v2-close-sheet>Voltar à sessão</button>
+      <button class="v2-btn v2-btn--primary" type="button" data-v2-closing-blocker-assisted="${esc(recoveryAssistedId)}">${recoveryAssistedName ? `Continuar com ${esc(recoveryAssistedName)}` : 'Voltar à sessão'}</button>
     `;
   } else {
     footerHtml = `
