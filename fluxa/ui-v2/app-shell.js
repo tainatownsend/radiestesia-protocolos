@@ -11,6 +11,7 @@ import { assistedPicker } from './session/assisted-picker.js';
 import { hawkinsFlow } from './session/hawkins-flow.js';
 import { preparationFlow } from './session/preparation-flow.js';
 import { sessionCockpit } from './session/session-cockpit.js';
+import { fixtureVisualData } from './testing/fixture-visual-data.js';
 import { finalAssessment } from './treatment/final-assessment.js';
 import { treatmentComposer } from './treatment/treatment-composer.js';
 import { treatmentPage } from './treatment/treatment-page.js';
@@ -30,6 +31,20 @@ function esc(value = '') {
   }[c]));
 }
 
+function fixtureResolved(model, ui) {
+  if (model.source !== 'fixture') return { model, ui };
+  const fixtureUi = model.fixtureUi || {};
+  const visual = fixtureVisualData(model.id);
+  return {
+    model: { ...model, ...visual },
+    ui: {
+      ...ui,
+      ...fixtureUi,
+      sheet: model.overlay || fixtureUi.sheet || ui.sheet,
+    },
+  };
+}
+
 function sheetMarkup(model, ui) {
   if (ui.sheet === 'preparation') return preparationFlow(model, ui);
   if (ui.sheet === 'assisted') return assistedPicker(model, ui);
@@ -47,7 +62,10 @@ function sheetMarkup(model, ui) {
   return '';
 }
 
-export function renderAppShell(model, ui) {
+export function renderAppShell(sourceModel, sourceUi) {
+  const resolved = fixtureResolved(sourceModel, sourceUi);
+  const model = resolved.model;
+  const ui = resolved.ui;
   const route = ui.route || 'today';
   const currentContext = model.sessionOpen
     ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
@@ -76,7 +94,7 @@ export function renderAppShell(model, ui) {
         </div>
         <div class="v2-header-actions">
           <span class="v2-context-chip">${esc(currentContext)}</span>
-          <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações">Ajustes</button>
+          <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações" ${model.source === 'live' ? '' : 'disabled'}>Ajustes</button>
         </div>
       </header>
 
