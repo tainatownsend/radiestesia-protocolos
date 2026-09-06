@@ -38,6 +38,7 @@ assert.match(css, /font-size:\s*16px/);
 assert.match(css, /body\[data-v2-sheet-open="true"\]\s*\{\s*touch-action:\s*auto;/s);
 assert.match(css, /\.v2-sheet__body\s*\{\s*touch-action:\s*pan-y;/s);
 assert.doesNotMatch(css, /body\[data-v2-sheet-open="true"\][^{]*\{[^}]*touch-action:\s*none/s);
+assert.match(css, /\.v2-question\s*\{\s*min-height:\s*0;/s);
 assert.match(css, /@media \(max-width: 390px\)/);
 assert.match(css, /\.v2-sheet__footer\s*\{\s*grid-template-columns:\s*1fr;/s);
 assert.match(css, /scroll-padding-bottom/);
