@@ -170,6 +170,44 @@ function markLinkedFindingsTreated(store, treatmentId) {
   });
 }
 
+function investigationReviewState(state, sessionId) {
+  const investigations = (state.investigations || []).filter((item) => item.currentSessionId === sessionId);
+  const reviewed = new Set((state.findings || [])
+    .filter((item) => item.investigationId && item.sourceQuestionId)
+    .map((item) => `${item.investigationId}:${item.sourceQuestionId}`));
+  const openCount = investigations.filter((item) => item.status === 'IN_PROGRESS').length;
+  const pendingFindingCount = investigations.reduce((total, investigation) => total + (investigation.answers || [])
+    .filter((answer) => answer.answer === 'YES' && !reviewed.has(`${investigation.id}:${answer.questionId}`)).length, 0);
+  return { openCount, pendingFindingCount };
+}
+
+function persistDismissedFindings(store, investigation, selectedQuestionIds) {
+  if (!investigation) return;
+  const selected = new Set(selectedQuestionIds || []);
+  const dismissed = (investigation.answers || []).filter((answer) => answer.answer === 'YES' && !selected.has(answer.questionId));
+  if (!dismissed.length) return;
+  store.setState((state) => {
+    const draft = structuredClone(state);
+    for (const answer of dismissed) {
+      const existing = (draft.findings || []).find((item) => item.investigationId === investigation.id && item.sourceQuestionId === answer.questionId);
+      if (existing) continue;
+      const now = store.nowIso();
+      draft.findings.push({
+        id: store.makeId('find'),
+        assistedEntityId: investigation.assistedEntityId,
+        investigationId: investigation.id,
+        sourceQuestionId: answer.questionId,
+        classification: 'FACTOR_RELEVANT',
+        title: answer.questionTextSnapshot,
+        status: 'DISMISSED',
+        createdAt: now,
+        dismissedAt: now,
+      });
+    }
+    return draft;
+  });
+}
+
 export function beginSession(store) {
   const session = startSession(store);
   ensurePreparation(store);
@@ -177,8 +215,12 @@ export function beginSession(store) {
 }
 
 export function closeCurrentSessionV2(store, input = {}) {
-  const session = getOpenSession(store.getState());
+  const state = store.getState();
+  const session = getOpenSession(state);
   if (!session) throw new Error('Não há uma sessão aberta para encerrar.');
+  const review = investigationReviewState(state, session.id);
+  if (review.openCount) throw new Error('Conclua a investigação em andamento antes de encerrar a sessão.');
+  if (review.pendingFindingCount) throw new Error('Revise os achados pendentes da investigação antes de encerrar a sessão.');
   const sessionId = session.id;
   closeSession(store, sessionId, {
     confirmation: String(input.confirmation || '').trim() || 'Procedimento de encerramento concluído',
@@ -283,7 +325,11 @@ export function stepBackTriage(store, investigationId) {
 }
 
 export function confirmInvestigationFindings(store, investigationId, questionIds) {
-  return confirmFindings(store, investigationId, questionIds);
+  const investigation = store.getState().investigations.find((item) => item.id === investigationId && item.status === 'COMPLETED') || null;
+  const selected = [...new Set(questionIds || [])];
+  const created = confirmFindings(store, investigationId, selected);
+  persistDismissedFindings(store, investigation, selected);
+  return created;
 }
 
 export function saveTreatmentDraft(store, input = {}, { start = false } = {}) {
