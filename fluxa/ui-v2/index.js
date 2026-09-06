@@ -560,6 +560,22 @@ root.addEventListener('click', (event) => {
     renderPreservingSheetScroll();
     return;
   }
+  if (target.matches('[data-v2-settings-save-modalities]')) {
+    if (!liveMode) return;
+    try {
+      const enabled = [...root.querySelectorAll('input[name="v2EnabledModality"]:checked')].map((input) => input.value);
+      const custom = String(root.querySelector('[data-v2-settings-custom-modalities]')?.value || '')
+        .split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+      store.setState((state) => {
+        const draft = structuredClone(state);
+        draft.settings = draft.settings || {};
+        draft.settings.therapeuticModalities = { enabled, custom };
+        return draft;
+      });
+      renderPreservingSheetScroll();
+    } catch (error) { showInlineError(error); }
+    return;
+  }
   if (target.matches('[data-v2-settings-export]')) {
     if (!liveMode) return;
     try {
