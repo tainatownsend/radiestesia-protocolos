@@ -13,6 +13,14 @@ function indicator(label, value, ok = false) {
   `;
 }
 
+const CONTINUITY_ACTIONS = new Set([
+  'TRIAGE',
+  'FINDINGS',
+  'REIKI_ACTIVE',
+  'TREATMENT_REVIEW',
+  'TREATMENT_FINAL',
+]);
+
 export function sessionCockpit(model) {
   if (!model.sessionOpen) {
     return `
@@ -38,6 +46,17 @@ export function sessionCockpit(model) {
   const treatmentCount = model.treatmentCount ?? model.treatmentsWorked ?? 0;
   const investigationCount = model.investigations ?? 0;
   const sessionActivity = `${investigationCount} investigaç${investigationCount === 1 ? 'ão' : 'ões'} · ${treatmentCount} tratamento${treatmentCount === 1 ? '' : 's'} trabalhado${treatmentCount === 1 ? '' : 's'}`;
+  const continuityLocked = CONTINUITY_ACTIONS.has(model.nextActionCode);
+  const optionalActions = continuityLocked ? '' : `
+      <section class="v2-section">
+        <p class="v2-eyebrow">Ações da sessão</p>
+        <div class="v2-session-actions">
+          <button class="v2-btn" type="button" data-v2-preview-action="investigate" ${prerequisitesReady ? '' : 'disabled'}>Investigar</button>
+          <button class="v2-btn" type="button" data-v2-preview-action="treat" ${prerequisitesReady ? '' : 'disabled'}>Tratar</button>
+          <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${prerequisitesReady && (model.reikiEnabled || model.reiki) ? '' : 'disabled'}>Reiki</button>
+        </div>
+      </section>
+  `;
 
   return `
     <div class="v2-stack">
@@ -61,14 +80,7 @@ export function sessionCockpit(model) {
         <p class="v2-session-activity">${esc(sessionActivity)}</p>
       </section>
 
-      <section class="v2-section">
-        <p class="v2-eyebrow">Ações da sessão</p>
-        <div class="v2-session-actions">
-          <button class="v2-btn" type="button" data-v2-preview-action="investigate" ${prerequisitesReady ? '' : 'disabled'}>Investigar</button>
-          <button class="v2-btn" type="button" data-v2-preview-action="treat" ${prerequisitesReady ? '' : 'disabled'}>Tratar</button>
-          <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${prerequisitesReady && (model.reikiEnabled || model.reiki) ? '' : 'disabled'}>Reiki</button>
-        </div>
-      </section>
+      ${optionalActions}
 
       <section class="v2-session-close-row">
         <button class="v2-btn v2-btn--ghost" type="button" data-v2-preview-action="close-session">Revisar e encerrar sessão</button>
