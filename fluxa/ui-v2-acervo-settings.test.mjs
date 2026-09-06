@@ -12,6 +12,7 @@ const state = {
   tools: [
     { id:'tool_1', type:'GRAPH', name:'Desimpregnador', purpose:'Limpeza', tags:['limpeza'], status:'ACTIVE', archivedAt:null },
     { id:'tool_2', type:'GRAPH', name:'Antigo', status:'ARCHIVED', archivedAt:'2026-09-01T00:00:00.000Z' },
+    { id:'tool_3', type:'GRAPH', name:'Luxor', status:'ARCHIVED', archivedAt:'2026-09-01T00:00:00.000Z', starterGraph:true },
   ],
   customProtocols: [
     { id:'proto_custom', name:'Protocolo pessoal', category:'Personalizado', description:'Teste', archivedAt:null },
@@ -23,12 +24,16 @@ const state = {
   },
 };
 
+const freshModel = deriveLibraryModel({ assistedEntities:[], tools:[], customProtocols:[], settings:{} });
+assert.equal(freshModel.library.resources.length, STARTER_GRAPHS.length, 'Fresh Acervo must expose the complete starter graph catalog without writing storage.');
+
 const model = deriveLibraryModel(state);
 assert.equal(model.library.assisteds.length, 1);
 assert.equal(model.library.assisteds[0].name, 'Marina');
-assert.equal(model.library.resources.length, STARTER_GRAPHS.length, 'Acervo must expose the full starter graph catalog without duplicating a stored starter graph.');
+assert.equal(model.library.resources.length, STARTER_GRAPHS.length - 1, 'Archived starter resources must stay hidden while active stored starter metadata remains deduplicated.');
 assert.equal(model.library.resources.filter((item) => item.name === 'Desimpregnador').length, 1);
 assert.equal(model.library.resources.find((item) => item.name === 'Desimpregnador')?.purpose, 'Limpeza', 'Stored resource metadata must enrich the virtual starter entry.');
+assert.ok(!model.library.resources.some((item) => item.name === 'Luxor'), 'An archived starter graph must not be resurrected by the virtual catalog.');
 assert.ok(model.library.protocols.some((item) => item.name === 'Protocolo pessoal'));
 assert.ok(model.library.protocols.some((item) => item.name === 'Protocolo versionado atual'));
 assert.ok(!model.library.protocols.some((item) => item.name === 'Protocolo versionado antigo'), 'Only the latest immutable custom-protocol version should be listed.');
@@ -56,6 +61,7 @@ assert.match(library, /data-v2-library-new-assisted/);
 assert.match(libraryModel, /ROOT_PROTOCOL_METADATA/);
 assert.match(libraryModel, /STARTER_GRAPHS/);
 assert.match(libraryModel, /protocolKey/);
+assert.match(libraryModel, /archivedNames/);
 assert.match(shell, /libraryPage/);
 assert.doesNotMatch(shell, /Em migração/);
 
@@ -78,4 +84,4 @@ assert.doesNotMatch(index, /MutationObserver/);
 assert.doesNotMatch(index, /location\.reload/);
 assert.match(html, /library-settings\.css/);
 
-console.log(`ui-v2-acervo-settings.test.mjs: ok · ${model.library.protocols.length} protocols · ${model.library.resources.length} resources`);
+console.log(`ui-v2-acervo-settings.test.mjs: ok · ${model.library.protocols.length} protocols · ${model.library.resources.length} active resources`);
