@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { deriveHistoryModel, narrativeForSession } from './ui-v2/history/history-model.js';
+import { historyPage } from './ui-v2/history/history-page.js';
 
 const state = {
   sessions: [{ id:'ses_1', status:'OPEN', startedAt:'2026-09-06T10:00:00.000Z', endedAt:null, currentAssistedEntityId:'ast_1' }],
@@ -17,6 +18,7 @@ const state = {
     { id:'cmp_3', treatmentId:'trt_2', name:'Integração', status:'PLANNED' },
   ],
   reikiApplications: [{ id:'reiki_1', sessionId:'ses_1', assistedEntityId:'ast_1', status:'PAUSED' }],
+  closingRuns: [],
   events: [
     { id:'evt_1', eventType:'SESSION_STARTED', entityType:'Session', entityId:'ses_1', sessionId:'ses_1', occurredAt:'2026-09-06T10:00:00.000Z', metadata:{} },
     { id:'evt_2', eventType:'INVESTIGATION_STARTED', entityType:'Investigation', entityId:'inv_1', sessionId:'ses_1', assistedEntityId:'ast_1', occurredAt:'2026-09-06T10:05:00.000Z', metadata:{protocolName:'Triagem rápida'} },
@@ -57,9 +59,33 @@ state.sessions[0].status = 'CLOSED';
 state.sessions[0].endedAt = '2026-09-06T10:40:00.000Z';
 state.sessions[0].closedRecordedAt = '2026-09-06T10:40:00.000Z';
 state.reikiApplications[0].status = 'COMPLETED';
+state.closingRuns.push({
+  id:'closing_default',
+  sessionId:'ses_1',
+  status:'COMPLETED',
+  confirmationSnapshot:'Procedimento de encerramento concluído',
+  completedAt:'2026-09-06T10:40:00.000Z',
+});
 model = deriveHistoryModel(state);
 assert.equal(model.safeClose, null);
 assert.equal(model.latestClosedSession.id, 'ses_1');
+assert.equal(model.latestClosedSession.closingNote, '', 'Automatic closing confirmation must not be presented as a therapist-authored note.');
+assert.equal(model.latestClosedSession.notes, 1, 'Automatic closing confirmation must not inflate the visible note count.');
+
+state.closingRuns.push({
+  id:'closing_custom',
+  sessionId:'ses_1',
+  status:'COMPLETED',
+  confirmationSnapshot:'Rever <strong>limites</strong> na próxima sessão.',
+  completedAt:'2026-09-06T10:41:00.000Z',
+});
+model = deriveHistoryModel(state);
+assert.equal(model.latestClosedSession.closingNote, 'Rever <strong>limites</strong> na próxima sessão.');
+assert.equal(model.latestClosedSession.notes, 2, 'A therapist-authored closing note is part of the session note count.');
+const detailHtml = historyPage(model, { historySessionId:'ses_1' });
+assert.match(detailHtml, /Nota de encerramento/);
+assert.match(detailHtml, /Rever &lt;strong&gt;limites&lt;\/strong&gt; na próxima sessão\./);
+assert.doesNotMatch(detailHtml, /Rever <strong>limites<\/strong>/, 'Closing notes must be HTML-escaped before rendering.');
 
 const actions = fs.readFileSync(new URL('./ui-v2/state/actions.js', import.meta.url), 'utf8');
 const index = fs.readFileSync(new URL('./ui-v2/index.js', import.meta.url), 'utf8');
