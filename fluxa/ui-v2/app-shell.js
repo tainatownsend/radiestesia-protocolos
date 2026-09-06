@@ -35,13 +35,12 @@ function fixtureResolved(model, ui) {
   if (model.source !== 'fixture') return { model, ui };
   const fixtureUi = model.fixtureUi || {};
   const visual = fixtureVisualData(model.id);
+  Object.assign(ui, fixtureUi, {
+    sheet: model.overlay || fixtureUi.sheet || ui.sheet,
+  });
   return {
     model: { ...model, ...visual },
-    ui: {
-      ...ui,
-      ...fixtureUi,
-      sheet: model.overlay || fixtureUi.sheet || ui.sheet,
-    },
+    ui,
   };
 }
 
