@@ -44,6 +44,17 @@ body[data-v2-sheet-open="true"] .v2-sheet__body {
   outline-offset: 2px;
 }
 
+.v2-context-chip--button {
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.v2-context-chip--button[disabled] {
+  opacity: .62;
+  cursor: default;
+}
+
 /* Session context stays informative without turning Hoje into a dashboard. */
 .v2-session-snapshot {
   display: grid;
