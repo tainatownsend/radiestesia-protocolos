@@ -14,25 +14,40 @@ assert.ok(html.indexOf('mobile-viewport.js') < html.indexOf('ui-v2/index.js'), '
 assert.deepEqual(viewportMetrics({ layoutHeight: 852, visualHeight: 852, offsetTop: 0 }), {
   layoutHeight: 852,
   visualHeight: 852,
+  offsetTop: 0,
   keyboardInset: 0,
   keyboardOpen: false,
 });
 assert.deepEqual(viewportMetrics({ layoutHeight: 852, visualHeight: 522, offsetTop: 0 }), {
   layoutHeight: 852,
   visualHeight: 522,
+  offsetTop: 0,
   keyboardInset: 330,
+  keyboardOpen: true,
+});
+assert.deepEqual(viewportMetrics({ layoutHeight: 852, visualHeight: 522, offsetTop: 36 }), {
+  layoutHeight: 852,
+  visualHeight: 522,
+  offsetTop: 36,
+  keyboardInset: 294,
   keyboardOpen: true,
 });
 assert.equal(viewportMetrics({ layoutHeight: 812, visualHeight: 730, offsetTop: 0 }).keyboardOpen, false, 'Small browser chrome changes must not be classified as the keyboard.');
 
 assert.match(js, /visualViewport/);
 assert.match(js, /--v2-visual-viewport-height/);
+assert.match(js, /--v2-visual-viewport-offset-top/);
 assert.match(js, /v2KeyboardOpen/);
 assert.match(js, /focusin/);
 assert.match(js, /ensureControlVisible/);
+assert.match(js, /keepFocusVisible/);
+assert.match(js, /clearTimeout/);
+assert.match(js, /scheduleSync\(\{ ensureFocus: false \}\)/);
 assert.doesNotMatch(js, /MutationObserver/);
 
 assert.match(css, /--v2-visual-viewport-height/);
+assert.match(css, /--v2-visual-viewport-offset-top/);
+assert.match(css, /top:\s*var\(--v2-visual-viewport-offset-top/);
 assert.match(css, /data-v2-keyboard-open="true"/);
 assert.match(css, /font-size:\s*16px/);
 assert.match(css, /body\[data-v2-sheet-open="true"\]\s*\{\s*touch-action:\s*auto;/s);
