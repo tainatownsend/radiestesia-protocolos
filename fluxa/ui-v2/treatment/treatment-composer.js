@@ -87,7 +87,7 @@ export function treatmentComposer(model, ui) {
           <p class="v2-eyebrow">Contexto</p>
           <label class="v2-field">
             <span>Nome do tratamento</span>
-            <input data-v2-treatment-draft="title" value="${esc(draft.title || '')}" placeholder="Ex.: Equilíbrio emocional" data-v2-autofocus>
+            <input data-v2-treatment-draft="title" value="${esc(draft.title || '')}" placeholder="Ex.: Equilíbrio emocional">
           </label>
           <label class="v2-field">
             <span>Objetivo <small>(opcional)</small></span>
