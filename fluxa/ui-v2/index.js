@@ -107,7 +107,7 @@ function scheduleRender({ focusDialog = false } = {}) {
 
 function renderPreservingSheetScroll() {
   const scrollTop = root.querySelector('.v2-sheet__body')?.scrollTop || 0;
-  render();
+  scheduleRender();
   queueMicrotask(() => {
     const body = root.querySelector('.v2-sheet__body');
     if (body) body.scrollTop = scrollTop;
@@ -150,7 +150,7 @@ function openSheet(name, source = null) {
   if (source) opener = source;
   ui.sheet = name;
   ui.error = '';
-  render({ focusDialog: true });
+  scheduleRender({ focusDialog: true });
 }
 
 function openTreatmentComposer(source = null, findingIds = []) {
@@ -221,10 +221,10 @@ function performTreatmentAction(action, treatmentId, source = null) {
     } else {
       ui.sheet = 'treatment-workspace';
     }
-    render({ focusDialog: true });
+    scheduleRender({ focusDialog: true });
   } catch (error) {
     ui.sheet = 'treatment-workspace';
-    render({ focusDialog: true });
+    scheduleRender({ focusDialog: true });
     showInlineError(error);
   }
 }
