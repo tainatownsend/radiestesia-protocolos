@@ -15,7 +15,20 @@ function indicator(label, value, ok = false) {
   `;
 }
 
+function outsideSessionReikiCard(reiki) {
+  const status = reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento';
+  return `
+    <section class="v2-card v2-card--soft v2-outside-reiki">
+      <p class="v2-eyebrow">Reiki fora da sessão</p>
+      <strong>${esc(reiki.assistedName || 'Assistido')} · ${esc(status)}</strong>
+      <p class="v2-copy">${esc(reiki.modeLabel || 'Aplicação ativa')} · esta aplicação continua independente do atendimento atual.</p>
+      <button class="v2-btn v2-btn--ghost" type="button" data-v2-preview-action="reiki">Abrir Reiki</button>
+    </section>
+  `;
+}
+
 export function sessionCockpit(model) {
+  const outsideSessionReiki = model.reiki?.sessionId === null ? model.reiki : null;
   if (!model.sessionOpen) {
     return `
       <div class="v2-stack">
@@ -30,6 +43,7 @@ export function sessionCockpit(model) {
           <p>O Fluxa conduz preparação, Assistido e próximos passos sem exigir que você procure o caminho.</p>
           <button class="v2-btn v2-btn--inverse" type="button" data-v2-preview-action="start-session">Iniciar sessão</button>
         </section>
+        ${outsideSessionReiki ? outsideSessionReikiCard(outsideSessionReiki) : ''}
       </div>
     `;
   }
@@ -41,16 +55,20 @@ export function sessionCockpit(model) {
   const investigationCount = model.investigations ?? 0;
   const sessionActivity = `${investigationCount} investigaç${investigationCount === 1 ? 'ão' : 'ões'} · ${treatmentCount} tratamento${treatmentCount === 1 ? '' : 's'} trabalhado${treatmentCount === 1 ? '' : 's'}`;
   const continuityLocked = isContinuityLocked(model.nextActionCode);
+  const reikiActionReady = Boolean(outsideSessionReiki || (prerequisitesReady && (model.reikiEnabled || model.reiki)));
   const optionalActions = continuityLocked ? '' : `
       <section class="v2-section">
         <p class="v2-eyebrow">Ações da sessão</p>
         <div class="v2-session-actions">
           <button class="v2-btn" type="button" data-v2-preview-action="investigate" ${prerequisitesReady ? '' : 'disabled'}>Investigar</button>
           <button class="v2-btn" type="button" data-v2-preview-action="treat" ${prerequisitesReady ? '' : 'disabled'}>Tratar</button>
-          <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${prerequisitesReady && (model.reikiEnabled || model.reiki) ? '' : 'disabled'}>Reiki</button>
+          <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${reikiActionReady ? '' : 'disabled'}>Reiki</button>
         </div>
       </section>
   `;
+  const lockedOutsideReikiAccess = continuityLocked && outsideSessionReiki
+    ? outsideSessionReikiCard(outsideSessionReiki)
+    : '';
 
   return `
     <div class="v2-stack">
@@ -66,6 +84,8 @@ export function sessionCockpit(model) {
         <p>${esc(model.nextReason || 'Continue pelo próximo passo do atendimento.')}</p>
         <button class="v2-btn v2-btn--inverse" type="button" data-v2-preview-action="next">${esc(model.nextAction || 'Continuar')}</button>
       </section>
+
+      ${lockedOutsideReikiAccess}
 
       <section class="v2-session-snapshot" aria-label="Indicadores compactos da sessão">
         ${indicator('Preparação', model.prepared ? 'Concluída' : 'Pendente', model.prepared)}
