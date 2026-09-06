@@ -38,7 +38,18 @@ assert.doesNotMatch(html,/data-v2-primary>Encerrar sessão/,'Closing must remain
 
 const index = fs.readFileSync(new URL('./ui-v2/index.js', import.meta.url), 'utf8');
 assert.match(index,/const closingRecoveryIds = \[[\s\S]*openInvestigationBlocker[\s\S]*pendingFindingBlocker[\s\S]*\]\.filter\(Boolean\)/,'Controller must derive the only assisted IDs allowed to bypass the continuity lock from safe-close blockers.');
-assert.match(index,/ui\.sheet === 'closing' && closingRecoveryIds\.includes\(assisted\.dataset\.v2SelectAssisted\)/,'Only targeted closing recovery may bypass the regular assisted-switch lock.');
+assert.match(index,/ui\.sheet === 'closing' && closingRecoveryIds\.includes\(targetAssistedId\)/,'Only targeted closing recovery may bypass the regular assisted-switch lock.');
+assert.match(index,/openSession\?\.currentAssistedEntityId !== targetAssistedId\) selectSessionAssisted/,'Selecting the already-current assisted should not create a redundant session-selection event.');
+
+const legacyBlockerHtml = closingFlow({
+  safeClose:{
+    assistedNames:['Marina'], investigationOpened:1, investigationCompleted:0, pendingFindingCount:0,
+    findings:0, treatmentsWorked:0, notes:0, longitudinal:[], activeReiki:null,
+  },
+  assistedName:'Marina', findings:[],
+}, { error:'' });
+assert.match(legacyBlockerHtml,/data-v2-close-sheet>Voltar à sessão/,'Missing blocker metadata must fall back to a safe return instead of selecting an empty assisted ID.');
+assert.doesNotMatch(legacyBlockerHtml,/data-v2-select-assisted=""/);
 
 state.findings.push({
   id:'find_2', investigationId:'inv_2', sourceQuestionId:'q2', assistedEntityId:'ast_2',
