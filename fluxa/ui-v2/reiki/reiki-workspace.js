@@ -26,7 +26,9 @@ export function reikiWorkspace(model, ui) {
       ? '<p class="v2-helper">Esta aplicação está vinculada à sessão e ao Assistido atuais.</p>'
       : (outsideSession
         ? '<p class="v2-helper">Esta aplicação foi iniciada fora de uma sessão. Você pode pausá-la, retomá-la ou concluí-la aqui.</p>'
-        : '<div class="v2-inline-error" role="alert"><strong>Registro pendente de uma sessão anterior.</strong><p>Essa sessão não está mais aberta, então o Reiki não pode ser retomado ou concluído como atendimento normal. Encerre apenas este registro pendente para liberar uma nova aplicação; a sessão anterior não será reaberta nem alterada.</p></div>');
+        : (staleSessionContext
+          ? '<div class="v2-inline-error" role="alert"><strong>Registro pendente de uma sessão anterior.</strong><p>Essa sessão não está mais aberta, então o Reiki não pode ser retomado ou concluído como atendimento normal. Encerre apenas este registro pendente para liberar uma nova aplicação; a sessão anterior não será reaberta nem alterada.</p></div>'
+          : '<div class="v2-inline-error" role="alert">A aplicação ativa pertence a outro contexto. Volte ao Assistido correto antes de alterá-la.</div>'));
     const body = `
       <div class="v2-reiki-workspace">
         <section class="v2-reiki-timer" role="timer" aria-label="Tempo decorrido da aplicação de Reiki" data-v2-reiki-timer data-v2-reiki-running="${reiki.status === 'RUNNING'}" data-v2-reiki-elapsed-seconds="${Math.max(0, Number(reiki.elapsedSeconds) || 0)}">
