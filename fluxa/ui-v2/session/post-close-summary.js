@@ -42,6 +42,8 @@ export function postCloseSummary(model, sessionId) {
         <section class="v2-card v2-card--soft"><strong>Nenhum tratamento longitudinal pendente desta sessão</strong><p class="v2-copy">O atendimento continua disponível no Histórico.</p></section>
       `}
 
+      ${session.closingNote ? `<section class="v2-card v2-card--soft v2-post-close-note"><p class="v2-eyebrow">Nota de encerramento salva</p><p class="v2-copy">${esc(session.closingNote)}</p></section>` : ''}
+
       <section class="v2-section">
         <div class="v2-post-close-actions">
           <button class="v2-btn v2-btn--primary" type="button" data-v2-history-session="${esc(session.id)}" data-v2-open-history>Ver resumo no Histórico</button>
