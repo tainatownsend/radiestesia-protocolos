@@ -138,6 +138,18 @@ body[data-v2-keyboard-open="true"] .v2-sheet__body {
     font-size: 16px;
   }
 
+  /* Keep controls visually identical across preparation, Acervo, Settings and treatment.
+     Individual feature styles may be denser on desktop, but mobile uses one touch geometry. */
+  .v2-field input,
+  .v2-field select,
+  .v2-library-search input[type="search"] {
+    min-height: 52px;
+  }
+
+  .v2-field textarea {
+    min-height: 96px;
+  }
+
   .v2-question {
     min-height: 0;
     padding-top: var(--v2-space-2);
