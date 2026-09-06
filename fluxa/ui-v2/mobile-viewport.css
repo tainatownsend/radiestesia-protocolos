@@ -1,5 +1,6 @@
 :root {
   --v2-visual-viewport-height: 100dvh;
+  --v2-visual-viewport-offset-top: 0px;
   --v2-keyboard-inset: 0px;
 }
 
@@ -14,6 +15,8 @@ body[data-v2-sheet-open="true"] .v2-sheet__body {
 }
 
 .v2-overlay {
+  inset: auto 0 auto 0;
+  top: var(--v2-visual-viewport-offset-top, 0px);
   min-height: 0;
   height: var(--v2-visual-viewport-height, 100dvh);
   max-height: 100dvh;
