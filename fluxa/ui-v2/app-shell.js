@@ -30,6 +30,26 @@ function esc(value = '') {
   }[c]));
 }
 
+function fixtureResolved(model, ui) {
+  if (model.source !== 'fixture') return { model, ui };
+  const fixtureUi = model.fixtureUi || {};
+  return {
+    model: {
+      ...model,
+      historySessions: model.fixtureHistorySessions ?? model.historySessions,
+      safeClose: model.fixtureSafeClose ?? model.safeClose,
+      latestClosedSession: model.fixtureLatestClosedSession ?? model.latestClosedSession,
+      library: model.fixtureLibrary ?? model.library,
+      therapeuticSettings: model.fixtureTherapeuticSettings ?? model.therapeuticSettings,
+    },
+    ui: {
+      ...ui,
+      ...fixtureUi,
+      sheet: model.overlay || fixtureUi.sheet || ui.sheet,
+    },
+  };
+}
+
 function sheetMarkup(model, ui) {
   if (ui.sheet === 'preparation') return preparationFlow(model, ui);
   if (ui.sheet === 'assisted') return assistedPicker(model, ui);
@@ -47,7 +67,10 @@ function sheetMarkup(model, ui) {
   return '';
 }
 
-export function renderAppShell(model, ui) {
+export function renderAppShell(sourceModel, sourceUi) {
+  const resolved = fixtureResolved(sourceModel, sourceUi);
+  const model = resolved.model;
+  const ui = resolved.ui;
   const route = ui.route || 'today';
   const currentContext = model.sessionOpen
     ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
@@ -76,7 +99,7 @@ export function renderAppShell(model, ui) {
         </div>
         <div class="v2-header-actions">
           <span class="v2-context-chip">${esc(currentContext)}</span>
-          <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações">Ajustes</button>
+          <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações" ${model.source === 'live' ? '' : 'disabled'}>Ajustes</button>
         </div>
       </header>
 
