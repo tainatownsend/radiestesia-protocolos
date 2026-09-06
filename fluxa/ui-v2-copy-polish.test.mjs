@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { preparationFlow } from './ui-v2/session/preparation-flow.js';
 import { closingFlow } from './ui-v2/session/closing-flow.js';
+import { postCloseSummary } from './ui-v2/session/post-close-summary.js';
 import { assistedPicker } from './ui-v2/session/assisted-picker.js';
 import { historyPage } from './ui-v2/history/history-page.js';
+import { libraryPage } from './ui-v2/library/library-page.js';
 import { treatmentStatusLabel } from './ui-v2/status-labels.js';
 
 const prepHtml = preparationFlow({
@@ -30,8 +32,22 @@ const closeHtml = closingFlow({
 }, { error:'' });
 assert.match(closeHtml,/Em andamento/);
 assert.match(closeHtml,/Planejado/);
+assert.match(closeHtml,/Pronto para encerrar/);
+assert.match(closeHtml,/data-v2-primary>Encerrar sessão/);
 assert.doesNotMatch(closeHtml,/>IN_PROGRESS</);
 assert.doesNotMatch(closeHtml,/>PLANNED</);
+
+const blockedCloseHtml = closingFlow({
+  assistedName:'Marina',
+  safeClose:{
+    assistedNames:['Marina'], investigationCompleted:1, investigationOpened:2,
+    treatmentsWorked:0, findings:0, notes:0, activeReiki:null, longitudinal:[],
+  },
+}, { error:'' });
+assert.match(blockedCloseHtml,/Há uma investigação em andamento/);
+assert.match(blockedCloseHtml,/Conclua a investigação aberta antes de encerrar/);
+assert.match(blockedCloseHtml,/Voltar à sessão/);
+assert.doesNotMatch(blockedCloseHtml,/data-v2-primary>Encerrar sessão/,'Closing must not remain actionable while an investigation is still open.');
 
 const historyHtml = historyPage({ historySessions:[{
   id:'ses_1', status:'CLOSED', startedAt:'2026-09-06T10:00:00.000Z', endedAt:'2026-09-06T11:00:00.000Z',
@@ -41,10 +57,24 @@ const historyHtml = historyPage({ historySessions:[{
 assert.match(historyHtml,/Equilíbrio emocional · Em andamento/);
 assert.doesNotMatch(historyHtml,/IN_PROGRESS/);
 
+const postCloseHtml = postCloseSummary({ historySessions:[{
+  id:'ses_2', status:'CLOSED', startedAt:'2026-09-06T12:00:00.000Z', endedAt:'2026-09-06T13:00:00.000Z',
+  assistedNames:['Marina'], investigationCompleted:1, treatmentsWorked:1, findings:1,
+  longitudinal:[{ title:'Continuidade', status:'PLANNED' }],
+}] }, 'ses_2');
+assert.match(postCloseHtml,/Continuidade/);
+assert.match(postCloseHtml,/Planejado/);
+assert.match(postCloseHtml,/1<\/strong><span>investigação concluída/);
+assert.doesNotMatch(postCloseHtml,/PLANNED/);
+
 const assistedHtml = assistedPicker({ assistedOptions:[{ id:'ast_joao', name:'João', type:'PERSON' }] }, { assistedCreate:false, error:'' });
 assert.match(assistedHtml,/data-v2-assisted-search="joão\|joao"/,'Assisted search metadata should support accented and unaccented queries.');
 assert.match(assistedHtml,/>Pessoa</);
 assert.doesNotMatch(assistedHtml,/>PERSON</);
+
+const libraryHtml = libraryPage({ library:{ assisteds:[{ id:'ast_1', name:'Marina', typeLabel:'Pessoa', birthDate:'1990-01-02', details:'' }] } }, { librarySection:'assisteds' });
+assert.match(libraryHtml,/Nascimento · 02\/01\/1990/);
+assert.doesNotMatch(libraryHtml,/1990-01-02/,'Acervo should not expose raw ISO date-only values.');
 
 const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 'utf8');
 assert.match(shell,/model\.source === 'live' \? 'Sessão guiada' : 'Preview seguro'/);
