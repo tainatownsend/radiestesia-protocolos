@@ -97,10 +97,18 @@ function treatmentCounts(state, session, assistedId) {
   if (!session || !assistedId) return { active: 0, touched: 0 };
   const current = (state.treatments || []).filter((item) => item.assistedEntityId === assistedId);
   const currentIds = new Set(current.map((item) => item.id));
+  const componentTreatmentIds = new Map((state.treatmentComponents || []).map((component) => [component.id, component.treatmentId]));
   const active = current.filter((item) => [TreatmentStatus.PLANNED, TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(item.status)).length;
-  const touchedIds = new Set((state.events || [])
-    .filter((event) => event.sessionId === session.id && event.entityType === 'Treatment' && currentIds.has(event.entityId))
-    .map((event) => event.entityId));
+  const touchedIds = new Set(current
+    .filter((item) => item.plannedInSessionId === session.id)
+    .map((item) => item.id));
+  for (const event of state.events || []) {
+    if (event.sessionId !== session.id) continue;
+    const treatmentId = event.entityType === 'Treatment'
+      ? event.entityId
+      : (event.metadata?.treatmentId || componentTreatmentIds.get(event.entityId));
+    if (treatmentId && currentIds.has(treatmentId)) touchedIds.add(treatmentId);
+  }
   return { active, touched: touchedIds.size };
 }
 
