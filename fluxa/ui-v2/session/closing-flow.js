@@ -14,7 +14,8 @@ export function closingFlow(model, ui) {
   if (!summary) return '';
   const reikiBlocker = summary.activeReiki;
   const openInvestigationCount = Math.max(0, Number(summary.investigationOpened || 0) - Number(summary.investigationCompleted || 0));
-  const pendingFindingCount = Array.isArray(model.findings) ? model.findings.length : 0;
+  const fallbackPendingFindings = Array.isArray(model.findings) ? model.findings.length : 0;
+  const pendingFindingCount = Math.max(0, Number(summary.pendingFindingCount ?? fallbackPendingFindings) || 0);
   const hasBlocker = Boolean(reikiBlocker || openInvestigationCount || pendingFindingCount);
   const body = `
     <div class="v2-closing-review">
