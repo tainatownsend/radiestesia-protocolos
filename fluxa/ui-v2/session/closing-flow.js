@@ -14,7 +14,8 @@ export function closingFlow(model, ui) {
   if (!summary) return '';
   const reikiBlocker = summary.activeReiki;
   const openInvestigationCount = Math.max(0, Number(summary.investigationOpened || 0) - Number(summary.investigationCompleted || 0));
-  const hasBlocker = Boolean(reikiBlocker || openInvestigationCount);
+  const pendingFindingCount = Array.isArray(model.findings) ? model.findings.length : 0;
+  const hasBlocker = Boolean(reikiBlocker || openInvestigationCount || pendingFindingCount);
   const body = `
     <div class="v2-closing-review">
       <section class="v2-card v2-card--soft v2-close-context">
@@ -47,8 +48,12 @@ export function closingFlow(model, ui) {
         <div class="v2-inline-error" role="alert"><strong>${openInvestigationCount === 1 ? 'Há uma investigação em andamento' : `Há ${openInvestigationCount} investigações em andamento`}</strong><span>Conclua a investigação aberta antes de encerrar para não perder a continuidade do atendimento.</span></div>
       ` : ''}
 
+      ${pendingFindingCount ? `
+        <div class="v2-inline-error" role="alert"><strong>${pendingFindingCount === 1 ? 'Há 1 achado aguardando revisão' : `Há ${pendingFindingCount} achados aguardando revisão`}</strong><span>Revise os achados da investigação antes de encerrar a sessão.</span></div>
+      ` : ''}
+
       ${!hasBlocker ? `
-        <div class="v2-close-ready"><span aria-hidden="true">✓</span><div><strong>Pronto para encerrar</strong><p>Não há investigação nem aplicação de Reiki bloqueando o fechamento.</p></div></div>
+        <div class="v2-close-ready"><span aria-hidden="true">✓</span><div><strong>Pronto para encerrar</strong><p>Não há investigação, achado pendente ou aplicação de Reiki bloqueando o fechamento.</p></div></div>
       ` : ''}
 
       <label class="v2-field">
@@ -64,7 +69,7 @@ export function closingFlow(model, ui) {
       <button class="v2-btn v2-btn--ghost" type="button" data-v2-close-sheet>Voltar</button>
       <button class="v2-btn v2-btn--primary" type="button" data-v2-closing-reiki>Concluir Reiki primeiro</button>
     `;
-  } else if (openInvestigationCount) {
+  } else if (openInvestigationCount || pendingFindingCount) {
     footerHtml = `
       <span aria-hidden="true"></span>
       <button class="v2-btn v2-btn--primary" type="button" data-v2-close-sheet>Voltar à sessão</button>
