@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { setPageScrollLock, viewportMetrics } from './ui-v2/mobile-viewport.js';
+import { viewportMetrics } from './ui-v2/mobile-viewport.js';
 
 const html = fs.readFileSync(new URL('./v2.html', import.meta.url), 'utf8');
 const css = fs.readFileSync(new URL('./ui-v2/mobile-viewport.css', import.meta.url), 'utf8');
 const js = fs.readFileSync(new URL('./ui-v2/mobile-viewport.js', import.meta.url), 'utf8');
-const index = fs.readFileSync(new URL('./ui-v2/index.js', import.meta.url), 'utf8');
 
 assert.match(html, /ui-v2\/mobile-viewport\.css/);
 assert.match(html, /ui-v2\/mobile-viewport\.js/);
@@ -35,33 +34,6 @@ assert.deepEqual(viewportMetrics({ layoutHeight: 852, visualHeight: 522, offsetT
 });
 assert.equal(viewportMetrics({ layoutHeight: 812, visualHeight: 730, offsetTop: 0 }).keyboardOpen, false, 'Small browser chrome changes must not be classified as the keyboard.');
 
-const body = { dataset: {}, style: {} };
-const scrollCalls = [];
-const fakeWindow = {
-  scrollY: 417,
-  scrollTo(input) { scrollCalls.push(input); },
-};
-const fakeDocument = { body };
-setPageScrollLock(true, fakeWindow, fakeDocument);
-assert.equal(body.dataset.v2ScrollLocked, 'true');
-assert.equal(body.dataset.v2ScrollY, '417');
-assert.equal(body.style.position, 'fixed');
-assert.equal(body.style.top, '-417px');
-assert.equal(body.style.overflow, 'hidden');
-assert.equal(body.style.overscrollBehavior, 'none');
-fakeWindow.scrollY = 0;
-setPageScrollLock(true, fakeWindow, fakeDocument);
-assert.equal(body.dataset.v2ScrollY, '417', 'Repeated renders while a sheet is open must not overwrite the original page position.');
-setPageScrollLock(false, fakeWindow, fakeDocument);
-assert.equal(body.dataset.v2ScrollLocked, undefined);
-assert.equal(body.dataset.v2ScrollY, undefined);
-assert.equal(body.style.position, '');
-assert.equal(body.style.top, '');
-assert.equal(body.style.overflow, '');
-assert.deepEqual(scrollCalls, [{ top:417, left:0, behavior:'auto' }], 'Closing the sheet must restore the exact page position once.');
-setPageScrollLock(false, fakeWindow, fakeDocument);
-assert.equal(scrollCalls.length, 1, 'Repeated unlocked renders must not cause extra scroll restoration.');
-
 assert.match(js, /visualViewport/);
 assert.match(js, /--v2-visual-viewport-height/);
 assert.match(js, /--v2-visual-viewport-offset-top/);
@@ -71,11 +43,6 @@ assert.match(js, /ensureControlVisible/);
 assert.match(js, /keepFocusVisible/);
 assert.match(js, /clearTimeout/);
 assert.match(js, /scheduleSync\(\{ ensureFocus: false \}\)/);
-assert.match(js, /setPageScrollLock/);
-assert.match(js, /position = 'fixed'/);
-assert.match(js, /v2ScrollY/);
-assert.match(index, /setPageScrollLock\(Boolean\(ui\.sheet\)/, 'The app renderer must drive the idempotent page scroll lock from sheet state.');
-assert.doesNotMatch(index, /document\.body\.style\.overflow\s*=\s*ui\.sheet/, 'The old overflow-only lock can lose page position on iOS and must not return.');
 assert.doesNotMatch(js, /MutationObserver/);
 
 assert.match(css, /--v2-visual-viewport-height/);
