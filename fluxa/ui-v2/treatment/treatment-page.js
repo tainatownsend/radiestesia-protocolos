@@ -1,4 +1,5 @@
 import { treatmentStatusLabel } from '../status-labels.js';
+import { isContinuityLocked } from '../workflow-continuity.js';
 
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
@@ -54,6 +55,12 @@ function emptyTreatmentState(model) {
 export function treatmentPage(model) {
   const treatments = model.treatments || [];
   const empty = emptyTreatmentState(model);
+  const canCreateTreatment = Boolean(
+    model.sessionOpen
+    && model.assistedSelected
+    && model.hawkinsReady
+    && !isContinuityLocked(model.nextActionCode)
+  );
   return `
     <div class="v2-stack">
       <section class="v2-section v2-page-heading">
@@ -62,7 +69,7 @@ export function treatmentPage(model) {
           <h1 class="v2-title">Fila de trabalho</h1>
           <p class="v2-copy">Planejados, ativos e prontos para revisão em uma única sequência.</p>
         </div>
-        ${model.sessionOpen && model.assistedSelected && model.hawkinsReady ? '<button class="v2-btn v2-btn--primary" type="button" data-v2-preview-action="treat">Novo tratamento</button>' : ''}
+        ${canCreateTreatment ? '<button class="v2-btn v2-btn--primary" type="button" data-v2-preview-action="treat">Novo tratamento</button>' : ''}
       </section>
       ${treatments.length ? `<section class="v2-treatment-list">${treatments.map(treatmentCard).join('')}</section>` : `
         <section class="v2-card v2-card--soft v2-empty-state">
