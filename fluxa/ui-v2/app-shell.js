@@ -68,11 +68,12 @@ export function renderAppShell(sourceModel, sourceUi) {
   const ui = resolved.ui;
   const route = ui.route || 'today';
   const currentContext = model.sessionOpen
-    ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
+    ? (model.assistedSelected ? model.assistedName : 'Selecionar Assistido')
     : (ui.justClosedSessionId ? 'Sessão encerrada' : 'Sem sessão');
   const contextChangeLocked = isContinuityLocked(model.nextActionCode);
+  const contextLabel = model.assistedSelected ? `Trocar Assistido · ${currentContext}` : 'Selecionar Assistido';
   const contextControl = model.source === 'live' && model.sessionOpen
-    ? `<button class="v2-context-chip v2-context-chip--button" type="button" data-v2-preview-action="change-assisted" aria-label="Trocar Assistido · ${esc(currentContext)}" ${contextChangeLocked ? 'disabled' : ''}>${esc(currentContext)}</button>`
+    ? `<button class="v2-context-chip v2-context-chip--button" type="button" data-v2-preview-action="change-assisted" aria-label="${esc(contextLabel)}" ${contextChangeLocked ? 'disabled' : ''}>${esc(currentContext)}</button>`
     : `<span class="v2-context-chip">${esc(currentContext)}</span>`;
   let content;
   if (route === 'today') {
