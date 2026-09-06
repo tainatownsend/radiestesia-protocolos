@@ -90,7 +90,7 @@ export function renderAppShell(sourceModel, sourceUi) {
       <header class="v2-header">
         <div class="v2-brand">
           <strong>Fluxa</strong>
-          <span>${model.source === 'live' ? 'Sessão guiada · UI V2' : 'UI V2 · preview seguro'}</span>
+          <span>${model.source === 'live' ? 'Sessão guiada' : 'Preview seguro'}</span>
         </div>
         <div class="v2-header-actions">
           <span class="v2-context-chip">${esc(currentContext)}</span>
