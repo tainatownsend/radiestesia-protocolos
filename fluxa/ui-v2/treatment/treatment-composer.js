@@ -1,9 +1,26 @@
+import { STARTER_GRAPHS } from '../../graph-starter-catalog.js';
 import { mobileSheet } from '../components/mobile-sheet.js';
 
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
   }[c]));
+}
+
+function graphChoices(model) {
+  const libraryGraphs = (model.library?.resources || [])
+    .filter((item) => item.type === 'GRAPH')
+    .map((item) => item.name)
+    .filter(Boolean);
+  const source = libraryGraphs.length ? libraryGraphs : ((model.graphOptions || []).length ? model.graphOptions : STARTER_GRAPHS);
+  const unique = new Map();
+  for (const name of source) {
+    const value = String(name || '').trim();
+    if (!value) continue;
+    const key = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+    if (!unique.has(key)) unique.set(key, value);
+  }
+  return [...unique.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 }
 
 function graphRow(graph, itemIndex, commandIndex, graphIndex) {
@@ -76,7 +93,7 @@ export function treatmentComposer(model, ui) {
   const draft = ui.treatmentDraft;
   const selectedModalities = new Set(draft.modalities || []);
   const optionalModalities = (model.modalityOptions || []).filter((item) => !item.base);
-  const graphOptions = (model.graphOptions || []).map((name) => `<option value="${esc(name)}"></option>`).join('');
+  const graphOptions = graphChoices(model).map((name) => `<option value="${esc(name)}"></option>`).join('');
   const linkedFindings = (model.treatmentFindings || []).filter((finding) => (draft.findingIds || []).includes(finding.id));
 
   const body = `
