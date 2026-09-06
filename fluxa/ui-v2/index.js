@@ -29,6 +29,7 @@ import { deriveHistoryModel } from './history/history-model.js';
 import { deriveLibraryModel } from './library/library-model.js';
 import { deriveV2Model } from './state/selectors.js';
 import { fixtureFromLocation } from './testing/fixtures.js';
+import { isContinuityLocked } from './workflow-continuity.js';
 
 const root = document.querySelector('#fluxa-v2-root');
 const params = new URLSearchParams(globalThis.location?.search || '');
@@ -69,6 +70,30 @@ function normalizeSearch(value = '') {
 function requireDataReplacementIdle() {
   const sessionOpen = Boolean(liveMode && store?.getState?.().sessions?.some((session) => session.status === 'OPEN'));
   if (sessionOpen) throw new Error('Finalize a sessão atual antes de importar ou recuperar os dados locais.');
+}
+function currentWorkflowModel() {
+  return liveMode ? deriveV2Model(store.getState()) : model;
+}
+function requireTreatmentActionAllowed(action, treatmentId) {
+  const current = currentWorkflowModel();
+  if (!isContinuityLocked(current.nextActionCode) || action === 'workspace') return;
+  const isRecommendedReview = current.nextActionCode === 'TREATMENT_REVIEW'
+    && action === 'review'
+    && current.nextActionTreatmentId === treatmentId;
+  const isRecommendedFinal = current.nextActionCode === 'TREATMENT_FINAL'
+    && action === 'final'
+    && current.nextActionTreatmentId === treatmentId;
+  if (isRecommendedReview || isRecommendedFinal) return;
+  throw new Error('Conclua a próxima ação recomendada em Hoje antes de alterar outro tratamento.');
+}
+function requireNewTreatmentAllowed() {
+  const current = currentWorkflowModel();
+  if (isContinuityLocked(current.nextActionCode)) {
+    throw new Error('Conclua a próxima ação recomendada em Hoje antes de criar outro tratamento.');
+  }
+}
+function assistedContextChangeAllowed() {
+  return !isContinuityLocked(currentWorkflowModel().nextActionCode);
 }
 
 const ui = {
@@ -199,12 +224,17 @@ function treatmentById(id) {
   return (model.treatments || []).find((item) => item.id === id) || null;
 }
 
+function treatmentIdForComponent(componentId) {
+  return (model.treatments || []).find((treatment) => (treatment.components || []).some((component) => component.id === componentId))?.id || null;
+}
+
 function performTreatmentAction(action, treatmentId, source = null) {
   if (!liveMode) return;
   if (source) opener = source;
   ui.activeTreatmentId = treatmentId;
   ui.error = '';
   try {
+    requireTreatmentActionAllowed(action, treatmentId);
     if (action === 'start') {
       startPlannedTreatmentV2(store, treatmentId);
       ui.sheet = 'treatment-workspace';
@@ -304,6 +334,7 @@ function handlePrimary() {
         render({ focusDialog: true });
         return;
       }
+      if (!assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
       createAndSelectPerson(store, {
         displayName: root.querySelector('[data-v2-assisted-name]')?.value,
         birthDate: root.querySelector('[data-v2-assisted-birthdate]')?.value,
@@ -354,6 +385,7 @@ function handlePrimary() {
     }
 
     if (ui.sheet === 'treatment-review') {
+      requireTreatmentActionAllowed('review', ui.activeTreatmentId);
       const outcome = root.querySelector('input[name="reviewOutcome"]:checked')?.value || 'continue';
       reviewTreatmentComponentV2(store, {
         componentId: ui.reviewComponentId,
@@ -371,6 +403,7 @@ function handlePrimary() {
     }
 
     if (ui.sheet === 'final-assessment') {
+      requireTreatmentActionAllowed('final', ui.activeTreatmentId);
       finalizeTreatmentV2(store, ui.activeTreatmentId, {
         frequency: root.querySelector('[data-v2-final-frequency]')?.value,
         imbalancePercent: root.querySelector('[data-v2-final-imbalance]')?.value,
@@ -554,6 +587,7 @@ root.addEventListener('click', (event) => {
   if (assisted && liveMode) {
     clearInlineError();
     try {
+      if (!assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
       selectSessionAssisted(store, assisted.dataset.v2SelectAssisted);
       const nextModel = deriveLiveModel();
       model = nextModel;
@@ -609,6 +643,7 @@ root.addEventListener('click', (event) => {
   if (treatmentSubmit && liveMode) {
     clearInlineError();
     try {
+      requireNewTreatmentAllowed();
       const treatment = saveTreatmentDraft(store, treatmentInput(), { start: treatmentSubmit.dataset.v2TreatmentSubmit === 'start' });
       ui.activeTreatmentId = treatment.id;
       ui.treatmentDraft = blankTreatmentDraft();
@@ -629,10 +664,19 @@ root.addEventListener('click', (event) => {
 
   const reviewComponent = event.target.closest('[data-v2-review-component]');
   if (reviewComponent) {
-    ui.reviewComponentId = reviewComponent.dataset.v2ReviewComponent;
-    ui.sheet = 'treatment-review';
-    ui.error = '';
-    render({ focusDialog: true });
+    clearInlineError();
+    try {
+      const componentId = reviewComponent.dataset.v2ReviewComponent;
+      const treatmentId = treatmentIdForComponent(componentId);
+      requireTreatmentActionAllowed('review', treatmentId);
+      ui.activeTreatmentId = treatmentId;
+      ui.reviewComponentId = componentId;
+      ui.sheet = 'treatment-review';
+      ui.error = '';
+      render({ focusDialog: true });
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
 
@@ -721,7 +765,7 @@ root.addEventListener('click', (event) => {
     return;
   }
   if (name === 'change-assisted') {
-    if (liveMode) openSheet('assisted', action);
+    if (liveMode && assistedContextChangeAllowed()) openSheet('assisted', action);
     return;
   }
   if (name === 'investigate' && liveMode) {
@@ -735,7 +779,14 @@ root.addEventListener('click', (event) => {
     return;
   }
   if (name === 'treat') {
-    openTreatmentComposer(action, (model.treatmentFindings || []).map((item) => item.id));
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      requireNewTreatmentAllowed();
+      openTreatmentComposer(action, (model.treatmentFindings || []).map((item) => item.id));
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
   if (name === 'reiki') {
