@@ -4,6 +4,17 @@ function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[char]));
 }
 
+const STATUS_LABELS = Object.freeze({
+  PLANNED: 'Planejado',
+  IN_PROGRESS: 'Em andamento',
+  INTERRUPTED: 'Interrompido',
+  COMPLETED: 'Concluído',
+});
+
+function statusLabel(value = '') {
+  return STATUS_LABELS[value] || String(value || 'Em acompanhamento').replace(/_/g, ' ').toLocaleLowerCase('pt-BR');
+}
+
 function metric(label, value, detail = '') {
   return `<div class="v2-close-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ''}</div>`;
 }
@@ -30,7 +41,7 @@ export function closingFlow(model, ui) {
       ${summary.longitudinal?.length ? `
         <section class="v2-close-section">
           <p class="v2-eyebrow">Continua depois da sessão</p>
-          <div class="v2-close-continuity">${summary.longitudinal.map((item) => `<div><strong>${esc(item.title)}</strong><span>${esc(item.status)}</span></div>`).join('')}</div>
+          <div class="v2-close-continuity">${summary.longitudinal.map((item) => `<div><strong>${esc(item.title)}</strong><span>${esc(statusLabel(item.status))}</span></div>`).join('')}</div>
         </section>
       ` : `
         <section class="v2-close-section v2-close-all-clear"><strong>Nenhum tratamento longitudinal pendente</strong><span>O trabalho registrado nesta sessão permanece no Histórico.</span></section>
