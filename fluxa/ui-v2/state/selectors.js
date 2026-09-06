@@ -57,11 +57,13 @@ function latestSessionInvestigation(state, sessionId, assistedId, status) {
 
 function pendingInvestigationFindings(state, investigation) {
   if (!investigation || investigation.status !== 'COMPLETED') return [];
-  const existing = new Set((state.findings || [])
-    .filter((item) => item.investigationId === investigation.id && item.status !== 'DISMISSED')
+  // Any persisted finding record means that positive answer was reviewed. IDENTIFIED/TREATED
+  // findings continue into treatment; DISMISSED findings intentionally stay out of the queue.
+  const reviewed = new Set((state.findings || [])
+    .filter((item) => item.investigationId === investigation.id)
     .map((item) => item.sourceQuestionId));
   return (investigation.answers || [])
-    .filter((answer) => answer.answer === 'YES' && !existing.has(answer.questionId))
+    .filter((answer) => answer.answer === 'YES' && !reviewed.has(answer.questionId))
     .map((answer) => ({
       questionId: answer.questionId,
       title: answer.questionTextSnapshot,
