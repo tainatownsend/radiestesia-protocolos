@@ -96,9 +96,10 @@ function availableTreatmentFindings(state, assistedId) {
 function treatmentCounts(state, session, assistedId) {
   if (!session || !assistedId) return { active: 0, touched: 0 };
   const current = (state.treatments || []).filter((item) => item.assistedEntityId === assistedId);
+  const currentIds = new Set(current.map((item) => item.id));
   const active = current.filter((item) => [TreatmentStatus.PLANNED, TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(item.status)).length;
   const touchedIds = new Set((state.events || [])
-    .filter((event) => event.sessionId === session.id && event.entityType === 'Treatment')
+    .filter((event) => event.sessionId === session.id && event.entityType === 'Treatment' && currentIds.has(event.entityId))
     .map((event) => event.entityId));
   return { active, touched: touchedIds.size };
 }
@@ -314,8 +315,8 @@ export function deriveV2Model(state) {
   const reiki = currentReikiModel(state, session, assisted?.id);
   const recommendation = nextRecommendation({ session, prepared, assisted, baseline, reiki, treatments, openInvestigation, pendingFindings, treatmentFindings });
   const treatment = treatmentCounts(state, session, assisted?.id);
-  const investigationCount = session
-    ? (state.investigations || []).filter((item) => item.currentSessionId === session.id).length
+  const investigationCount = session && assisted
+    ? (state.investigations || []).filter((item) => item.currentSessionId === session.id && item.assistedEntityId === assisted.id).length
     : 0;
 
   return {
