@@ -35,6 +35,7 @@ export function sessionCockpit(model) {
   const assisted = model.assistedSelected ? model.assistedName : 'Sessão em andamento';
   const hawkins = model.hawkinsReady ? `${model.hawkins} Hz` : 'Pendente';
   const prerequisitesReady = Boolean(model.prepared && model.assistedSelected && model.hawkinsReady);
+  const treatmentCount = model.treatmentCount ?? model.treatmentsWorked ?? 0;
 
   return `
     <div class="v2-stack">
@@ -55,11 +56,12 @@ export function sessionCockpit(model) {
         ${statusLine('Preparação', model.prepared ? 'Concluída' : 'Pendente', model.prepared)}
         ${statusLine('Assistido', model.assistedSelected ? model.assistedName : 'Pendente', model.assistedSelected)}
         ${statusLine('Hawkins inicial', hawkins, model.hawkinsReady)}
+        ${model.reiki ? statusLine('Reiki', model.reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento', false) : ''}
       </section>
 
       <section class="v2-kpis" aria-label="Resumo compacto da sessão">
         <div class="v2-kpi"><strong>${model.investigations ?? 0}</strong><span>investigações nesta sessão</span></div>
-        <div class="v2-kpi"><strong>${model.treatments ?? 0}</strong><span>tratamentos trabalhados</span></div>
+        <div class="v2-kpi"><strong>${treatmentCount}</strong><span>tratamentos trabalhados</span></div>
         <div class="v2-kpi"><strong>${model.activeTreatments ?? 0}</strong><span>tratamentos ativos</span></div>
       </section>
 
@@ -67,8 +69,8 @@ export function sessionCockpit(model) {
         <p class="v2-eyebrow">Ações da sessão</p>
         <div class="v2-session-actions">
           <button class="v2-btn" type="button" data-v2-preview-action="investigate" ${prerequisitesReady ? '' : 'disabled'}>Investigar</button>
-          <button class="v2-btn" type="button" data-v2-preview-action="treat" ${model.source === 'live' ? 'disabled title="Treatment Composer entra na próxima migração"' : ''}>Tratar</button>
-          <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${model.source === 'live' ? 'disabled title="Reiki entra depois do Treatment Workspace"' : ''}>Reiki</button>
+          <button class="v2-btn" type="button" data-v2-preview-action="treat" ${prerequisitesReady ? '' : 'disabled'}>Tratar</button>
+          <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${prerequisitesReady && (model.reikiEnabled || model.reiki) ? '' : 'disabled'}>Reiki</button>
         </div>
       </section>
     </div>
