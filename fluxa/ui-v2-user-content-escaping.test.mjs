@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { mobileSheet } from './ui-v2/components/mobile-sheet.js';
+import { findingsSummary } from './ui-v2/investigation/findings-summary.js';
+import { triageFlow } from './ui-v2/investigation/triage-flow.js';
 import { assistedPicker } from './ui-v2/session/assisted-picker.js';
 import { sessionCockpit } from './ui-v2/session/session-cockpit.js';
 import { postCloseSummary } from './ui-v2/session/post-close-summary.js';
@@ -46,6 +48,21 @@ assertSafe('Session cockpit', sessionCockpit({
   reikiEnabled: false,
   reiki: null,
 }));
+
+assertSafe('Investigation triage', triageFlow({
+  assistedName: hostile,
+  investigation: {
+    currentIndex: 0,
+    total: 1,
+    name: hostile,
+    question: hostile,
+  },
+}, { error: hostile }));
+
+assertSafe('Investigation findings', findingsSummary({
+  assistedName: hostile,
+  findings: [{ questionId: hostile, title: hostile }],
+}, { error: hostile }));
 
 assertSafe('Treatment list', treatmentPage({
   sessionOpen: true,
