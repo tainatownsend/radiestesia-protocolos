@@ -36,7 +36,7 @@ assert.match(ui, /Último backup/, 'Backup recency must be visible in settings.'
 assert.match(ui, /window\.alert = managed/, 'Legacy alert feedback must be translated into in-product feedback.');
 
 assert.match(fixes, /manualReviewReady/, 'Components without automatic deadlines must remain manually reviewable.');
-assert.match(fixes, /data-treatment-filter=\\"ALL\\"/, 'Recommended treatment actions must escape sticky filters.');
+assert.match(fixes, /data-treatment-filter="ALL"/, 'Recommended treatment actions must escape sticky filters.');
 assert.match(fixes, /resumeTreatmentPreservingDuration/, 'Treatment resume must update state without a page reload.');
 assert.doesNotMatch(fixes, /location\.reload\(/, 'Release workflow fixes must not introduce page reload jank.');
 assert.match(fixes, /data-fluxa-sheet-assisted/, 'Task sheets must preserve visible Assistido context.');
