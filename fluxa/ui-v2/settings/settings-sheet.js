@@ -30,7 +30,7 @@ function storageStatus(health) {
   return { label: 'Não foi possível ler o armazenamento local', detail: 'Verifique as permissões do navegador antes de continuar.' };
 }
 
-function importPreview(preview) {
+function importPreview(preview, locked = false) {
   if (!preview) return '';
   const summary = preview.summary || {};
   return `
@@ -44,16 +44,17 @@ function importPreview(preview) {
         <span>${summary.resources || 0} recursos</span>
       </div>
       <p class="v2-helper">A importação substituirá os dados atuais somente depois da sua confirmação. O Fluxa preserva uma cópia local anterior quando possível.</p>
-      <button class="v2-btn v2-btn--primary" type="button" data-v2-settings-import-apply>Importar este backup</button>
+      <button class="v2-btn v2-btn--primary" type="button" data-v2-settings-import-apply ${locked ? 'disabled' : ''}>Importar este backup</button>
     </div>
   `;
 }
 
 export function settingsSheet(model, ui) {
-  const health = inspectStorageHealth();
+  const health = model.storageHealth || inspectStorageHealth();
   const status = storageStatus(health);
   const therapeutic = model.therapeuticSettings || { enabled: [], custom: [] };
   const enabled = new Set(therapeutic.enabled || []);
+  const dataReplacementLocked = Boolean(model.sessionOpen);
 
   const body = `
     <div class="v2-settings-stack">
@@ -66,12 +67,13 @@ export function settingsSheet(model, ui) {
           <span>${esc(status.detail)}</span>
         </div>
         <div class="v2-status-line"><span>Última exportação concluída</span><strong>${esc(fmt(health.lastExportAt))}</strong></div>
+        ${dataReplacementLocked ? '<div class="v2-card v2-card--soft"><strong>Importação e recuperação estão pausadas</strong><p class="v2-copy">Finalize a sessão atual antes de substituir ou recuperar os dados locais. Exportar backup continua disponível.</p></div>' : ''}
         <div class="v2-settings-actions">
           <button class="v2-btn" type="button" data-v2-settings-export>Exportar backup JSON</button>
-          <label class="v2-btn v2-btn--ghost v2-file-button">Selecionar backup para importar<input type="file" accept="application/json,.json" data-v2-settings-import-file></label>
+          <label class="v2-btn v2-btn--ghost v2-file-button">Selecionar backup para importar<input type="file" accept="application/json,.json" data-v2-settings-import-file ${dataReplacementLocked ? 'disabled' : ''}></label>
         </div>
-        ${health.canRecover && health.status !== 'OK' ? '<button class="v2-btn v2-btn--ghost" type="button" data-v2-settings-recover>Tentar recuperar cópia local</button>' : ''}
-        ${importPreview(ui.importPreview)}
+        ${health.canRecover && health.status !== 'OK' ? `<button class="v2-btn v2-btn--ghost" type="button" data-v2-settings-recover ${dataReplacementLocked ? 'disabled' : ''}>Tentar recuperar cópia local</button>` : ''}
+        ${importPreview(ui.importPreview, dataReplacementLocked)}
       </section>
 
       <section class="v2-settings-block">
