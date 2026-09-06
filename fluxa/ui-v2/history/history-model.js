@@ -1,3 +1,5 @@
+const DEFAULT_CLOSING_CONFIRMATION = 'Procedimento de encerramento concluído';
+
 const TREATMENT_EVENT_LABELS = Object.freeze({
   TREATMENT_CREATED: 'Tratamento {title} criado',
   TREATMENT_STARTED: 'Tratamento {title} iniciado',
@@ -117,6 +119,15 @@ function touchedTreatmentIds(state, sessionId) {
   return [...ids];
 }
 
+function closingNoteForSession(state, sessionId) {
+  const run = [...(state.closingRuns || [])]
+    .filter((item) => item.sessionId === sessionId && item.status === 'COMPLETED')
+    .sort((a, b) => String(b.completedAt || b.createdAt || '').localeCompare(String(a.completedAt || a.createdAt || '')))[0] || null;
+  const snapshot = String(run?.confirmationSnapshot || '').trim();
+  if (!snapshot || snapshot === DEFAULT_CLOSING_CONFIRMATION) return '';
+  return snapshot;
+}
+
 function sessionCounts(state, session) {
   const investigations = (state.investigations || []).filter((item) => item.currentSessionId === session.id);
   const investigationOpened = investigations.length;
@@ -139,7 +150,8 @@ function sessionCounts(state, session) {
       if (!pendingFindingInvestigation) pendingFindingInvestigation = investigation;
     }
   }
-  const notes = (state.events || []).filter((event) => event.sessionId === session.id && event.eventType === 'NOTE_CREATED');
+  const noteEvents = (state.events || []).filter((event) => event.sessionId === session.id && event.eventType === 'NOTE_CREATED');
+  const closingNote = closingNoteForSession(state, session.id);
   const activeReiki = (state.reikiApplications || []).find((item) => item.sessionId === session.id && ['RUNNING', 'PAUSED'].includes(item.status)) || null;
   const assistedIds = sessionAssistedIds(state, session);
   return {
@@ -161,7 +173,8 @@ function sessionCounts(state, session) {
     treatmentsWorked: treatmentList.length,
     treatmentIds,
     findings: findings.length,
-    notes: notes.length,
+    notes: noteEvents.length + (closingNote ? 1 : 0),
+    closingNote,
     longitudinal: longitudinal.map((item) => ({ id: item.id, title: item.title, status: item.status })),
     activeReiki: activeReiki ? {
       id: activeReiki.id,
