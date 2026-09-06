@@ -48,7 +48,7 @@ body[data-v2-sheet-open="true"] .v2-sheet__body {
 .v2-session-snapshot {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
+  gap: var(--v2-space-2);
   padding: var(--v2-space-2) 0;
   border-top: 1px solid var(--v2-border);
   border-bottom: 1px solid var(--v2-border);
@@ -57,14 +57,9 @@ body[data-v2-sheet-open="true"] .v2-sheet__body {
 .v2-session-indicator {
   min-width: 0;
   display: grid;
+  align-content: start;
   gap: 2px;
-  padding: var(--v2-space-2) var(--v2-space-3);
-  border-right: 1px solid var(--v2-border);
-}
-
-.v2-session-indicator:nth-of-type(3),
-.v2-session-indicator:last-of-type {
-  border-right: 0;
+  padding: var(--v2-space-2);
 }
 
 .v2-session-indicator > span {
@@ -82,7 +77,7 @@ body[data-v2-sheet-open="true"] .v2-sheet__body {
 
 .v2-session-activity {
   grid-column: 1 / -1;
-  margin: var(--v2-space-2) var(--v2-space-3) 0;
+  margin: 0 var(--v2-space-2);
   padding-top: var(--v2-space-2);
   border-top: 1px solid color-mix(in srgb, var(--v2-border) 70%, transparent);
   color: var(--v2-muted);
@@ -187,11 +182,11 @@ body[data-v2-keyboard-open="true"] .v2-sheet__body {
   }
 
   .v2-session-indicator {
-    padding-inline: var(--v2-space-2);
+    padding-inline: var(--v2-space-1);
   }
-}
 
-@media (max-width: 390px) {
+  /* Long secondary/primary labels were squeezed at 393px by the old two-column footer.
+     Stack them across the entire target iPhone matrix so the main action stays legible. */
   .v2-sheet__footer {
     grid-template-columns: 1fr;
   }
@@ -200,10 +195,7 @@ body[data-v2-keyboard-open="true"] .v2-sheet__body {
     display: none;
   }
 
-  .v2-sheet__footer .v2-binary-actions {
-    width: 100%;
-  }
-
+  .v2-sheet__footer .v2-binary-actions,
   .v2-sheet__footer > .v2-btn,
   .v2-sheet__footer > .v2-file-button {
     width: 100%;
