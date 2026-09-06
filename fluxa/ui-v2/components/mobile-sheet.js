@@ -11,7 +11,13 @@ export function mobileSheet({
   primaryLabel,
   secondaryLabel = '',
   closeLabel = 'Fechar',
+  footerHtml = '',
+  error = '',
 }) {
+  const footer = footerHtml || `
+    ${secondaryLabel ? `<button class="v2-btn v2-btn--ghost" type="button" data-v2-secondary>${esc(secondaryLabel)}</button>` : '<span aria-hidden="true"></span>'}
+    <button class="v2-btn v2-btn--primary" type="button" data-v2-primary>${esc(primaryLabel)}</button>
+  `;
   return `
     <div class="v2-overlay" data-v2-overlay>
       <section class="v2-sheet" role="dialog" aria-modal="true" aria-labelledby="v2-sheet-title">
@@ -23,12 +29,10 @@ export function mobileSheet({
           <button class="v2-icon-btn" type="button" data-v2-close-sheet aria-label="${esc(closeLabel)}">×</button>
         </header>
         <div class="v2-sheet__body" data-v2-sheet-body>
+          ${error ? `<div class="v2-inline-error" role="alert">${esc(error)}</div>` : ''}
           ${body}
         </div>
-        <footer class="v2-sheet__footer">
-          ${secondaryLabel ? `<button class="v2-btn v2-btn--ghost" type="button" data-v2-secondary>${esc(secondaryLabel)}</button>` : '<span aria-hidden="true"></span>'}
-          <button class="v2-btn v2-btn--primary" type="button" data-v2-primary>${esc(primaryLabel)}</button>
-        </footer>
+        <footer class="v2-sheet__footer">${footer}</footer>
       </section>
     </div>
   `;
