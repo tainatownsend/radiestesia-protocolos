@@ -44,6 +44,52 @@ body[data-v2-sheet-open="true"] .v2-sheet__body {
   outline-offset: 2px;
 }
 
+/* Session context stays informative without turning Hoje into a dashboard. */
+.v2-session-snapshot {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: var(--v2-space-2) 0;
+  border-top: 1px solid var(--v2-border);
+  border-bottom: 1px solid var(--v2-border);
+}
+
+.v2-session-indicator {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: var(--v2-space-2) var(--v2-space-3);
+  border-right: 1px solid var(--v2-border);
+}
+
+.v2-session-indicator:nth-of-type(3),
+.v2-session-indicator:last-of-type {
+  border-right: 0;
+}
+
+.v2-session-indicator > span {
+  color: var(--v2-muted);
+  font-size: .7rem;
+  line-height: 1.25;
+}
+
+.v2-session-indicator > strong {
+  min-width: 0;
+  font-size: .84rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.v2-session-activity {
+  grid-column: 1 / -1;
+  margin: var(--v2-space-2) var(--v2-space-3) 0;
+  padding-top: var(--v2-space-2);
+  border-top: 1px solid color-mix(in srgb, var(--v2-border) 70%, transparent);
+  color: var(--v2-muted);
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
 /* Keep the narrative timeline connected even when one event wraps to several lines. */
 .v2-history-event__dot {
   align-self: stretch;
@@ -138,6 +184,10 @@ body[data-v2-keyboard-open="true"] .v2-sheet__body {
   .v2-treatment-card h2,
   .v2-history-session-card__head h2 {
     overflow-wrap: anywhere;
+  }
+
+  .v2-session-indicator {
+    padding-inline: var(--v2-space-2);
   }
 }
 
