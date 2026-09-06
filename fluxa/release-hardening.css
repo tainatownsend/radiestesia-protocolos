@@ -1,5 +1,5 @@
-/* Fluxa release hardening: final structural/a11y layer.
-   Theme colors remain owned by theme-system.css. */
+/* Fluxa release hardening: structural/a11y layer.
+   Visual reconciliation and theme-system remain the final visual/color authorities. */
 :root{
   --fluxa-vvh:100dvh;
   --fluxa-touch:48px;
@@ -51,6 +51,14 @@ body.fluxa-modal-open>.modal-backdrop{touch-action:auto}
   max-width:min(74vw,560px);
   font-size:clamp(1.18rem,4.8vw,1.55rem)!important;
   line-height:1.12!important;
+}
+.fluxa-sheet-assisted{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:700;
+  line-height:1.25;
 }
 .fluxa-managed-sheet form>button[type="submit"]:last-child,
 .fluxa-managed-sheet .mx3-sticky-cta{
@@ -153,6 +161,7 @@ body.fluxa-modal-open>.modal-backdrop{touch-action:auto}
 }
 [data-treatment-filters] .button-row::-webkit-scrollbar{display:none}
 [data-treatment-filters] .button-row>.btn{flex:0 0 auto;min-height:44px}
+[data-fluxa-planned-prereq]{display:block;margin:3px 0 8px;line-height:1.35}
 
 .fluxa-item-summary{
   display:inline-flex;
