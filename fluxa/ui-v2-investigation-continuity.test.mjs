@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { nextRecommendation, pendingSessionFindingBatch } from './ui-v2/state/selectors.js';
+import { closeCurrentSessionV2, confirmInvestigationFindings } from './ui-v2/state/actions.js';
 
 const base = {
   session:{ id:'ses_1' },
@@ -48,5 +49,47 @@ state.findings.push({ investigationId:'inv_old', sourceQuestionId:'q_old', statu
 batch = pendingSessionFindingBatch(state, 'ses_1', 'ast_1');
 assert.equal(batch.investigation.id, 'inv_new');
 assert.deepEqual(batch.findings.map((item) => item.questionId), ['q_new']);
+
+state.findings.push({ investigationId:'inv_new', sourceQuestionId:'q_new', status:'DISMISSED' });
+batch = pendingSessionFindingBatch(state, 'ses_1', 'ast_1');
+assert.equal(batch.investigation, null, 'A deliberately dismissed positive answer is reviewed and must not return to the pending queue.');
+assert.deepEqual(batch.findings, []);
+
+function fakeStore(initial) {
+  let value = structuredClone(initial);
+  let id = 0;
+  return {
+    getState: () => value,
+    setState(updater) {
+      value = typeof updater === 'function' ? updater(value) : updater;
+      return value;
+    },
+    makeId(prefix = 'id') { id += 1; return `${prefix}_${id}`; },
+    nowIso() { return new Date().toISOString(); },
+  };
+}
+
+const reviewStore = fakeStore({
+  sessions:[{ id:'ses_review', status:'OPEN', startedAt:new Date(Date.now() - 60_000).toISOString(), currentAssistedEntityId:'ast_1' }],
+  assistedEntities:[{ id:'ast_1', type:'PERSON', displayName:'Marina', birthDate:'1990-01-01', archivedAt:null }],
+  preparationRuns:[{ id:'prep_1', sessionId:'ses_review', status:'COMPLETED' }],
+  investigations:[{
+    id:'inv_review', currentSessionId:'ses_review', assistedEntityId:'ast_1', status:'COMPLETED',
+    answers:[
+      { questionId:'q_keep', questionTextSnapshot:'Achado confirmado', answer:'YES' },
+      { questionId:'q_drop', questionTextSnapshot:'Achado descartado', answer:'YES' },
+    ],
+  }],
+  findings:[], events:[], closingRuns:[], reikiApplications:[],
+});
+
+assert.throws(() => closeCurrentSessionV2(reviewStore), /Revise os achados pendentes/,'The V2 close action must guard pending finding review even if the UI is bypassed.');
+const created = confirmInvestigationFindings(reviewStore, 'inv_review', ['q_keep']);
+assert.equal(created.length, 1);
+assert.equal(reviewStore.getState().findings.find((item) => item.sourceQuestionId === 'q_keep')?.status, 'IDENTIFIED');
+assert.equal(reviewStore.getState().findings.find((item) => item.sourceQuestionId === 'q_drop')?.status, 'DISMISSED','Unchecked positive findings must persist as deliberately dismissed.');
+assert.deepEqual(pendingSessionFindingBatch(reviewStore.getState(), 'ses_review', 'ast_1').findings, []);
+closeCurrentSessionV2(reviewStore);
+assert.equal(reviewStore.getState().sessions[0].status, 'CLOSED','Closing becomes available after every positive answer has been reviewed.');
 
 console.log('ui-v2-investigation-continuity.test.mjs: ok');
