@@ -22,7 +22,9 @@ assert.match(lockedHtml,/data-v2-preview-action="change-assisted"[^>]*disabled/,
 
 const index = fs.readFileSync(new URL('./ui-v2/index.js', import.meta.url), 'utf8');
 assert.match(index,/name === 'change-assisted'[\s\S]*openSheet\('assisted', action\)/);
-assert.match(index,/selectSessionAssisted\(store, assisted\.dataset\.v2SelectAssisted\);[\s\S]*const nextModel = deriveLiveModel\(\);[\s\S]*ui\.sheet = nextModel\.hawkinsReady \? null : 'hawkins';/,'Switching back to an assisted with a current-session baseline must not request Hawkins twice.');
+assert.match(index,/selectSessionAssisted\(store, assisted\.dataset\.v2SelectAssisted\);[\s\S]*const nextModel = deriveLiveModel\(\);[\s\S]*ui\.route = 'today';[\s\S]*ui\.sheet = nextModel\.hawkinsReady \? null : 'hawkins';/,'Switching assisted must return to Hoje and must not request Hawkins twice when a current-session baseline already exists.');
+assert.match(index,/createAndSelectPerson\(store,[\s\S]*ui\.route = 'today';[\s\S]*ui\.sheet = 'hawkins';/,'Creating and selecting a new person from any route must return the session to Hoje before Hawkins.');
+assert.match(index,/ui\.historySessionId = null;[\s\S]*ui\.librarySection = 'home';[\s\S]*ui\.justClosedSessionId = null;/,'Context switching must clear stale route-specific state.');
 
 const css = fs.readFileSync(new URL('./ui-v2/mobile-viewport.css', import.meta.url), 'utf8');
 assert.match(css,/\.v2-context-chip--button\s*\{[^}]*min-height:\s*44px;/s,'Interactive context chip must meet the mobile touch target.');
