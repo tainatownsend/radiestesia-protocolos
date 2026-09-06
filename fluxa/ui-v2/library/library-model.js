@@ -95,9 +95,17 @@ function therapies(state) {
 }
 
 function resources(state) {
+  const stored = Array.isArray(state.tools) ? state.tools : [];
+  const archivedNames = new Set(stored
+    .filter((item) => item.archivedAt || item.status === 'ARCHIVED')
+    .map((item) => normalizeKey(item.name || ''))
+    .filter(Boolean));
   const byName = new Map();
+
   for (const name of STARTER_GRAPHS) {
-    byName.set(normalizeKey(name), {
+    const key = normalizeKey(name);
+    if (archivedNames.has(key)) continue;
+    byName.set(key, {
       id: `starter_graph_${slug(name)}`,
       name,
       type: 'GRAPH',
@@ -108,7 +116,7 @@ function resources(state) {
     });
   }
 
-  for (const item of (state.tools || [])) {
+  for (const item of stored) {
     if (item.archivedAt || item.status === 'ARCHIVED') continue;
     const mapped = {
       id: item.id,
