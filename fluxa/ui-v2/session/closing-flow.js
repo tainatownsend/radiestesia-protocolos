@@ -9,6 +9,10 @@ function metric(label, value, detail = '') {
   return `<div class="v2-close-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ''}</div>`;
 }
 
+function continuityTitle(item, multiAssisted) {
+  return [multiAssisted ? item.assistedName : '', item.title].filter(Boolean).map(esc).join(' · ');
+}
+
 export function closingFlow(model, ui) {
   const summary = model.safeClose;
   if (!summary) return '';
@@ -22,6 +26,7 @@ export function closingFlow(model, ui) {
   const recoveryAssistedId = recoveryBlocker?.assistedEntityId || '';
   const recoveryAssistedName = recoveryBlocker?.assistedName || '';
   const hasBlocker = Boolean(reikiBlocker || openInvestigationCount || pendingFindingCount);
+  const multiAssisted = (summary.assistedNames?.length || 0) > 1;
   const body = `
     <div class="v2-closing-review">
       <section class="v2-card v2-card--soft v2-close-context">
@@ -40,7 +45,7 @@ export function closingFlow(model, ui) {
       ${summary.longitudinal?.length ? `
         <section class="v2-close-section">
           <p class="v2-eyebrow">Continua depois da sessão</p>
-          <div class="v2-close-continuity">${summary.longitudinal.map((item) => `<div><strong>${esc(item.title)}</strong><span>${esc(treatmentStatusLabel(item.status))}</span></div>`).join('')}</div>
+          <div class="v2-close-continuity">${summary.longitudinal.map((item) => `<div><strong>${continuityTitle(item, multiAssisted)}</strong><span>${esc(treatmentStatusLabel(item.status))}</span></div>`).join('')}</div>
         </section>
       ` : `
         <section class="v2-close-section v2-close-all-clear"><strong>Nenhum tratamento longitudinal pendente</strong><span>O trabalho registrado nesta sessão permanece no Histórico.</span></section>
