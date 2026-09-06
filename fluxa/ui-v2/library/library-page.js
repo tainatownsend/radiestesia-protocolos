@@ -137,7 +137,7 @@ function therapies(model) {
         ${items.map((item) => `
           <article class="v2-library-row">
             <span><strong>${esc(item.label)}</strong><small>${item.base ? 'Base permanente do Fluxa' : 'Terapia complementar ativa'}</small></span>
-            <span class="v2-library-kind">${item.base ? 'BASE' : 'ATIVA'}</span>
+            <span class="v2-library-kind">${item.base ? 'Base' : 'Ativa'}</span>
           </article>
         `).join('')}
       </section>
