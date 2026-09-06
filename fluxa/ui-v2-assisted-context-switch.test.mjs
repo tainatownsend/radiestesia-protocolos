@@ -15,6 +15,21 @@ assert.match(availableHtml,/data-v2-preview-action="change-assisted"/);
 assert.match(availableHtml,/aria-label="Trocar Assistido · Marina"/);
 assert.doesNotMatch(availableHtml,/data-v2-preview-action="change-assisted"[^>]*disabled/,'Context switching should remain available when no contiguous workflow is active.');
 
+const noAssistedHtml = renderAppShell({
+  ...baseModel,
+  assistedSelected:false,
+  assistedName:'',
+  hawkinsReady:false,
+  hawkins:null,
+  nextActionCode:'SELECT_ASSISTED',
+  nextAction:'Selecionar Assistido',
+  nextReason:'Escolha quem será atendido.',
+}, ui);
+assert.match(noAssistedHtml,/data-v2-preview-action="change-assisted"/);
+assert.match(noAssistedHtml,/aria-label="Selecionar Assistido"/,'An open session without an assisted must invite selection, not imply a replacement.');
+assert.match(noAssistedHtml,/>Selecionar Assistido<\/button>/);
+assert.doesNotMatch(noAssistedHtml,/Trocar Assistido · Sessão aberta/);
+
 const lockedHtml = renderAppShell({
   ...baseModel, nextActionCode:'TRIAGE', nextAction:'Continuar investigação', nextReason:'Triagem em andamento.',
 }, ui);
