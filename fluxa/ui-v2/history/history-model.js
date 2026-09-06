@@ -126,6 +126,11 @@ function sessionCounts(state, session) {
   const longitudinal = treatmentList.filter((item) => ['PLANNED', 'IN_PROGRESS', 'INTERRUPTED'].includes(item.status));
   const investigationIds = new Set(investigations.map((item) => item.id));
   const findings = (state.findings || []).filter((item) => investigationIds.has(item.investigationId) && item.status !== 'DISMISSED');
+  const reviewedAnswers = new Set((state.findings || [])
+    .filter((item) => investigationIds.has(item.investigationId) && item.sourceQuestionId)
+    .map((item) => `${item.investigationId}:${item.sourceQuestionId}`));
+  const pendingFindingCount = investigations.reduce((total, investigation) => total + (investigation.answers || [])
+    .filter((answer) => answer.answer === 'YES' && !reviewedAnswers.has(`${investigation.id}:${answer.questionId}`)).length, 0);
   const notes = (state.events || []).filter((event) => event.sessionId === session.id && event.eventType === 'NOTE_CREATED');
   const activeReiki = (state.reikiApplications || []).find((item) => item.sessionId === session.id && ['RUNNING', 'PAUSED'].includes(item.status)) || null;
   const assistedIds = sessionAssistedIds(state, session);
@@ -134,6 +139,7 @@ function sessionCounts(state, session) {
     assistedNames: assistedIds.map((id) => assistedName(state, id)),
     investigationOpened,
     investigationCompleted,
+    pendingFindingCount,
     treatmentsWorked: treatmentList.length,
     treatmentIds,
     findings: findings.length,
