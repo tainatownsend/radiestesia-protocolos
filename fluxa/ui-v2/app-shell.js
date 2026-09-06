@@ -17,6 +17,7 @@ import { treatmentComposer } from './treatment/treatment-composer.js';
 import { treatmentPage } from './treatment/treatment-page.js';
 import { treatmentReview } from './treatment/treatment-review.js';
 import { treatmentWorkspace } from './treatment/treatment-workspace.js';
+import { isContinuityLocked } from './workflow-continuity.js';
 
 const ROUTES = [
   ['today', 'Hoje'],
@@ -24,15 +25,6 @@ const ROUTES = [
   ['history', 'Histórico'],
   ['library', 'Acervo'],
 ];
-
-const CONTEXT_LOCK_ACTIONS = new Set([
-  'TRIAGE',
-  'FINDINGS',
-  'REIKI_CONTEXT',
-  'REIKI_ACTIVE',
-  'TREATMENT_REVIEW',
-  'TREATMENT_FINAL',
-]);
 
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({
@@ -79,7 +71,7 @@ export function renderAppShell(sourceModel, sourceUi) {
   const currentContext = model.sessionOpen
     ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
     : (ui.justClosedSessionId ? 'Sessão encerrada' : 'Sem sessão');
-  const contextChangeLocked = CONTEXT_LOCK_ACTIONS.has(model.nextActionCode);
+  const contextChangeLocked = isContinuityLocked(model.nextActionCode);
   const contextControl = model.source === 'live' && model.sessionOpen
     ? `<button class="v2-context-chip v2-context-chip--button" type="button" data-v2-preview-action="change-assisted" aria-label="Trocar Assistido · ${esc(currentContext)}" ${contextChangeLocked ? 'disabled' : ''}>${esc(currentContext)}</button>`
     : `<span class="v2-context-chip">${esc(currentContext)}</span>`;
