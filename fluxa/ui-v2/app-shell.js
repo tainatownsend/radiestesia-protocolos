@@ -11,6 +11,7 @@ import { assistedPicker } from './session/assisted-picker.js';
 import { hawkinsFlow } from './session/hawkins-flow.js';
 import { preparationFlow } from './session/preparation-flow.js';
 import { sessionCockpit } from './session/session-cockpit.js';
+import { fixtureVisualData } from './testing/fixture-visual-data.js';
 import { finalAssessment } from './treatment/final-assessment.js';
 import { treatmentComposer } from './treatment/treatment-composer.js';
 import { treatmentPage } from './treatment/treatment-page.js';
@@ -33,15 +34,9 @@ function esc(value = '') {
 function fixtureResolved(model, ui) {
   if (model.source !== 'fixture') return { model, ui };
   const fixtureUi = model.fixtureUi || {};
+  const visual = fixtureVisualData(model.id);
   return {
-    model: {
-      ...model,
-      historySessions: model.fixtureHistorySessions ?? model.historySessions,
-      safeClose: model.fixtureSafeClose ?? model.safeClose,
-      latestClosedSession: model.fixtureLatestClosedSession ?? model.latestClosedSession,
-      library: model.fixtureLibrary ?? model.library,
-      therapeuticSettings: model.fixtureTherapeuticSettings ?? model.therapeuticSettings,
-    },
+    model: { ...model, ...visual },
     ui: {
       ...ui,
       ...fixtureUi,
