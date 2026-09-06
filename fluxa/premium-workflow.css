@@ -10,6 +10,24 @@
 .premium-component-progress span{display:block;height:100%;border-radius:inherit;background:#173F46}
 .treatment-card:has(.premium-treatment-components)>.muted{margin-bottom:0;background:transparent;padding:0 1px;color:#66898C}
 .treatment-card:has(.premium-treatment-components) .button-row{margin-top:12px}
+.treatment-trace-disclosure{margin-top:12px;padding-top:10px;border-top:1px solid var(--premium-line);color:#606B6C}
+.treatment-trace-disclosure summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:38px;color:#173F46;font-size:12px;font-weight:720;cursor:pointer;list-style:none}
+.treatment-trace-disclosure summary::-webkit-details-marker{display:none}
+.treatment-trace-disclosure summary::after{content:'⌄';font-size:16px;line-height:1;transition:transform .16s ease}
+.treatment-trace-disclosure[open] summary::after{transform:rotate(180deg)}
+.treatment-trace-disclosure summary small{margin-left:auto;color:#66898C;font-size:10px;font-weight:650}
+.treatment-trace-detail{display:grid;gap:5px;padding:5px 0 2px}
+.treatment-trace-detail p{margin:0;color:#66898C;font-size:11px;line-height:1.4}
+#backlog-overlay .detail-sheet{min-height:0;max-height:min(82dvh,720px)}
+#backlog-overlay .detail-sheet>.stack{gap:8px}
+#backlog-overlay .detail-sheet>.stack>.card{padding:13px 14px;border-radius:15px}
+#backlog-overlay .detail-sheet>.stack>.card .section-head{align-items:start;margin-bottom:4px}
+#backlog-overlay .detail-sheet>.stack>.card .section-head p{margin:3px 0 0;font-size:12px}
+#backlog-overlay .detail-sheet>.stack>.card .button-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;padding-top:10px}
+#backlog-overlay .detail-sheet>.stack>.card .button-row .btn{min-height:42px;width:100%;padding-inline:9px}
+#backlog-overlay .detail-sheet>.stack>.card .button-row .btn.danger{grid-column:1/-1}
+#backlog-overlay .detail-sheet>.section{margin-top:10px}
+#backlog-overlay .detail-sheet>.section .btn{min-height:46px}
 .premium-workflow-protocol .sheet-head{position:sticky;top:0;z-index:4;background:rgba(248,249,247,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--premium-line)}
 .premium-protocol-kicker{grid-column:1/-1;margin-bottom:-3px;color:#66898C;font-size:9px;font-weight:780;letter-spacing:.12em;text-transform:uppercase}
 .premium-workflow-protocol .question-context{padding:0 3px 12px;border-bottom:1px solid var(--premium-line)}
@@ -26,6 +44,8 @@
   .premium-component-mark{width:31px;height:31px}
   .premium-component-copy>div:first-child{grid-template-columns:1fr;gap:2px}
   .premium-component-copy span{white-space:normal}
+  #backlog-overlay .detail-sheet{max-height:78dvh}
+  #backlog-overlay .detail-sheet>.stack>.card .button-row{grid-template-columns:1fr 1fr}
   .premium-workflow-protocol .question-panel{min-height:44vh;padding:26px 12px}
   .premium-workflow-protocol .question-panel h1{font-size:clamp(25px,7.2vw,32px)}
   .premium-workflow-protocol .binary-btn{min-height:56px}

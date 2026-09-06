@@ -1,0 +1,235 @@
+/* Fluxa release hardening: structural/a11y layer.
+   Visual reconciliation and theme-system remain the final visual/color authorities. */
+:root{
+  --fluxa-vvh:100dvh;
+  --fluxa-touch:48px;
+  --fluxa-touch-primary:56px;
+  --fluxa-sheet-radius:22px;
+  --fluxa-copy-max:68ch;
+}
+
+html.fluxa-booting #app{visibility:hidden}
+html.fluxa-ready #app{visibility:visible}
+
+body.fluxa-modal-open{
+  overflow:hidden!important;
+  overscroll-behavior:none;
+  touch-action:none;
+}
+body.fluxa-modal-open>.modal-backdrop{touch-action:auto}
+
+.modal-backdrop.fluxa-managed-overlay{
+  background:rgba(13,24,26,.58)!important;
+  backdrop-filter:blur(6px) saturate(.9);
+  -webkit-backdrop-filter:blur(6px) saturate(.9);
+  overscroll-behavior:contain;
+}
+.fluxa-managed-sheet{
+  display:flex!important;
+  flex-direction:column!important;
+  width:min(100% - 20px,720px)!important;
+  max-height:calc(var(--fluxa-vvh) - max(12px,env(safe-area-inset-top)) - max(12px,env(safe-area-inset-bottom)))!important;
+  overflow:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch;
+  scroll-padding-top:74px;
+  scroll-padding-bottom:calc(86px + env(safe-area-inset-bottom));
+  border-radius:var(--fluxa-sheet-radius)!important;
+}
+.fluxa-managed-sheet>.sheet-head{
+  position:sticky!important;
+  top:0;
+  z-index:15;
+  min-height:60px;
+  padding-top:max(10px,env(safe-area-inset-top));
+  background:color-mix(in srgb,var(--surface) 94%,transparent)!important;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.fluxa-managed-sheet>.sheet-head h1,
+.fluxa-managed-sheet>.sheet-head h2{
+  max-width:min(74vw,560px);
+  font-size:clamp(1.18rem,4.8vw,1.55rem)!important;
+  line-height:1.12!important;
+}
+.fluxa-sheet-assisted{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:700;
+  line-height:1.25;
+}
+.fluxa-managed-sheet form>button[type="submit"]:last-child,
+.fluxa-managed-sheet .mx3-sticky-cta{
+  min-height:var(--fluxa-touch-primary)!important;
+}
+.fluxa-managed-sheet .field,
+.fluxa-managed-sheet .muted,
+.fluxa-managed-sheet .lead{max-width:var(--fluxa-copy-max)}
+
+.fluxa-toast-region{
+  position:fixed;
+  z-index:10000;
+  left:50%;
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  width:min(92vw,520px);
+  transform:translateX(-50%);
+  display:grid;
+  gap:8px;
+  pointer-events:none;
+}
+.fluxa-toast{
+  padding:12px 14px;
+  border-radius:14px;
+  background:var(--text);
+  color:var(--surface);
+  box-shadow:0 12px 36px rgba(0,0,0,.22);
+  font-size:.9rem;
+  line-height:1.35;
+  animation:fluxa-toast-in .18s ease-out both;
+}
+.fluxa-toast[data-kind="success"]{background:var(--primary-strong)}
+.fluxa-toast[data-kind="warning"],.fluxa-toast[data-kind="error"]{background:#3b2b27}
+@keyframes fluxa-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.fluxa-question-progress{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:.74rem;
+  font-weight:750;
+}
+.fluxa-question-progress b{
+  display:block;
+  width:48px;
+  height:4px;
+  overflow:hidden;
+  border-radius:99px;
+  background:var(--border);
+}
+.fluxa-question-progress b::after{
+  content:"";
+  display:block;
+  width:var(--fluxa-progress,33%);
+  height:100%;
+  background:var(--primary);
+}
+.fluxa-question-back{min-height:38px!important;margin-right:4px}
+.mx3-question-sheet .question-panel{
+  min-height:0!important;
+  padding-top:8px!important;
+  padding-bottom:16px!important;
+  justify-content:flex-start!important;
+}
+.mx3-question-sheet .binary-actions{
+  margin-top:auto!important;
+  padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
+}
+
+.fluxa-home-preflight{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  margin-top:10px;
+  border-radius:14px;
+  background:var(--surface-2);
+}
+.fluxa-home-preflight>div{min-width:0}
+.fluxa-home-preflight strong{display:block;font-size:.86rem}
+.fluxa-home-preflight small{display:block;margin-top:2px;color:var(--muted);font-size:.72rem}
+.home-primary-actions.fluxa-home-actions-ready{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+.home-primary-actions .home-action{
+  min-height:78px!important;
+  touch-action:manipulation;
+}
+.fluxa-home-reiki .home-action-icon svg{stroke:currentColor;fill:none}
+
+[data-treatment-filters] .button-row{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;
+  overscroll-behavior-inline:contain;
+}
+[data-treatment-filters] .button-row::-webkit-scrollbar{display:none}
+[data-treatment-filters] .button-row>.btn{flex:0 0 auto;min-height:44px}
+[data-fluxa-planned-prereq]{display:block;margin:3px 0 8px;line-height:1.35}
+
+.fluxa-item-summary{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin:6px 0 0;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--muted);
+  font-size:.7rem;
+  font-weight:700;
+}
+.mx3-treatment-item .mx3-treatment-command,
+.mx3-treatment-command .mx3-treatment-graph{
+  box-shadow:none!important;
+}
+.mx3-treatment-command .mx3-treatment-graph{
+  background:transparent!important;
+  border-left:2px solid var(--border)!important;
+  border-radius:0!important;
+}
+
+.fluxa-post-close-summary{
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border-radius:18px;
+  background:var(--surface);
+  border:1px solid var(--border);
+}
+.fluxa-post-close-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.fluxa-post-close-grid div{
+  padding:10px;
+  border-radius:12px;
+  background:var(--surface-2);
+}
+.fluxa-post-close-grid strong{display:block;font-size:1.05rem}
+.fluxa-post-close-grid span{display:block;margin-top:2px;color:var(--muted);font-size:.7rem}
+.fluxa-post-close-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+button,.btn,.home-action,.workspace-nav-btn,.close-btn{touch-action:manipulation}
+button:focus-visible,.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--primary) 55%,transparent)!important;
+  outline-offset:2px!important;
+}
+.close-btn,.workspace-nav-btn{min-width:44px;min-height:44px}
+[disabled]{cursor:not-allowed;opacity:.55}
+
+@media(max-width:560px){
+  .fluxa-managed-sheet{
+    width:calc(100% - 12px)!important;
+    max-height:calc(var(--fluxa-vvh) - max(6px,env(safe-area-inset-top)) - max(6px,env(safe-area-inset-bottom)))!important;
+    border-radius:20px!important;
+  }
+  .fluxa-home-preflight{align-items:flex-start;flex-direction:column}
+  .fluxa-home-preflight .btn{width:100%}
+  .fluxa-post-close-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fluxa-post-close-actions .btn{flex:1 1 150px}
+}
+@media(max-width:360px){
+  .home-primary-actions.fluxa-home-actions-ready{grid-template-columns:1fr!important}
+  .fluxa-post-close-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}

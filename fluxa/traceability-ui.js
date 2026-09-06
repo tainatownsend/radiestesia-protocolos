@@ -28,9 +28,9 @@ function enhanceTreatmentCards(){
     if(card.querySelector('[data-treatment-trace]'))return;
     const treatment=state.treatments.find((t)=>t.id===card.dataset.treatmentId);if(!treatment)return;
     const findings=state.findings.filter((f)=>(treatment.findingIds||[]).includes(f.id));if(!findings.length)return;
-    const p=document.createElement('p');p.className='muted';p.dataset.treatmentTrace='true';
-    p.innerHTML=`<strong>Origem:</strong> ${findings.map((f)=>`${esc(protocolName(state,f))} → ${esc(f.title||f.questionTextSnapshot||'Achado')}`).join('<br>')}`;
-    card.querySelector('.button-row')?.before(p) || card.appendChild(p);
+    const details=document.createElement('details');details.className='treatment-trace-disclosure';details.dataset.treatmentTrace='true';
+    details.innerHTML=`<summary><span>Origem da investigação</span><small>${findings.length} ${findings.length===1?'achado':'achados'}</small></summary><div class="treatment-trace-detail">${findings.map((f)=>`<p>${esc(protocolName(state,f))} → ${esc(f.title||f.questionTextSnapshot||'Achado')}</p>`).join('')}</div>`;
+    card.querySelector('.button-row')?.after(details) || card.appendChild(details);
   });
 }
 function enhance(){enhanceAssistedDetail();enhanceTreatmentCards();}

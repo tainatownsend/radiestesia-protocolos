@@ -1,0 +1,9 @@
+.workspace-settings-label{display:none;}
+.workspace-settings-button svg{width:21px;height:21px;}
+.session-assisted-prompt{margin-top:16px;}
+.session-assisted-prompt h2{margin:4px 0 6px;}
+.protocol-row{cursor:pointer;color:var(--text);}
+.protocol-row:hover{border-color:color-mix(in srgb,var(--secondary) 55%,var(--border));background:var(--surface-2);}
+.protocol-detail-card{display:grid;gap:16px;}
+.protocol-detail-questions ol{margin:10px 0 0;padding-left:22px;display:grid;gap:8px;}
+.protocol-detail-questions li{line-height:1.45;color:var(--text);}

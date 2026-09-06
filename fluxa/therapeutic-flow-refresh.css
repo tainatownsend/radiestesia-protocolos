@@ -41,6 +41,31 @@ body.fluxa-home-refreshed main{scroll-padding-top:88px;}
 .treatment-modality-picker fieldset{margin-top:14px;}
 .modality-summary{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;}
 .modality-chip{padding:5px 9px;border-radius:999px;background:#E8EFED;color:#173F46;font-size:10px;font-weight:700;}
+
+/* Technical responsive hardening reconciled from PR #72. */
+html,body{max-width:100%;overflow-x:hidden;}
+main,.card,.hero-card,.sheet,.treatment-card,.home-cockpit{min-width:0;}
+main{padding-inline:clamp(14px,4vw,28px);}
+h1,h2,h3,p,strong,span,label{overflow-wrap:anywhere;}
+.section-head{min-width:0;align-items:flex-start;}
+.section-head>div{min-width:0;}
+.topbar>*{min-width:0;}
+.session-indicator{max-width:min(52vw,300px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bottom-nav .nav-btn{min-width:0;}
+.bottom-nav-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+.modal-backdrop{padding-inline:max(10px,env(safe-area-inset-left));}
+.sheet{width:min(100%,680px);max-height:min(90dvh,780px);overscroll-behavior:contain;}
+.field input,.field textarea,.field select{max-width:100%;font-size:16px;}
+.timeline-item{grid-template-columns:minmax(42px,54px) 10px minmax(0,1fr);}
+.timeline-copy{min-width:0;}
+
+@media(min-width:760px) and (max-width:1180px){
+  main{width:min(100%,920px);padding-inline:28px;}
+  .sheet{width:min(92vw,760px);}
+  .home-primary-actions{max-width:720px;margin-inline:auto;}
+  .treatment-items{display:grid;gap:16px;}
+}
+
 @media(max-width:560px){
   body.fluxa-home-refreshed .home-cockpit-context{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px;}
   .home-primary-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;}
@@ -49,4 +74,21 @@ body.fluxa-home-refreshed main{scroll-padding-top:88px;}
   .home-action span:not(.home-action-icon){font-size:9px;}
   .modality-settings-card{grid-template-columns:1fr;gap:10px;}
   .modality-settings-card .btn{width:100%;}
+  .topbar{gap:8px;}
+  .session-indicator{max-width:54vw;padding-inline:9px;font-size:10px;}
+  .section-head{gap:8px;flex-wrap:wrap;}
+  .button-row{gap:7px;}
+  .duration-grid,.graph-duration{grid-template-columns:1fr;}
+  .sheet{max-height:92dvh;padding:16px;}
+  .timeline-item{grid-template-columns:46px 9px minmax(0,1fr);gap:8px;}
+}
+
+@media(max-width:390px){
+  main{padding-inline:14px;}
+  .brand{font-size:27px;}
+  .session-indicator{max-width:50vw;font-size:9.5px;}
+  .home-primary-actions{grid-template-columns:1fr;gap:7px;}
+  .home-action{min-height:70px;display:grid;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;text-align:left;align-items:center;}
+  .home-action-icon{grid-row:1 / span 2;margin:0;}
+  .home-action strong,.home-action span:not(.home-action-icon){text-align:left;}
 }

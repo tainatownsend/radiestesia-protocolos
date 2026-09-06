@@ -1,0 +1,138 @@
+/* App-wide audit fixes from desktop validation. Loaded last by app-audit-fix.js. */
+:root{--audit-max:920px;--audit-touch:50px;}
+
+/* Header: one calm row, aligned to the same content grid as the app. */
+.topbar{
+  min-height:76px!important;
+  padding:14px max(24px,calc((100vw - var(--audit-max))/2))!important;
+  display:grid!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+}
+.topbar>.brand,.topbar>.brand-button{margin-right:auto!important;flex:0 0 auto!important;}
+.topbar>.session-indicator,.topbar>.workspace-settings-button,.topbar>button:not(.brand-button){position:static!important;inset:auto!important;transform:none!important;margin:0!important;flex:0 0 auto!important;}
+.session-indicator{white-space:nowrap!important;}
+
+/* Main canvas: avoid huge empty desktop fields while keeping iPad/mobile fluid. */
+main,.workspace-view{width:min(100%,var(--audit-max))!important;padding-inline:24px!important;}
+
+/* Bottom navigation: centered dock with four true columns. */
+.workspace-bottom-nav{
+  left:50%!important;right:auto!important;bottom:12px!important;
+  width:min(720px,calc(100% - 32px))!important;
+  transform:translateX(-50%)!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:8px!important;
+  padding:8px!important;
+  min-height:72px!important;
+  border:1px solid rgba(203,211,209,.88)!important;
+  border-radius:20px!important;
+  box-shadow:0 16px 44px rgba(16,47,53,.12)!important;
+}
+.workspace-bottom-nav .workspace-nav-btn{
+  position:static!important;inset:auto!important;transform:none!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+  gap:5px!important;width:100%!important;min-width:0!important;min-height:56px!important;margin:0!important;padding:6px 8px!important;
+}
+.workspace-bottom-nav .workspace-nav-btn svg{position:static!important;width:20px!important;height:20px!important;margin:0!important;}
+.workspace-bottom-nav .workspace-nav-btn span{position:static!important;display:block!important;width:100%!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:11px!important;line-height:1.15!important;}
+
+/* Idle home: stronger hierarchy, less admin-dashboard feel. */
+body.fluxa-home-idle main{padding-top:34px!important;}
+body.fluxa-home-idle .hero-card{padding:28px!important;border-radius:24px!important;}
+body.fluxa-home-idle .hero-card h2{font-size:clamp(24px,3vw,32px)!important;max-width:620px;}
+body.fluxa-home-idle .hero-card p{max-width:620px;}
+body.fluxa-home-idle .section-head{align-items:center!important;}
+body.fluxa-home-idle [data-home-recent-actions],body.fluxa-home-idle .home-idle-secondary{display:flex!important;gap:8px!important;align-items:center!important;flex-wrap:wrap!important;}
+
+/* Sheets: composed working surfaces instead of long grey forms. */
+.sheet{border:1px solid rgba(203,211,209,.78)!important;}
+.sheet-head{position:sticky;top:-18px;z-index:4;margin:-18px -18px 18px!important;padding:18px!important;background:rgba(248,249,247,.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(203,211,209,.68);}
+
+/* Preparation: one visual workflow with clear sections and no wall of controls. */
+[data-prep-structured]{
+  display:grid!important;gap:18px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+[data-prep-structured]>div:first-child{padding:0 2px 4px;}
+[data-prep-structured]>.field,[data-prep-structured]>.check-row,[data-prep-structured]>.prep-unlisted-fields{
+  padding:16px!important;border:1px solid rgba(203,211,209,.8)!important;border-radius:18px!important;background:#fff!important;box-shadow:0 8px 24px rgba(16,47,53,.05)!important;
+}
+[data-prep-structured]>.field>label,[data-prep-structured] .prep-resource-picker>label{font-size:12px!important;text-transform:uppercase;letter-spacing:.06em;color:#66898C!important;}
+.prep-picker-row{align-items:stretch!important;}
+.prep-picker-row select,.prep-picker-row .btn{min-height:52px!important;}
+.prep-selected-tools{margin-top:10px!important;}
+.prep-selected-tool{background:#F8F9F7!important;border-color:#CBD3D1!important;}
+.prep-unlisted-toggle{background:#F8F9F7!important;box-shadow:none!important;}
+.prep-mantra-preview{padding:16px!important;background:#F8F9F7!important;border-radius:16px!important;}
+
+/* One Hawkins component language everywhere. */
+.hawkins-input{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;
+  min-height:52px!important;border:1px solid #CBD3D1!important;border-radius:14px!important;background:#fff!important;overflow:hidden!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.8) inset!important;
+}
+.hawkins-input:focus-within{border-color:#66898C!important;box-shadow:0 0 0 3px rgba(102,137,140,.14)!important;}
+.hawkins-input input{
+  width:100%!important;min-width:0!important;min-height:50px!important;border:0!important;background:transparent!important;box-shadow:none!important;padding:12px 14px!important;font-size:17px!important;font-weight:700!important;color:#102F35!important;outline:0!important;
+}
+.hawkins-input b{display:grid;place-items:center;min-width:52px;height:100%;padding:0 14px;border-left:1px solid #DEE4E1;color:#66898C;font-size:12px;letter-spacing:.04em;}
+.hawkins-measurement-card{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important;padding:18px!important;
+  border:1px solid rgba(203,211,209,.8)!important;border-radius:18px!important;background:linear-gradient(180deg,#fff,#F8F9F7)!important;box-shadow:0 8px 24px rgba(16,47,53,.05)!important;
+}
+.hawkins-measurement-card>div p{margin:5px 0 0!important;}
+.hawkins-measurement-card form{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important;align-items:end!important;}
+.hawkins-measurement-card form label{display:grid!important;gap:7px!important;min-width:0!important;}
+.hawkins-measurement-card form label>span:first-child{font-size:12px!important;font-weight:800!important;color:#66898C!important;}
+.hawkins-measurement-card form .btn{min-height:52px!important;white-space:nowrap!important;}
+
+/* Investigation chooser: keep baseline input usable and the choices scannable. */
+#investigation-chooser-overlay .sheet{width:min(94vw,760px)!important;}
+#investigation-chooser-overlay [data-hawkins-baseline-card]{margin:14px 0 18px!important;}
+#investigation-chooser-overlay .investigation-entry-grid{gap:12px!important;}
+#investigation-chooser-overlay .investigation-entry-card{min-height:88px!important;padding:15px 16px!important;}
+
+/* Session home: never look empty after preparation. */
+.session-assisted-prompt{margin-top:20px!important;padding:20px!important;border-radius:20px!important;}
+body:has(.topbar-session-open) main>.section:last-of-type{margin-bottom:28px;}
+
+/* Objective responsive hardening staged for mobile/iPad validation. */
+html,body{max-width:100%;overflow-x:hidden;}
+main,.workspace-view,.card,.hero-card,.sheet,.treatment-card,.home-cockpit{min-width:0;}
+h1,h2,h3,p,strong,span,label{overflow-wrap:anywhere;}
+.section-head,.section-head>div,.topbar>*{min-width:0;}
+.modal-backdrop{padding-left:max(10px,env(safe-area-inset-left))!important;padding-right:max(10px,env(safe-area-inset-right))!important;padding-bottom:max(10px,env(safe-area-inset-bottom))!important;}
+.sheet{width:min(100%,760px)!important;max-height:min(90dvh,820px)!important;overscroll-behavior:contain;}
+.field input,.field textarea,.field select{max-width:100%;}
+.timeline-item{grid-template-columns:minmax(42px,54px) 10px minmax(0,1fr)!important;}
+.timeline-copy{min-width:0;}
+
+@media(min-width:700px) and (max-width:1180px){
+  main,.workspace-view{width:min(100%,920px)!important;padding-inline:28px!important;}
+  .sheet{width:min(92vw,780px)!important;}
+  .home-primary-actions{max-width:720px;margin-inline:auto;}
+}
+
+@media(max-width:699px){
+  .topbar{min-height:66px!important;padding-top:10px!important;padding-bottom:10px!important;padding-left:max(14px,env(safe-area-inset-left))!important;padding-right:max(14px,env(safe-area-inset-right))!important;gap:8px!important;}
+  .session-indicator{max-width:42vw!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:11px!important;padding-inline:9px!important;}
+  main,.workspace-view{padding-left:max(14px,env(safe-area-inset-left))!important;padding-right:max(14px,env(safe-area-inset-right))!important;}
+  .workspace-bottom-nav{bottom:max(8px,env(safe-area-inset-bottom))!important;width:calc(100% - 16px - env(safe-area-inset-left) - env(safe-area-inset-right))!important;border-radius:18px!important;gap:2px!important;padding:6px!important;}
+  .workspace-bottom-nav .workspace-nav-btn{padding-inline:2px!important;}
+  .workspace-bottom-nav .workspace-nav-btn span{font-size:10px!important;}
+  body:has(input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus) .workspace-bottom-nav{opacity:0!important;pointer-events:none!important;transform:translate(-50%,calc(100% + 24px + env(safe-area-inset-bottom)))!important;}
+  .hawkins-measurement-card form{grid-template-columns:1fr!important;}
+  .hawkins-measurement-card form .btn{width:100%!important;}
+  [data-prep-structured]>.field,[data-prep-structured]>.check-row,[data-prep-structured]>.prep-unlisted-fields{padding:14px!important;}
+  .field input,.field textarea,.field select{font-size:16px!important;}
+  .section-head{gap:8px;flex-wrap:wrap;}
+  .sheet{max-height:92dvh!important;}
+  .timeline-item{grid-template-columns:46px 9px minmax(0,1fr)!important;gap:8px!important;}
+}
+
+@media(max-width:390px){
+  .home-primary-actions{grid-template-columns:1fr!important;gap:7px!important;}
+  .session-indicator{max-width:50vw!important;font-size:9.5px!important;}
+}
