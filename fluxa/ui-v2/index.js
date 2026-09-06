@@ -545,8 +545,10 @@ root.addEventListener('click', (event) => {
     clearInlineError();
     try {
       selectSessionAssisted(store, assisted.dataset.v2SelectAssisted);
-      ui.sheet = 'hawkins';
-      scheduleRender({ focusDialog: true });
+      const nextModel = deriveLiveModel();
+      model = nextModel;
+      ui.sheet = nextModel.hawkinsReady ? null : 'hawkins';
+      scheduleRender({ focusDialog: Boolean(ui.sheet) });
     } catch (error) {
       showInlineError(error);
     }
@@ -702,6 +704,10 @@ root.addEventListener('click', (event) => {
   const name = action.dataset.v2PreviewAction;
   if (name === 'next' || name === 'start-session') {
     performNext(action);
+    return;
+  }
+  if (name === 'change-assisted') {
+    if (liveMode) openSheet('assisted', action);
     return;
   }
   if (name === 'investigate' && liveMode) {
