@@ -570,14 +570,13 @@ root.addEventListener('click', (event) => {
     return;
   }
   if (target.matches('[data-v2-settings-import-apply]')) {
-    if (!liveMode || !ui.importPreview?.state) return;
+    if (!liveMode || !ui.importPreview?.normalized) return;
     try {
       requireDataReplacementIdle();
-      localStorage.setItem('fluxa_state_v1', JSON.stringify(ui.importPreview.state));
-      loadState({ force:true });
+      const normalized = structuredClone(ui.importPreview.normalized);
+      store.setState(() => normalized);
       ui.importPreview = null;
-      ui.sheet = null;
-      render();
+      renderPreservingSheetScroll();
     } catch (error) { showInlineError(error); }
     return;
   }
@@ -602,19 +601,25 @@ root.addEventListener('change', async (event) => {
       const file = target.files?.[0];
       if (!file) return;
       const text = await file.text();
-      const state = validateImportPayload(text);
+      let parsed;
+      try { parsed = JSON.parse(text); }
+      catch (_) { throw new Error('Este arquivo não contém um backup JSON válido do Fluxa.'); }
+      const normalized = validateImportPayload(parsed);
       ui.importPreview = {
         name: file.name,
-        state,
+        normalized,
         summary: {
-          sessions: state.sessions?.length || 0,
-          assisteds: state.assistedEntities?.length || 0,
-          treatments: state.treatments?.length || 0,
-          resources: state.tools?.length || 0,
+          sessions: normalized.sessions?.length || 0,
+          assisteds: normalized.assistedEntities?.length || 0,
+          treatments: normalized.treatments?.length || 0,
+          resources: normalized.tools?.length || 0,
         },
       };
-      scheduleRender({ focusDialog: true });
-    } catch (error) { showInlineError(error); }
+      renderPreservingSheetScroll();
+    } catch (error) {
+      ui.importPreview = null;
+      showInlineError(error);
+    }
     finally { target.value = ''; }
   }
   if (target.matches('[data-v2-final-needs-new]')) scheduleRender({ focusDialog: true });
