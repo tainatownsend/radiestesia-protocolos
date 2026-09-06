@@ -148,7 +148,11 @@ export function completeFlexibleReiki(store, applicationId, notes = '') {
   const state = store.getState();
   const application = state.reikiApplications.find((item) => item.id === applicationId && ['RUNNING','PAUSED'].includes(item.status));
   if (!application) throw new Error('Aplicação de Reiki não disponível para conclusão.');
-  if (application.sessionId) requireSessionContext(state, application.sessionId, application.assistedEntityId, 'complete');
+  if (application.sessionId) {
+    const linkedSessionOpen = (state.sessions || []).some((item) => item.id === application.sessionId && item.status === 'OPEN');
+    if (!linkedSessionOpen) return recoverStaleFlexibleReiki(store, applicationId, notes);
+    requireSessionContext(state, application.sessionId, application.assistedEntityId, 'complete');
+  }
   store.setState((current) => {
     const draft = structuredClone(current);
     const app = draft.reikiApplications.find((item) => item.id === applicationId);
