@@ -54,7 +54,12 @@ function narrative(session) {
   `).join('')}</div>`;
 }
 
+function longitudinalLabel(item, multiAssisted) {
+  return [multiAssisted ? item.assistedName : '', item.title, treatmentStatusLabel(item.status)].filter(Boolean).map(esc).join(' · ');
+}
+
 function sessionDetail(session) {
+  const multiAssisted = (session.assistedNames?.length || 0) > 1;
   return `
     <div class="v2-stack">
       <section class="v2-section v2-history-detail-head">
@@ -70,7 +75,7 @@ function sessionDetail(session) {
         <div class="v2-kpi"><strong>${session.findings + session.notes}</strong><span>achados + notas</span></div>
       </section>
 
-      ${session.longitudinal?.length ? `<section class="v2-card v2-card--soft"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${esc(item.title)} · ${esc(treatmentStatusLabel(item.status))}</span>`).join('')}</div></section>` : ''}
+      ${session.longitudinal?.length ? `<section class="v2-card v2-card--soft"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${longitudinalLabel(item, multiAssisted)}</span>`).join('')}</div></section>` : ''}
 
       ${session.closingNote ? `<section class="v2-card v2-card--soft v2-history-closing-note"><p class="v2-eyebrow">Nota de encerramento</p><p class="v2-copy">${esc(session.closingNote)}</p></section>` : ''}
 
