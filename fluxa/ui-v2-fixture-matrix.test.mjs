@@ -29,16 +29,35 @@ const indexOverrides = {
 for (const id of V2_FIXTURE_ORDER) {
   const source = structuredClone(V2_FIXTURES[id]);
   const model = { ...source, source:'fixture', ...indexOverrides };
-  const html = renderAppShell(model, structuredClone(indexLikeUi));
+  const controllerUi = structuredClone(indexLikeUi);
+  const html = renderAppShell(model, controllerUi);
   assert.match(html, /class="v2-app"/, `${id} must render the V2 shell.`);
   assert.doesNotMatch(html, />undefined</, `${id} must not expose undefined copy.`);
-  if (source.overlay) assert.match(html, /class="v2-sheet"/, `${id} must render its real MobileSheet surface.`);
+  if (source.overlay) {
+    assert.match(html, /class="v2-sheet"/, `${id} must render its real MobileSheet surface.`);
+    assert.equal(controllerUi.sheet, source.overlay, `${id} must synchronize sheet state back to controller bookkeeping.`);
+  }
+  if (source.fixtureUi?.route) {
+    assert.equal(controllerUi.route, source.fixtureUi.route, `${id} must synchronize its fixture route back to the controller.`);
+  }
 }
 
+const settingsSource = structuredClone(V2_FIXTURES['settings-local-first']);
+const settingsUi = structuredClone(indexLikeUi);
+const settingsHtml = renderAppShell({ ...settingsSource, source:'fixture', ...indexOverrides }, settingsUi);
+assert.equal(settingsUi.sheet, 'settings', 'Settings fixture must participate in real sheet bookkeeping.');
+assert.match(settingsHtml, /data-status="OK"/, 'Settings fixture must render fixed storage-health status without reading live storage.');
+assert.doesNotMatch(settingsHtml, /Ainda não realizado/, 'Settings fixture must expose a deterministic last-export timestamp.');
+
 const fixtureSource = fs.readFileSync(new URL('./ui-v2/testing/fixtures.js', import.meta.url), 'utf8');
+const visualFixtureSource = fs.readFileSync(new URL('./ui-v2/testing/fixture-visual-data.js', import.meta.url), 'utf8');
 const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 'utf8');
+const settingsSheet = fs.readFileSync(new URL('./ui-v2/settings/settings-sheet.js', import.meta.url), 'utf8');
 assert.match(fixtureSource, /V2_FIXTURE_ORDER/);
 assert.match(shell, /fixtureVisualData/);
+assert.match(shell, /Object\.assign\(ui,/);
+assert.match(visualFixtureSource, /deterministicStorageHealth/);
+assert.match(settingsSheet, /model\.storageHealth \|\| inspectStorageHealth\(\)/);
 assert.doesNotMatch(shell, /MutationObserver/);
 
 console.log(`ui-v2-fixture-matrix.test.mjs: ok (${V2_FIXTURE_ORDER.length} states)`);

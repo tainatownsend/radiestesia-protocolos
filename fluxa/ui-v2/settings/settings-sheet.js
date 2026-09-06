@@ -50,7 +50,7 @@ function importPreview(preview) {
 }
 
 export function settingsSheet(model, ui) {
-  const health = inspectStorageHealth();
+  const health = model.storageHealth || inspectStorageHealth();
   const status = storageStatus(health);
   const therapeutic = model.therapeuticSettings || { enabled: [], custom: [] };
   const enabled = new Set(therapeutic.enabled || []);
