@@ -55,6 +55,15 @@ body[data-v2-keyboard-open="true"] .v2-sheet__body {
   .v2-library-search input[type="search"] {
     font-size: 16px;
   }
+
+  .v2-question {
+    min-height: 0;
+    padding-top: var(--v2-space-2);
+  }
+
+  .v2-triage {
+    gap: var(--v2-space-3);
+  }
 }
 
 @media (max-width: 430px) {
