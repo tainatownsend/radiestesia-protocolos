@@ -76,9 +76,12 @@ export function closingFlow(model, ui) {
       <button class="v2-btn v2-btn--primary" type="button" data-v2-closing-reiki>Concluir Reiki primeiro</button>
     `;
   } else if (openInvestigationCount || pendingFindingCount) {
-    footerHtml = `
+    footerHtml = recoveryAssistedId ? `
       <span aria-hidden="true"></span>
       <button class="v2-btn v2-btn--primary" type="button" data-v2-select-assisted="${esc(recoveryAssistedId)}" data-v2-closing-blocker-assisted="${esc(recoveryAssistedId)}">${recoveryAssistedName ? `Continuar com ${esc(recoveryAssistedName)}` : 'Voltar à sessão'}</button>
+    ` : `
+      <span aria-hidden="true"></span>
+      <button class="v2-btn v2-btn--primary" type="button" data-v2-close-sheet>Voltar à sessão</button>
     `;
   } else {
     footerHtml = `
