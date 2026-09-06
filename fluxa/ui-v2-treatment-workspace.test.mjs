@@ -28,6 +28,11 @@ model = deriveV2Model(state);
 assert.equal(model.nextActionCode, 'TREATMENT_REVIEW');
 assert.equal(model.treatments[0].reviewableCount, 1, 'No-deadline components remain manually reviewable.');
 
+const lockedWorkspace = treatmentWorkspace({ ...model, nextActionCode:'TRIAGE' }, { activeTreatmentId:'trt_1', error:'' });
+assert.match(lockedWorkspace,/Somente consulta neste momento/);
+assert.doesNotMatch(lockedWorkspace,/data-v2-review-component=/,'A treatment workspace must not expose review mutations while another contiguous workflow is active.');
+assert.doesNotMatch(lockedWorkspace,/data-v2-treatment-action=/,'A treatment workspace must not expose start/resume/review/final mutations while continuity is locked.');
+
 state.treatmentComponents[0].status = 'COMPLETED';
 state.treatmentComponents[0].completedAt = '2026-09-06T01:10:00.000Z';
 model = deriveV2Model(state);
