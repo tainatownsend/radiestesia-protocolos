@@ -21,7 +21,7 @@ function breathingStep() {
       <div>
         <p class="v2-eyebrow">Respiração e presença</p>
         <h3>Chegue antes de começar</h3>
-        <p class="v2-copy">Faça uma breve pausa e confirme que você está presente e pronta para conduzir o atendimento.</p>
+        <p class="v2-copy">Faça uma breve pausa e confirme que você está presente para conduzir o atendimento.</p>
       </div>
       <div class="v2-inline-note">
         <strong>Sem formulário</strong>
@@ -37,7 +37,7 @@ function frequencyStep(prep) {
       <div>
         <p class="v2-eyebrow">Frequência do terapeuta</p>
         <h3>Como está sua frequência agora?</h3>
-        <p class="v2-copy">A sessão terapêutica pode continuar a partir de 400 Hz. A explicação de bloqueio só aparece se o valor estiver abaixo do mínimo.</p>
+        <p class="v2-copy">A sessão terapêutica pode continuar a partir de 400 Hz. Se a medição estiver abaixo do mínimo, o Fluxa orientará o próximo passo.</p>
       </div>
       <label class="v2-field">
         <span>Frequência vibracional</span>
@@ -56,7 +56,7 @@ function protectionStep(prep) {
       <div>
         <p class="v2-eyebrow">Proteção</p>
         <h3>Qual proteção está ativa?</h3>
-        <p class="v2-copy">Registre somente o que precisa ficar associado a esta sessão. A seleção direta do Acervo será conectada na próxima etapa da migração.</p>
+        <p class="v2-copy">Registre o recurso ou proteção que precisa ficar associado a esta sessão.</p>
       </div>
       <label class="v2-field">
         <span>Proteção / recurso utilizado</span>
@@ -75,7 +75,7 @@ function permissionStep(prep) {
       <div>
         <p class="v2-eyebrow">Permissão</p>
         <h3 id="v2-prep-summary">Confirme antes de atender</h3>
-        <p class="v2-copy">Revise o essencial uma vez. Não repetimos a mesma informação em cards separados.</p>
+        <p class="v2-copy">Revise o essencial uma vez antes de iniciar o atendimento.</p>
       </div>
       <div class="v2-card">
         <div class="v2-summary-row">
