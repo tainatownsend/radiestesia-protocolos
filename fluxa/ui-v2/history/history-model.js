@@ -175,7 +175,13 @@ function sessionCounts(state, session) {
     findings: findings.length,
     notes: noteEvents.length + (closingNote ? 1 : 0),
     closingNote,
-    longitudinal: longitudinal.map((item) => ({ id: item.id, title: item.title, status: item.status })),
+    longitudinal: longitudinal.map((item) => ({
+      id: item.id,
+      title: item.title,
+      status: item.status,
+      assistedEntityId: item.assistedEntityId || null,
+      assistedName: item.assistedEntityId ? assistedName(state, item.assistedEntityId) : '',
+    })),
     activeReiki: activeReiki ? {
       id: activeReiki.id,
       assistedEntityId: activeReiki.assistedEntityId,
@@ -201,18 +207,24 @@ function rawAuditEvent(event) {
   return { id: event.id, type: event.eventType, label, detail, occurredAt: event.occurredAt };
 }
 
-function treatmentGroup(state, treatmentId, events) {
+function contextualDetail(state, assistedEntityId, detail, includeAssisted) {
+  const owner = assistedEntityId ? assistedName(state, assistedEntityId) : '';
+  return includeAssisted ? [owner, detail].filter(Boolean).join(' · ') : detail;
+}
+
+function treatmentGroup(state, treatmentId, events, { includeAssisted = false } = {}) {
   const treatment = state.treatments?.find((item) => item.id === treatmentId);
   const title = treatment?.title || 'tratamento';
   const lead = highestEvent(events, TREATMENT_PRIORITY) || events.at(-1);
   const template = TREATMENT_EVENT_LABELS[lead?.eventType] || 'Tratamento {title} atualizado';
   const components = (state.treatmentComponents || []).filter((item) => item.treatmentId === treatmentId);
   const resolved = components.filter((item) => ['COMPLETED', 'STOPPED', 'REPLACED'].includes(item.status)).length;
+  const progress = components.length ? `${resolved} de ${components.length} componentes resolvidos` : '';
   return {
     id: `treatment:${treatmentId}`,
     kind: 'treatment',
     title: template.replace('{title}', title),
-    detail: components.length ? `${resolved} de ${components.length} componentes resolvidos` : '',
+    detail: contextualDetail(state, treatment?.assistedEntityId, progress, includeAssisted),
     occurredAt: lead?.occurredAt || events.at(-1)?.occurredAt,
     relatedCount: Math.max(0, events.length - 1),
     audit: events.map(rawAuditEvent),
@@ -220,14 +232,17 @@ function treatmentGroup(state, treatmentId, events) {
   };
 }
 
-function plannedTreatmentGroup(state, treatment) {
+function plannedTreatmentGroup(state, treatment, { includeAssisted = false } = {}) {
   const components = (state.treatmentComponents || []).filter((item) => item.treatmentId === treatment.id);
   const occurredAt = treatment.plannedAt || treatment.createdAt || treatment.updatedAt;
+  const composition = components.length
+    ? `${components.length} componente${components.length === 1 ? '' : 's'} preparado${components.length === 1 ? '' : 's'}`
+    : 'Composição salva para iniciar depois';
   return {
     id: `treatment-planned:${treatment.id}`,
     kind: 'treatment',
     title: `Tratamento ${treatment.title || 'sem nome'} planejado`,
-    detail: components.length ? `${components.length} componente${components.length === 1 ? '' : 's'} preparado${components.length === 1 ? '' : 's'}` : 'Composição salva para iniciar depois',
+    detail: contextualDetail(state, treatment.assistedEntityId, composition, includeAssisted),
     occurredAt,
     relatedCount: 0,
     audit: [{
@@ -241,17 +256,18 @@ function plannedTreatmentGroup(state, treatment) {
   };
 }
 
-function investigationGroup(state, investigationId, events) {
+function investigationGroup(state, investigationId, events, { includeAssisted = false } = {}) {
   const investigation = state.investigations?.find((item) => item.id === investigationId);
   const lead = highestEvent(events, INVESTIGATION_PRIORITY) || events.at(-1);
   const label = EVENT_LABELS[lead?.eventType] || 'Investigação atualizada';
   const yesCount = (investigation?.answers || []).filter((item) => item.answer === 'YES').length;
   const protocol = investigation?.protocolSnapshot?.name || lead?.metadata?.protocolName || 'Investigação';
+  const result = investigation?.status === 'COMPLETED' ? `${yesCount} resposta${yesCount === 1 ? '' : 's'} positiva${yesCount === 1 ? '' : 's'}` : '';
   return {
     id: `investigation:${investigationId}`,
     kind: 'investigation',
     title: `${label} · ${protocol}`,
-    detail: investigation?.status === 'COMPLETED' ? `${yesCount} resposta${yesCount === 1 ? '' : 's'} positiva${yesCount === 1 ? '' : 's'}` : '',
+    detail: contextualDetail(state, investigation?.assistedEntityId || lead?.assistedEntityId, result, includeAssisted),
     occurredAt: lead?.occurredAt || events.at(-1)?.occurredAt,
     relatedCount: Math.max(0, events.length - 1),
     audit: events.map(rawAuditEvent),
@@ -277,6 +293,8 @@ function reikiGroup(state, reikiId, events) {
 }
 
 export function narrativeForSession(state, sessionId) {
+  const session = (state.sessions || []).find((item) => item.id === sessionId) || { id: sessionId };
+  const includeAssisted = sessionAssistedIds(state, session).length > 1;
   const sessionEvents = (state.events || []).filter((event) => event.sessionId === sessionId).sort(byTimeAsc);
   const groups = new Map();
   const singles = [];
@@ -302,11 +320,12 @@ export function narrativeForSession(state, sessionId) {
       return;
     }
     const raw = rawAuditEvent(event);
+    const owner = event.assistedEntityId ? assistedName(state, event.assistedEntityId) : '';
     singles.push({
       id: raw.id || `event:${index}`,
       kind: 'event',
       title: raw.label,
-      detail: raw.detail || (event.assistedEntityId ? assistedName(state, event.assistedEntityId) : ''),
+      detail: includeAssisted && owner ? [owner, raw.detail].filter(Boolean).join(' · ') : (raw.detail || owner),
       occurredAt: raw.occurredAt,
       relatedCount: 0,
       audit: [raw],
@@ -314,14 +333,14 @@ export function narrativeForSession(state, sessionId) {
   });
 
   const summarized = [...groups.values()].map((group) => {
-    if (group.kind === 'treatment') return treatmentGroup(state, group.id, group.events);
-    if (group.kind === 'investigation') return investigationGroup(state, group.id, group.events);
+    if (group.kind === 'treatment') return treatmentGroup(state, group.id, group.events, { includeAssisted });
+    if (group.kind === 'investigation') return investigationGroup(state, group.id, group.events, { includeAssisted });
     return reikiGroup(state, group.id, group.events);
   });
   const groupedTreatmentIds = new Set([...groups.values()].filter((group) => group.kind === 'treatment').map((group) => group.id));
   const plannedOnly = (state.treatments || [])
     .filter((treatment) => treatment.plannedInSessionId === sessionId && !groupedTreatmentIds.has(treatment.id))
-    .map((treatment) => plannedTreatmentGroup(state, treatment));
+    .map((treatment) => plannedTreatmentGroup(state, treatment, { includeAssisted }));
   return [...summarized, ...plannedOnly, ...singles].sort((a, b) => String(a.occurredAt || '').localeCompare(String(b.occurredAt || '')));
 }
 
