@@ -1,6 +1,7 @@
 import {
   AssistedType,
   answerInvestigation,
+  closeSession,
   confirmFindings,
   createAssistedEntity,
   getOpenSession,
@@ -150,6 +151,7 @@ function linkTreatmentDetails(store, treatmentId, input) {
     target.findingIds = findingIds;
     target.modalities = ['RADIESTHESIA', ...selected.map((item) => item.id)];
     target.modalitySnapshots = [{ id: 'RADIESTHESIA', label: 'Radiestesia' }, ...selected.map((item) => ({ id: item.id, label: item.label || item.id }))];
+    target.plannedInSessionId = input.sessionId || target.plannedInSessionId || null;
     target.updatedAt = store.nowIso();
     return draft;
   });
@@ -172,6 +174,16 @@ export function beginSession(store) {
   const session = startSession(store);
   ensurePreparation(store);
   return session;
+}
+
+export function closeCurrentSessionV2(store, input = {}) {
+  const session = getOpenSession(store.getState());
+  if (!session) throw new Error('Não há uma sessão aberta para encerrar.');
+  const sessionId = session.id;
+  closeSession(store, sessionId, {
+    confirmation: String(input.confirmation || '').trim() || 'Procedimento de encerramento concluído',
+  });
+  return sessionId;
 }
 
 export function prepareCurrentSession(store) {
@@ -292,7 +304,7 @@ export function saveTreatmentDraft(store, input = {}, { start = false } = {}) {
   const components = store.getState().treatmentComponents.filter((item) => item.treatmentId === treatment.id);
   components.forEach((component, index) => enrichComponentWithTreatmentItem(store, component.id, items[index]));
   normalizePlannedStructuredTiming(store, treatment.id);
-  linkTreatmentDetails(store, treatment.id, input);
+  linkTreatmentDetails(store, treatment.id, { ...input, sessionId: session.id });
   if (start) startPlannedTreatmentV2(store, treatment.id);
   return treatment;
 }

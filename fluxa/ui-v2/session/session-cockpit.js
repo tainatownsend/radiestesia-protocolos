@@ -73,6 +73,10 @@ export function sessionCockpit(model) {
           <button class="v2-btn" type="button" data-v2-preview-action="reiki" ${prerequisitesReady && (model.reikiEnabled || model.reiki) ? '' : 'disabled'}>Reiki</button>
         </div>
       </section>
+
+      <section class="v2-session-close-row">
+        <button class="v2-btn v2-btn--ghost" type="button" data-v2-preview-action="close-session">Revisar e encerrar sessão</button>
+      </section>
     </div>
   `;
 }
