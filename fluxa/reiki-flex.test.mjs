@@ -113,9 +113,12 @@ completeFlexibleReiki(store,sessionApp.id,'sessão alinhada');
 
 store.setState((state)=>{
   const draft=structuredClone(state);
+  const linkedSession=draft.sessions.find((item)=>item.id===session.id);
+  linkedSession.status='CLOSED';
+  linkedSession.closedAt='2026-09-06T10:30:00.000Z';
   draft.reikiApplications.push({
     id:'reiki_stale',
-    sessionId:'ses_missing',
+    sessionId:session.id,
     assistedEntityId:sessionOwner.id,
     mode:ReikiMode.DISTANCE,
     status:'RUNNING',
@@ -131,15 +134,15 @@ store.setState((state)=>{
 });
 completeFlexibleReiki(store,'reiki_stale','recuperado após sessão antiga');
 const stale=store.getState().reikiApplications.find((item)=>item.id==='reiki_stale');
-assert.equal(stale.status,'CANCELED','stale session-bound Reiki must be canceled, never falsely completed');
+assert.equal(stale.status,'CANCELED','closed-session Reiki must be canceled, never falsely completed');
 assert.ok(stale.endedAt,'recovery must close the stale application');
 assert.ok(Number.isFinite(stale.durationSeconds),'recovery must preserve a duration snapshot');
 assert.equal(stale.notes,'recuperado após sessão antiga');
 const recoveryEvent=store.getState().events.find((e)=>e.eventType==='REIKI_CANCELED' && e.entityId==='reiki_stale');
 assert.ok(recoveryEvent,'recovery must append an auditable cancellation event');
-assert.equal(recoveryEvent.sessionId,'ses_missing','recovery must preserve the original session reference');
+assert.equal(recoveryEvent.sessionId,session.id,'recovery must preserve the original session reference');
 assert.equal(recoveryEvent.metadata.recovery,true);
 assert.equal(recoveryEvent.metadata.staleSessionContext,true);
-assert.equal(store.getState().sessions.find((item)=>item.id===session.id).status,'OPEN','recovering an orphan Reiki record must not alter an unrelated open session');
+assert.equal(store.getState().sessions.find((item)=>item.id===session.id).status,'CLOSED','recovering stale Reiki must not reopen or alter the closed session');
 
 console.log('reiki-flex.test.mjs: ok');
