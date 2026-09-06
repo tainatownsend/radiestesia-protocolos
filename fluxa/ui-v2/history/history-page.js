@@ -72,6 +72,8 @@ function sessionDetail(session) {
 
       ${session.longitudinal?.length ? `<section class="v2-card v2-card--soft"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${esc(item.title)} · ${esc(treatmentStatusLabel(item.status))}</span>`).join('')}</div></section>` : ''}
 
+      ${session.closingNote ? `<section class="v2-card v2-card--soft v2-history-closing-note"><p class="v2-eyebrow">Nota de encerramento</p><p class="v2-copy">${esc(session.closingNote)}</p></section>` : ''}
+
       <section class="v2-section">
         <div class="v2-section-head"><div><p class="v2-eyebrow">Histórico narrativo</p><h2>Linha do tempo</h2></div></div>
         ${narrative(session)}
