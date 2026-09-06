@@ -57,4 +57,15 @@ assert.equal((reikiHtml.match(/class="v2-session-indicator"/g) || []).length, 3,
 assert.match(reikiHtml, /Acompanhar Reiki/,'Active Reiki remains visible through the primary recommendation instead of adding a layout-shifting KPI.');
 assert.doesNotMatch(reikiHtml, /Ações da sessão/,'Active Reiki must not compete with new investigation/treatment actions.');
 
+const reikiContextHtml = sessionCockpit({
+  ...baseModel,
+  assistedName:'João',
+  nextAction:'Voltar para Marina',
+  nextActionCode:'REIKI_CONTEXT',
+  nextReason:'Há uma aplicação vinculada a Marina.',
+  reiki:{ status:'PAUSED', assistedName:'Marina', modeLabel:'Sessão' },
+});
+assert.match(reikiContextHtml, /Voltar para Marina/);
+assert.doesNotMatch(reikiContextHtml, /Ações da sessão/,'Reiki context recovery must stay the single guided action until the correct assisted is restored.');
+
 console.log('ui-v2-session-cockpit.test.mjs: ok');
