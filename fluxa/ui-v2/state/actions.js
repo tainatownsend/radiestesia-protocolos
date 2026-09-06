@@ -1,6 +1,7 @@
 import {
   AssistedType,
   answerInvestigation,
+  closeSession,
   confirmFindings,
   createAssistedEntity,
   getOpenSession,
@@ -172,6 +173,16 @@ export function beginSession(store) {
   const session = startSession(store);
   ensurePreparation(store);
   return session;
+}
+
+export function closeCurrentSessionV2(store, input = {}) {
+  const session = getOpenSession(store.getState());
+  if (!session) throw new Error('Não há uma sessão aberta para encerrar.');
+  const sessionId = session.id;
+  closeSession(store, sessionId, {
+    confirmation: String(input.confirmation || '').trim() || 'Procedimento de encerramento concluído',
+  });
+  return sessionId;
 }
 
 export function prepareCurrentSession(store) {
