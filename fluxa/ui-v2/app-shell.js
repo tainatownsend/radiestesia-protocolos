@@ -1,5 +1,8 @@
 import { findingsSummary } from './investigation/findings-summary.js';
 import { triageFlow } from './investigation/triage-flow.js';
+import { historyPage } from './history/history-page.js';
+import { closingFlow } from './session/closing-flow.js';
+import { postCloseSummary } from './session/post-close-summary.js';
 import { assistedPicker } from './session/assisted-picker.js';
 import { hawkinsFlow } from './session/hawkins-flow.js';
 import { preparationFlow } from './session/preparation-flow.js';
@@ -26,10 +29,9 @@ function esc(value = '') {
 
 function placeholder(route) {
   const labels = {
-    history: ['Histórico', 'Narrativa da evolução + auditoria sob demanda'],
     library: ['Acervo', 'Assistidos, protocolos, gráficos, recursos e terapias'],
   };
-  const [title, copy] = labels[route] || labels.history;
+  const [title, copy] = labels[route] || labels.library;
   return `
     <section class="v2-section">
       <p class="v2-eyebrow">Fluxa UI V2</p>
@@ -54,6 +56,7 @@ function sheetMarkup(model, ui) {
   if (ui.sheet === 'treatment-review') return treatmentReview(model, ui);
   if (ui.sheet === 'final-assessment') return finalAssessment(model, ui);
   if (ui.sheet === 'reiki') return reikiWorkspace(model, ui);
+  if (ui.sheet === 'closing') return closingFlow(model, ui);
   return '';
 }
 
@@ -61,10 +64,17 @@ export function renderAppShell(model, ui) {
   const route = ui.route || 'today';
   const currentContext = model.sessionOpen
     ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
-    : 'Sem sessão';
-  const content = route === 'today'
-    ? sessionCockpit(model)
-    : (route === 'treatments' ? treatmentPage(model) : placeholder(route));
+    : (ui.justClosedSessionId ? 'Sessão encerrada' : 'Sem sessão');
+  let content;
+  if (route === 'today') {
+    content = ui.justClosedSessionId ? postCloseSummary(model, ui.justClosedSessionId) : sessionCockpit(model);
+  } else if (route === 'treatments') {
+    content = treatmentPage(model);
+  } else if (route === 'history') {
+    content = historyPage(model, ui);
+  } else {
+    content = placeholder(route);
+  }
 
   const nav = ROUTES.map(([id, label]) => `
     <button type="button" data-v2-route="${id}" ${route === id ? 'aria-current="page"' : ''}>${label}</button>
