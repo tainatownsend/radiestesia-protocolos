@@ -12,7 +12,9 @@ function metric(label, value, detail = '') {
 export function closingFlow(model, ui) {
   const summary = model.safeClose;
   if (!summary) return '';
-  const blocker = summary.activeReiki;
+  const reikiBlocker = summary.activeReiki;
+  const openInvestigationCount = Math.max(0, Number(summary.investigationOpened || 0) - Number(summary.investigationCompleted || 0));
+  const hasBlocker = Boolean(reikiBlocker || openInvestigationCount);
   const body = `
     <div class="v2-closing-review">
       <section class="v2-card v2-card--soft v2-close-context">
@@ -37,11 +39,17 @@ export function closingFlow(model, ui) {
         <section class="v2-close-section v2-close-all-clear"><strong>Nenhum tratamento longitudinal pendente</strong><span>O trabalho registrado nesta sessão permanece no Histórico.</span></section>
       `}
 
-      ${blocker ? `
-        <div class="v2-inline-error" role="alert"><strong>Reiki ainda está ${blocker.status === 'PAUSED' ? 'pausado' : 'em andamento'}</strong><span>Conclua a aplicação de ${esc(blocker.assistedName)} antes de encerrar a sessão.</span></div>
-      ` : `
-        <div class="v2-close-ready"><span aria-hidden="true">✓</span><div><strong>Pronto para encerrar</strong><p>Não há aplicação de Reiki bloqueando o fechamento.</p></div></div>
-      `}
+      ${reikiBlocker ? `
+        <div class="v2-inline-error" role="alert"><strong>Reiki ainda está ${reikiBlocker.status === 'PAUSED' ? 'pausado' : 'em andamento'}</strong><span>Conclua a aplicação de ${esc(reikiBlocker.assistedName)} antes de encerrar a sessão.</span></div>
+      ` : ''}
+
+      ${openInvestigationCount ? `
+        <div class="v2-inline-error" role="alert"><strong>${openInvestigationCount === 1 ? 'Há uma investigação em andamento' : `Há ${openInvestigationCount} investigações em andamento`}</strong><span>Conclua a investigação aberta antes de encerrar para não perder a continuidade do atendimento.</span></div>
+      ` : ''}
+
+      ${!hasBlocker ? `
+        <div class="v2-close-ready"><span aria-hidden="true">✓</span><div><strong>Pronto para encerrar</strong><p>Não há investigação nem aplicação de Reiki bloqueando o fechamento.</p></div></div>
+      ` : ''}
 
       <label class="v2-field">
         <span>Confirmação / nota de encerramento <small>(opcional)</small></span>
@@ -50,17 +58,29 @@ export function closingFlow(model, ui) {
     </div>
   `;
 
-  return mobileSheet({
-    eyebrow: 'Revisão da sessão',
-    title: blocker ? 'Há uma ação pendente' : 'Encerrar sessão',
-    body,
-    error: ui.error,
-    footerHtml: blocker ? `
+  let footerHtml;
+  if (reikiBlocker) {
+    footerHtml = `
       <button class="v2-btn v2-btn--ghost" type="button" data-v2-close-sheet>Voltar</button>
       <button class="v2-btn v2-btn--primary" type="button" data-v2-closing-reiki>Concluir Reiki primeiro</button>
-    ` : `
+    `;
+  } else if (openInvestigationCount) {
+    footerHtml = `
+      <span aria-hidden="true"></span>
+      <button class="v2-btn v2-btn--primary" type="button" data-v2-close-sheet>Voltar à sessão</button>
+    `;
+  } else {
+    footerHtml = `
       <button class="v2-btn v2-btn--ghost" type="button" data-v2-close-sheet>Cancelar</button>
       <button class="v2-btn v2-btn--primary" type="button" data-v2-primary>Encerrar sessão</button>
-    `,
+    `;
+  }
+
+  return mobileSheet({
+    eyebrow: 'Revisão da sessão',
+    title: hasBlocker ? 'Há ações pendentes' : 'Encerrar sessão',
+    body,
+    error: ui.error,
+    footerHtml,
   });
 }
