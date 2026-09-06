@@ -11,7 +11,7 @@ import {
   startSession,
   togglePreparationStep,
 } from '../../domain.js';
-import { recordHawkinsBaseline } from '../../hawkins-measurement.js';
+import { recordHawkinsBaseline, requireHawkinsBaseline } from '../../hawkins-measurement.js';
 import { completeStructuredPreparation, updatePreparationDetails } from '../../structured-preparation.js';
 import { createPlannedTreatment, startPlannedTreatment } from '../../treatment-planning.js';
 import { enrichComponentWithTreatmentItem, graphExpectedEndAt } from '../../treatment-item-graphs.js';
@@ -75,6 +75,15 @@ function composerItems(input = {}) {
       throw new Error(`Cada comando de “${itemLabel}” precisa de pelo menos um gráfico.`);
     }
     return { itemLabel, commands };
+  });
+}
+
+function preflightImmediateTreatmentStart(state, session) {
+  const prepared = (state.preparationRuns || []).some((run) => run.sessionId === session.id && run.status === 'COMPLETED');
+  if (!prepared) throw new Error('Conclua a preparação da sessão antes de iniciar o tratamento.');
+  requireHawkinsBaseline(state, {
+    sessionId: session.id,
+    assistedEntityId: session.currentAssistedEntityId,
   });
 }
 
@@ -270,6 +279,7 @@ export function saveTreatmentDraft(store, input = {}, { start = false } = {}) {
   const session = getOpenSession(state);
   if (!session?.currentAssistedEntityId) throw new Error('Selecione o Assistido antes de compor o tratamento.');
   const items = composerItems(input);
+  if (start) preflightImmediateTreatmentStart(state, session);
   const treatment = createPlannedTreatment(store, {
     assistedEntityId: session.currentAssistedEntityId,
     title: String(input.title || '').trim(),
