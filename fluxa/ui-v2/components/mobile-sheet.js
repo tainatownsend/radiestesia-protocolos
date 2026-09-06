@@ -38,18 +38,25 @@ export function mobileSheet({
   `;
 }
 
+function focusableIn(sheet) {
+  return [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+}
+
 export function focusSheet(root) {
   const sheet = root.querySelector('.v2-sheet');
   if (!sheet) return;
-  const focusable = [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
-  focusable[0]?.focus({ preventScroll: true });
+  const preferred = sheet.querySelector('[data-v2-autofocus]')
+    || sheet.querySelector('.v2-sheet__body input:not([disabled]), .v2-sheet__body select:not([disabled]), .v2-sheet__body textarea:not([disabled]), .v2-sheet__body button:not([disabled])')
+    || sheet.querySelector('[data-v2-primary]')
+    || focusableIn(sheet)[0];
+  preferred?.focus({ preventScroll: true });
 }
 
 export function trapSheetFocus(event, root) {
   if (event.key !== 'Tab') return;
   const sheet = root.querySelector('.v2-sheet');
   if (!sheet) return;
-  const focusable = [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+  const focusable = focusableIn(sheet);
   if (!focusable.length) return;
   const first = focusable[0];
   const last = focusable.at(-1);
