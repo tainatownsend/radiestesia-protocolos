@@ -1,9 +1,28 @@
 import { mobileSheet } from '../components/mobile-sheet.js';
 
+const ASSISTED_TYPE_LABELS = Object.freeze({
+  PERSON: 'Pessoa',
+  PET: 'PET',
+  ENVIRONMENT: 'Ambiente',
+  GROUP: 'Grupo',
+  SITUATION: 'Situação / Processo',
+  OTHER: 'Outro',
+});
+
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
   }[c]));
+}
+
+function searchKey(value = '') {
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+}
+
+function assistedSearchText(name = '') {
+  const original = String(name).toLocaleLowerCase('pt-BR').trim();
+  const normalized = searchKey(name);
+  return original === normalized ? original : `${original}|${normalized}`;
 }
 
 export function assistedPicker(model, ui = {}) {
@@ -42,10 +61,10 @@ export function assistedPicker(model, ui = {}) {
   }
 
   const options = (model.assistedOptions || []).map((item) => `
-    <button class="v2-select-row" type="button" data-v2-select-assisted="${esc(item.id)}" data-v2-assisted-search="${esc(item.name.toLowerCase())}">
+    <button class="v2-select-row" type="button" data-v2-select-assisted="${esc(item.id)}" data-v2-assisted-search="${esc(assistedSearchText(item.name))}">
       <span>
         <strong>${esc(item.name)}</strong>
-        <small>${esc(item.type || 'Assistido')}</small>
+        <small>${esc(ASSISTED_TYPE_LABELS[item.type] || 'Assistido')}</small>
       </span>
       <span aria-hidden="true">›</span>
     </button>
