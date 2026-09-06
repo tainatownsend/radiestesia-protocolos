@@ -50,6 +50,8 @@ assert.match(css, /--v2-visual-viewport-offset-top/);
 assert.match(css, /top:\s*var\(--v2-visual-viewport-offset-top/);
 assert.match(css, /data-v2-keyboard-open="true"/);
 assert.match(css, /font-size:\s*16px/);
+assert.match(css, /\.v2-field input,\s*\.v2-field select,\s*\.v2-library-search input\[type="search"\]\s*\{\s*min-height:\s*52px;/s,'Mobile controls must share one stable touch height across feature surfaces.');
+assert.match(css, /\.v2-field textarea\s*\{\s*min-height:\s*96px;/s,'Mobile textareas must share one stable geometry across feature surfaces.');
 assert.match(css, /body\[data-v2-sheet-open="true"\]\s*\{\s*touch-action:\s*auto;/s);
 assert.match(css, /\.v2-sheet__body\s*\{\s*touch-action:\s*pan-y;/s);
 assert.doesNotMatch(css, /body\[data-v2-sheet-open="true"\][^{]*\{[^}]*touch-action:\s*none/s);
