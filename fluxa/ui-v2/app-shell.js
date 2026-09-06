@@ -25,6 +25,15 @@ const ROUTES = [
   ['library', 'Acervo'],
 ];
 
+const CONTEXT_LOCK_ACTIONS = new Set([
+  'TRIAGE',
+  'FINDINGS',
+  'REIKI_CONTEXT',
+  'REIKI_ACTIVE',
+  'TREATMENT_REVIEW',
+  'TREATMENT_FINAL',
+]);
+
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -70,6 +79,10 @@ export function renderAppShell(sourceModel, sourceUi) {
   const currentContext = model.sessionOpen
     ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
     : (ui.justClosedSessionId ? 'Sessão encerrada' : 'Sem sessão');
+  const contextChangeLocked = CONTEXT_LOCK_ACTIONS.has(model.nextActionCode);
+  const contextControl = model.source === 'live' && model.sessionOpen
+    ? `<button class="v2-context-chip v2-context-chip--button" type="button" data-v2-preview-action="change-assisted" aria-label="Trocar Assistido · ${esc(currentContext)}" ${contextChangeLocked ? 'disabled' : ''}>${esc(currentContext)}</button>`
+    : `<span class="v2-context-chip">${esc(currentContext)}</span>`;
   let content;
   if (route === 'today') {
     content = ui.justClosedSessionId ? postCloseSummary(model, ui.justClosedSessionId) : sessionCockpit(model);
@@ -93,7 +106,7 @@ export function renderAppShell(sourceModel, sourceUi) {
           <span>${model.source === 'live' ? 'Sessão guiada' : 'Preview seguro'}</span>
         </div>
         <div class="v2-header-actions">
-          <span class="v2-context-chip">${esc(currentContext)}</span>
+          ${contextControl}
           <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações" ${model.source === 'live' ? '' : 'disabled'}>Ajustes</button>
         </div>
       </header>
