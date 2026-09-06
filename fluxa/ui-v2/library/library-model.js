@@ -1,4 +1,6 @@
+import { STARTER_GRAPHS } from '../../graph-starter-catalog.js';
 import { PROTOCOL_LIBRARY } from '../../protocol-engine.js';
+import { ROOT_PROTOCOL_METADATA } from './root-protocol-metadata.js';
 
 const TYPE_LABELS = Object.freeze({
   PERSON: 'Pessoa',
@@ -22,6 +24,14 @@ const MODALITY_LABELS = Object.freeze({
   RADIONIC_TABLE: 'Mesa radiônica',
 });
 
+function normalizeKey(value = '') {
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+}
+
+function slug(value = '') {
+  return normalizeKey(value).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
 function therapeuticSettings(state) {
   const raw = state.settings?.therapeuticModalities || {};
   return {
@@ -30,22 +40,49 @@ function therapeuticSettings(state) {
   };
 }
 
-function protocols(state) {
-  const builtIn = (PROTOCOL_LIBRARY || []).map((item, index) => ({
-    id: String(item.id || item.protocolId || item.slug || `protocol-${index}`),
-    name: item.name || 'Protocolo',
-    category: item.category || 'Fluxa',
-    description: item.description || '',
-    source: 'Fluxa',
-  }));
-  const custom = (state.customProtocols || []).filter((item) => !item.archivedAt).map((item, index) => ({
-    id: String(item.id || `custom-${index}`),
+function builtInProtocols() {
+  const canonical = [
+    ...(PROTOCOL_LIBRARY || []).map((item, index) => ({
+      id: String(item.id || item.protocolId || item.slug || `protocol-${index}`),
+      name: item.name || 'Protocolo',
+      category: item.category || 'Fluxa',
+      description: item.description || '',
+      source: 'Fluxa',
+    })),
+    ...ROOT_PROTOCOL_METADATA,
+  ];
+  const unique = new Map();
+  for (const item of canonical) {
+    const key = normalizeKey(item.name || item.id);
+    if (!unique.has(key)) unique.set(key, item);
+  }
+  return [...unique.values()];
+}
+
+function latestCustomProtocols(state) {
+  const latest = new Map();
+  (state.customProtocols || []).forEach((item, index) => {
+    if (item.archivedAt) return;
+    const identity = item.protocolKey ? `protocol:${item.protocolKey}` : `record:${item.id || index}`;
+    const current = latest.get(identity);
+    const version = Number(item.version) || 0;
+    const currentVersion = Number(current?.version) || 0;
+    if (!current || version > currentVersion || (version === currentVersion && String(item.createdAt || '') > String(current.createdAt || ''))) {
+      latest.set(identity, item);
+    }
+  });
+  return [...latest.values()].map((item, index) => ({
+    id: String(item.id || item.versionId || item.protocolKey || `custom-${index}`),
     name: item.name || item.title || 'Protocolo personalizado',
     category: item.category || 'Personalizado',
     description: item.description || item.notes || '',
     source: 'Personalizado',
   }));
-  return [...builtIn, ...custom].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+}
+
+function protocols(state) {
+  return [...builtInProtocols(), ...latestCustomProtocols(state)]
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 }
 
 function therapies(state) {
@@ -55,6 +92,46 @@ function therapies(state) {
     ...configured.enabled.map((id) => ({ id, label: MODALITY_LABELS[id] || id, base: false })),
     ...configured.custom.map((label, index) => ({ id: `CUSTOM_${index}`, label, base: false })),
   ];
+}
+
+function resources(state) {
+  const stored = Array.isArray(state.tools) ? state.tools : [];
+  const archivedNames = new Set(stored
+    .filter((item) => item.archivedAt || item.status === 'ARCHIVED')
+    .map((item) => normalizeKey(item.name || ''))
+    .filter(Boolean));
+  const byName = new Map();
+
+  for (const name of STARTER_GRAPHS) {
+    const key = normalizeKey(name);
+    if (archivedNames.has(key)) continue;
+    byName.set(key, {
+      id: `starter_graph_${slug(name)}`,
+      name,
+      type: 'GRAPH',
+      typeLabel: TOOL_LABELS.GRAPH,
+      purpose: '',
+      tags: [],
+      starterGraph: true,
+    });
+  }
+
+  for (const item of stored) {
+    if (item.archivedAt || item.status === 'ARCHIVED') continue;
+    const mapped = {
+      id: item.id,
+      name: item.name || 'Recurso',
+      type: item.type || 'OTHER',
+      typeLabel: TOOL_LABELS[item.type] || 'Recurso',
+      purpose: item.purpose || item.notes || '',
+      tags: Array.isArray(item.tags) ? item.tags : [],
+      starterGraph: Boolean(item.starterGraph),
+    };
+    byName.set(normalizeKey(mapped.name), mapped);
+  }
+
+  return [...byName.values()]
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'));
 }
 
 export function deriveLibraryModel(state) {
@@ -70,30 +147,19 @@ export function deriveLibraryModel(state) {
       details: item.details || '',
     }));
 
-  const resources = (state.tools || [])
-    .filter((item) => !item.archivedAt && item.status !== 'ARCHIVED')
-    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR'))
-    .map((item) => ({
-      id: item.id,
-      name: item.name || 'Recurso',
-      type: item.type || 'OTHER',
-      typeLabel: TOOL_LABELS[item.type] || 'Recurso',
-      purpose: item.purpose || item.notes || '',
-      tags: Array.isArray(item.tags) ? item.tags : [],
-    }));
-
+  const resourceItems = resources(state);
   const protocolItems = protocols(state);
   const therapyItems = therapies(state);
   return {
     therapeuticSettings: therapeuticSettings(state),
     library: {
       assisteds,
-      resources,
+      resources: resourceItems,
       protocols: protocolItems,
       therapies: therapyItems,
       counts: {
         assisteds: assisteds.length,
-        resources: resources.length,
+        resources: resourceItems.length,
         protocols: protocolItems.length,
         therapies: therapyItems.length,
       },
