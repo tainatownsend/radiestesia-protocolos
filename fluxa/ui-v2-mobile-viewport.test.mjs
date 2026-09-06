@@ -57,8 +57,9 @@ assert.match(css, /\.v2-question\s*\{\s*min-height:\s*0;/s);
 assert.match(css, /\.v2-file-button:focus-within/);
 assert.match(css, /\.v2-history-event__dot::before/);
 assert.match(css, /\.v2-history-event__dot::after\s*\{[^}]*bottom:\s*0;[^}]*height:\s*auto;/s);
-assert.match(css, /@media \(max-width: 390px\)/);
+assert.match(css, /@media \(max-width: 430px\)/);
 assert.match(css, /\.v2-sheet__footer\s*\{\s*grid-template-columns:\s*1fr;/s);
+assert.doesNotMatch(css, /@media \(max-width: 390px\)[\s\S]*\.v2-sheet__footer/);
 assert.match(css, /scroll-padding-bottom/);
 
 console.log('ui-v2-mobile-viewport.test.mjs: ok');
