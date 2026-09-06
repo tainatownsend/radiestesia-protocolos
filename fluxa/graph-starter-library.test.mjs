@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { STARTER_GRAPHS } from './graph-starter-catalog.js';
 const root=new URL('.',import.meta.url);
 const starter=fs.readFileSync(new URL('./graph-starter-library.js',root),'utf8');
 const form=fs.readFileSync(new URL('./treatment-create-ui.js',root),'utf8');
@@ -7,7 +8,10 @@ const management=fs.readFileSync(new URL('./treatment-item-management-ui.js',roo
 const prefill=fs.readFileSync(new URL('./root-treatment-prefill-ui.js',root),'utf8');
 const css=fs.readFileSync(new URL('./treatment-item-graphs.css',root),'utf8');
 const html=fs.readFileSync(new URL('./index.html',root),'utf8');
-for(const name of ['Prosperador','Luxor','Scap','Neutralize','Flor da Vida','Abundância Financeira','Forma Yave','Escudo Bouclier'])assert.ok(starter.includes(name),`Starter library should include ${name}.`);
+for(const name of ['Prosperador','Luxor','Scap','Neutralize','Flor da Vida','Abundância Financeira','Forma Yave','Escudo Bouclier'])assert.ok(STARTER_GRAPHS.includes(name),`Starter catalog should include ${name}.`);
+assert.ok(STARTER_GRAPHS.length>=60,'Starter graph catalog should preserve the established library breadth.');
+assert.equal(new Set(STARTER_GRAPHS.map((name)=>name.toLocaleLowerCase('pt-BR'))).size,STARTER_GRAPHS.length,'Starter graph catalog should not contain duplicate names.');
+assert.match(starter,/graph-starter-catalog\.js/,'Persistent graph seeding should consume the shared pure catalog.');
 assert.match(starter,/type:'GRAPH'/);
 assert.match(starter,/tags:\[\]/,'Starter graphs must not impose categories yet.');
 assert.match(form,/data-treatment-item/);
@@ -24,4 +28,4 @@ assert.match(css,/contain:layout paint/,'Question panel should keep a stable lay
 assert.ok(html.indexOf('treatment-item-graphs.css')<html.indexOf('brand-shell.css'),'Treatment graph CSS must preserve the final brand shell authority.');
 assert.ok(html.includes('graph-starter-library.js'));
 assert.ok(html.includes('treatment-item-management-ui.js'));
-console.log('graph-starter-library.test.mjs: ok');
+console.log(`graph-starter-library.test.mjs: ok (${STARTER_GRAPHS.length} starter graphs)`);
