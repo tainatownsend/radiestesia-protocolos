@@ -16,6 +16,7 @@ assert.match(prepHtml,/Registre o recurso ou proteção/);
 
 const closeHtml = closingFlow({
   assistedName:'Marina',
+  findings:[],
   safeClose:{
     assistedNames:['Marina'],
     investigationCompleted:1,
@@ -39,6 +40,7 @@ assert.doesNotMatch(closeHtml,/>PLANNED</);
 
 const blockedCloseHtml = closingFlow({
   assistedName:'Marina',
+  findings:[],
   safeClose:{
     assistedNames:['Marina'], investigationCompleted:1, investigationOpened:2,
     treatmentsWorked:0, findings:0, notes:0, activeReiki:null, longitudinal:[],
@@ -48,6 +50,19 @@ assert.match(blockedCloseHtml,/Há uma investigação em andamento/);
 assert.match(blockedCloseHtml,/Conclua a investigação aberta antes de encerrar/);
 assert.match(blockedCloseHtml,/Voltar à sessão/);
 assert.doesNotMatch(blockedCloseHtml,/data-v2-primary>Encerrar sessão/,'Closing must not remain actionable while an investigation is still open.');
+
+const pendingFindingCloseHtml = closingFlow({
+  assistedName:'Marina',
+  findings:[{ questionId:'q1', title:'Achado pendente' }],
+  safeClose:{
+    assistedNames:['Marina'], investigationCompleted:1, investigationOpened:1,
+    treatmentsWorked:0, findings:0, notes:0, activeReiki:null, longitudinal:[],
+  },
+}, { error:'' });
+assert.match(pendingFindingCloseHtml,/Há 1 achado aguardando revisão/);
+assert.match(pendingFindingCloseHtml,/Revise os achados da investigação antes de encerrar/);
+assert.match(pendingFindingCloseHtml,/Voltar à sessão/);
+assert.doesNotMatch(pendingFindingCloseHtml,/data-v2-primary>Encerrar sessão/,'Closing must not remain actionable while positive findings are awaiting review.');
 
 const historyHtml = historyPage({ historySessions:[{
   id:'ses_1', status:'CLOSED', startedAt:'2026-09-06T10:00:00.000Z', endedAt:'2026-09-06T11:00:00.000Z',
