@@ -9,6 +9,6 @@ assert.match(source,/suggestedTreatmentCommand/,'Suggested treatment commands fr
 assert.match(source,/form\.dataset\.findings=pending\.findingIds\.join\(','\)/,'Treatment must preserve Finding → Treatment traceability.');
 assert.match(source,/\[data-treatment-items\] > \[data-treatment-item\]/,'Multiple thematic findings must become multiple treatment items.');
 assert.match(source,/form\.dataset\.thematicPrefill='true'/,'The prefilled form must expose its thematic origin.');
-assert.match(source,/Escolha ao menos um gráfico para cada comando/,'Protocol suggestions must not be written into the graph-name field.');
-assert.match(source,/Sugestões do protocolo aplicadas/,'Therapist must be told that protocol suggestions were applied and remain editable.');
+assert.match(source,/Revise os comandos e escolha um gráfico para cada um/,'Protocol suggestions must not be written into the graph-name field.');
+assert.match(source,/item preenchido/,'Therapist must be told that protocol suggestions were applied and remain editable.');
 console.log('root-treatment-prefill.test.mjs: ok');
