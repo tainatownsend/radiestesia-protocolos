@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { deriveV2Model } from './ui-v2/state/selectors.js';
+import { treatmentWorkspace } from './ui-v2/treatment/treatment-workspace.js';
 
 const base = () => ({
   sessions: [{ id:'ses_1', status:'OPEN', startedAt:'2026-09-06T01:00:00.000Z', currentAssistedEntityId:'ast_1' }],
@@ -32,6 +33,18 @@ state.treatmentComponents[0].completedAt = '2026-09-06T01:10:00.000Z';
 model = deriveV2Model(state);
 assert.equal(model.nextActionCode, 'TREATMENT_FINAL');
 assert.equal(model.treatments[0].readyForFinalAssessment, true);
+
+const completedWorkspace = treatmentWorkspace(model, { activeTreatmentId:'trt_1', error:'' });
+assert.match(completedWorkspace,/aria-label="Componente resolvido">✓</,'Resolved component visual state must derive from persisted component status.');
+assert.match(completedWorkspace,/1\/1/);
+
+const emptyWorkspace = treatmentWorkspace({ assistedName:'Marina', treatments:[{
+  id:'trt_empty', title:'Planejado', objective:'', status:'PLANNED', resolved:0, total:0,
+  primaryAction:'start', primaryLabel:'Iniciar', components:[],
+}] }, { activeTreatmentId:'trt_empty', error:'' });
+assert.match(emptyWorkspace,/aria-label="Nenhum componente registrado"/);
+assert.match(emptyWorkspace,/<strong>—<\/strong><span>componentes<\/span>/);
+assert.doesNotMatch(emptyWorkspace,/0\/0/);
 
 const reikiState = base();
 reikiState.reikiApplications.push({ id:'reiki_1', sessionId:'ses_1', assistedEntityId:'ast_1', mode:'IN_PERSON', status:'RUNNING', startedAt:'2026-09-06T01:06:00.000Z', intervals:[{id:'int_1',startedAt:'2026-09-06T01:06:00.000Z',endedAt:null}], createdAt:'2026-09-06T01:06:00.000Z', updatedAt:'2026-09-06T01:06:00.000Z' });
