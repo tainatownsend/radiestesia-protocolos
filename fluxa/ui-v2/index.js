@@ -3,6 +3,7 @@ import { createStore, loadState } from '../store.js';
 import { exportLocalDataFile, recoverLocalData, validateImportPayload } from '../storage-health.js';
 import { focusSheet, trapSheetFocus } from './components/mobile-sheet.js';
 import { renderAppShell } from './app-shell.js';
+import { setPageScrollLock } from './mobile-viewport.js';
 import {
   advancePreparation,
   answerTriage,
@@ -117,8 +118,7 @@ function render({ focusDialog = false } = {}) {
   if (liveMode) model = deriveLiveModel();
   root.innerHTML = renderAppShell(model, ui);
   document.body.dataset.v2SheetOpen = ui.sheet ? 'true' : 'false';
-  document.body.style.overflow = ui.sheet ? 'hidden' : '';
-  document.body.style.overscrollBehavior = ui.sheet ? 'none' : '';
+  setPageScrollLock(Boolean(ui.sheet), globalThis.window, document);
   if (focusDialog && ui.sheet) queueMicrotask(() => focusSheet(root));
 }
 
@@ -241,629 +241,405 @@ function performTreatmentAction(action, treatmentId, source = null) {
     } else if (action === 'resume') {
       resumeTreatmentV2(store, treatmentId);
       ui.sheet = 'treatment-workspace';
-    } else if (action === 'final') {
-      ui.sheet = 'final-assessment';
     } else if (action === 'review') {
       const treatment = treatmentById(treatmentId);
-      const component = treatment?.components?.find((item) => item.reviewable);
-      if (component) {
-        ui.reviewComponentId = component.id;
-        ui.sheet = 'treatment-review';
-      } else {
-        ui.sheet = 'treatment-workspace';
-      }
+      const due = treatment?.components?.find((item) => item.reviewable);
+      if (!due) throw new Error('Nenhum componente está pronto para revisão.');
+      ui.reviewComponentId = due.id;
+      ui.sheet = 'treatment-review';
+    } else if (action === 'final') {
+      ui.sheet = 'final-assessment';
     } else {
       ui.sheet = 'treatment-workspace';
     }
     scheduleRender({ focusDialog: true });
   } catch (error) {
-    ui.sheet = 'treatment-workspace';
-    scheduleRender({ focusDialog: true });
     showInlineError(error);
   }
 }
 
-function performNext(source) {
-  if (!liveMode) {
-    if (model.nextAction === 'Concluir preparação' || model.nextAction === 'Continuar preparação') openSheet('preparation', source);
-    return;
-  }
-  clearInlineError();
+function performPrimaryAction(source = null) {
+  if (!liveMode) return;
   try {
-    if (model.nextActionCode === 'START_SESSION') {
-      ui.justClosedSessionId = null;
-      ui.historySessionId = null;
+    const action = model.nextActionCode;
+    if (action === 'START_SESSION') {
       beginSession(store);
-      openSheet('preparation', source);
-      return;
-    }
-    if (model.nextActionCode === 'PREPARATION') {
+      ui.sheet = 'preparation';
+      ui.justClosedSessionId = null;
+    } else if (action === 'PREPARE') {
       prepareCurrentSession(store);
-      openSheet('preparation', source);
-      return;
-    }
-    if (model.nextActionCode === 'SELECT_ASSISTED') return openSheet('assisted', source);
-    if (model.nextActionCode === 'HAWKINS') return openSheet('hawkins', source);
-    if (model.nextActionCode === 'TRIAGE') return openSheet('triage', source);
-    if (model.nextActionCode === 'FINDINGS') return openSheet('findings', source);
-    if (model.nextActionCode === 'COMPOSE_TREATMENT') return openTreatmentComposer(source, (model.treatmentFindings || []).map((item) => item.id));
-    if (model.nextActionCode === 'REIKI_CONTEXT') {
-      if (!model.nextActionAssistedId) throw new Error('Não foi possível restaurar o Assistido da aplicação de Reiki.');
-      selectSessionAssisted(store, model.nextActionAssistedId);
-      openSheet('reiki', source);
-      return;
-    }
-    if (model.nextActionCode === 'REIKI_ACTIVE') return openSheet('reiki', source);
-    if (['TREATMENT_FINAL', 'TREATMENT_REVIEW', 'TREATMENT_WORKSPACE'].includes(model.nextActionCode)) {
-      const treatment = treatmentById(model.nextActionTreatmentId);
-      return performTreatmentAction(treatment?.primaryAction || 'workspace', model.nextActionTreatmentId, source);
-    }
-    if (model.nextActionCode === 'INVESTIGATE') {
+      ui.sheet = 'preparation';
+    } else if (action === 'SELECT_ASSISTED') {
+      ui.sheet = 'assisted';
+    } else if (action === 'HAWKINS') {
+      ui.sheet = 'hawkins';
+    } else if (action === 'INVESTIGATE') {
       beginTriage(store);
-      openSheet('triage', source);
+      ui.sheet = 'triage';
+    } else if (action === 'REVIEW_FINDINGS') {
+      ui.sheet = 'findings';
+    } else if (action === 'TREATMENT_REVIEW' || action === 'TREATMENT_FINAL') {
+      performTreatmentAction(action === 'TREATMENT_REVIEW' ? 'review' : 'final', model.nextActionTreatmentId, source);
+      return;
+    } else if (action === 'TREATMENT_RESUME') {
+      performTreatmentAction('resume', model.nextActionTreatmentId, source);
+      return;
+    } else if (action === 'REIKI') {
+      ui.sheet = 'reiki';
+    } else if (action === 'CLOSE_SESSION') {
+      ui.sheet = 'closing';
     }
+    if (source) opener = source;
+    scheduleRender({ focusDialog: Boolean(ui.sheet) });
   } catch (error) {
     showInlineError(error);
   }
 }
 
-function handlePrimary() {
+function submitCurrentSheet() {
   if (!liveMode) return;
-  clearInlineError();
   try {
     if (ui.sheet === 'preparation') {
-      const currentStep = model.preparation?.stepKey;
-      advancePreparation(store, {
-        frequencyValue: root.querySelector('[data-v2-prep-frequency]')?.value,
-        protectionNotes: root.querySelector('[data-v2-prep-protection]')?.value,
-        permissionNotes: root.querySelector('[data-v2-prep-permission]')?.value,
-      });
-      const nextModel = deriveLiveModel();
-      if (nextModel.prepared) {
-        ui.sheet = nextModel.assistedSelected ? (nextModel.hawkinsReady ? null : 'hawkins') : 'assisted';
-        scheduleRender({ focusDialog: Boolean(ui.sheet) });
-      } else if (currentStep !== nextModel.preparation?.stepKey) {
-        scheduleRender({ focusDialog: true });
-      }
-      return;
-    }
-
-    if (ui.sheet === 'assisted') {
-      if (!ui.assistedCreate) {
-        ui.assistedCreate = true;
-        render({ focusDialog: true });
-        return;
-      }
-      if (!assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
+      const frequencyValue = root.querySelector('[data-v2-frequency]')?.value || '';
+      const protectionNotes = root.querySelector('[data-v2-protection-notes]')?.value || '';
+      const permissionNotes = root.querySelector('[data-v2-permission-notes]')?.value || '';
+      advancePreparation(store, { frequencyValue, protectionNotes, permissionNotes });
+    } else if (ui.sheet === 'assisted' && ui.assistedCreate) {
       createAndSelectPerson(store, {
-        displayName: root.querySelector('[data-v2-assisted-name]')?.value,
-        birthDate: root.querySelector('[data-v2-assisted-birthdate]')?.value,
+        displayName: root.querySelector('[data-v2-assisted-name]')?.value || '',
+        birthDate: root.querySelector('[data-v2-assisted-birthdate]')?.value || '',
       });
       ui.assistedCreate = false;
+    } else if (ui.sheet === 'hawkins') {
+      recordSessionHawkins(store, root.querySelector('[data-v2-hawkins]')?.value || '');
+    } else if (ui.sheet === 'findings') {
+      const ids = [...root.querySelectorAll('[data-v2-finding-choice]:checked')].map((input) => input.value);
+      confirmInvestigationFindings(store, model.investigation?.id, ids);
+    } else if (ui.sheet === 'closing') {
+      const confirmation = root.querySelector('[data-v2-closing-confirmation]')?.value || '';
+      const closedId = closeCurrentSessionV2(store, { confirmation });
+      ui.justClosedSessionId = closedId;
       ui.route = 'today';
-      ui.historySessionId = null;
-      ui.librarySection = 'home';
-      ui.justClosedSessionId = null;
-      ui.sheet = 'hawkins';
-      scheduleRender({ focusDialog: true });
-      return;
-    }
-
-    if (ui.sheet === 'library-new-assisted') {
-      createAssistedEntity(store, {
-        type: AssistedType.PERSON,
-        displayName: root.querySelector('[data-v2-library-person-name]')?.value || '',
-        birthDate: root.querySelector('[data-v2-library-person-birthdate]')?.value || '',
-      });
-      ui.sheet = null;
+    } else if (ui.sheet === 'library-new-assisted') {
+      const displayName = root.querySelector('[data-v2-library-person-name]')?.value || '';
+      const birthDate = root.querySelector('[data-v2-library-person-birthdate]')?.value || '';
+      createAssistedEntity(store, { type: AssistedType.PERSON, displayName, birthDate });
       ui.librarySection = 'assisteds';
-      scheduleRender();
-      return;
     }
-
-    if (ui.sheet === 'hawkins') {
-      recordSessionHawkins(store, root.querySelector('[data-v2-hawkins-input]')?.value);
-      ui.sheet = null;
-      scheduleRender();
-      return;
-    }
-
-    if (ui.sheet === 'findings') {
-      const selected = [...root.querySelectorAll('[data-v2-finding-choice]:checked')].map((input) => input.value);
-      const created = model.findingsInvestigationId
-        ? confirmInvestigationFindings(store, model.findingsInvestigationId, selected)
-        : [];
-      const nextModel = deriveLiveModel();
-      const findingIds = created.map((item) => item.id);
-      model = nextModel;
-      if (findingIds.length) openTreatmentComposer(null, findingIds);
-      else {
-        ui.sheet = null;
-        scheduleRender();
-      }
-      return;
-    }
-
-    if (ui.sheet === 'treatment-review') {
-      requireTreatmentActionAllowed('review', ui.activeTreatmentId);
-      const outcome = root.querySelector('input[name="reviewOutcome"]:checked')?.value || 'continue';
-      reviewTreatmentComponentV2(store, {
-        componentId: ui.reviewComponentId,
-        verifiedComplete: outcome === 'complete',
-        permissionToDismantle: outcome === 'complete',
-        notes: root.querySelector('[data-v2-review-notes]')?.value || '',
-      });
-      const nextModel = deriveLiveModel();
-      const treatment = nextModel.treatments.find((item) => item.id === ui.activeTreatmentId);
-      model = nextModel;
-      ui.reviewComponentId = null;
-      ui.sheet = treatment?.readyForFinalAssessment ? 'final-assessment' : 'treatment-workspace';
-      scheduleRender({ focusDialog: true });
-      return;
-    }
-
-    if (ui.sheet === 'final-assessment') {
-      requireTreatmentActionAllowed('final', ui.activeTreatmentId);
-      finalizeTreatmentV2(store, ui.activeTreatmentId, {
-        frequency: root.querySelector('[data-v2-final-frequency]')?.value,
-        imbalancePercent: root.querySelector('[data-v2-final-imbalance]')?.value,
-        needsNewTreatment: Boolean(root.querySelector('[data-v2-final-needs-new]')?.checked),
-        nextTreatmentWhen: root.querySelector('[data-v2-final-next]')?.value || '',
-        notes: root.querySelector('[data-v2-final-notes]')?.value || '',
-      });
-      ui.sheet = null;
-      ui.activeTreatmentId = null;
-      ui.route = 'today';
-      scheduleRender();
-      return;
-    }
-
-    if (ui.sheet === 'reiki' && !model.reiki) {
-      const mode = root.querySelector('input[name="reikiMode"]:checked')?.value || 'IN_PERSON';
-      startSessionReiki(store, mode);
-      scheduleRender({ focusDialog: true });
-      return;
-    }
-
-    if (ui.sheet === 'closing') {
-      const sessionId = closeCurrentSessionV2(store, {
-        confirmation: root.querySelector('[data-v2-closing-confirmation]')?.value || '',
-      });
-      ui.sheet = null;
-      ui.route = 'today';
-      ui.historySessionId = null;
-      ui.justClosedSessionId = sessionId;
-      scheduleRender();
-    }
+    ui.sheet = null;
+    ui.error = '';
+    render();
   } catch (error) {
     showInlineError(error);
   }
 }
 
-function handleSecondary() {
-  if (ui.sheet === 'assisted' && ui.assistedCreate) {
-    ui.assistedCreate = false;
-    ui.error = '';
-    render({ focusDialog: true });
-    return;
-  }
-  if (ui.sheet === 'treatment-review' || ui.sheet === 'final-assessment') {
-    ui.reviewComponentId = null;
-    ui.sheet = 'treatment-workspace';
-    ui.error = '';
-    render({ focusDialog: true });
-    return;
-  }
-  closeSheet();
-}
-
-if (store) store.subscribe(() => scheduleRender());
-
 root.addEventListener('click', (event) => {
-  const route = event.target.closest('[data-v2-route]');
-  if (route) {
-    ui.route = route.dataset.v2Route;
-    ui.sheet = null;
-    if (ui.route !== 'history') ui.historySessionId = null;
-    if (ui.route !== 'library') ui.librarySection = 'home';
-    ui.error = '';
-    render();
-    return;
-  }
+  const target = event.target.closest('button, label, input, summary');
+  if (!target) return;
 
-  if (event.target.closest('[data-v2-close-sheet]')) {
+  if (target.matches('[data-v2-close-sheet]')) {
     closeSheet();
     return;
   }
-
-  const settingsTrigger = event.target.closest('[data-v2-open-settings]');
-  if (settingsTrigger) {
-    if (!liveMode) return;
-    openSheet('settings', settingsTrigger);
+  if (target.matches('[data-v2-primary]')) {
+    submitCurrentSheet();
     return;
   }
-
-  const librarySection = event.target.closest('[data-v2-library-section]');
-  if (librarySection) {
-    ui.route = 'library';
-    ui.librarySection = librarySection.dataset.v2LibrarySection || 'home';
-    ui.error = '';
-    render();
-    return;
-  }
-
-  if (event.target.closest('[data-v2-library-back]')) {
-    ui.route = 'library';
-    ui.librarySection = 'home';
-    ui.error = '';
-    render();
-    return;
-  }
-
-  const newLibraryAssisted = event.target.closest('[data-v2-library-new-assisted]');
-  if (newLibraryAssisted) {
-    if (!liveMode) return;
-    openSheet('library-new-assisted', newLibraryAssisted);
-    return;
-  }
-
-  if (event.target.closest('[data-v2-settings-export]')) {
-    if (!liveMode) return;
-    clearInlineError();
-    try {
-      exportLocalDataFile();
-      renderPreservingSheetScroll();
-    } catch (error) {
-      showInlineError(error);
+  if (target.matches('[data-v2-secondary]')) {
+    if (ui.sheet === 'assisted' && ui.assistedCreate) {
+      ui.assistedCreate = false;
+      scheduleRender({ focusDialog: true });
+    } else {
+      closeSheet();
     }
     return;
   }
-
-  if (event.target.closest('[data-v2-settings-recover]')) {
-    if (!liveMode) return;
-    clearInlineError();
-    try {
-      requireDataReplacementIdle();
-      recoverLocalData();
-      store.setState(() => loadState());
-      renderPreservingSheetScroll();
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-
-  if (event.target.closest('[data-v2-settings-import-apply]')) {
-    if (!liveMode || !ui.importPreview?.normalized) return;
-    clearInlineError();
-    try {
-      requireDataReplacementIdle();
-      const normalized = structuredClone(ui.importPreview.normalized);
-      store.setState(() => normalized);
-      ui.importPreview = null;
-      renderPreservingSheetScroll();
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-
-  if (event.target.closest('[data-v2-settings-save-modalities]')) {
-    if (!liveMode) return;
-    clearInlineError();
-    try {
-      const enabled = [...root.querySelectorAll('input[name="v2EnabledModality"]:checked')].map((input) => input.value);
-      const custom = String(root.querySelector('[data-v2-settings-custom-modalities]')?.value || '')
-        .split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
-      store.setState((state) => {
-        const draft = structuredClone(state);
-        draft.settings = draft.settings || {};
-        draft.settings.therapeuticModalities = { enabled, custom };
-        return draft;
-      });
-      renderPreservingSheetScroll();
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-
-  const closingReiki = event.target.closest('[data-v2-closing-reiki]');
-  if (closingReiki) {
-    if (!liveMode) return;
-    clearInlineError();
-    try {
-      if (model.reiki?.assistedEntityId && !model.reiki.belongsToCurrentAssisted) {
-        selectSessionAssisted(store, model.reiki.assistedEntityId);
+  if (target.matches('[data-v2-preview-action]')) {
+    const action = target.dataset.v2PreviewAction;
+    if (action === 'start-session' || action === 'next') performPrimaryAction(target);
+    else if (action === 'change-assisted') {
+      if (!liveMode) return;
+      if (!assistedContextChangeAllowed()) {
+        showInlineError(new Error('Conclua a etapa em andamento antes de trocar o Assistido da sessão.'));
+        return;
       }
-      openSheet('reiki', closingReiki);
+      openSheet('assisted', target);
+    } else if (action === 'investigate') {
+      try { beginTriage(store); openSheet('triage', target); } catch (error) { showInlineError(error); }
+    } else if (action === 'treat') {
+      try { requireNewTreatmentAllowed(); openTreatmentComposer(target); } catch (error) { showInlineError(error); }
+    } else if (action === 'reiki') openSheet('reiki', target);
+    else if (action === 'close-session') openSheet('closing', target);
+    return;
+  }
+  if (target.matches('[data-v2-route]')) {
+    ui.route = target.dataset.v2Route;
+    ui.sheet = null;
+    ui.error = '';
+    ui.historySessionId = null;
+    if (ui.route !== 'library') ui.librarySection = 'home';
+    render();
+    return;
+  }
+  if (target.matches('[data-v2-open-settings]')) {
+    openSheet('settings', target);
+    return;
+  }
+  if (target.matches('[data-v2-select-assisted]')) {
+    if (!liveMode) return;
+    try {
+      const assistedId = target.dataset.v2SelectAssisted;
+      if (!assistedContextChangeAllowed()) throw new Error('Conclua a etapa em andamento antes de trocar o Assistido da sessão.');
+      selectSessionAssisted(store, assistedId);
+      ui.sheet = null;
+      ui.assistedCreate = false;
+      ui.error = '';
+      render();
+      if (target.hasAttribute('data-v2-closing-blocker-assisted')) performPrimaryAction();
     } catch (error) {
       showInlineError(error);
     }
     return;
   }
-
-  const assisted = event.target.closest('[data-v2-select-assisted]');
-  if (assisted && liveMode) {
-    clearInlineError();
+  if (target.matches('[data-v2-triage-answer]')) {
+    if (!liveMode) return;
     try {
-      const targetAssistedId = assisted.dataset.v2SelectAssisted;
-      const closingRecoveryIds = [
-        model.safeClose?.openInvestigationBlocker?.assistedEntityId,
-        model.safeClose?.pendingFindingBlocker?.assistedEntityId,
-      ].filter(Boolean);
-      const closingRecovery = ui.sheet === 'closing' && closingRecoveryIds.includes(targetAssistedId);
-      if (!closingRecovery && !assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
-      const openSession = store.getState().sessions?.find((session) => session.status === 'OPEN');
-      if (openSession?.currentAssistedEntityId !== targetAssistedId) selectSessionAssisted(store, targetAssistedId);
-      const nextModel = deriveLiveModel();
-      model = nextModel;
-      ui.route = 'today';
-      ui.historySessionId = null;
-      ui.librarySection = 'home';
-      ui.justClosedSessionId = null;
-      ui.sheet = nextModel.hawkinsReady ? null : 'hawkins';
-      scheduleRender({ focusDialog: Boolean(ui.sheet) });
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-
-  if (event.target.closest('[data-v2-secondary]')) {
-    handleSecondary();
-    return;
-  }
-
-  if (event.target.closest('[data-v2-primary]')) {
-    handlePrimary();
-    return;
-  }
-
-  const triageAnswer = event.target.closest('[data-v2-triage-answer]');
-  if (triageAnswer && liveMode && model.investigation) {
-    clearInlineError();
-    try {
-      answerTriage(store, model.investigation.id, triageAnswer.dataset.v2TriageAnswer);
-      const nextModel = deriveLiveModel();
-      ui.sheet = nextModel.nextActionCode === 'FINDINGS' ? 'findings'
-        : (nextModel.nextActionCode === 'TRIAGE' ? 'triage' : null);
-      scheduleRender({ focusDialog: Boolean(ui.sheet) });
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-
-  if (event.target.closest('[data-v2-triage-back]') && liveMode && model.investigation) {
-    clearInlineError();
-    try {
-      stepBackTriage(store, model.investigation.id);
+      answerTriage(store, model.investigation?.id, target.dataset.v2TriageAnswer);
+      const next = deriveLiveModel();
+      ui.sheet = next.findings?.length && !next.investigation ? 'findings' : 'triage';
       scheduleRender({ focusDialog: true });
-    } catch (error) {
-      showInlineError(error);
-    }
+    } catch (error) { showInlineError(error); }
     return;
   }
-
-  const treatmentSubmit = event.target.closest('[data-v2-treatment-submit]');
-  if (treatmentSubmit && liveMode) {
-    clearInlineError();
+  if (target.matches('[data-v2-triage-back]')) {
+    if (!liveMode) return;
+    stepBackTriage(store, model.investigation?.id);
+    scheduleRender({ focusDialog: true });
+    return;
+  }
+  if (target.matches('[data-v2-treatment-submit]')) {
+    if (!liveMode) return;
     try {
-      requireNewTreatmentAllowed();
-      const treatment = saveTreatmentDraft(store, treatmentInput(), { start: treatmentSubmit.dataset.v2TreatmentSubmit === 'start' });
+      const start = target.dataset.v2TreatmentSubmit === 'start';
+      const treatment = saveTreatmentDraft(store, treatmentInput(), { start });
       ui.activeTreatmentId = treatment.id;
-      ui.treatmentDraft = blankTreatmentDraft();
+      ui.sheet = start ? 'treatment-workspace' : null;
       ui.route = 'treatments';
-      ui.sheet = 'treatment-workspace';
-      scheduleRender({ focusDialog: true });
-    } catch (error) {
-      showInlineError(error);
-    }
+      ui.error = '';
+      render();
+    } catch (error) { showInlineError(error); }
     return;
   }
-
-  const treatmentAction = event.target.closest('[data-v2-treatment-action]');
-  if (treatmentAction) {
-    performTreatmentAction(treatmentAction.dataset.v2TreatmentAction, treatmentAction.dataset.treatmentId, treatmentAction);
+  if (target.matches('[data-v2-treatment-action]')) {
+    performTreatmentAction(target.dataset.v2TreatmentAction, target.dataset.treatmentId, target);
     return;
   }
-
-  const reviewComponent = event.target.closest('[data-v2-review-component]');
-  if (reviewComponent) {
-    clearInlineError();
+  if (target.matches('[data-v2-review-component]')) {
+    if (!liveMode) return;
     try {
-      const componentId = reviewComponent.dataset.v2ReviewComponent;
-      const treatmentId = treatmentIdForComponent(componentId);
-      requireTreatmentActionAllowed('review', treatmentId);
-      ui.activeTreatmentId = treatmentId;
+      const componentId = target.dataset.v2ReviewComponent;
+      requireTreatmentActionAllowed('review', treatmentIdForComponent(componentId));
       ui.reviewComponentId = componentId;
       ui.sheet = 'treatment-review';
-      ui.error = '';
-      render({ focusDialog: true });
-    } catch (error) {
-      showInlineError(error);
-    }
+      openSheet('treatment-review', target);
+    } catch (error) { showInlineError(error); }
     return;
   }
-
-  if (event.target.closest('[data-v2-add-item]')) {
+  if (target.matches('[data-v2-review-save]')) {
+    if (!liveMode) return;
+    try {
+      const outcome = root.querySelector('[name="reviewOutcome"]:checked')?.value || 'continue';
+      const notes = root.querySelector('[data-v2-review-notes]')?.value || '';
+      reviewTreatmentComponentV2(store, ui.reviewComponentId, { outcome, notes });
+      ui.sheet = 'treatment-workspace';
+      ui.reviewComponentId = null;
+      scheduleRender({ focusDialog: true });
+    } catch (error) { showInlineError(error); }
+    return;
+  }
+  if (target.matches('[data-v2-final-submit]')) {
+    if (!liveMode) return;
+    try {
+      finalizeTreatmentV2(store, ui.activeTreatmentId, {
+        finalHertz: root.querySelector('[data-v2-final-frequency]')?.value || '',
+        imbalance: root.querySelector('[data-v2-final-imbalance]')?.value || '',
+        needsNewTreatment: Boolean(root.querySelector('[data-v2-final-needs-new]')?.checked),
+        nextTreatmentTiming: root.querySelector('[data-v2-final-next]')?.value || '',
+        notes: root.querySelector('[data-v2-final-notes]')?.value || '',
+      });
+      ui.sheet = null;
+      ui.error = '';
+      render();
+    } catch (error) { showInlineError(error); }
+    return;
+  }
+  if (target.matches('[data-v2-reiki-control]')) {
+    if (!liveMode) return;
+    try {
+      const action = target.dataset.v2ReikiControl;
+      if (action === 'pause') pauseSessionReiki(store);
+      else if (action === 'resume') resumeSessionReiki(store);
+      else if (action === 'complete') completeSessionReiki(store, root.querySelector('[data-v2-reiki-notes]')?.value || '');
+      ui.sheet = null;
+      ui.error = '';
+      render();
+    } catch (error) { showInlineError(error); }
+    return;
+  }
+  if (target.matches('[data-v2-closing-reiki]')) {
+    openSheet('reiki', target);
+    return;
+  }
+  if (target.matches('[data-v2-library-section]')) {
+    ui.librarySection = target.dataset.v2LibrarySection;
+    ui.route = 'library';
+    render();
+    return;
+  }
+  if (target.matches('[data-v2-library-back]')) {
+    ui.librarySection = 'home';
+    render();
+    return;
+  }
+  if (target.matches('[data-v2-library-new-assisted]')) {
+    openSheet('library-new-assisted', target);
+    return;
+  }
+  if (target.matches('[data-v2-history-session]')) {
+    ui.route = 'history';
+    ui.historySessionId = target.dataset.v2HistorySession;
+    ui.justClosedSessionId = null;
+    render();
+    return;
+  }
+  if (target.matches('[data-v2-history-back]')) {
+    ui.historySessionId = null;
+    render();
+    return;
+  }
+  if (target.matches('[data-v2-open-history]')) {
+    ui.route = 'history';
+    ui.justClosedSessionId = null;
+    render();
+    return;
+  }
+  if (target.matches('[data-v2-add-item]')) {
     syncTreatmentDraftFromDom();
     ui.treatmentDraft.items.push(blankItem());
     renderPreservingSheetScroll();
     return;
   }
-  const removeItem = event.target.closest('[data-v2-remove-item]');
-  if (removeItem) {
+  if (target.matches('[data-v2-remove-item]')) {
     syncTreatmentDraftFromDom();
-    ui.treatmentDraft.items.splice(Number(removeItem.dataset.itemIndex), 1);
+    ui.treatmentDraft.items.splice(Number(target.dataset.itemIndex), 1);
     renderPreservingSheetScroll();
     return;
   }
-  const addCommand = event.target.closest('[data-v2-add-command]');
-  if (addCommand) {
+  if (target.matches('[data-v2-add-command]')) {
     syncTreatmentDraftFromDom();
-    ui.treatmentDraft.items[Number(addCommand.dataset.itemIndex)]?.commands.push(blankCommand());
+    ui.treatmentDraft.items[Number(target.dataset.itemIndex)]?.commands.push(blankCommand());
     renderPreservingSheetScroll();
     return;
   }
-  const removeCommand = event.target.closest('[data-v2-remove-command]');
-  if (removeCommand) {
+  if (target.matches('[data-v2-remove-command]')) {
     syncTreatmentDraftFromDom();
-    ui.treatmentDraft.items[Number(removeCommand.dataset.itemIndex)]?.commands.splice(Number(removeCommand.dataset.commandIndex), 1);
+    ui.treatmentDraft.items[Number(target.dataset.itemIndex)]?.commands.splice(Number(target.dataset.commandIndex), 1);
     renderPreservingSheetScroll();
     return;
   }
-  const addGraph = event.target.closest('[data-v2-add-graph]');
-  if (addGraph) {
+  if (target.matches('[data-v2-add-graph]')) {
     syncTreatmentDraftFromDom();
-    ui.treatmentDraft.items[Number(addGraph.dataset.itemIndex)]?.commands[Number(addGraph.dataset.commandIndex)]?.graphApplications.push(blankGraph());
+    ui.treatmentDraft.items[Number(target.dataset.itemIndex)]?.commands[Number(target.dataset.commandIndex)]?.graphApplications.push(blankGraph());
     renderPreservingSheetScroll();
     return;
   }
-  const removeGraph = event.target.closest('[data-v2-remove-graph]');
-  if (removeGraph) {
+  if (target.matches('[data-v2-remove-graph]')) {
     syncTreatmentDraftFromDom();
-    ui.treatmentDraft.items[Number(removeGraph.dataset.itemIndex)]?.commands[Number(removeGraph.dataset.commandIndex)]?.graphApplications.splice(Number(removeGraph.dataset.graphIndex), 1);
+    ui.treatmentDraft.items[Number(target.dataset.itemIndex)]?.commands[Number(target.dataset.commandIndex)]?.graphApplications.splice(Number(target.dataset.graphIndex), 1);
     renderPreservingSheetScroll();
     return;
   }
-
-  const reikiControl = event.target.closest('[data-v2-reiki-control]');
-  if (reikiControl && liveMode && model.reiki) {
-    clearInlineError();
-    try {
-      const action = reikiControl.dataset.v2ReikiControl;
-      if (action === 'pause') pauseSessionReiki(store, model.reiki.id);
-      if (action === 'resume') resumeSessionReiki(store, model.reiki.id);
-      if (action === 'complete') {
-        completeSessionReiki(store, model.reiki.id, root.querySelector('[data-v2-reiki-notes]')?.value || '');
-        ui.sheet = null;
-      }
-      scheduleRender({ focusDialog: Boolean(ui.sheet) });
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-
-  const historySession = event.target.closest('[data-v2-history-session]');
-  if (historySession) {
-    ui.route = 'history';
-    ui.sheet = null;
-    ui.historySessionId = historySession.dataset.v2HistorySession;
-    ui.error = '';
-    render();
-    return;
-  }
-
-  if (event.target.closest('[data-v2-history-back]')) {
-    ui.historySessionId = null;
-    render();
-    return;
-  }
-
-  const action = event.target.closest('[data-v2-preview-action]');
-  if (!action) return;
-  opener = action;
-  const name = action.dataset.v2PreviewAction;
-  if (name === 'next' || name === 'start-session') {
-    performNext(action);
-    return;
-  }
-  if (name === 'change-assisted') {
-    if (liveMode && assistedContextChangeAllowed()) openSheet('assisted', action);
-    return;
-  }
-  if (name === 'investigate' && liveMode) {
-    clearInlineError();
-    try {
-      beginTriage(store);
-      openSheet('triage', action);
-    } catch (error) {
-      showInlineError(error);
-    }
-    return;
-  }
-  if (name === 'treat') {
+  if (target.matches('[data-v2-settings-export]')) {
     if (!liveMode) return;
-    clearInlineError();
     try {
-      requireNewTreatmentAllowed();
-      openTreatmentComposer(action, (model.treatmentFindings || []).map((item) => item.id));
-    } catch (error) {
-      showInlineError(error);
-    }
+      exportLocalDataFile();
+      model = deriveLiveModel();
+      scheduleRender({ focusDialog: true });
+    } catch (error) { showInlineError(error); }
     return;
   }
-  if (name === 'reiki') {
-    openSheet('reiki', action);
+  if (target.matches('[data-v2-settings-import-apply]')) {
+    if (!liveMode || !ui.importPreview?.state) return;
+    try {
+      requireDataReplacementIdle();
+      localStorage.setItem('fluxa_state_v1', JSON.stringify(ui.importPreview.state));
+      loadState({ force:true });
+      ui.importPreview = null;
+      ui.sheet = null;
+      render();
+    } catch (error) { showInlineError(error); }
     return;
   }
-  if (name === 'close-session') {
-    openSheet('closing', action);
+  if (target.matches('[data-v2-settings-recover]')) {
+    if (!liveMode) return;
+    try {
+      requireDataReplacementIdle();
+      recoverLocalData();
+      loadState({ force:true });
+      ui.sheet = null;
+      render();
+    } catch (error) { showInlineError(error); }
   }
-});
-
-root.addEventListener('input', (event) => {
-  const assistedSearch = event.target.closest('[data-v2-assisted-search-input]');
-  if (assistedSearch) {
-    const query = String(assistedSearch.value || '').trim().toLocaleLowerCase('pt-BR');
-    root.querySelectorAll('[data-v2-assisted-search]').forEach((row) => {
-      row.hidden = Boolean(query && !row.dataset.v2AssistedSearch.includes(query));
-    });
-    return;
-  }
-
-  const librarySearch = event.target.closest('[data-v2-library-search]');
-  if (librarySearch) {
-    const query = normalizeSearch(librarySearch.value);
-    root.querySelectorAll('[data-v2-library-search-text]').forEach((row) => {
-      row.hidden = Boolean(query && !String(row.dataset.v2LibrarySearchText || '').includes(query));
-    });
-    return;
-  }
-
-  if (event.target.closest('[data-v2-treatment-draft], [data-v2-treatment-modality]')) syncTreatmentDraftFromDom();
 });
 
 root.addEventListener('change', async (event) => {
-  const importInput = event.target.closest('[data-v2-settings-import-file]');
-  if (importInput && liveMode) {
-    clearInlineError();
+  const target = event.target;
+  if (target.matches('[data-v2-settings-import-file]')) {
+    if (!liveMode) return;
     try {
       requireDataReplacementIdle();
-      const file = importInput.files?.[0];
+      const file = target.files?.[0];
       if (!file) return;
       const text = await file.text();
-      let parsed;
-      try { parsed = JSON.parse(text); }
-      catch (_) { throw new Error('Este arquivo não contém um backup JSON válido do Fluxa.'); }
-      const normalized = validateImportPayload(parsed);
+      const state = validateImportPayload(text);
       ui.importPreview = {
         name: file.name,
-        normalized,
+        state,
         summary: {
-          sessions: normalized.sessions?.length || 0,
-          assisteds: normalized.assistedEntities?.length || 0,
-          treatments: normalized.treatments?.length || 0,
-          resources: normalized.tools?.length || 0,
+          sessions: state.sessions?.length || 0,
+          assisteds: state.assistedEntities?.length || 0,
+          treatments: state.treatments?.length || 0,
+          resources: state.tools?.length || 0,
         },
       };
-      renderPreservingSheetScroll();
-    } catch (error) {
-      ui.importPreview = null;
-      showInlineError(error);
-    }
-    return;
+      scheduleRender({ focusDialog: true });
+    } catch (error) { showInlineError(error); }
+    finally { target.value = ''; }
   }
+  if (target.matches('[data-v2-final-needs-new]')) scheduleRender({ focusDialog: true });
+});
 
-  if (event.target.closest('[data-v2-treatment-modality]')) syncTreatmentDraftFromDom();
+root.addEventListener('input', (event) => {
+  const target = event.target;
+  if (target.matches('[data-v2-assisted-search-input]')) {
+    const needle = normalizeSearch(target.value);
+    root.querySelectorAll('[data-v2-assisted-search]').forEach((row) => {
+      row.hidden = needle && !String(row.dataset.v2AssistedSearch || '').includes(needle);
+    });
+  }
+  if (target.matches('[data-v2-library-search]')) {
+    const needle = normalizeSearch(target.value);
+    root.querySelectorAll('[data-v2-library-search-text]').forEach((row) => {
+      row.hidden = needle && !normalizeSearch(row.dataset.v2LibrarySearchText || '').includes(needle);
+    });
+  }
 });
 
 document.addEventListener('keydown', (event) => {
   if (!ui.sheet) return;
   if (event.key === 'Escape') {
+    event.preventDefault();
     closeSheet();
     return;
   }
