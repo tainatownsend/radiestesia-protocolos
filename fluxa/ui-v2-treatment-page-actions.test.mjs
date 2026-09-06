@@ -4,6 +4,7 @@ import { treatmentPage } from './ui-v2/treatment/treatment-page.js';
 const base = {
   sessionOpen:true,
   assistedSelected:true,
+  assistedName:'Marina',
   hawkinsReady:true,
 };
 
@@ -38,5 +39,16 @@ const emptyCompositionHtml = treatmentPage({
   }],
 });
 assert.match(emptyCompositionHtml,/class="v2-progress-count">—</,'Empty compositions should not display a misleading 0\/0 progress ratio.');
+
+const noSessionHtml = treatmentPage({ sessionOpen:false, assistedSelected:false, hawkinsReady:false, treatments:[] });
+assert.match(noSessionHtml,/Abra uma sessão para entrar no contexto do Assistido/);
+assert.doesNotMatch(noSessionHtml,/Nenhum tratamento para este Assistido/,'No-session state must not pretend an assisted context exists.');
+
+const noAssistedHtml = treatmentPage({ sessionOpen:true, assistedSelected:false, hawkinsReady:false, treatments:[] });
+assert.match(noAssistedHtml,/Selecione o Assistido da sessão/);
+assert.doesNotMatch(noAssistedHtml,/Nenhum tratamento para este Assistido/);
+
+const emptyAssistedHtml = treatmentPage({ ...base, treatments:[] });
+assert.match(emptyAssistedHtml,/Nenhum tratamento para Marina/);
 
 console.log('ui-v2-treatment-page-actions.test.mjs: ok');
