@@ -12,5 +12,10 @@ export function validateFinalAssessmentInput(input = {}) {
   if (!Number.isFinite(imbalancePercent) || imbalancePercent < 0 || imbalancePercent > 100) {
     throw new Error('O percentual de desequilíbrio deve estar entre 0% e 100%.');
   }
+
+  if (Boolean(input.needsNewTreatment) && !String(input.nextTreatmentWhen || '').trim()) {
+    throw new Error('Indique quando revisar ou iniciar o próximo tratamento.');
+  }
+
   return { frequency:String(hertz), hertz, imbalancePercent };
 }
