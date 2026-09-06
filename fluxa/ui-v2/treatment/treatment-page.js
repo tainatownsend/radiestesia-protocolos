@@ -15,6 +15,9 @@ function treatmentCard(treatment) {
     : 'Composição ainda sem componentes';
   const modality = (treatment.modalities || []).map((item) => item.label).join(' · ');
   const active = treatment.status !== 'COMPLETED';
+  const secondaryAction = active && treatment.primaryAction !== 'workspace'
+    ? `<button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver componentes</button>`
+    : '';
   return `
     <article class="v2-treatment-card" data-treatment-id="${esc(treatment.id)}">
       <div class="v2-treatment-card__head">
@@ -22,13 +25,13 @@ function treatmentCard(treatment) {
           <span class="v2-status-pill" data-status="${esc(treatment.status)}">${esc(STATUS[treatment.status] || treatment.status)}</span>
           <h2>${esc(treatment.title)}</h2>
         </div>
-        <span class="v2-progress-count">${treatment.resolved}/${treatment.total}</span>
+        <span class="v2-progress-count">${treatment.total ? `${treatment.resolved}/${treatment.total}` : '—'}</span>
       </div>
       ${treatment.objective ? `<p class="v2-copy">${esc(treatment.objective)}</p>` : ''}
       <div class="v2-treatment-meta"><span>${esc(progress)}</span>${modality ? `<span>${esc(modality)}</span>` : ''}</div>
       ${active ? `<div class="v2-treatment-card__actions">
         <button class="v2-btn v2-btn--primary" type="button" data-v2-treatment-action="${esc(treatment.primaryAction)}" data-treatment-id="${esc(treatment.id)}">${esc(treatment.primaryLabel)}</button>
-        <button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver componentes</button>
+        ${secondaryAction}
       </div>` : `<button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver tratamento</button>`}
     </article>
   `;
