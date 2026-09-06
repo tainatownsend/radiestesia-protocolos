@@ -24,7 +24,7 @@ export function finalAssessment(model, ui) {
           <p class="v2-eyebrow">Estado atual</p>
           <label class="v2-field"><span>Desequilíbrio restante (%)</span><input type="number" min="0" max="100" inputmode="decimal" data-v2-final-imbalance placeholder="0–100"></label>
           <label class="v2-check-row v2-check-row--standalone"><input type="checkbox" data-v2-final-needs-new><span><strong>Precisa de um novo tratamento</strong><small>Marque somente se houver continuidade indicada.</small></span></label>
-          <label class="v2-field" data-v2-final-next-wrap hidden><span>Quando revisar / iniciar o próximo</span><input data-v2-final-next placeholder="Ex.: em 7 dias"></label>
+          <label class="v2-field" data-v2-final-next-wrap><span>Quando revisar / iniciar o próximo</span><input data-v2-final-next placeholder="Ex.: em 7 dias"></label>
         </div>
       </section>
 
