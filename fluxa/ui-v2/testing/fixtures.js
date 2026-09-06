@@ -2,13 +2,22 @@ const base = {
   assistedName: 'Marina',
   sessionStartedAt: '10:02',
   investigations: 1,
-  treatments: 1,
+  treatmentCount: 1,
+  treatmentsWorked: 1,
+  treatments: [],
+  activeTreatments: 0,
+  treatmentFindings: [],
+  modalityOptions: [{ id: 'RADIESTHESIA', label: 'Radiestesia', base: true }],
+  graphOptions: [],
+  reikiEnabled: false,
+  reiki: null,
   notes: 0,
 };
 
 export const V2_FIXTURES = Object.freeze({
   'no-session': {
     id: 'no-session',
+    ...base,
     sessionOpen: false,
     title: 'Seu próximo atendimento começa aqui',
     description: 'Inicie uma sessão quando estiver pronta. O Fluxa vai conduzir preparação, Assistido, Hawkins e próximos passos.',

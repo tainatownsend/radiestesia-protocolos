@@ -1,5 +1,9 @@
 import { getOpenSession, latestPreparation, TreatmentStatus } from '../../domain.js';
 import { hawkinsBaseline } from '../../hawkins-measurement.js';
+import { componentReviewAvailable, treatmentComponentResolution } from '../../remaining.js';
+import { treatmentItemView } from '../../treatment-item-graphs.js';
+import { isReikiEnabled } from '../../reiki-modality.js';
+import { ReikiModeLabel, reikiElapsedSecondsFlexible } from '../../reiki-flex.js';
 
 function newest(items = [], key = 'updatedAt') {
   return [...items].sort((a, b) => String(b?.[key] || b?.createdAt || '').localeCompare(String(a?.[key] || a?.createdAt || '')))[0] || null;
@@ -65,17 +69,140 @@ function pendingInvestigationFindings(state, investigation) {
     }));
 }
 
+function availableTreatmentFindings(state, assistedId) {
+  if (!assistedId) return [];
+  const linked = new Set((state.treatments || [])
+    .filter((treatment) => treatment.assistedEntityId === assistedId && treatment.status !== TreatmentStatus.COMPLETED)
+    .flatMap((treatment) => treatment.findingIds || []));
+  return (state.findings || [])
+    .filter((item) => item.assistedEntityId === assistedId && item.status === 'IDENTIFIED' && !linked.has(item.id))
+    .map((item) => ({ id: item.id, title: item.title, investigationId: item.investigationId }));
+}
+
 function treatmentCounts(state, session, assistedId) {
   if (!session || !assistedId) return { active: 0, touched: 0 };
   const current = (state.treatments || []).filter((item) => item.assistedEntityId === assistedId);
-  const active = current.filter((item) => [TreatmentStatus.PLANNED, TreatmentStatus.IN_PROGRESS].includes(item.status)).length;
+  const active = current.filter((item) => [TreatmentStatus.PLANNED, TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED].includes(item.status)).length;
   const touchedIds = new Set((state.events || [])
     .filter((event) => event.sessionId === session.id && event.entityType === 'Treatment')
     .map((event) => event.entityId));
   return { active, touched: touchedIds.size };
 }
 
-function nextRecommendation({ session, prepared, assisted, baseline, openInvestigation, pendingFindings }) {
+function modalityOptions(state) {
+  const labels = {
+    REIKI: 'Aplicação de Reiki',
+    BACH_FLOWERS: 'Florais de Bach',
+    CRYSTALS: 'Cristais',
+    RADIONIC_TABLE: 'Mesa radiônica',
+  };
+  const settings = state.settings?.therapeuticModalities || {};
+  const enabled = Array.isArray(settings.enabled) ? settings.enabled : [];
+  const custom = Array.isArray(settings.custom) ? settings.custom : [];
+  return [
+    { id: 'RADIESTHESIA', label: 'Radiestesia', base: true },
+    ...enabled.map((id) => ({ id, label: labels[id] || id, base: false })),
+    ...custom.map((label, index) => ({ id: `CUSTOM_${index}`, label: String(label), base: false })),
+  ];
+}
+
+function componentModel(component) {
+  const item = treatmentItemView(component);
+  const graphCount = item.commands.reduce((sum, command) => sum + (command.graphApplications || []).length, 0);
+  const now = Date.now();
+  const due = Boolean(component.expectedEndAt && new Date(component.expectedEndAt).getTime() <= now);
+  const manualReview = component.status === TreatmentStatus.IN_PROGRESS && !component.expectedEndAt;
+  return {
+    id: component.id,
+    name: item.itemLabel || component.name,
+    status: component.status,
+    expectedEndAt: component.expectedEndAt || null,
+    due,
+    manualReview,
+    reviewable: componentReviewAvailable(component, now),
+    commands: item.commands.map((command) => ({
+      id: command.id,
+      text: command.text,
+      graphs: (command.graphApplications || []).map((graph) => ({
+        id: graph.id,
+        name: graph.graphName,
+        expectedEndAt: graph.expectedEndAt || null,
+        noDuration: Boolean(graph.noDuration),
+      })),
+    })),
+    commandCount: item.commands.length,
+    graphCount,
+  };
+}
+
+function treatmentModels(state, assistedId) {
+  if (!assistedId) return [];
+  return (state.treatments || [])
+    .filter((treatment) => treatment.assistedEntityId === assistedId)
+    .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))
+    .map((treatment) => {
+      const components = (state.treatmentComponents || [])
+        .filter((component) => component.treatmentId === treatment.id)
+        .map(componentModel);
+      const resolution = treatmentComponentResolution(state, treatment.id);
+      const reviewableCount = components.filter((component) => component.reviewable).length;
+      let primaryAction = 'workspace';
+      let primaryLabel = 'Ver tratamento';
+      if (treatment.status === TreatmentStatus.PLANNED) {
+        primaryAction = 'start';
+        primaryLabel = 'Iniciar';
+      } else if (treatment.status === TreatmentStatus.INTERRUPTED) {
+        primaryAction = 'resume';
+        primaryLabel = 'Retomar';
+      } else if (treatment.status === TreatmentStatus.IN_PROGRESS && resolution.readyForFinalAssessment) {
+        primaryAction = 'final';
+        primaryLabel = 'Realizar avaliação final';
+      } else if (treatment.status === TreatmentStatus.IN_PROGRESS && reviewableCount) {
+        primaryAction = 'review';
+        primaryLabel = 'Revisar';
+      }
+      return {
+        id: treatment.id,
+        title: treatment.title,
+        objective: treatment.therapeuticObjective || treatment.planningNotes || '',
+        status: treatment.status,
+        startedAt: treatment.startedAt || null,
+        plannedAt: treatment.plannedAt || null,
+        completedAt: treatment.completedAt || null,
+        modalities: Array.isArray(treatment.modalitySnapshots) ? treatment.modalitySnapshots : [{ id: 'RADIESTHESIA', label: 'Radiestesia' }],
+        findingIds: treatment.findingIds || [],
+        components,
+        total: resolution.total,
+        resolved: resolution.resolved,
+        unresolved: resolution.unresolved,
+        readyForFinalAssessment: resolution.readyForFinalAssessment,
+        reviewableCount,
+        primaryAction,
+        primaryLabel,
+      };
+    });
+}
+
+function currentReikiModel(state, session, assistedId) {
+  const active = (state.reikiApplications || []).find((item) => ['RUNNING', 'PAUSED'].includes(item.status));
+  if (!active) return null;
+  const assisted = activeAssisted(state).find((item) => item.id === active.assistedEntityId);
+  return {
+    id: active.id,
+    sessionId: active.sessionId || null,
+    assistedEntityId: active.assistedEntityId,
+    assistedName: assisted?.displayName || 'Assistido',
+    belongsToCurrentSession: Boolean(session && active.sessionId === session.id),
+    belongsToCurrentAssisted: Boolean(assistedId && active.assistedEntityId === assistedId),
+    status: active.status,
+    mode: active.mode || 'OTHER',
+    modeLabel: ReikiModeLabel[active.mode] || 'Outro',
+    elapsedSeconds: reikiElapsedSecondsFlexible(active),
+    startedAt: active.startedAt,
+  };
+}
+
+function nextRecommendation({ session, prepared, assisted, baseline, reiki, treatments, openInvestigation, pendingFindings, treatmentFindings }) {
   if (!session) return {
     code: 'START_SESSION',
     label: 'Iniciar sessão',
@@ -96,6 +223,25 @@ function nextRecommendation({ session, prepared, assisted, baseline, openInvesti
     label: 'Registrar Hawkins inicial',
     reason: `Registre a frequência inicial de ${assisted.displayName} antes de investigar ou tratar.`,
   };
+  if (reiki?.belongsToCurrentSession) return {
+    code: 'REIKI_ACTIVE',
+    label: reiki.status === 'PAUSED' ? 'Retomar Reiki' : 'Acompanhar Reiki',
+    reason: `${reiki.assistedName} · ${reiki.modeLabel} · aplicação ${reiki.status === 'PAUSED' ? 'pausada' : 'em andamento'}.`,
+  };
+  const finalReady = treatments.find((item) => item.status === TreatmentStatus.IN_PROGRESS && item.readyForFinalAssessment);
+  if (finalReady) return {
+    code: 'TREATMENT_FINAL',
+    treatmentId: finalReady.id,
+    label: 'Realizar avaliação final',
+    reason: `${finalReady.title} · todos os ${finalReady.total} componentes foram resolvidos.`,
+  };
+  const reviewReady = treatments.find((item) => item.status === TreatmentStatus.IN_PROGRESS && item.reviewableCount > 0);
+  if (reviewReady) return {
+    code: 'TREATMENT_REVIEW',
+    treatmentId: reviewReady.id,
+    label: 'Revisar tratamento',
+    reason: `${reviewReady.title} · ${reviewReady.reviewableCount} componente${reviewReady.reviewableCount === 1 ? '' : 's'} pronto${reviewReady.reviewableCount === 1 ? '' : 's'} para revisão.`,
+  };
   if (openInvestigation) {
     const total = openInvestigation.protocolSnapshot?.questions?.length || 0;
     return {
@@ -104,6 +250,18 @@ function nextRecommendation({ session, prepared, assisted, baseline, openInvesti
       reason: `${openInvestigation.protocolSnapshot?.name || 'Investigação'} · pergunta ${Math.min(openInvestigation.currentIndex + 1, total)} de ${total}.`,
     };
   }
+  const activeTreatment = treatments.find((item) => [TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED, TreatmentStatus.PLANNED].includes(item.status));
+  if (activeTreatment) return {
+    code: 'TREATMENT_WORKSPACE',
+    treatmentId: activeTreatment.id,
+    label: activeTreatment.primaryLabel,
+    reason: `${activeTreatment.title} · ${activeTreatment.resolved} de ${activeTreatment.total} componentes resolvidos.`,
+  };
+  if (treatmentFindings.length) return {
+    code: 'COMPOSE_TREATMENT',
+    label: 'Compor tratamento',
+    reason: `${treatmentFindings.length} achado${treatmentFindings.length === 1 ? '' : 's'} confirmado${treatmentFindings.length === 1 ? '' : 's'} aguardando tratamento.`,
+  };
   if (pendingFindings.length) return {
     code: 'FINDINGS',
     label: 'Revisar achados',
@@ -112,7 +270,7 @@ function nextRecommendation({ session, prepared, assisted, baseline, openInvesti
   return {
     code: 'INVESTIGATE',
     label: 'Iniciar investigação',
-    reason: 'Os pré-requisitos estão concluídos. Você pode seguir para uma investigação guiada.',
+    reason: 'Os pré-requisitos estão concluídos. Você pode investigar, tratar ou iniciar Reiki.',
   };
 }
 
@@ -127,7 +285,10 @@ export function deriveV2Model(state) {
   const openInvestigation = latestSessionInvestigation(state, session?.id, assisted?.id, 'IN_PROGRESS');
   const completedInvestigation = latestSessionInvestigation(state, session?.id, assisted?.id, 'COMPLETED');
   const pendingFindings = pendingInvestigationFindings(state, completedInvestigation);
-  const recommendation = nextRecommendation({ session, prepared, assisted, baseline, openInvestigation, pendingFindings });
+  const treatmentFindings = availableTreatmentFindings(state, assisted?.id);
+  const treatments = treatmentModels(state, assisted?.id);
+  const reiki = currentReikiModel(state, session, assisted?.id);
+  const recommendation = nextRecommendation({ session, prepared, assisted, baseline, reiki, treatments, openInvestigation, pendingFindings, treatmentFindings });
   const treatment = treatmentCounts(state, session, assisted?.id);
   const investigationCount = session
     ? (state.investigations || []).filter((item) => item.currentSessionId === session.id).length
@@ -153,11 +314,19 @@ export function deriveV2Model(state) {
     hawkins: baseline?.hertz || null,
     hawkinsAssessmentId: baseline?.id || null,
     nextActionCode: recommendation.code,
+    nextActionTreatmentId: recommendation.treatmentId || null,
     nextAction: recommendation.label,
     nextReason: recommendation.reason,
     investigations: investigationCount,
-    treatments: treatment.touched,
+    treatmentsWorked: treatment.touched,
+    treatments: treatments,
+    treatmentCount: treatment.touched,
     activeTreatments: treatment.active,
+    treatmentFindings,
+    modalityOptions: modalityOptions(state),
+    graphOptions: (state.tools || []).filter((tool) => !tool.archivedAt && tool.status !== 'ARCHIVED').map((tool) => tool.name).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    reikiEnabled: isReikiEnabled(state),
+    reiki,
     preparation: preparationModel(prepRun),
     investigation: openInvestigation ? {
       id: openInvestigation.id,

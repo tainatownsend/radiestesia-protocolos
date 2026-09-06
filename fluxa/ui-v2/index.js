@@ -6,11 +6,20 @@ import {
   answerTriage,
   beginSession,
   beginTriage,
+  completeSessionReiki,
   confirmInvestigationFindings,
   createAndSelectPerson,
+  finalizeTreatmentV2,
+  pauseSessionReiki,
   prepareCurrentSession,
   recordSessionHawkins,
+  resumeSessionReiki,
+  resumeTreatmentV2,
+  reviewTreatmentComponentV2,
+  saveTreatmentDraft,
   selectSessionAssisted,
+  startPlannedTreatmentV2,
+  startSessionReiki,
   stepBackTriage,
 } from './state/actions.js';
 import { deriveV2Model } from './state/selectors.js';
@@ -21,11 +30,28 @@ const params = new URLSearchParams(globalThis.location?.search || '');
 const liveMode = params.get('mode') === 'live';
 const store = liveMode ? createStore() : null;
 let model = liveMode ? deriveV2Model(store.getState()) : { ...fixtureFromLocation(), source: 'fixture' };
+
+function blankGraph() {
+  return { graphName: '', durationValue: '', durationUnit: 'DAY' };
+}
+function blankCommand() {
+  return { text: '', graphApplications: [blankGraph()] };
+}
+function blankItem(label = '') {
+  return { itemLabel: label, commands: [blankCommand()] };
+}
+function blankTreatmentDraft(findingIds = [], firstLabel = '') {
+  return { title: '', objective: '', modalities: [], findingIds: [...findingIds], items: [blankItem(firstLabel)] };
+}
+
 const ui = {
   route: 'today',
   sheet: liveMode ? null : (model.overlay === 'preparation' ? 'preparation' : null),
   assistedCreate: false,
   error: '',
+  activeTreatmentId: null,
+  reviewComponentId: null,
+  treatmentDraft: blankTreatmentDraft(),
 };
 let opener = null;
 let renderQueued = false;
@@ -52,6 +78,15 @@ function scheduleRender({ focusDialog = false } = {}) {
   });
 }
 
+function renderPreservingSheetScroll() {
+  const scrollTop = root.querySelector('.v2-sheet__body')?.scrollTop || 0;
+  render();
+  queueMicrotask(() => {
+    const body = root.querySelector('.v2-sheet__body');
+    if (body) body.scrollTop = scrollTop;
+  });
+}
+
 function clearInlineError() {
   ui.error = '';
   root.querySelector('.v2-inline-error')?.remove();
@@ -61,7 +96,10 @@ function showInlineError(error) {
   const message = String(error?.message || error || 'Não foi possível concluir esta ação.');
   ui.error = message;
   const body = root.querySelector('.v2-sheet__body');
-  if (!body) return;
+  if (!body) {
+    render();
+    return;
+  }
   body.querySelector('.v2-inline-error')?.remove();
   const alert = document.createElement('div');
   alert.className = 'v2-inline-error';
@@ -73,6 +111,7 @@ function showInlineError(error) {
 function closeSheet() {
   ui.sheet = null;
   ui.assistedCreate = false;
+  ui.reviewComponentId = null;
   ui.error = '';
   render();
   queueMicrotask(() => opener?.focus?.());
@@ -85,15 +124,80 @@ function openSheet(name, source = null) {
   render({ focusDialog: true });
 }
 
-function nextSheetForModel(nextModel) {
-  const map = {
-    PREPARATION: 'preparation',
-    SELECT_ASSISTED: 'assisted',
-    HAWKINS: 'hawkins',
-    TRIAGE: 'triage',
-    FINDINGS: 'findings',
-  };
-  return map[nextModel.nextActionCode] || null;
+function openTreatmentComposer(source = null, findingIds = []) {
+  const findings = (model.treatmentFindings || []).filter((finding) => findingIds.includes(finding.id));
+  const firstLabel = findings.length === 1 ? findings[0].title : '';
+  ui.treatmentDraft = blankTreatmentDraft(findingIds, firstLabel);
+  openSheet('treatment-composer', source);
+}
+
+function syncTreatmentDraftFromDom() {
+  if (ui.sheet !== 'treatment-composer') return;
+  root.querySelectorAll('[data-v2-treatment-draft]').forEach((field) => {
+    const kind = field.dataset.v2TreatmentDraft;
+    const itemIndex = Number(field.dataset.itemIndex);
+    const commandIndex = Number(field.dataset.commandIndex);
+    const graphIndex = Number(field.dataset.graphIndex);
+    if (kind === 'title' || kind === 'objective') {
+      ui.treatmentDraft[kind] = field.value;
+      return;
+    }
+    const item = ui.treatmentDraft.items?.[itemIndex];
+    if (!item) return;
+    if (kind === 'itemLabel') item.itemLabel = field.value;
+    const command = item.commands?.[commandIndex];
+    if (!command) return;
+    if (kind === 'commandText') command.text = field.value;
+    const graph = command.graphApplications?.[graphIndex];
+    if (graph && ['graphName', 'durationValue', 'durationUnit'].includes(kind)) graph[kind] = field.value;
+  });
+  ui.treatmentDraft.modalities = [...root.querySelectorAll('[data-v2-treatment-modality]:checked')].map((input) => input.value);
+}
+
+function treatmentInput() {
+  syncTreatmentDraftFromDom();
+  const modalities = (model.modalityOptions || [])
+    .filter((item) => ui.treatmentDraft.modalities.includes(item.id))
+    .map((item) => ({ id: item.id, label: item.label }));
+  return { ...structuredClone(ui.treatmentDraft), modalities };
+}
+
+function treatmentById(id) {
+  return (model.treatments || []).find((item) => item.id === id) || null;
+}
+
+function performTreatmentAction(action, treatmentId, source = null) {
+  if (!liveMode) return;
+  if (source) opener = source;
+  ui.activeTreatmentId = treatmentId;
+  ui.error = '';
+  try {
+    if (action === 'start') {
+      startPlannedTreatmentV2(store, treatmentId);
+      ui.sheet = 'treatment-workspace';
+    } else if (action === 'resume') {
+      resumeTreatmentV2(store, treatmentId);
+      ui.sheet = 'treatment-workspace';
+    } else if (action === 'final') {
+      ui.sheet = 'final-assessment';
+    } else if (action === 'review') {
+      const treatment = treatmentById(treatmentId);
+      const component = treatment?.components?.find((item) => item.reviewable);
+      if (component) {
+        ui.reviewComponentId = component.id;
+        ui.sheet = 'treatment-review';
+      } else {
+        ui.sheet = 'treatment-workspace';
+      }
+    } else {
+      ui.sheet = 'treatment-workspace';
+    }
+    render({ focusDialog: true });
+  } catch (error) {
+    ui.sheet = 'treatment-workspace';
+    render({ focusDialog: true });
+    showInlineError(error);
+  }
 }
 
 function performNext(source) {
@@ -117,6 +221,12 @@ function performNext(source) {
     if (model.nextActionCode === 'HAWKINS') return openSheet('hawkins', source);
     if (model.nextActionCode === 'TRIAGE') return openSheet('triage', source);
     if (model.nextActionCode === 'FINDINGS') return openSheet('findings', source);
+    if (model.nextActionCode === 'COMPOSE_TREATMENT') return openTreatmentComposer(source, (model.treatmentFindings || []).map((item) => item.id));
+    if (model.nextActionCode === 'REIKI_ACTIVE') return openSheet('reiki', source);
+    if (['TREATMENT_FINAL', 'TREATMENT_REVIEW', 'TREATMENT_WORKSPACE'].includes(model.nextActionCode)) {
+      const treatment = treatmentById(model.nextActionTreatmentId);
+      return performTreatmentAction(treatment?.primaryAction || 'workspace', model.nextActionTreatmentId, source);
+    }
     if (model.nextActionCode === 'INVESTIGATE') {
       beginTriage(store);
       openSheet('triage', source);
@@ -173,12 +283,74 @@ function handlePrimary() {
     if (ui.sheet === 'findings') {
       const selected = [...root.querySelectorAll('[data-v2-finding-choice]:checked')].map((input) => input.value);
       if (model.findingsInvestigationId) confirmInvestigationFindings(store, model.findingsInvestigationId, selected);
+      const nextModel = deriveV2Model(store.getState());
+      const findingIds = (nextModel.treatmentFindings || []).map((item) => item.id);
+      model = nextModel;
+      if (findingIds.length) openTreatmentComposer(null, findingIds);
+      else {
+        ui.sheet = null;
+        scheduleRender();
+      }
+      return;
+    }
+
+    if (ui.sheet === 'treatment-review') {
+      const outcome = root.querySelector('input[name="reviewOutcome"]:checked')?.value || 'continue';
+      reviewTreatmentComponentV2(store, {
+        componentId: ui.reviewComponentId,
+        verifiedComplete: outcome === 'complete',
+        permissionToDismantle: outcome === 'complete',
+        notes: root.querySelector('[data-v2-review-notes]')?.value || '',
+      });
+      const nextModel = deriveV2Model(store.getState());
+      const treatment = nextModel.treatments.find((item) => item.id === ui.activeTreatmentId);
+      model = nextModel;
+      ui.reviewComponentId = null;
+      ui.sheet = treatment?.readyForFinalAssessment ? 'final-assessment' : 'treatment-workspace';
+      scheduleRender({ focusDialog: true });
+      return;
+    }
+
+    if (ui.sheet === 'final-assessment') {
+      finalizeTreatmentV2(store, ui.activeTreatmentId, {
+        frequency: root.querySelector('[data-v2-final-frequency]')?.value,
+        imbalancePercent: root.querySelector('[data-v2-final-imbalance]')?.value,
+        needsNewTreatment: Boolean(root.querySelector('[data-v2-final-needs-new]')?.checked),
+        nextTreatmentWhen: root.querySelector('[data-v2-final-next]')?.value || '',
+        notes: root.querySelector('[data-v2-final-notes]')?.value || '',
+      });
       ui.sheet = null;
+      ui.activeTreatmentId = null;
+      ui.route = 'today';
       scheduleRender();
+      return;
+    }
+
+    if (ui.sheet === 'reiki' && !model.reiki) {
+      const mode = root.querySelector('input[name="reikiMode"]:checked')?.value || 'IN_PERSON';
+      startSessionReiki(store, mode);
+      scheduleRender({ focusDialog: true });
     }
   } catch (error) {
     showInlineError(error);
   }
+}
+
+function handleSecondary() {
+  if (ui.sheet === 'assisted' && ui.assistedCreate) {
+    ui.assistedCreate = false;
+    ui.error = '';
+    render({ focusDialog: true });
+    return;
+  }
+  if (ui.sheet === 'treatment-review' || ui.sheet === 'final-assessment') {
+    ui.reviewComponentId = null;
+    ui.sheet = 'treatment-workspace';
+    ui.error = '';
+    render({ focusDialog: true });
+    return;
+  }
+  closeSheet();
 }
 
 if (store) store.subscribe(() => scheduleRender());
@@ -211,10 +383,8 @@ root.addEventListener('click', (event) => {
     return;
   }
 
-  if (event.target.closest('[data-v2-secondary]') && ui.sheet === 'assisted' && ui.assistedCreate) {
-    ui.assistedCreate = false;
-    ui.error = '';
-    render({ focusDialog: true });
+  if (event.target.closest('[data-v2-secondary]')) {
+    handleSecondary();
     return;
   }
 
@@ -249,6 +419,97 @@ root.addEventListener('click', (event) => {
     return;
   }
 
+  const treatmentSubmit = event.target.closest('[data-v2-treatment-submit]');
+  if (treatmentSubmit && liveMode) {
+    clearInlineError();
+    try {
+      const treatment = saveTreatmentDraft(store, treatmentInput(), { start: treatmentSubmit.dataset.v2TreatmentSubmit === 'start' });
+      ui.activeTreatmentId = treatment.id;
+      ui.treatmentDraft = blankTreatmentDraft();
+      ui.route = 'treatments';
+      ui.sheet = 'treatment-workspace';
+      scheduleRender({ focusDialog: true });
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
+  const treatmentAction = event.target.closest('[data-v2-treatment-action]');
+  if (treatmentAction) {
+    performTreatmentAction(treatmentAction.dataset.v2TreatmentAction, treatmentAction.dataset.treatmentId, treatmentAction);
+    return;
+  }
+
+  const reviewComponent = event.target.closest('[data-v2-review-component]');
+  if (reviewComponent) {
+    ui.reviewComponentId = reviewComponent.dataset.v2ReviewComponent;
+    ui.sheet = 'treatment-review';
+    ui.error = '';
+    render({ focusDialog: true });
+    return;
+  }
+
+  if (event.target.closest('[data-v2-add-item]')) {
+    syncTreatmentDraftFromDom();
+    ui.treatmentDraft.items.push(blankItem());
+    renderPreservingSheetScroll();
+    return;
+  }
+  const removeItem = event.target.closest('[data-v2-remove-item]');
+  if (removeItem) {
+    syncTreatmentDraftFromDom();
+    ui.treatmentDraft.items.splice(Number(removeItem.dataset.itemIndex), 1);
+    renderPreservingSheetScroll();
+    return;
+  }
+  const addCommand = event.target.closest('[data-v2-add-command]');
+  if (addCommand) {
+    syncTreatmentDraftFromDom();
+    ui.treatmentDraft.items[Number(addCommand.dataset.itemIndex)]?.commands.push(blankCommand());
+    renderPreservingSheetScroll();
+    return;
+  }
+  const removeCommand = event.target.closest('[data-v2-remove-command]');
+  if (removeCommand) {
+    syncTreatmentDraftFromDom();
+    ui.treatmentDraft.items[Number(removeCommand.dataset.itemIndex)]?.commands.splice(Number(removeCommand.dataset.commandIndex), 1);
+    renderPreservingSheetScroll();
+    return;
+  }
+  const addGraph = event.target.closest('[data-v2-add-graph]');
+  if (addGraph) {
+    syncTreatmentDraftFromDom();
+    ui.treatmentDraft.items[Number(addGraph.dataset.itemIndex)]?.commands[Number(addGraph.dataset.commandIndex)]?.graphApplications.push(blankGraph());
+    renderPreservingSheetScroll();
+    return;
+  }
+  const removeGraph = event.target.closest('[data-v2-remove-graph]');
+  if (removeGraph) {
+    syncTreatmentDraftFromDom();
+    ui.treatmentDraft.items[Number(removeGraph.dataset.itemIndex)]?.commands[Number(removeGraph.dataset.commandIndex)]?.graphApplications.splice(Number(removeGraph.dataset.graphIndex), 1);
+    renderPreservingSheetScroll();
+    return;
+  }
+
+  const reikiControl = event.target.closest('[data-v2-reiki-control]');
+  if (reikiControl && liveMode && model.reiki) {
+    clearInlineError();
+    try {
+      const action = reikiControl.dataset.v2ReikiControl;
+      if (action === 'pause') pauseSessionReiki(store, model.reiki.id);
+      if (action === 'resume') resumeSessionReiki(store, model.reiki.id);
+      if (action === 'complete') {
+        completeSessionReiki(store, model.reiki.id, root.querySelector('[data-v2-reiki-notes]')?.value || '');
+        ui.sheet = null;
+      }
+      scheduleRender({ focusDialog: Boolean(ui.sheet) });
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
   const action = event.target.closest('[data-v2-preview-action]');
   if (!action) return;
   opener = action;
@@ -265,16 +526,30 @@ root.addEventListener('click', (event) => {
     } catch (error) {
       showInlineError(error);
     }
+    return;
+  }
+  if (name === 'treat') {
+    openTreatmentComposer(action, (model.treatmentFindings || []).map((item) => item.id));
+    return;
+  }
+  if (name === 'reiki') {
+    openSheet('reiki', action);
   }
 });
 
 root.addEventListener('input', (event) => {
   const search = event.target.closest('[data-v2-assisted-search-input]');
-  if (!search) return;
-  const query = String(search.value || '').trim().toLocaleLowerCase('pt-BR');
-  root.querySelectorAll('[data-v2-assisted-search]').forEach((row) => {
-    row.hidden = Boolean(query && !row.dataset.v2AssistedSearch.includes(query));
-  });
+  if (search) {
+    const query = String(search.value || '').trim().toLocaleLowerCase('pt-BR');
+    root.querySelectorAll('[data-v2-assisted-search]').forEach((row) => {
+      row.hidden = Boolean(query && !row.dataset.v2AssistedSearch.includes(query));
+    });
+    return;
+  }
+  if (event.target.closest('[data-v2-treatment-draft], [data-v2-treatment-modality]')) syncTreatmentDraftFromDom();
+});
+root.addEventListener('change', (event) => {
+  if (event.target.closest('[data-v2-treatment-modality]')) syncTreatmentDraftFromDom();
 });
 
 document.addEventListener('keydown', (event) => {
