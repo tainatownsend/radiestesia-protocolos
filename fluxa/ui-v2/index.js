@@ -13,6 +13,8 @@ let opener = null;
 function render({ focusDialog = false } = {}) {
   root.innerHTML = renderAppShell(model, ui);
   document.body.dataset.v2SheetOpen = ui.sheet ? 'true' : 'false';
+  document.body.style.overflow = ui.sheet ? 'hidden' : '';
+  document.body.style.overscrollBehavior = ui.sheet ? 'none' : '';
   if (focusDialog && ui.sheet) queueMicrotask(() => focusSheet(root));
 }
 
