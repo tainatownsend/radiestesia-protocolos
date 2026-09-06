@@ -20,12 +20,13 @@ export function reikiWorkspace(model, ui) {
   if (reiki) {
     const isCurrentContext = reiki.belongsToCurrentSession && reiki.belongsToCurrentAssisted;
     const outsideSession = !reiki.sessionId;
+    const staleSessionContext = Boolean(reiki.sessionId && !reiki.belongsToCurrentSession);
     const canControl = outsideSession || isCurrentContext;
     const contextMessage = isCurrentContext
       ? '<p class="v2-helper">Esta aplicação está vinculada à sessão e ao Assistido atuais.</p>'
       : (outsideSession
         ? '<p class="v2-helper">Esta aplicação foi iniciada fora de uma sessão. Você pode pausá-la, retomá-la ou concluí-la aqui.</p>'
-        : '<div class="v2-inline-error" role="alert">A aplicação ativa pertence a outro contexto. Volte ao Assistido correto antes de alterá-la.</div>');
+        : '<div class="v2-inline-error" role="alert"><strong>Registro pendente de uma sessão anterior.</strong><p>Essa sessão não está mais aberta, então o Reiki não pode ser retomado ou concluído como atendimento normal. Encerre apenas este registro pendente para liberar uma nova aplicação; a sessão anterior não será reaberta nem alterada.</p></div>');
     const body = `
       <div class="v2-reiki-workspace">
         <section class="v2-reiki-timer" role="timer" aria-label="Tempo decorrido da aplicação de Reiki" data-v2-reiki-timer data-v2-reiki-running="${reiki.status === 'RUNNING'}" data-v2-reiki-elapsed-seconds="${Math.max(0, Number(reiki.elapsedSeconds) || 0)}">
@@ -34,15 +35,17 @@ export function reikiWorkspace(model, ui) {
           <span>${esc(reiki.modeLabel)} · ${esc(reiki.assistedName)}</span>
         </section>
         ${contextMessage}
-        <label class="v2-field"><span>Notas ao concluir <small>(opcional)</small></span><textarea rows="3" data-v2-reiki-notes placeholder="Observações da aplicação"></textarea></label>
+        <label class="v2-field"><span>${staleSessionContext ? 'Nota da recuperação' : 'Notas ao concluir'} <small>(opcional)</small></span><textarea rows="3" data-v2-reiki-notes placeholder="${staleSessionContext ? 'Por que este registro ficou pendente?' : 'Observações da aplicação'}"></textarea></label>
       </div>
     `;
     return mobileSheet({
       eyebrow: `${reiki.assistedName} · Reiki`,
-      title: reiki.status === 'PAUSED' ? 'Aplicação pausada' : 'Aplicação em andamento',
+      title: staleSessionContext ? 'Registro de Reiki pendente' : (reiki.status === 'PAUSED' ? 'Aplicação pausada' : 'Aplicação em andamento'),
       body,
       error: ui.error,
-      footerHtml: `
+      footerHtml: staleSessionContext
+        ? '<span aria-hidden="true"></span><button class="v2-btn v2-btn--primary" type="button" data-v2-reiki-control="complete">Encerrar registro pendente</button>'
+        : `
         <button class="v2-btn v2-btn--ghost" type="button" data-v2-reiki-control="${reiki.status === 'PAUSED' ? 'resume' : 'pause'}" ${canControl ? '' : 'disabled'}>${reiki.status === 'PAUSED' ? 'Retomar' : 'Pausar'}</button>
         <button class="v2-btn v2-btn--primary" type="button" data-v2-reiki-control="complete" ${canControl ? '' : 'disabled'}>Concluir Reiki</button>
       `,
