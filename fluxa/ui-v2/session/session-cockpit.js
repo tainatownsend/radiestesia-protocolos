@@ -1,3 +1,5 @@
+import { isContinuityLocked } from '../workflow-continuity.js';
+
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
@@ -12,15 +14,6 @@ function indicator(label, value, ok = false) {
     </div>
   `;
 }
-
-const CONTINUITY_ACTIONS = new Set([
-  'TRIAGE',
-  'FINDINGS',
-  'REIKI_CONTEXT',
-  'REIKI_ACTIVE',
-  'TREATMENT_REVIEW',
-  'TREATMENT_FINAL',
-]);
 
 export function sessionCockpit(model) {
   if (!model.sessionOpen) {
@@ -47,7 +40,7 @@ export function sessionCockpit(model) {
   const treatmentCount = model.treatmentCount ?? model.treatmentsWorked ?? 0;
   const investigationCount = model.investigations ?? 0;
   const sessionActivity = `${investigationCount} investigaç${investigationCount === 1 ? 'ão' : 'ões'} · ${treatmentCount} tratamento${treatmentCount === 1 ? '' : 's'} trabalhado${treatmentCount === 1 ? '' : 's'}`;
-  const continuityLocked = CONTINUITY_ACTIONS.has(model.nextActionCode);
+  const continuityLocked = isContinuityLocked(model.nextActionCode);
   const optionalActions = continuityLocked ? '' : `
       <section class="v2-section">
         <p class="v2-eyebrow">Ações da sessão</p>
