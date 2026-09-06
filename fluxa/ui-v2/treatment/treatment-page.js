@@ -46,17 +46,20 @@ function emptyTreatmentState(model) {
     return {
       title: 'Abra uma sessão para entrar no contexto do Assistido',
       copy: 'A fila de Tratamentos acompanha o Assistido selecionado na sessão. Registros de atendimentos anteriores continuam disponíveis no Histórico.',
+      actionLabel: 'Abrir sessão em Hoje',
     };
   }
   if (!model.assistedSelected) {
     return {
       title: 'Selecione o Assistido da sessão',
       copy: 'Depois da seleção, o Fluxa mostra aqui os tratamentos desse Assistido e a próxima ação disponível.',
+      actionLabel: 'Selecionar em Hoje',
     };
   }
   return {
     title: `Nenhum tratamento para ${model.assistedName || 'este Assistido'}`,
     copy: 'Quando você criar ou planejar um tratamento, ele aparecerá aqui com a próxima ação correta.',
+    actionLabel: '',
   };
 }
 
@@ -85,6 +88,7 @@ export function treatmentPage(model) {
         <section class="v2-card v2-card--soft v2-empty-state">
           <strong>${esc(empty.title)}</strong>
           <p class="v2-copy">${esc(empty.copy)}</p>
+          ${empty.actionLabel ? `<button class="v2-btn v2-btn--primary" type="button" data-v2-route="today">${esc(empty.actionLabel)}</button>` : ''}
         </section>
       `}
     </div>
