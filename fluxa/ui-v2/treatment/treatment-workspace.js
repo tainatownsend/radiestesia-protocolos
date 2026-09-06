@@ -22,11 +22,12 @@ function statusCopy(component) {
 }
 
 function componentRow(component) {
+  const resolved = ['COMPLETED', 'STOPPED', 'REPLACED'].includes(component.status);
   return `
     <article class="v2-component-row">
       <div class="v2-component-row__head">
         <div><strong>${esc(component.name)}</strong><small>${esc(statusCopy(component))}</small></div>
-        <span class="v2-status-dot" data-status="${esc(component.status)}">${component.resolved ? '✓' : ''}</span>
+        <span class="v2-status-dot" data-status="${esc(component.status)}" aria-label="${resolved ? 'Componente resolvido' : 'Componente pendente'}">${resolved ? '✓' : ''}</span>
       </div>
       <details class="v2-component-details">
         <summary>${component.commandCount} comando${component.commandCount === 1 ? '' : 's'} · ${component.graphCount} gráfico${component.graphCount === 1 ? '' : 's'}</summary>
@@ -45,10 +46,14 @@ export function treatmentWorkspace(model, ui) {
   const treatment = (model.treatments || []).find((item) => item.id === ui.activeTreatmentId);
   if (!treatment) return '';
   const activePrimary = treatment.status !== 'COMPLETED' && treatment.primaryAction !== 'workspace';
+  const progressValue = treatment.total ? `${treatment.resolved}/${treatment.total}` : '—';
+  const progressLabel = treatment.total
+    ? `${treatment.resolved} de ${treatment.total} componentes resolvidos`
+    : 'Nenhum componente registrado';
   const body = `
     <div class="v2-treatment-workspace">
       <section class="v2-workspace-summary">
-        <div class="v2-progress-ring" aria-label="${treatment.resolved} de ${treatment.total} componentes resolvidos"><strong>${treatment.resolved}/${treatment.total}</strong><span>resolvidos</span></div>
+        <div class="v2-progress-ring" aria-label="${esc(progressLabel)}"><strong>${progressValue}</strong><span>${treatment.total ? 'resolvidos' : 'componentes'}</span></div>
         <div><p class="v2-eyebrow">Progresso</p><strong>${esc(treatment.title)}</strong>${treatment.objective ? `<p class="v2-helper">${esc(treatment.objective)}</p>` : ''}</div>
       </section>
       <section class="v2-component-list" aria-label="Componentes do tratamento">
