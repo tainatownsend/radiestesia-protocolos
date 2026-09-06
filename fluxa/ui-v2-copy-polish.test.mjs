@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { preparationFlow } from './ui-v2/session/preparation-flow.js';
 import { closingFlow } from './ui-v2/session/closing-flow.js';
+import { assistedPicker } from './ui-v2/session/assisted-picker.js';
 import { historyPage } from './ui-v2/history/history-page.js';
 import { treatmentStatusLabel } from './ui-v2/status-labels.js';
 
@@ -38,6 +40,15 @@ const historyHtml = historyPage({ historySessions:[{
 }] }, { historySessionId:'ses_1' });
 assert.match(historyHtml,/Equilíbrio emocional · Em andamento/);
 assert.doesNotMatch(historyHtml,/IN_PROGRESS/);
+
+const assistedHtml = assistedPicker({ assistedOptions:[{ id:'ast_joao', name:'João', type:'PERSON' }] }, { assistedCreate:false, error:'' });
+assert.match(assistedHtml,/data-v2-assisted-search="joão\|joao"/,'Assisted search metadata should support accented and unaccented queries.');
+assert.match(assistedHtml,/>Pessoa</);
+assert.doesNotMatch(assistedHtml,/>PERSON</);
+
+const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 'utf8');
+assert.match(shell,/model\.source === 'live' \? 'Sessão guiada' : 'Preview seguro'/);
+assert.doesNotMatch(shell,/'Sessão guiada · UI V2'/,'Live header must not expose implementation version labels.');
 
 assert.equal(treatmentStatusLabel('INTERRUPTED'),'Interrompido');
 assert.equal(treatmentStatusLabel('WAITING_REVIEW'),'Waiting review','Unknown status fallback should remain readable instead of exposing underscores.');
