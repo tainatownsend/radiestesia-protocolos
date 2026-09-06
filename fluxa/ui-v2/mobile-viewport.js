@@ -31,6 +31,42 @@ export function syncVisualViewportMetrics(win = globalThis.window, doc = globalT
   return metrics;
 }
 
+export function setPageScrollLock(locked, win = globalThis.window, doc = globalThis.document) {
+  const body = doc?.body;
+  if (!body) return;
+  const alreadyLocked = body.dataset.v2ScrollLocked === 'true';
+  if (locked) {
+    if (alreadyLocked) return;
+    const scrollY = Math.max(0, Number(win?.scrollY ?? win?.pageYOffset) || 0);
+    body.dataset.v2ScrollLocked = 'true';
+    body.dataset.v2ScrollY = String(scrollY);
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehavior = 'none';
+    return;
+  }
+  if (!alreadyLocked) {
+    body.style.overflow = '';
+    body.style.overscrollBehavior = '';
+    return;
+  }
+  const scrollY = Math.max(0, Number(body.dataset.v2ScrollY) || 0);
+  delete body.dataset.v2ScrollLocked;
+  delete body.dataset.v2ScrollY;
+  body.style.position = '';
+  body.style.top = '';
+  body.style.left = '';
+  body.style.right = '';
+  body.style.width = '';
+  body.style.overflow = '';
+  body.style.overscrollBehavior = '';
+  win?.scrollTo?.({ top: scrollY, left: 0, behavior: 'auto' });
+}
+
 function focusedBlock(target) {
   return target?.closest?.('.v2-field, .v2-choice-card, .v2-check-row, .v2-treatment-graph') || target;
 }
