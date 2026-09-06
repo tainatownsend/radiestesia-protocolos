@@ -1,4 +1,6 @@
-import { createStore } from '../store.js';
+import { AssistedType, createAssistedEntity } from '../domain.js';
+import { createStore, loadState } from '../store.js';
+import { exportLocalDataFile, recoverLocalData, validateImportPayload } from '../storage-health.js';
 import { focusSheet, trapSheetFocus } from './components/mobile-sheet.js';
 import { renderAppShell } from './app-shell.js';
 import {
@@ -24,6 +26,7 @@ import {
   stepBackTriage,
 } from './state/actions.js';
 import { deriveHistoryModel } from './history/history-model.js';
+import { deriveLibraryModel } from './library/library-model.js';
 import { deriveV2Model } from './state/selectors.js';
 import { fixtureFromLocation } from './testing/fixtures.js';
 
@@ -34,10 +37,19 @@ const store = liveMode ? createStore() : null;
 
 function deriveLiveModel() {
   const state = store.getState();
-  return { ...deriveV2Model(state), ...deriveHistoryModel(state) };
+  return { ...deriveV2Model(state), ...deriveHistoryModel(state), ...deriveLibraryModel(state) };
 }
 
-let model = liveMode ? deriveLiveModel() : { ...fixtureFromLocation(), source: 'fixture', historySessions: [], safeClose: null, latestClosedSession: null };
+const emptyLibrary = {
+  assisteds: [], resources: [], protocols: [], therapies: [{ id:'RADIESTHESIA', label:'Radiestesia', base:true }],
+  counts: { assisteds:0, resources:0, protocols:0, therapies:1 },
+};
+let model = liveMode
+  ? deriveLiveModel()
+  : {
+      ...fixtureFromLocation(), source:'fixture', historySessions:[], safeClose:null, latestClosedSession:null,
+      library:emptyLibrary, therapeuticSettings:{ enabled:[], custom:[] },
+    };
 
 function blankGraph() {
   return { graphName: '', durationValue: '', durationUnit: 'DAY' };
@@ -51,6 +63,9 @@ function blankItem(label = '') {
 function blankTreatmentDraft(findingIds = [], firstLabel = '') {
   return { title: '', objective: '', modalities: [], findingIds: [...findingIds], items: [blankItem(firstLabel)] };
 }
+function normalizeSearch(value = '') {
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+}
 
 const ui = {
   route: 'today',
@@ -62,6 +77,8 @@ const ui = {
   treatmentDraft: blankTreatmentDraft(),
   justClosedSessionId: null,
   historySessionId: null,
+  librarySection: 'home',
+  importPreview: null,
 };
 let opener = null;
 let renderQueued = false;
@@ -119,9 +136,11 @@ function showInlineError(error) {
 }
 
 function closeSheet() {
+  const closingSheet = ui.sheet;
   ui.sheet = null;
   ui.assistedCreate = false;
   ui.reviewComponentId = null;
+  if (closingSheet === 'settings') ui.importPreview = null;
   ui.error = '';
   render();
   queueMicrotask(() => opener?.focus?.());
@@ -285,6 +304,18 @@ function handlePrimary() {
       return;
     }
 
+    if (ui.sheet === 'library-new-assisted') {
+      createAssistedEntity(store, {
+        type: AssistedType.PERSON,
+        displayName: root.querySelector('[data-v2-library-person-name]')?.value || '',
+        birthDate: root.querySelector('[data-v2-library-person-birthdate]')?.value || '',
+      });
+      ui.sheet = null;
+      ui.librarySection = 'assisteds';
+      scheduleRender();
+      return;
+    }
+
     if (ui.sheet === 'hawkins') {
       recordSessionHawkins(store, root.querySelector('[data-v2-hawkins-input]')?.value);
       ui.sheet = null;
@@ -387,6 +418,7 @@ root.addEventListener('click', (event) => {
     ui.route = route.dataset.v2Route;
     ui.sheet = null;
     if (ui.route !== 'history') ui.historySessionId = null;
+    if (ui.route !== 'library') ui.librarySection = 'home';
     ui.error = '';
     render();
     return;
@@ -394,6 +426,96 @@ root.addEventListener('click', (event) => {
 
   if (event.target.closest('[data-v2-close-sheet]')) {
     closeSheet();
+    return;
+  }
+
+  const settingsTrigger = event.target.closest('[data-v2-open-settings]');
+  if (settingsTrigger) {
+    if (!liveMode) return;
+    openSheet('settings', settingsTrigger);
+    return;
+  }
+
+  const librarySection = event.target.closest('[data-v2-library-section]');
+  if (librarySection) {
+    ui.route = 'library';
+    ui.librarySection = librarySection.dataset.v2LibrarySection || 'home';
+    ui.error = '';
+    render();
+    return;
+  }
+
+  if (event.target.closest('[data-v2-library-back]')) {
+    ui.route = 'library';
+    ui.librarySection = 'home';
+    ui.error = '';
+    render();
+    return;
+  }
+
+  const newLibraryAssisted = event.target.closest('[data-v2-library-new-assisted]');
+  if (newLibraryAssisted) {
+    if (!liveMode) return;
+    openSheet('library-new-assisted', newLibraryAssisted);
+    return;
+  }
+
+  if (event.target.closest('[data-v2-settings-export]')) {
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      exportLocalDataFile();
+      renderPreservingSheetScroll();
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
+  if (event.target.closest('[data-v2-settings-recover]')) {
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      recoverLocalData();
+      store.setState(() => loadState());
+      renderPreservingSheetScroll();
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
+  if (event.target.closest('[data-v2-settings-import-apply]')) {
+    if (!liveMode || !ui.importPreview?.normalized) return;
+    clearInlineError();
+    try {
+      const normalized = structuredClone(ui.importPreview.normalized);
+      store.setState(() => normalized);
+      ui.importPreview = null;
+      renderPreservingSheetScroll();
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
+  if (event.target.closest('[data-v2-settings-save-modalities]')) {
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      const enabled = [...root.querySelectorAll('input[name="v2EnabledModality"]:checked')].map((input) => input.value);
+      const custom = String(root.querySelector('[data-v2-settings-custom-modalities]')?.value || '')
+        .split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+      store.setState((state) => {
+        const draft = structuredClone(state);
+        draft.settings = draft.settings || {};
+        draft.settings.therapeuticModalities = { enabled, custom };
+        return draft;
+      });
+      renderPreservingSheetScroll();
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
 
@@ -592,17 +714,57 @@ root.addEventListener('click', (event) => {
 });
 
 root.addEventListener('input', (event) => {
-  const search = event.target.closest('[data-v2-assisted-search-input]');
-  if (search) {
-    const query = String(search.value || '').trim().toLocaleLowerCase('pt-BR');
+  const assistedSearch = event.target.closest('[data-v2-assisted-search-input]');
+  if (assistedSearch) {
+    const query = String(assistedSearch.value || '').trim().toLocaleLowerCase('pt-BR');
     root.querySelectorAll('[data-v2-assisted-search]').forEach((row) => {
       row.hidden = Boolean(query && !row.dataset.v2AssistedSearch.includes(query));
     });
     return;
   }
+
+  const librarySearch = event.target.closest('[data-v2-library-search]');
+  if (librarySearch) {
+    const query = normalizeSearch(librarySearch.value);
+    root.querySelectorAll('[data-v2-library-search-text]').forEach((row) => {
+      row.hidden = Boolean(query && !String(row.dataset.v2LibrarySearchText || '').includes(query));
+    });
+    return;
+  }
+
   if (event.target.closest('[data-v2-treatment-draft], [data-v2-treatment-modality]')) syncTreatmentDraftFromDom();
 });
-root.addEventListener('change', (event) => {
+
+root.addEventListener('change', async (event) => {
+  const importInput = event.target.closest('[data-v2-settings-import-file]');
+  if (importInput && liveMode) {
+    clearInlineError();
+    const file = importInput.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      let parsed;
+      try { parsed = JSON.parse(text); }
+      catch (_) { throw new Error('Este arquivo não contém um backup JSON válido do Fluxa.'); }
+      const normalized = validateImportPayload(parsed);
+      ui.importPreview = {
+        name: file.name,
+        normalized,
+        summary: {
+          sessions: normalized.sessions?.length || 0,
+          assisteds: normalized.assistedEntities?.length || 0,
+          treatments: normalized.treatments?.length || 0,
+          resources: normalized.tools?.length || 0,
+        },
+      };
+      renderPreservingSheetScroll();
+    } catch (error) {
+      ui.importPreview = null;
+      showInlineError(error);
+    }
+    return;
+  }
+
   if (event.target.closest('[data-v2-treatment-modality]')) syncTreatmentDraftFromDom();
 });
 

@@ -1,18 +1,21 @@
 import { findingsSummary } from './investigation/findings-summary.js';
 import { triageFlow } from './investigation/triage-flow.js';
 import { historyPage } from './history/history-page.js';
+import { libraryPage } from './library/library-page.js';
+import { newAssistedSheet } from './library/new-assisted-sheet.js';
+import { reikiWorkspace } from './reiki/reiki-workspace.js';
+import { settingsSheet } from './settings/settings-sheet.js';
 import { closingFlow } from './session/closing-flow.js';
 import { postCloseSummary } from './session/post-close-summary.js';
 import { assistedPicker } from './session/assisted-picker.js';
 import { hawkinsFlow } from './session/hawkins-flow.js';
 import { preparationFlow } from './session/preparation-flow.js';
 import { sessionCockpit } from './session/session-cockpit.js';
+import { finalAssessment } from './treatment/final-assessment.js';
 import { treatmentComposer } from './treatment/treatment-composer.js';
 import { treatmentPage } from './treatment/treatment-page.js';
-import { treatmentWorkspace } from './treatment/treatment-workspace.js';
 import { treatmentReview } from './treatment/treatment-review.js';
-import { finalAssessment } from './treatment/final-assessment.js';
-import { reikiWorkspace } from './reiki/reiki-workspace.js';
+import { treatmentWorkspace } from './treatment/treatment-workspace.js';
 
 const ROUTES = [
   ['today', 'Hoje'],
@@ -27,24 +30,6 @@ function esc(value = '') {
   }[c]));
 }
 
-function placeholder(route) {
-  const labels = {
-    library: ['Acervo', 'Assistidos, protocolos, gráficos, recursos e terapias'],
-  };
-  const [title, copy] = labels[route] || labels.library;
-  return `
-    <section class="v2-section">
-      <p class="v2-eyebrow">Fluxa UI V2</p>
-      <h1 class="v2-title">${esc(title)}</h1>
-      <p class="v2-copy">${esc(copy)}.</p>
-      <div class="v2-card v2-card--soft">
-        <strong>Em migração</strong>
-        <p class="v2-copy">Esta superfície entra depois que o golden path da sessão estiver estável no iPhone.</p>
-      </div>
-    </section>
-  `;
-}
-
 function sheetMarkup(model, ui) {
   if (ui.sheet === 'preparation') return preparationFlow(model, ui);
   if (ui.sheet === 'assisted') return assistedPicker(model, ui);
@@ -57,6 +42,8 @@ function sheetMarkup(model, ui) {
   if (ui.sheet === 'final-assessment') return finalAssessment(model, ui);
   if (ui.sheet === 'reiki') return reikiWorkspace(model, ui);
   if (ui.sheet === 'closing') return closingFlow(model, ui);
+  if (ui.sheet === 'library-new-assisted') return newAssistedSheet(model, ui);
+  if (ui.sheet === 'settings') return settingsSheet(model, ui);
   return '';
 }
 
@@ -73,7 +60,7 @@ export function renderAppShell(model, ui) {
   } else if (route === 'history') {
     content = historyPage(model, ui);
   } else {
-    content = placeholder(route);
+    content = libraryPage(model, ui);
   }
 
   const nav = ROUTES.map(([id, label]) => `
@@ -87,7 +74,10 @@ export function renderAppShell(model, ui) {
           <strong>Fluxa</strong>
           <span>${model.source === 'live' ? 'Sessão guiada · UI V2' : 'UI V2 · preview seguro'}</span>
         </div>
-        <span class="v2-context-chip">${esc(currentContext)}</span>
+        <div class="v2-header-actions">
+          <span class="v2-context-chip">${esc(currentContext)}</span>
+          <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações">Ajustes</button>
+        </div>
       </header>
 
       <main class="v2-main" id="v2-main">${content}</main>
