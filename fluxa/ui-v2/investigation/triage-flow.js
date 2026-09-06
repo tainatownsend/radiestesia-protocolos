@@ -21,7 +21,7 @@ export function triageFlow(model, ui = {}) {
       </div>
       <section class="v2-question" aria-labelledby="v2-triage-question">
         <p class="v2-eyebrow">${esc(model.assistedName || 'Assistido')}</p>
-        <h3 id="v2-triage-question">${esc(investigation.question)}</h3>
+        <h3 id="v2-triage-question" tabindex="-1" data-v2-autofocus>${esc(investigation.question)}</h3>
         <p class="v2-copy">Responda apenas à pergunta atual. O progresso é salvo automaticamente.</p>
       </section>
     </div>
