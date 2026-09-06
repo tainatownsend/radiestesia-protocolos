@@ -114,7 +114,11 @@ export function historyPage(model, ui) {
         <p class="v2-copy">Primeiro a história que faz sentido. O detalhe técnico continua disponível quando você precisa auditar.</p>
       </section>
       ${sessions.length ? `<section class="v2-history-session-list">${sessions.map(sessionCard).join('')}</section>` : `
-        <section class="v2-card v2-card--soft v2-empty-state"><strong>Nenhuma sessão registrada</strong><p class="v2-copy">Depois do primeiro atendimento, a evolução aparecerá aqui.</p></section>
+        <section class="v2-card v2-card--soft v2-empty-state">
+          <strong>Nenhuma sessão registrada</strong>
+          <p class="v2-copy">Depois do primeiro atendimento, a evolução aparecerá aqui.</p>
+          <button class="v2-btn v2-btn--primary" type="button" data-v2-route="today">Ir para Hoje</button>
+        </section>
       `}
     </div>
   `;
