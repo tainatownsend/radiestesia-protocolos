@@ -27,7 +27,7 @@ assert.match(outsideRunning, /À distância · João/);
 assert.match(outsideRunning, /data-v2-reiki-control="pause"/);
 assert.doesNotMatch(outsideRunning, /data-v2-reiki-control="pause"[^>]*disabled/,'Outside-session Reiki must remain pausable even while another session is open.');
 assert.doesNotMatch(outsideRunning, /data-v2-reiki-control="complete"[^>]*disabled/,'Outside-session Reiki must remain completable.');
-assert.doesNotMatch(outsideRunning, /pertence a outro contexto/);
+assert.doesNotMatch(outsideRunning, /Registro de Reiki pendente/);
 
 const outsidePaused = reikiWorkspace({
   ...baseModel,
@@ -47,11 +47,11 @@ assert.match(outsidePaused, /data-v2-reiki-control="resume"/);
 assert.doesNotMatch(outsidePaused, /data-v2-reiki-control="resume"[^>]*disabled/,'Outside-session paused Reiki must remain resumable.');
 assert.doesNotMatch(outsidePaused, /data-v2-reiki-control="complete"[^>]*disabled/);
 
-const otherSession = reikiWorkspace({
+const staleSession = reikiWorkspace({
   ...baseModel,
   reiki: {
-    id: 'reiki_other',
-    sessionId: 'ses_other',
+    id: 'reiki_stale',
+    sessionId: 'ses_old',
     assistedEntityId: 'ast_joao',
     assistedName: 'João',
     belongsToCurrentSession: false,
@@ -61,10 +61,32 @@ const otherSession = reikiWorkspace({
     elapsedSeconds: 60,
   },
 }, ui);
-assert.match(otherSession, /pertence a outro contexto/,'Session-bound Reiki from another context must remain visibly protected.');
-assert.match(otherSession, /data-v2-reiki-control="pause"[^>]*disabled/);
-assert.match(otherSession, /data-v2-reiki-control="complete"[^>]*disabled/);
-assert.doesNotMatch(otherSession, /foi iniciada fora de uma sessão/);
+assert.match(staleSession, /Registro de Reiki pendente/);
+assert.match(staleSession, /sessão não está mais aberta/);
+assert.match(staleSession, /Encerrar registro pendente/);
+assert.match(staleSession, /data-v2-reiki-control="complete"/,'Recovery intentionally reuses the existing completion controller action.');
+assert.doesNotMatch(staleSession, /data-v2-reiki-control="pause"/,'A stale session-bound record must not offer pause.');
+assert.doesNotMatch(staleSession, /data-v2-reiki-control="resume"/,'A stale session-bound record must not offer resume.');
+assert.doesNotMatch(staleSession, />Concluir Reiki</,'A stale record must not be described as a therapeutic completion.');
+
+const wrongAssistedCurrentSession = reikiWorkspace({
+  ...baseModel,
+  reiki: {
+    id: 'reiki_current_wrong_assisted',
+    sessionId: 'ses_current',
+    assistedEntityId: 'ast_joao',
+    assistedName: 'João',
+    belongsToCurrentSession: true,
+    belongsToCurrentAssisted: false,
+    status: 'PAUSED',
+    modeLabel: 'Presencial',
+    elapsedSeconds: 60,
+  },
+}, ui);
+assert.match(wrongAssistedCurrentSession, /outro contexto/,'Current-session Reiki for another assisted must remain protected, not treated as stale.');
+assert.match(wrongAssistedCurrentSession, /data-v2-reiki-control="resume"[^>]*disabled/);
+assert.match(wrongAssistedCurrentSession, /data-v2-reiki-control="complete"[^>]*disabled/);
+assert.doesNotMatch(wrongAssistedCurrentSession, /Encerrar registro pendente/);
 
 const currentSession = reikiWorkspace({
   ...baseModel,
