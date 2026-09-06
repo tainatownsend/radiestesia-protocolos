@@ -44,10 +44,23 @@ state.findings.push({
   id:'find_2', investigationId:'inv_2', sourceQuestionId:'q2', assistedEntityId:'ast_2',
   title:'Achado de João', status:'DISMISSED', createdAt:'2026-09-06T10:30:00.000Z', dismissedAt:'2026-09-06T10:30:00.000Z',
 });
+state.investigations[1].status = 'IN_PROGRESS';
 history = deriveHistoryModel(state);
 assert.equal(history.safeClose.pendingFindingCount, 0,'A persisted dismissal counts as a completed review without inflating confirmed finding totals.');
 assert.equal(history.safeClose.findings, 0);
 assert.equal(history.safeClose.pendingFindingBlocker, null);
+assert.equal(history.safeClose.openInvestigationBlocker?.assistedEntityId, 'ast_2');
+assert.equal(history.safeClose.openInvestigationBlocker?.assistedName, 'João');
+html = closingFlow({ safeClose:history.safeClose, assistedName:'Marina', findings:[] }, { error:'' });
+assert.match(html,/Há uma investigação em andamento/);
+assert.match(html,/a investigação de João/,'Open-investigation recovery should identify the assisted whose flow must resume.');
+assert.match(html,/data-v2-select-assisted="ast_2"/);
+assert.match(html,/Continuar com João/);
+assert.doesNotMatch(html,/data-v2-primary>Encerrar sessão/);
+
+state.investigations[1].status = 'COMPLETED';
+history = deriveHistoryModel(state);
+assert.equal(history.safeClose.openInvestigationBlocker, null);
 html = closingFlow({ safeClose:history.safeClose, assistedName:'Marina', findings:[] }, { error:'' });
 assert.match(html,/Pronto para encerrar/);
 assert.match(html,/data-v2-primary>Encerrar sessão/);
