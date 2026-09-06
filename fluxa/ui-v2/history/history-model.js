@@ -98,6 +98,9 @@ function sessionAssistedIds(state, session) {
   for (const reiki of state.reikiApplications || []) {
     if (reiki.sessionId === session.id && reiki.assistedEntityId) ids.add(reiki.assistedEntityId);
   }
+  for (const treatment of state.treatments || []) {
+    if (treatment.plannedInSessionId === session.id && treatment.assistedEntityId) ids.add(treatment.assistedEntityId);
+  }
   return [...ids];
 }
 
@@ -107,6 +110,9 @@ function touchedTreatmentIds(state, sessionId) {
     if (event.sessionId !== sessionId) continue;
     const treatmentId = treatmentIdForEvent(state, event);
     if (treatmentId) ids.add(treatmentId);
+  }
+  for (const treatment of state.treatments || []) {
+    if (treatment.plannedInSessionId === sessionId) ids.add(treatment.id);
   }
   return [...ids];
 }
@@ -174,6 +180,27 @@ function treatmentGroup(state, treatmentId, events) {
     relatedCount: Math.max(0, events.length - 1),
     audit: events.map(rawAuditEvent),
     treatmentId,
+  };
+}
+
+function plannedTreatmentGroup(state, treatment) {
+  const components = (state.treatmentComponents || []).filter((item) => item.treatmentId === treatment.id);
+  const occurredAt = treatment.plannedAt || treatment.createdAt || treatment.updatedAt;
+  return {
+    id: `treatment-planned:${treatment.id}`,
+    kind: 'treatment',
+    title: `Tratamento ${treatment.title || 'sem nome'} planejado`,
+    detail: components.length ? `${components.length} componente${components.length === 1 ? '' : 's'} preparado${components.length === 1 ? '' : 's'}` : 'Composição salva para iniciar depois',
+    occurredAt,
+    relatedCount: 0,
+    audit: [{
+      id: `planned:${treatment.id}`,
+      type: 'TREATMENT_PLANNED',
+      label: 'Tratamento planejado',
+      detail: treatment.title || '',
+      occurredAt,
+    }],
+    treatmentId: treatment.id,
   };
 }
 
@@ -254,7 +281,11 @@ export function narrativeForSession(state, sessionId) {
     if (group.kind === 'investigation') return investigationGroup(state, group.id, group.events);
     return reikiGroup(state, group.id, group.events);
   });
-  return [...summarized, ...singles].sort((a, b) => String(a.occurredAt || '').localeCompare(String(b.occurredAt || '')));
+  const groupedTreatmentIds = new Set([...groups.values()].filter((group) => group.kind === 'treatment').map((group) => group.id));
+  const plannedOnly = (state.treatments || [])
+    .filter((treatment) => treatment.plannedInSessionId === sessionId && !groupedTreatmentIds.has(treatment.id))
+    .map((treatment) => plannedTreatmentGroup(state, treatment));
+  return [...summarized, ...plannedOnly, ...singles].sort((a, b) => String(a.occurredAt || '').localeCompare(String(b.occurredAt || '')));
 }
 
 function sessionModel(state, session) {
