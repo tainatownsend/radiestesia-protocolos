@@ -66,6 +66,10 @@ function blankTreatmentDraft(findingIds = [], firstLabel = '') {
 function normalizeSearch(value = '') {
   return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 }
+function requireDataReplacementIdle() {
+  const sessionOpen = Boolean(liveMode && store?.getState?.().sessions?.some((session) => session.status === 'OPEN'));
+  if (sessionOpen) throw new Error('Finalize a sessão atual antes de importar ou recuperar os dados locais.');
+}
 
 const ui = {
   route: 'today',
@@ -305,6 +309,10 @@ function handlePrimary() {
         birthDate: root.querySelector('[data-v2-assisted-birthdate]')?.value,
       });
       ui.assistedCreate = false;
+      ui.route = 'today';
+      ui.historySessionId = null;
+      ui.librarySection = 'home';
+      ui.justClosedSessionId = null;
       ui.sheet = 'hawkins';
       scheduleRender({ focusDialog: true });
       return;
@@ -482,6 +490,7 @@ root.addEventListener('click', (event) => {
     if (!liveMode) return;
     clearInlineError();
     try {
+      requireDataReplacementIdle();
       recoverLocalData();
       store.setState(() => loadState());
       renderPreservingSheetScroll();
@@ -495,6 +504,7 @@ root.addEventListener('click', (event) => {
     if (!liveMode || !ui.importPreview?.normalized) return;
     clearInlineError();
     try {
+      requireDataReplacementIdle();
       const normalized = structuredClone(ui.importPreview.normalized);
       store.setState(() => normalized);
       ui.importPreview = null;
@@ -547,6 +557,10 @@ root.addEventListener('click', (event) => {
       selectSessionAssisted(store, assisted.dataset.v2SelectAssisted);
       const nextModel = deriveLiveModel();
       model = nextModel;
+      ui.route = 'today';
+      ui.historySessionId = null;
+      ui.librarySection = 'home';
+      ui.justClosedSessionId = null;
       ui.sheet = nextModel.hawkinsReady ? null : 'hawkins';
       scheduleRender({ focusDialog: Boolean(ui.sheet) });
     } catch (error) {
@@ -759,9 +773,10 @@ root.addEventListener('change', async (event) => {
   const importInput = event.target.closest('[data-v2-settings-import-file]');
   if (importInput && liveMode) {
     clearInlineError();
-    const file = importInput.files?.[0];
-    if (!file) return;
     try {
+      requireDataReplacementIdle();
+      const file = importInput.files?.[0];
+      if (!file) return;
       const text = await file.text();
       let parsed;
       try { parsed = JSON.parse(text); }
