@@ -14,9 +14,14 @@ function countLabel(value, singular, plural) {
   return Number(value) === 1 ? singular : plural;
 }
 
+function continuityTitle(item, multiAssisted) {
+  return [multiAssisted ? item.assistedName : '', item.title].filter(Boolean).map(esc).join(' · ');
+}
+
 export function postCloseSummary(model, sessionId) {
   const session = (model.historySessions || []).find((item) => item.id === sessionId) || model.latestClosedSession;
   if (!session) return '';
+  const multiAssisted = (session.assistedNames?.length || 0) > 1;
   return `
     <div class="v2-stack">
       <section class="v2-post-close-hero">
@@ -36,7 +41,7 @@ export function postCloseSummary(model, sessionId) {
         <section class="v2-card v2-card--soft v2-post-close-continuity">
           <p class="v2-eyebrow">Fica para acompanhar</p>
           <h2>Trabalho longitudinal continua ativo</h2>
-          ${session.longitudinal.map((item) => `<div><strong>${esc(item.title)}</strong><span>${esc(treatmentStatusLabel(item.status))}</span></div>`).join('')}
+          ${session.longitudinal.map((item) => `<div><strong>${continuityTitle(item, multiAssisted)}</strong><span>${esc(treatmentStatusLabel(item.status))}</span></div>`).join('')}
         </section>
       ` : `
         <section class="v2-card v2-card--soft"><strong>Nenhum tratamento longitudinal pendente desta sessão</strong><p class="v2-copy">O atendimento continua disponível no Histórico.</p></section>
