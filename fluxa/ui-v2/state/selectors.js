@@ -69,6 +69,18 @@ function pendingInvestigationFindings(state, investigation) {
     }));
 }
 
+export function pendingSessionFindingBatch(state, sessionId, assistedId) {
+  if (!sessionId || !assistedId) return { investigation: null, findings: [] };
+  const completed = (state.investigations || [])
+    .filter((item) => item.currentSessionId === sessionId && item.assistedEntityId === assistedId && item.status === 'COMPLETED')
+    .sort((a, b) => String(a.completedAt || a.updatedAt || a.startedAt || '').localeCompare(String(b.completedAt || b.updatedAt || b.startedAt || '')));
+  for (const investigation of completed) {
+    const findings = pendingInvestigationFindings(state, investigation);
+    if (findings.length) return { investigation, findings };
+  }
+  return { investigation: null, findings: [] };
+}
+
 function availableTreatmentFindings(state, assistedId) {
   if (!assistedId) return [];
   const linked = new Set((state.treatments || [])
@@ -202,7 +214,7 @@ function currentReikiModel(state, session, assistedId) {
   };
 }
 
-function nextRecommendation({ session, prepared, assisted, baseline, reiki, treatments, openInvestigation, pendingFindings, treatmentFindings }) {
+export function nextRecommendation({ session, prepared, assisted, baseline, reiki, treatments, openInvestigation, pendingFindings, treatmentFindings }) {
   if (!session) return {
     code: 'START_SESSION',
     label: 'Iniciar sessão',
@@ -228,6 +240,21 @@ function nextRecommendation({ session, prepared, assisted, baseline, reiki, trea
     label: reiki.status === 'PAUSED' ? 'Retomar Reiki' : 'Acompanhar Reiki',
     reason: `${reiki.assistedName} · ${reiki.modeLabel} · aplicação ${reiki.status === 'PAUSED' ? 'pausada' : 'em andamento'}.`,
   };
+  // Once an investigation starts, keep that workflow contiguous. A due treatment should not
+  // steal the next action between triage questions or between triage completion and findings.
+  if (openInvestigation) {
+    const total = openInvestigation.protocolSnapshot?.questions?.length || 0;
+    return {
+      code: 'TRIAGE',
+      label: 'Continuar investigação',
+      reason: `${openInvestigation.protocolSnapshot?.name || 'Investigação'} · pergunta ${Math.min(openInvestigation.currentIndex + 1, total)} de ${total}.`,
+    };
+  }
+  if (pendingFindings.length) return {
+    code: 'FINDINGS',
+    label: 'Revisar achados',
+    reason: `${pendingFindings.length} achado${pendingFindings.length === 1 ? '' : 's'} aguardando confirmação para o próximo passo.`,
+  };
   const finalReady = treatments.find((item) => item.status === TreatmentStatus.IN_PROGRESS && item.readyForFinalAssessment);
   if (finalReady) return {
     code: 'TREATMENT_FINAL',
@@ -242,14 +269,6 @@ function nextRecommendation({ session, prepared, assisted, baseline, reiki, trea
     label: 'Revisar tratamento',
     reason: `${reviewReady.title} · ${reviewReady.reviewableCount} componente${reviewReady.reviewableCount === 1 ? '' : 's'} pronto${reviewReady.reviewableCount === 1 ? '' : 's'} para revisão.`,
   };
-  if (openInvestigation) {
-    const total = openInvestigation.protocolSnapshot?.questions?.length || 0;
-    return {
-      code: 'TRIAGE',
-      label: 'Continuar investigação',
-      reason: `${openInvestigation.protocolSnapshot?.name || 'Investigação'} · pergunta ${Math.min(openInvestigation.currentIndex + 1, total)} de ${total}.`,
-    };
-  }
   const activeTreatment = treatments.find((item) => [TreatmentStatus.IN_PROGRESS, TreatmentStatus.INTERRUPTED, TreatmentStatus.PLANNED].includes(item.status));
   if (activeTreatment) return {
     code: 'TREATMENT_WORKSPACE',
@@ -261,11 +280,6 @@ function nextRecommendation({ session, prepared, assisted, baseline, reiki, trea
     code: 'COMPOSE_TREATMENT',
     label: 'Compor tratamento',
     reason: `${treatmentFindings.length} achado${treatmentFindings.length === 1 ? '' : 's'} confirmado${treatmentFindings.length === 1 ? '' : 's'} aguardando tratamento.`,
-  };
-  if (pendingFindings.length) return {
-    code: 'FINDINGS',
-    label: 'Revisar achados',
-    reason: `${pendingFindings.length} achado${pendingFindings.length === 1 ? '' : 's'} aguardando confirmação para o próximo passo.`,
   };
   return {
     code: 'INVESTIGATE',
@@ -283,8 +297,8 @@ export function deriveV2Model(state) {
     : null;
   const baseline = prepared && assisted ? hawkinsBaseline(state, session.id, assisted.id) : null;
   const openInvestigation = latestSessionInvestigation(state, session?.id, assisted?.id, 'IN_PROGRESS');
-  const completedInvestigation = latestSessionInvestigation(state, session?.id, assisted?.id, 'COMPLETED');
-  const pendingFindings = pendingInvestigationFindings(state, completedInvestigation);
+  const pendingBatch = pendingSessionFindingBatch(state, session?.id, assisted?.id);
+  const pendingFindings = pendingBatch.findings;
   const treatmentFindings = availableTreatmentFindings(state, assisted?.id);
   const treatments = treatmentModels(state, assisted?.id);
   const reiki = currentReikiModel(state, session, assisted?.id);
@@ -337,6 +351,6 @@ export function deriveV2Model(state) {
       answers: structuredClone(openInvestigation.answers || []),
     } : null,
     findings: pendingFindings,
-    findingsInvestigationId: pendingFindings.length ? completedInvestigation?.id || null : null,
+    findingsInvestigationId: pendingFindings.length ? pendingBatch.investigation?.id || null : null,
   };
 }
