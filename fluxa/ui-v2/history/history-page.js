@@ -1,3 +1,5 @@
+import { treatmentStatusLabel } from '../status-labels.js';
+
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[char]));
 }
@@ -68,7 +70,7 @@ function sessionDetail(session) {
         <div class="v2-kpi"><strong>${session.findings + session.notes}</strong><span>achados + notas</span></div>
       </section>
 
-      ${session.longitudinal?.length ? `<section class="v2-card v2-card--soft"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${esc(item.title)} · ${esc(item.status)}</span>`).join('')}</div></section>` : ''}
+      ${session.longitudinal?.length ? `<section class="v2-card v2-card--soft"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${esc(item.title)} · ${esc(treatmentStatusLabel(item.status))}</span>`).join('')}</div></section>` : ''}
 
       <section class="v2-section">
         <div class="v2-section-head"><div><p class="v2-eyebrow">Histórico narrativo</p><h2>Linha do tempo</h2></div></div>
