@@ -121,6 +121,7 @@ function sessionCounts(state, session) {
   const investigations = (state.investigations || []).filter((item) => item.currentSessionId === session.id);
   const investigationOpened = investigations.length;
   const investigationCompleted = investigations.filter((item) => item.status === 'COMPLETED').length;
+  const openInvestigation = investigations.find((item) => item.status === 'IN_PROGRESS') || null;
   const treatmentIds = touchedTreatmentIds(state, session.id);
   const treatmentList = treatmentIds.map((id) => state.treatments?.find((item) => item.id === id)).filter(Boolean);
   const longitudinal = treatmentList.filter((item) => ['PLANNED', 'IN_PROGRESS', 'INTERRUPTED'].includes(item.status));
@@ -129,8 +130,15 @@ function sessionCounts(state, session) {
   const reviewedAnswers = new Set((state.findings || [])
     .filter((item) => investigationIds.has(item.investigationId) && item.sourceQuestionId)
     .map((item) => `${item.investigationId}:${item.sourceQuestionId}`));
-  const pendingFindingCount = investigations.reduce((total, investigation) => total + (investigation.answers || [])
-    .filter((answer) => answer.answer === 'YES' && !reviewedAnswers.has(`${investigation.id}:${answer.questionId}`)).length, 0);
+  let pendingFindingCount = 0;
+  let pendingFindingInvestigation = null;
+  for (const investigation of investigations) {
+    for (const answer of investigation.answers || []) {
+      if (answer.answer !== 'YES' || reviewedAnswers.has(`${investigation.id}:${answer.questionId}`)) continue;
+      pendingFindingCount += 1;
+      if (!pendingFindingInvestigation) pendingFindingInvestigation = investigation;
+    }
+  }
   const notes = (state.events || []).filter((event) => event.sessionId === session.id && event.eventType === 'NOTE_CREATED');
   const activeReiki = (state.reikiApplications || []).find((item) => item.sessionId === session.id && ['RUNNING', 'PAUSED'].includes(item.status)) || null;
   const assistedIds = sessionAssistedIds(state, session);
@@ -140,6 +148,16 @@ function sessionCounts(state, session) {
     investigationOpened,
     investigationCompleted,
     pendingFindingCount,
+    openInvestigationBlocker: openInvestigation ? {
+      investigationId: openInvestigation.id,
+      assistedEntityId: openInvestigation.assistedEntityId,
+      assistedName: assistedName(state, openInvestigation.assistedEntityId),
+    } : null,
+    pendingFindingBlocker: pendingFindingInvestigation ? {
+      investigationId: pendingFindingInvestigation.id,
+      assistedEntityId: pendingFindingInvestigation.assistedEntityId,
+      assistedName: assistedName(state, pendingFindingInvestigation.assistedEntityId),
+    } : null,
     treatmentsWorked: treatmentList.length,
     treatmentIds,
     findings: findings.length,
