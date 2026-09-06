@@ -227,6 +227,19 @@ export function nextRecommendation({ session, prepared, assisted, baseline, reik
     label: 'Continuar preparação',
     reason: 'Conclua a preparação do terapeuta antes de iniciar o atendimento.',
   };
+  if (reiki?.belongsToCurrentSession) {
+    if (!reiki.belongsToCurrentAssisted) return {
+      code: 'REIKI_CONTEXT',
+      assistedEntityId: reiki.assistedEntityId,
+      label: `Voltar para ${reiki.assistedName}`,
+      reason: `Há uma aplicação de Reiki ${reiki.status === 'PAUSED' ? 'pausada' : 'em andamento'} vinculada a ${reiki.assistedName}. Restaure esse contexto para continuar com segurança.`,
+    };
+    return {
+      code: 'REIKI_ACTIVE',
+      label: reiki.status === 'PAUSED' ? 'Retomar Reiki' : 'Acompanhar Reiki',
+      reason: `${reiki.assistedName} · ${reiki.modeLabel} · aplicação ${reiki.status === 'PAUSED' ? 'pausada' : 'em andamento'}.`,
+    };
+  }
   if (!assisted) return {
     code: 'SELECT_ASSISTED',
     label: 'Selecionar Assistido',
@@ -236,11 +249,6 @@ export function nextRecommendation({ session, prepared, assisted, baseline, reik
     code: 'HAWKINS',
     label: 'Registrar Hawkins inicial',
     reason: `Registre a frequência inicial de ${assisted.displayName} antes de investigar ou tratar.`,
-  };
-  if (reiki?.belongsToCurrentSession) return {
-    code: 'REIKI_ACTIVE',
-    label: reiki.status === 'PAUSED' ? 'Retomar Reiki' : 'Acompanhar Reiki',
-    reason: `${reiki.assistedName} · ${reiki.modeLabel} · aplicação ${reiki.status === 'PAUSED' ? 'pausada' : 'em andamento'}.`,
   };
   // Once an investigation starts, keep that workflow contiguous. A due treatment should not
   // steal the next action between triage questions or between triage completion and findings.
@@ -331,6 +339,7 @@ export function deriveV2Model(state) {
     hawkinsAssessmentId: baseline?.id || null,
     nextActionCode: recommendation.code,
     nextActionTreatmentId: recommendation.treatmentId || null,
+    nextActionAssistedId: recommendation.assistedEntityId || null,
     nextAction: recommendation.label,
     nextReason: recommendation.reason,
     investigations: investigationCount,
