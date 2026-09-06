@@ -1,3 +1,5 @@
+import { treatmentStatusLabel } from '../status-labels.js';
+
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[char]));
 }
@@ -6,6 +8,10 @@ function dateTime(value) {
   if (!value) return '';
   try { return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }).format(new Date(value)); }
   catch { return String(value); }
+}
+
+function countLabel(value, singular, plural) {
+  return Number(value) === 1 ? singular : plural;
 }
 
 export function postCloseSummary(model, sessionId) {
@@ -21,16 +27,16 @@ export function postCloseSummary(model, sessionId) {
       </section>
 
       <section class="v2-kpis" aria-label="Resumo da sessão encerrada">
-        <div class="v2-kpi"><strong>${session.investigationCompleted}</strong><span>investigações concluídas</span></div>
-        <div class="v2-kpi"><strong>${session.treatmentsWorked}</strong><span>tratamentos trabalhados</span></div>
-        <div class="v2-kpi"><strong>${session.findings}</strong><span>achados registrados</span></div>
+        <div class="v2-kpi"><strong>${session.investigationCompleted}</strong><span>${countLabel(session.investigationCompleted, 'investigação concluída', 'investigações concluídas')}</span></div>
+        <div class="v2-kpi"><strong>${session.treatmentsWorked}</strong><span>${countLabel(session.treatmentsWorked, 'tratamento trabalhado', 'tratamentos trabalhados')}</span></div>
+        <div class="v2-kpi"><strong>${session.findings}</strong><span>${countLabel(session.findings, 'achado registrado', 'achados registrados')}</span></div>
       </section>
 
       ${session.longitudinal?.length ? `
         <section class="v2-card v2-card--soft v2-post-close-continuity">
           <p class="v2-eyebrow">Fica para acompanhar</p>
           <h2>Trabalho longitudinal continua ativo</h2>
-          ${session.longitudinal.map((item) => `<div><strong>${esc(item.title)}</strong><span>${esc(item.status)}</span></div>`).join('')}
+          ${session.longitudinal.map((item) => `<div><strong>${esc(item.title)}</strong><span>${esc(treatmentStatusLabel(item.status))}</span></div>`).join('')}
         </section>
       ` : `
         <section class="v2-card v2-card--soft"><strong>Nenhum tratamento longitudinal pendente desta sessão</strong><p class="v2-copy">O atendimento continua disponível no Histórico.</p></section>
