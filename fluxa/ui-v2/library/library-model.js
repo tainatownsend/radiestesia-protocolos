@@ -22,6 +22,14 @@ const MODALITY_LABELS = Object.freeze({
   RADIONIC_TABLE: 'Mesa radiônica',
 });
 
+function therapeuticSettings(state) {
+  const raw = state.settings?.therapeuticModalities || {};
+  return {
+    enabled: Array.isArray(raw.enabled) ? raw.enabled.filter(Boolean) : [],
+    custom: Array.isArray(raw.custom) ? raw.custom.map((value) => String(value).trim()).filter(Boolean) : [],
+  };
+}
+
 function protocols(state) {
   const builtIn = (PROTOCOL_LIBRARY || []).map((item, index) => ({
     id: String(item.id || item.protocolId || item.slug || `protocol-${index}`),
@@ -41,13 +49,11 @@ function protocols(state) {
 }
 
 function therapies(state) {
-  const raw = state.settings?.therapeuticModalities || {};
-  const enabled = Array.isArray(raw.enabled) ? raw.enabled : [];
-  const custom = Array.isArray(raw.custom) ? raw.custom.map((value) => String(value).trim()).filter(Boolean) : [];
+  const configured = therapeuticSettings(state);
   return [
     { id: 'RADIESTHESIA', label: 'Radiestesia', base: true },
-    ...enabled.map((id) => ({ id, label: MODALITY_LABELS[id] || id, base: false })),
-    ...custom.map((label, index) => ({ id: `CUSTOM_${index}`, label, base: false })),
+    ...configured.enabled.map((id) => ({ id, label: MODALITY_LABELS[id] || id, base: false })),
+    ...configured.custom.map((label, index) => ({ id: `CUSTOM_${index}`, label, base: false })),
   ];
 }
 
@@ -79,6 +85,7 @@ export function deriveLibraryModel(state) {
   const protocolItems = protocols(state);
   const therapyItems = therapies(state);
   return {
+    therapeuticSettings: therapeuticSettings(state),
     library: {
       assisteds,
       resources,
