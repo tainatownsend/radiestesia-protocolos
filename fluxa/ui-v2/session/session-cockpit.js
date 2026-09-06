@@ -4,9 +4,9 @@ function esc(value = '') {
   }[c]));
 }
 
-function statusLine(label, value, ok) {
+function indicator(label, value, ok = false) {
   return `
-    <div class="v2-status-line">
+    <div class="v2-session-indicator">
       <span>${esc(label)}</span>
       <strong class="${ok ? 'v2-status-ok' : ''}">${esc(value)}</strong>
     </div>
@@ -36,6 +36,8 @@ export function sessionCockpit(model) {
   const hawkins = model.hawkinsReady ? `${model.hawkins} Hz` : 'Pendente';
   const prerequisitesReady = Boolean(model.prepared && model.assistedSelected && model.hawkinsReady);
   const treatmentCount = model.treatmentCount ?? model.treatmentsWorked ?? 0;
+  const investigationCount = model.investigations ?? 0;
+  const sessionActivity = `${investigationCount} investigaç${investigationCount === 1 ? 'ão' : 'ões'} · ${treatmentCount} tratamento${treatmentCount === 1 ? '' : 's'} trabalhado${treatmentCount === 1 ? '' : 's'}`;
 
   return `
     <div class="v2-stack">
@@ -52,17 +54,12 @@ export function sessionCockpit(model) {
         <button class="v2-btn v2-btn--inverse" type="button" data-v2-preview-action="next">${esc(model.nextAction || 'Continuar')}</button>
       </section>
 
-      <section class="v2-card v2-session-state" aria-label="Estado da sessão">
-        ${statusLine('Preparação', model.prepared ? 'Concluída' : 'Pendente', model.prepared)}
-        ${statusLine('Assistido', model.assistedSelected ? model.assistedName : 'Pendente', model.assistedSelected)}
-        ${statusLine('Hawkins inicial', hawkins, model.hawkinsReady)}
-        ${model.reiki ? statusLine('Reiki', model.reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento', false) : ''}
-      </section>
-
-      <section class="v2-kpis" aria-label="Resumo compacto da sessão">
-        <div class="v2-kpi"><strong>${model.investigations ?? 0}</strong><span>investigações nesta sessão</span></div>
-        <div class="v2-kpi"><strong>${treatmentCount}</strong><span>tratamentos trabalhados</span></div>
-        <div class="v2-kpi"><strong>${model.activeTreatments ?? 0}</strong><span>tratamentos ativos</span></div>
+      <section class="v2-session-snapshot" aria-label="Indicadores compactos da sessão">
+        ${indicator('Preparação', model.prepared ? 'Concluída' : 'Pendente', model.prepared)}
+        ${indicator('Hawkins', hawkins, model.hawkinsReady)}
+        ${indicator('Tratamentos ativos', String(model.activeTreatments ?? 0), (model.activeTreatments ?? 0) > 0)}
+        ${model.reiki ? indicator('Reiki', model.reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento') : ''}
+        <p class="v2-session-activity">${esc(sessionActivity)}</p>
       </section>
 
       <section class="v2-section">
