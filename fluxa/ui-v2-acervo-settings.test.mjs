@@ -97,6 +97,10 @@ assert.match(settings, /data-v2-settings-import-file/);
 assert.match(settings, /Prévia validada/);
 assert.match(settings, /Terapias complementares/);
 
+assert.match(index, /function requireDataReplacementIdle\(\)[\s\S]*session\.status === 'OPEN'[\s\S]*Finalize a sessão atual antes de importar ou recuperar/,'Controller must independently reject destructive data replacement while any session is open.');
+assert.match(index, /data-v2-settings-recover[\s\S]*requireDataReplacementIdle\(\);[\s\S]*recoverLocalData\(\)/,'Recovery handler must enforce the controller guard before replacing state.');
+assert.match(index, /data-v2-settings-import-apply[\s\S]*requireDataReplacementIdle\(\);[\s\S]*structuredClone\(ui\.importPreview\.normalized\)/,'Import apply handler must enforce the controller guard before replacing state.');
+assert.match(index, /data-v2-settings-import-file[\s\S]*requireDataReplacementIdle\(\);[\s\S]*file\.text\(\)/,'Import file validation must not begin during an active session.');
 assert.match(index, /createAssistedEntity/);
 assert.match(index, /validateImportPayload/);
 assert.match(index, /exportLocalDataFile/);
