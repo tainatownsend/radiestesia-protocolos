@@ -1,13 +1,8 @@
+import { treatmentStatusLabel } from '../status-labels.js';
+
 function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 }
-
-const STATUS = {
-  PLANNED: 'Planejado',
-  IN_PROGRESS: 'Em andamento',
-  INTERRUPTED: 'Interrompido',
-  COMPLETED: 'Concluído',
-};
 
 function treatmentCard(treatment) {
   const progress = treatment.total
@@ -22,7 +17,7 @@ function treatmentCard(treatment) {
     <article class="v2-treatment-card" data-treatment-id="${esc(treatment.id)}">
       <div class="v2-treatment-card__head">
         <div>
-          <span class="v2-status-pill" data-status="${esc(treatment.status)}">${esc(STATUS[treatment.status] || treatment.status)}</span>
+          <span class="v2-status-pill" data-status="${esc(treatment.status)}">${esc(treatmentStatusLabel(treatment.status))}</span>
           <h2>${esc(treatment.title)}</h2>
         </div>
         <span class="v2-progress-count">${treatment.total ? `${treatment.resolved}/${treatment.total}` : '—'}</span>
