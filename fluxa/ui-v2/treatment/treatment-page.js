@@ -32,8 +32,28 @@ function treatmentCard(treatment) {
   `;
 }
 
+function emptyTreatmentState(model) {
+  if (!model.sessionOpen) {
+    return {
+      title: 'Abra uma sessão para entrar no contexto do Assistido',
+      copy: 'A fila de Tratamentos acompanha o Assistido selecionado na sessão. Registros de atendimentos anteriores continuam disponíveis no Histórico.',
+    };
+  }
+  if (!model.assistedSelected) {
+    return {
+      title: 'Selecione o Assistido da sessão',
+      copy: 'Depois da seleção, o Fluxa mostra aqui os tratamentos desse Assistido e a próxima ação disponível.',
+    };
+  }
+  return {
+    title: `Nenhum tratamento para ${model.assistedName || 'este Assistido'}`,
+    copy: 'Quando você criar ou planejar um tratamento, ele aparecerá aqui com a próxima ação correta.',
+  };
+}
+
 export function treatmentPage(model) {
   const treatments = model.treatments || [];
+  const empty = emptyTreatmentState(model);
   return `
     <div class="v2-stack">
       <section class="v2-section v2-page-heading">
@@ -46,8 +66,8 @@ export function treatmentPage(model) {
       </section>
       ${treatments.length ? `<section class="v2-treatment-list">${treatments.map(treatmentCard).join('')}</section>` : `
         <section class="v2-card v2-card--soft v2-empty-state">
-          <strong>Nenhum tratamento para este Assistido</strong>
-          <p class="v2-copy">Quando você criar ou planejar um tratamento, ele aparecerá aqui com a próxima ação correta.</p>
+          <strong>${esc(empty.title)}</strong>
+          <p class="v2-copy">${esc(empty.copy)}</p>
         </section>
       `}
     </div>
