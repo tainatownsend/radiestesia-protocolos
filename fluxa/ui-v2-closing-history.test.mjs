@@ -7,8 +7,15 @@ const state = {
   assistedEntities: [{ id:'ast_1', displayName:'Marina', archivedAt:null }],
   investigations: [{ id:'inv_1', currentSessionId:'ses_1', assistedEntityId:'ast_1', status:'COMPLETED', protocolSnapshot:{name:'Triagem rápida'}, answers:[{answer:'YES'}] }],
   findings: [{ id:'find_1', investigationId:'inv_1', status:'IDENTIFIED', title:'Fator relevante' }],
-  treatments: [{ id:'trt_1', assistedEntityId:'ast_1', title:'Equilíbrio', status:'IN_PROGRESS' }],
-  treatmentComponents: [{ id:'cmp_1', treatmentId:'trt_1', name:'Crença', status:'COMPLETED' }, { id:'cmp_2', treatmentId:'trt_1', name:'Emoção', status:'IN_PROGRESS' }],
+  treatments: [
+    { id:'trt_1', assistedEntityId:'ast_1', title:'Equilíbrio', status:'IN_PROGRESS' },
+    { id:'trt_2', assistedEntityId:'ast_1', title:'Próximo ciclo', status:'PLANNED', plannedInSessionId:'ses_1', plannedAt:'2026-09-06T10:22:00.000Z' },
+  ],
+  treatmentComponents: [
+    { id:'cmp_1', treatmentId:'trt_1', name:'Crença', status:'COMPLETED' },
+    { id:'cmp_2', treatmentId:'trt_1', name:'Emoção', status:'IN_PROGRESS' },
+    { id:'cmp_3', treatmentId:'trt_2', name:'Integração', status:'PLANNED' },
+  ],
   reikiApplications: [{ id:'reiki_1', sessionId:'ses_1', assistedEntityId:'ast_1', status:'PAUSED' }],
   events: [
     { id:'evt_1', eventType:'SESSION_STARTED', entityType:'Session', entityId:'ses_1', sessionId:'ses_1', occurredAt:'2026-09-06T10:00:00.000Z', metadata:{} },
@@ -26,18 +33,22 @@ let model = deriveHistoryModel(state);
 assert.equal(model.safeClose.assistedNames[0], 'Marina');
 assert.equal(model.safeClose.investigationOpened, 1);
 assert.equal(model.safeClose.investigationCompleted, 1);
-assert.equal(model.safeClose.treatmentsWorked, 1);
+assert.equal(model.safeClose.treatmentsWorked, 2, 'Treatments planned during the session must appear in safe close.');
 assert.equal(model.safeClose.findings, 1);
 assert.equal(model.safeClose.notes, 1);
-assert.equal(model.safeClose.longitudinal.length, 1);
+assert.equal(model.safeClose.longitudinal.length, 2);
 assert.equal(model.safeClose.activeReiki.status, 'PAUSED');
 
 const narrative = narrativeForSession(state, 'ses_1');
-const treatment = narrative.find((item) => item.kind === 'treatment');
+const treatment = narrative.find((item) => item.kind === 'treatment' && item.treatmentId === 'trt_1');
 assert.ok(treatment);
 assert.match(treatment.title, /Tratamento Equilíbrio/);
 assert.equal(treatment.relatedCount, 1);
 assert.equal(treatment.detail, '1 de 2 componentes resolvidos');
+const planned = narrative.find((item) => item.treatmentId === 'trt_2');
+assert.ok(planned, 'A planned-only treatment needs a narrative history row even though core planning events are sessionless.');
+assert.equal(planned.title, 'Tratamento Próximo ciclo planejado');
+assert.equal(planned.detail, '1 componente preparado');
 const investigation = narrative.find((item) => item.kind === 'investigation');
 assert.equal(investigation.relatedCount, 1);
 assert.ok(narrative.every((item) => item.title !== 'Atividade registrada'));
@@ -56,6 +67,8 @@ const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 
 const closing = fs.readFileSync(new URL('./ui-v2/session/closing-flow.js', import.meta.url), 'utf8');
 assert.match(actions, /closeSession/);
 assert.match(actions, /closeCurrentSessionV2/);
+assert.match(actions, /plannedInSessionId/);
+assert.match(actions, /sessionId: session\.id/);
 assert.match(closing, /Concluir Reiki primeiro/);
 assert.match(closing, /Continua depois da sessão/);
 assert.match(index, /justClosedSessionId/);
