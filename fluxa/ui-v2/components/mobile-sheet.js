@@ -20,7 +20,7 @@ export function mobileSheet({
   `;
   return `
     <div class="v2-overlay" data-v2-overlay>
-      <section class="v2-sheet" role="dialog" aria-modal="true" aria-labelledby="v2-sheet-title">
+      <section class="v2-sheet" role="dialog" aria-modal="true" aria-labelledby="v2-sheet-title" tabindex="-1">
         <header class="v2-sheet__header">
           <div class="v2-sheet__header-copy">
             ${eyebrow ? `<p class="v2-eyebrow">${esc(eyebrow)}</p>` : ''}
@@ -39,7 +39,8 @@ export function mobileSheet({
 }
 
 function focusableIn(sheet) {
-  return [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+  return [...sheet.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')]
+    .filter((element) => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
 }
 
 export function focusSheet(root) {
@@ -48,22 +49,32 @@ export function focusSheet(root) {
   const preferred = sheet.querySelector('[data-v2-autofocus]')
     || sheet.querySelector('.v2-sheet__body input:not([disabled]), .v2-sheet__body select:not([disabled]), .v2-sheet__body textarea:not([disabled]), .v2-sheet__body button:not([disabled])')
     || sheet.querySelector('[data-v2-primary]')
-    || focusableIn(sheet)[0];
-  preferred?.focus({ preventScroll: true });
+    || focusableIn(sheet)[0]
+    || sheet;
+  preferred.focus?.({ preventScroll: true });
 }
 
-export function trapSheetFocus(event, root) {
+export function trapSheetFocus(event, root, activeElement = globalThis.document?.activeElement) {
   if (event.key !== 'Tab') return;
   const sheet = root.querySelector('.v2-sheet');
   if (!sheet) return;
   const focusable = focusableIn(sheet);
-  if (!focusable.length) return;
+  if (!focusable.length) {
+    event.preventDefault();
+    sheet.focus?.({ preventScroll: true });
+    return;
+  }
   const first = focusable[0];
   const last = focusable.at(-1);
-  if (event.shiftKey && document.activeElement === first) {
+  if (!sheet.contains(activeElement)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+    return;
+  }
+  if (event.shiftKey && activeElement === first) {
     event.preventDefault();
     last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
+  } else if (!event.shiftKey && activeElement === last) {
     event.preventDefault();
     first.focus();
   }
