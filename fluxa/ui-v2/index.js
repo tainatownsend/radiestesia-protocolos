@@ -587,13 +587,15 @@ root.addEventListener('click', (event) => {
   if (assisted && liveMode) {
     clearInlineError();
     try {
+      const targetAssistedId = assisted.dataset.v2SelectAssisted;
       const closingRecoveryIds = [
         model.safeClose?.openInvestigationBlocker?.assistedEntityId,
         model.safeClose?.pendingFindingBlocker?.assistedEntityId,
       ].filter(Boolean);
-      const closingRecovery = ui.sheet === 'closing' && closingRecoveryIds.includes(assisted.dataset.v2SelectAssisted);
+      const closingRecovery = ui.sheet === 'closing' && closingRecoveryIds.includes(targetAssistedId);
       if (!closingRecovery && !assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
-      selectSessionAssisted(store, assisted.dataset.v2SelectAssisted);
+      const openSession = store.getState().sessions?.find((session) => session.status === 'OPEN');
+      if (openSession?.currentAssistedEntityId !== targetAssistedId) selectSessionAssisted(store, targetAssistedId);
       const nextModel = deriveLiveModel();
       model = nextModel;
       ui.route = 'today';
