@@ -49,6 +49,20 @@ const safeClose = {
   findings:2, notes:1, longitudinal:[{id:'trt_1',title:'Equilíbrio emocional',status:'IN_PROGRESS'}], activeReiki:null,
 };
 
+const deterministicStorageHealth = Object.freeze({
+  writable:true,
+  writeError:null,
+  readError:null,
+  hasPrimary:true,
+  primaryValid:true,
+  backupValid:true,
+  recoveryValid:false,
+  canRecover:false,
+  preferredRecoverySource:null,
+  lastExportAt:'2026-09-06T10:45:00.000Z',
+  status:'OK',
+});
+
 export function fixtureVisualData(id) {
   const common = {
     library: populatedLibrary,
@@ -60,6 +74,9 @@ export function fixtureVisualData(id) {
   }
   if (id === 'acervo-empty') {
     return { library:emptyLibrary, therapeuticSettings:{ enabled:[], custom:[] } };
+  }
+  if (id === 'settings-local-first') {
+    return { ...common, storageHealth:deterministicStorageHealth };
   }
   return common;
 }
