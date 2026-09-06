@@ -9,6 +9,7 @@ export function viewportMetrics({ layoutHeight = 0, visualHeight = 0, offsetTop 
   return {
     layoutHeight: layout,
     visualHeight: visual || layout,
+    offsetTop: offset,
     keyboardInset,
     keyboardOpen: keyboardInset >= KEYBOARD_THRESHOLD,
   };
@@ -24,6 +25,7 @@ export function syncVisualViewportMetrics(win = globalThis.window, doc = globalT
   });
   const root = doc.documentElement;
   root.style.setProperty('--v2-visual-viewport-height', `${Math.round(metrics.visualHeight)}px`);
+  root.style.setProperty('--v2-visual-viewport-offset-top', `${Math.round(metrics.offsetTop)}px`);
   root.style.setProperty('--v2-keyboard-inset', `${Math.round(metrics.keyboardInset)}px`);
   if (doc.body) doc.body.dataset.v2KeyboardOpen = metrics.keyboardOpen ? 'true' : 'false';
   return metrics;
@@ -50,29 +52,60 @@ export function ensureControlVisible(target = globalThis.document?.activeElement
   return true;
 }
 
-function scheduleFocusedControlVisibility(win, doc) {
-  const run = () => ensureControlVisible(doc.activeElement);
-  if (typeof win.requestAnimationFrame === 'function') win.requestAnimationFrame(run);
-  else queueMicrotask(run);
-  win.setTimeout?.(run, 180);
-}
-
 export function initMobileViewport(win = globalThis.window, doc = globalThis.document) {
   if (!win || !doc?.documentElement || doc.documentElement.dataset.v2ViewportReady === 'true') return;
   doc.documentElement.dataset.v2ViewportReady = 'true';
-  const sync = () => {
-    syncVisualViewportMetrics(win, doc);
-    if (doc.body?.dataset.v2SheetOpen === 'true') scheduleFocusedControlVisibility(win, doc);
+
+  let syncFrame = null;
+  let focusFrame = null;
+  let focusTimer = null;
+  let keepFocusVisible = false;
+
+  const requestFrame = (callback) => {
+    if (typeof win.requestAnimationFrame === 'function') return win.requestAnimationFrame(callback);
+    queueMicrotask(callback);
+    return 'microtask';
   };
-  sync();
-  win.addEventListener?.('resize', sync, { passive: true });
-  win.addEventListener?.('orientationchange', sync, { passive: true });
-  win.addEventListener?.('pageshow', sync, { passive: true });
-  win.visualViewport?.addEventListener?.('resize', sync, { passive: true });
-  win.visualViewport?.addEventListener?.('scroll', sync, { passive: true });
+
+  const scheduleFocusedControlVisibility = () => {
+    if (focusFrame == null) {
+      focusFrame = requestFrame(() => {
+        focusFrame = null;
+        ensureControlVisible(doc.activeElement);
+      });
+    }
+    if (focusTimer != null) win.clearTimeout?.(focusTimer);
+    focusTimer = win.setTimeout?.(() => {
+      focusTimer = null;
+      ensureControlVisible(doc.activeElement);
+    }, 180) ?? null;
+  };
+
+  const flushSync = () => {
+    syncFrame = null;
+    syncVisualViewportMetrics(win, doc);
+    const shouldKeepFocus = keepFocusVisible;
+    keepFocusVisible = false;
+    if (shouldKeepFocus && doc.body?.dataset.v2SheetOpen === 'true') scheduleFocusedControlVisibility();
+  };
+
+  const scheduleSync = ({ ensureFocus = false } = {}) => {
+    keepFocusVisible ||= ensureFocus;
+    if (syncFrame != null) return;
+    syncFrame = requestFrame(flushSync);
+  };
+
+  syncVisualViewportMetrics(win, doc);
+  win.addEventListener?.('resize', () => scheduleSync({ ensureFocus: true }), { passive: true });
+  win.addEventListener?.('orientationchange', () => scheduleSync({ ensureFocus: true }), { passive: true });
+  win.addEventListener?.('pageshow', () => scheduleSync({ ensureFocus: true }), { passive: true });
+  win.visualViewport?.addEventListener?.('resize', () => scheduleSync({ ensureFocus: true }), { passive: true });
+  // VisualViewport scroll fires repeatedly while Safari pans the visual viewport around the keyboard.
+  // Sync geometry, but do not repeatedly scroll the sheet body and create a feedback/jitter loop.
+  win.visualViewport?.addEventListener?.('scroll', () => scheduleSync({ ensureFocus: false }), { passive: true });
   doc.addEventListener?.('focusin', (event) => {
     if (!event.target?.closest?.('.v2-sheet__body')) return;
-    scheduleFocusedControlVisibility(win, doc);
+    scheduleFocusedControlVisibility();
   });
 }
 
