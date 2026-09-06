@@ -60,7 +60,8 @@ export function assistedPicker(model, ui = {}) {
     });
   }
 
-  const options = (model.assistedOptions || []).map((item) => `
+  const assistedOptions = model.assistedOptions || [];
+  const options = assistedOptions.map((item) => `
     <button class="v2-select-row" type="button" data-v2-select-assisted="${esc(item.id)}" data-v2-assisted-search="${esc(assistedSearchText(item.name))}">
       <span>
         <strong>${esc(item.name)}</strong>
@@ -69,8 +70,18 @@ export function assistedPicker(model, ui = {}) {
       <span aria-hidden="true">›</span>
     </button>
   `).join('');
+  const searchEmpty = assistedOptions.length ? `
+    <div class="v2-empty v2-assisted-search-empty" role="status" aria-live="polite">
+      <strong>Nenhum nome encontrado</strong>
+      <p>Revise a busca ou adicione um novo Assistido.</p>
+    </div>
+  ` : '';
 
   const body = `
+    <style>
+      .v2-assisted-search-empty { display: none; }
+      .v2-select-list:has(.v2-select-row):not(:has(.v2-select-row:not([hidden]))) .v2-assisted-search-empty { display: block; }
+    </style>
     <div class="v2-stack">
       <section class="v2-section">
         <div>
@@ -84,6 +95,7 @@ export function assistedPicker(model, ui = {}) {
         </label>
         <div class="v2-select-list" data-v2-assisted-list>
           ${options || '<div class="v2-empty"><strong>Nenhum Assistido cadastrado</strong><p>Adicione uma pessoa para continuar a sessão.</p></div>'}
+          ${searchEmpty}
         </div>
       </section>
     </div>
