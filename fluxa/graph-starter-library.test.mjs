@@ -18,7 +18,7 @@ assert.match(form,/Adicione pelo menos um item de tratamento/);
 assert.match(management,/dataset\.backlogAddComponent/,'Existing treatment add flow must be intercepted by the item model.');
 assert.match(management,/dataset\.backlogReplaceComponent/,'Existing treatment replace flow must use the item model.');
 assert.match(management,/stopImmediatePropagation/,'Item management must prevent the legacy component form from handling the same action.');
-assert.match(prefill,/Escolha ao menos um gráfico para cada comando/,'Protocol prefill must populate topic and command, not misuse the graph field.');
+assert.match(prefill,/Revise os comandos e escolha um gráfico para cada um/,'Protocol prefill must populate topic and command, not misuse the graph field.');
 assert.match(css,/overflow-anchor:none/,'Guided protocol should disable scroll anchoring during answer transitions.');
 assert.match(css,/contain:layout paint/,'Question panel should keep a stable layout between Sim/Não answers.');
 assert.ok(html.indexOf('treatment-item-graphs.css')<html.indexOf('brand-shell.css'),'Treatment graph CSS must preserve the final brand shell authority.');
