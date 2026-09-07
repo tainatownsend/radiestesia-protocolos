@@ -28,7 +28,7 @@ function graphRow(graph, itemIndex, commandIndex, graphIndex) {
     <div class="v2-treatment-graph" data-v2-treatment-graph>
       <label class="v2-field v2-field--grow">
         <span>Gráfico ${graphIndex + 1}</span>
-        <input data-v2-treatment-draft="graphName" data-item-index="${itemIndex}" data-command-index="${commandIndex}" data-graph-index="${graphIndex}" list="v2-treatment-graphs" value="${esc(graph.graphName || '')}" placeholder="Selecione ou digite o nome">
+        <input data-v2-treatment-draft="graphName" data-item-index="${itemIndex}" data-command-index="${commandIndex}" data-graph-index="${graphIndex}" list="v2-treatment-graphs" value="${esc(graph.graphName || '')}" placeholder="Selecione ou digite o nome" required>
       </label>
       <label class="v2-field v2-field--duration">
         <span>Tempo <small>(opcional)</small></span>
@@ -54,7 +54,7 @@ function commandBlock(command, itemIndex, commandIndex) {
       </div>
       <label class="v2-field">
         <span>Comando / orientação</span>
-        <textarea data-v2-treatment-draft="commandText" data-item-index="${itemIndex}" data-command-index="${commandIndex}" rows="2" placeholder="Ex.: neutralizar, harmonizar, fortalecer…">${esc(command.text || '')}</textarea>
+        <textarea data-v2-treatment-draft="commandText" data-item-index="${itemIndex}" data-command-index="${commandIndex}" rows="2" placeholder="Ex.: neutralizar, harmonizar, fortalecer…" required>${esc(command.text || '')}</textarea>
       </label>
       <div class="v2-treatment-graphs">
         ${(command.graphApplications || []).map((graph, graphIndex) => graphRow(graph, itemIndex, commandIndex, graphIndex)).join('')}
@@ -95,7 +95,7 @@ function itemBlock(item, itemIndex, openIndex) {
         </div>
         <label class="v2-field">
           <span>Item a tratar</span>
-          <input data-v2-treatment-draft="itemLabel" data-item-index="${itemIndex}" value="${esc(item.itemLabel || '')}" placeholder="Ex.: crença de escassez">
+          <input data-v2-treatment-draft="itemLabel" data-item-index="${itemIndex}" value="${esc(item.itemLabel || '')}" placeholder="Ex.: crença de escassez" required>
         </label>
         ${(item.commands || []).map((command, commandIndex) => commandBlock(command, itemIndex, commandIndex)).join('')}
         <button class="v2-btn v2-btn--quiet" type="button" data-v2-add-command data-item-index="${itemIndex}">+ Comando</button>
@@ -118,7 +118,7 @@ export function treatmentComposer(model, ui) {
       <section class="v2-composer-context">
         <label class="v2-field">
           <span>Nome do tratamento</span>
-          <input data-v2-treatment-draft="title" value="${esc(draft.title || '')}" placeholder="Ex.: Equilíbrio emocional">
+          <input data-v2-treatment-draft="title" value="${esc(draft.title || '')}" placeholder="Ex.: Equilíbrio emocional" required>
         </label>
         <label class="v2-field">
           <span>Objetivo <small>(opcional)</small></span>
@@ -160,7 +160,7 @@ export function treatmentComposer(model, ui) {
   `;
 
   return mobileSheet({
-    eyebrow: `${esc(model.assistedName || 'Assistido')} · Tratamento`,
+    eyebrow: `${model.assistedName || 'Assistido'} · Tratamento`,
     title: 'Novo tratamento',
     body,
     error: ui.error,
