@@ -18,12 +18,12 @@ assert.doesNotMatch(
 );
 assert.match(
   treatmentCss,
-  /\.v2-treatment-modality-base\s*\{/,
+  /\.v2-treatment-modality-base\s*(?:,|\{)/,
   'Treatment CSS must own the treatment modality summary geometry.',
 );
 assert.match(
   treatmentCss,
-  /\.v2-treatment-modality-base span\s*\{/,
+  /\.v2-treatment-modality-base span\s*(?:,|\{)/,
   'Treatment CSS must own the treatment modality summary supporting copy.',
 );
 assert.doesNotMatch(
