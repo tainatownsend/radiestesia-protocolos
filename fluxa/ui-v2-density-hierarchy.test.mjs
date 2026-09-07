@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { closingFlow } from './ui-v2/session/closing-flow.js';
+import { postCloseSummary } from './ui-v2/session/post-close-summary.js';
 import { historyPage } from './ui-v2/history/history-page.js';
 import { treatmentReview } from './ui-v2/treatment/treatment-review.js';
 
@@ -50,13 +51,24 @@ assert.match(multiCloseHtml, /2 Assistidos · Revisão da sessão/);
 assert.match(multiCloseHtml, /Assistidos:<\/strong> Marina, João/,
   'Multi-Assisted closing still needs the explicit identity list because a count alone is insufficient context.');
 
-const historyHtml = historyPage({ historySessions:[{
-  id:'ses_1', status:'CLOSED', startedAt:'2026-09-06T10:00:00.000Z', endedAt:'2026-09-06T11:00:00.000Z',
+const closedSession = {
+  id:'ses_closed', status:'CLOSED', startedAt:'2026-09-06T10:00:00.000Z', endedAt:'2026-09-06T11:00:00.000Z',
   assistedNames:['Marina'], investigationCompleted:1, investigationOpened:1,
   treatmentsWorked:2, findings:3, notes:1, closingNote:'Retomar limites.',
   longitudinal:[{ title:'Equilíbrio', status:'IN_PROGRESS' }],
   narrative:[{ id:'n1', title:'Investigação concluída', detail:'1 resposta positiva', occurredAt:'2026-09-06T10:15:00.000Z', audit:[], relatedCount:0 }],
-}] }, { historySessionId:'ses_1' });
+};
+
+const postCloseHtml = postCloseSummary({ historySessions:[closedSession] }, 'ses_closed');
+assert.match(postCloseHtml, /class="v2-post-close-summary"/);
+assert.doesNotMatch(postCloseHtml, /class="v2-kpis"|class="v2-kpi"/,
+  'Post-close confirmation must not revert to a KPI dashboard after the session has ended.');
+assert.match(postCloseHtml, /class="v2-post-close-continuity"/);
+assert.doesNotMatch(postCloseHtml, /v2-card v2-card--soft v2-post-close-continuity/,
+  'Longitudinal follow-up must not be wrapped in a redundant outer card.');
+assert.match(postCloseHtml, /class="v2-post-close-note"/);
+
+const historyHtml = historyPage({ historySessions:[closedSession] }, { historySessionId:'ses_closed' });
 assert.match(historyHtml, /class="v2-history-summary"/);
 assert.doesNotMatch(historyHtml, /v2-history-kpis|class="v2-kpi"/,
   'History detail must read like a narrative, not a KPI dashboard.');
