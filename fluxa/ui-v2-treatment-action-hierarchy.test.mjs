@@ -12,7 +12,7 @@ function activeTreatment(overrides = {}) {
 
 const base = {
   sessionOpen:true, assistedSelected:true, assistedName:'Marina', hawkinsReady:true,
-  nextActionCode:'TREATMENT_REVIEW',
+  nextActionCode:'INVESTIGATE',
 };
 
 const activeHtml = treatmentPage({ ...base, treatments:[activeTreatment()] });
@@ -33,7 +33,7 @@ assert.match(lockedHtml, />Histórico</);
 assert.match(lockedHtml, /Somente consulta por enquanto/);
 
 const completedHtml = treatmentPage({
-  ...base, nextActionCode:'INVESTIGATE',
+  ...base,
   treatments:[activeTreatment({ status:'COMPLETED', total:2, resolved:2, primaryAction:'workspace', primaryLabel:'Ver tratamento' })],
 });
 assert.match(completedHtml, />Ver tratamento</);
