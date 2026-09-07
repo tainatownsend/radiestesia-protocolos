@@ -14,7 +14,7 @@ export function finalAssessment(model, ui) {
         <div>
           <p class="v2-eyebrow">Calibração final</p>
           <p class="v2-helper">Hawkins inicial desta sessão: <strong>${model.hawkins ? esc(model.hawkins) : 'não disponível'}</strong></p>
-          <label class="v2-field"><span>Nível final de Hawkins</span><input type="number" min="1" inputmode="decimal" data-v2-final-frequency placeholder="Ex.: 540"></label>
+          <label class="v2-field"><span>Nível final de Hawkins</span><input type="number" min="1" inputmode="decimal" data-v2-final-frequency placeholder="Ex.: 540" required></label>
         </div>
       </section>
 
@@ -22,7 +22,7 @@ export function finalAssessment(model, ui) {
         <div class="v2-section-number">2</div>
         <div>
           <p class="v2-eyebrow">Estado atual</p>
-          <label class="v2-field"><span>Desequilíbrio restante (%)</span><input type="number" min="0" max="100" inputmode="decimal" data-v2-final-imbalance placeholder="0–100"></label>
+          <label class="v2-field"><span>Desequilíbrio restante (%)</span><input type="number" min="0" max="100" inputmode="decimal" data-v2-final-imbalance placeholder="0–100" required></label>
           <label class="v2-check-row v2-check-row--standalone"><input type="checkbox" data-v2-final-needs-new><span><strong>Precisa de um novo tratamento</strong><small>Marque somente se houver continuidade indicada.</small></span></label>
           <label class="v2-field" data-v2-final-next-wrap><span>Quando revisar / iniciar o próximo <small>(obrigatório se marcado acima)</small></span><input data-v2-final-next placeholder="Ex.: em 7 dias"></label>
         </div>
