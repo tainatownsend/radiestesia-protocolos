@@ -34,10 +34,6 @@ function heading(title, copy) {
 
 function search(placeholder) {
   return `
-    <style>
-      .v2-library-search-empty { display: none; }
-      .v2-library-list:has([data-v2-library-search-text]):not(:has([data-v2-library-search-text]:not([hidden]))) .v2-library-search-empty { display: block; }
-    </style>
     <label class="v2-field v2-library-search"><span class="sr-only">Buscar</span><input type="search" data-v2-library-search placeholder="${esc(placeholder)}" autocomplete="off"></label>
   `;
 }
