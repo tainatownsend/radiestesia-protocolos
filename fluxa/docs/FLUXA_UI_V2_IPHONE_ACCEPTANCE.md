@@ -184,11 +184,15 @@ If practical, work with two Assistidos during the same session.
 After the session is closed:
 
 - [ ] History timeline remains readable and scrollable on the iPhone.
+- [ ] History detail reads as a narrative: compact summary, continuity, note, then timeline — not a KPI dashboard.
 - [ ] Raw enum values such as `IN_PROGRESS`, `PLANNED` or `PET` are not exposed as primary UI labels.
 - [ ] Person birth dates render in `dd/mm/yyyy` format.
 - [ ] Non-person Assistidos do not show misleading `missing birth date` copy.
+- [ ] Acervo home categories read as compact navigation rows, not four large dashboard cards.
+- [ ] The populated Acervo remains scannable without unnecessary nested card layers.
 - [ ] Acervo search can be used with the keyboard without hiding results/footer.
 - [ ] Settings correctly says data is local to this browser/device.
+- [ ] Settings sections remain visually flat and separated; storage/import states do not create card-on-card nesting.
 - [ ] Export remains available.
 - [ ] During an open session, import/recovery is visibly disabled.
 - [ ] After the session closes, import can be selected and previewed before replacement.
