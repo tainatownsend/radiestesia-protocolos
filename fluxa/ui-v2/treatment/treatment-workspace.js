@@ -57,7 +57,7 @@ export function treatmentWorkspace(model, ui) {
       ${continuityLocked ? '<section class="v2-card v2-card--soft"><strong>Somente consulta neste momento</strong><p class="v2-copy">Conclua a etapa em andamento em Hoje antes de revisar ou alterar este tratamento.</p></section>' : ''}
       <section class="v2-workspace-summary">
         <div class="v2-progress-ring" aria-label="${esc(progressLabel)}"><strong>${progressValue}</strong><span>${treatment.total ? 'resolvidos' : 'componentes'}</span></div>
-        <div><p class="v2-eyebrow">Progresso</p><strong>${esc(treatment.title)}</strong>${treatment.objective ? `<p class="v2-helper">${esc(treatment.objective)}</p>` : ''}</div>
+        <div><p class="v2-eyebrow">Progresso</p>${treatment.objective ? `<p class="v2-helper">${esc(treatment.objective)}</p>` : '<p class="v2-helper">Acompanhe e revise os componentes abaixo.</p>'}</div>
       </section>
       <section class="v2-component-list" aria-label="Componentes do tratamento">
         ${(treatment.components || []).map((component) => componentRow(component, { locked: continuityLocked })).join('') || '<p class="v2-helper">Nenhum componente registrado.</p>'}
@@ -69,7 +69,7 @@ export function treatmentWorkspace(model, ui) {
     </div>
   `;
   return mobileSheet({
-    eyebrow: model.assistedName || 'Tratamento',
+    eyebrow: `${esc(model.assistedName || 'Assistido')} · Tratamento`,
     title: treatment.title,
     body,
     error: ui.error,
