@@ -1,11 +1,5 @@
 import { mobileSheet } from '../components/mobile-sheet.js';
 
-function esc(value = '') {
-  return String(value).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
-  }[c]));
-}
-
 export function hawkinsFlow(model, ui = {}) {
   const body = `
     <div class="v2-stack">
@@ -24,7 +18,7 @@ export function hawkinsFlow(model, ui = {}) {
   `;
 
   return mobileSheet({
-    eyebrow: `${esc(model.assistedName || 'Assistido')} · Hawkins`,
+    eyebrow: `${model.assistedName || 'Assistido'} · Hawkins`,
     title: 'Calibração inicial de Hawkins',
     body,
     primaryLabel: 'Registrar e continuar',
