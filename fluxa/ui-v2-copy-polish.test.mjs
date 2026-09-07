@@ -103,9 +103,13 @@ const postCloseHtml = postCloseSummary({ historySessions:[{
   assistedNames:['Marina'], investigationCompleted:1, treatmentsWorked:1, findings:1,
   longitudinal:[{ title:'Continuidade', status:'PLANNED' }],
 }] }, 'ses_2');
+assert.match(postCloseHtml,/Sessão encerrada/,'Post-close context already makes completion explicit.');
 assert.match(postCloseHtml,/Continuidade/);
 assert.match(postCloseHtml,/Planejado/);
-assert.match(postCloseHtml,/1<\/strong><span>investigação concluída/);
+assert.match(postCloseHtml,/<strong>1<\/strong><span>investigação<\/span>/,'Post-close KPI should stay compact because the hero already states the session is closed.');
+assert.match(postCloseHtml,/<strong>1<\/strong><span>tratamento<\/span>/);
+assert.match(postCloseHtml,/<strong>1<\/strong><span>achado<\/span>/);
+assert.doesNotMatch(postCloseHtml,/investigação concluída/,'Completion wording must not be duplicated inside the compact KPI.');
 assert.doesNotMatch(postCloseHtml,/PLANNED/);
 
 const assistedHtml = assistedPicker({ assistedOptions:[{ id:'ast_joao', name:'João', type:'PERSON' }] }, { assistedCreate:false, error:'' });
