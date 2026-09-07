@@ -12,6 +12,7 @@ const populatedHtml = historyPage({
   }],
 }, { historySessionId:null });
 assert.doesNotMatch(populatedHtml,/data-v2-route="today">Ir para Hoje/,'History with sessions should remain focused on the session list.');
-assert.match(populatedHtml,/data-v2-history-session="ses_1"/);
+assert.match(populatedHtml,/data-v2-history-session="ses_1">Ver detalhes/,'History cards must describe their action as opening historical detail, not resuming a session.');
+assert.doesNotMatch(populatedHtml,/>Abrir sessão</,'History cards must not imply they resume clinical work.');
 
 console.log('ui-v2-history-empty-state.test.mjs: ok');
