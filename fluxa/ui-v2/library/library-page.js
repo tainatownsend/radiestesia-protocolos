@@ -21,6 +21,12 @@ function dateLabel(value = '') {
   }
 }
 
+function assistedSummary(item) {
+  if (item.birthDate) return `Nascimento · ${dateLabel(item.birthDate)}`;
+  if (item.type === 'PERSON') return 'Data de nascimento não registrada';
+  return item.details || item.typeLabel || 'Assistido';
+}
+
 function heading(title, copy) {
   return `
     <div class="v2-library-heading">
@@ -76,7 +82,7 @@ function assisteds(model) {
       <section class="v2-library-list" data-v2-library-list>
         ${items.length ? items.map((item) => `
           <article class="v2-library-row" data-v2-library-search-text="${esc(norm(`${item.name} ${item.typeLabel} ${item.details || ''}`))}">
-            <span><strong>${esc(item.name)}</strong><small>${item.birthDate ? `Nascimento · ${esc(dateLabel(item.birthDate))}` : 'Sem data de nascimento registrada'}</small></span>
+            <span><strong>${esc(item.name)}</strong><small>${esc(assistedSummary(item))}</small></span>
             <span class="v2-library-kind">${esc(item.typeLabel)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum Assistido cadastrado.</div>'}
