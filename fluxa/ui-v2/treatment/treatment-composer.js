@@ -83,7 +83,7 @@ function itemBlock(item, itemIndex, openIndex) {
   const commandCount = item.commands?.length || 0;
   const graphCount = (item.commands || []).reduce((sum, command) => sum + (command.graphApplications?.length || 0), 0);
   return `
-    <details class="v2-treatment-item" data-v2-treatment-item-index="${itemIndex}" ${itemIndex === openIndex ? 'open' : ''}>
+    <details class="v2-treatment-item" name="v2-treatment-items" data-v2-treatment-item-index="${itemIndex}" ${itemIndex === openIndex ? 'open' : ''}>
       <summary>
         <span><strong>${esc(item.itemLabel || `Item ${itemIndex + 1}`)}</strong><small>${commandCount} comando${commandCount === 1 ? '' : 's'} · ${graphCount} gráfico${graphCount === 1 ? '' : 's'}</small></span>
         <span class="v2-treatment-item__chevron" aria-hidden="true">⌄</span>
