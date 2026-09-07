@@ -116,7 +116,6 @@ export function treatmentComposer(model, ui) {
   const body = `
     <form class="v2-treatment-composer" data-v2-treatment-form>
       <section class="v2-composer-context">
-        <p class="v2-eyebrow">Tratamento</p>
         <label class="v2-field">
           <span>Nome do tratamento</span>
           <input data-v2-treatment-draft="title" value="${esc(draft.title || '')}" placeholder="Ex.: Equilíbrio emocional">
@@ -161,7 +160,7 @@ export function treatmentComposer(model, ui) {
   `;
 
   return mobileSheet({
-    eyebrow: model.assistedName || 'Tratamento',
+    eyebrow: `${esc(model.assistedName || 'Assistido')} · Tratamento`,
     title: 'Novo tratamento',
     body,
     error: ui.error,
