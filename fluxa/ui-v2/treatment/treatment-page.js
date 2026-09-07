@@ -10,7 +10,7 @@ function historyAction() {
 }
 
 function treatmentCard(treatment, { locked = false } = {}) {
-  const progress = treatment.total
+  const progressLabel = treatment.total
     ? `${treatment.resolved} de ${treatment.total} componentes resolvidos`
     : 'Composição ainda sem componentes';
   const modality = (treatment.modalities || []).map((item) => item.label).join(' · ');
@@ -44,10 +44,10 @@ function treatmentCard(treatment, { locked = false } = {}) {
           <span class="v2-status-pill" data-status="${esc(treatment.status)}">${esc(treatmentStatusLabel(treatment.status))}</span>
           <h2>${esc(treatment.title)}</h2>
         </div>
-        <span class="v2-progress-count">${treatment.total ? `${treatment.resolved}/${treatment.total}` : '—'}</span>
+        <span class="v2-progress-count" aria-label="${esc(progressLabel)}">${treatment.total ? `${treatment.resolved}/${treatment.total}` : '—'}</span>
       </div>
       ${treatment.objective ? `<p class="v2-copy">${esc(treatment.objective)}</p>` : ''}
-      <div class="v2-treatment-meta"><span>${esc(progress)}</span>${modality ? `<span>${esc(modality)}</span>` : ''}</div>
+      ${modality ? `<div class="v2-treatment-meta"><span>${esc(modality)}</span></div>` : ''}
       ${actions}
     </article>
   `;
