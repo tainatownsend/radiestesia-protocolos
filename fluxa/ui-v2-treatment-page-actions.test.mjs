@@ -57,12 +57,14 @@ const lockedWithTreatmentHtml = treatmentPage({
   treatments:[{
     id:'trt_locked', title:'Consulta segura', objective:'', status:'IN_PROGRESS',
     resolved:0, total:1, modalities:[{label:'Radiestesia'}],
-    primaryAction:'workspace', primaryLabel:'Ver tratamento',
+    primaryAction:'review', primaryLabel:'Revisar',
   }],
 });
 assert.match(lockedWithTreatmentHtml,/Há uma etapa em andamento/);
 assert.match(lockedWithTreatmentHtml,/data-v2-route="today">Ir para Hoje/,'A locked treatment queue must offer a direct path back to the contiguous workflow.');
-assert.doesNotMatch(lockedWithTreatmentHtml,/data-v2-treatment-action="workspace"/,'Locked active treatments must remain read-only.');
+assert.match(lockedWithTreatmentHtml,/data-v2-treatment-action="workspace"/,'Locked active treatments should remain consultable without exposing mutations.');
+assert.match(lockedWithTreatmentHtml,/Somente consulta por enquanto/);
+assert.doesNotMatch(lockedWithTreatmentHtml,/data-v2-treatment-action="(?:review|start|resume|final)"/,'Locked treatment consultation must not expose mutating actions.');
 
 const noSessionHtml = treatmentPage({ sessionOpen:false, assistedSelected:false, hawkinsReady:false, treatments:[] });
 assert.match(noSessionHtml,/Abra uma sessão para entrar no contexto do Assistido/);
