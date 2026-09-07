@@ -75,7 +75,7 @@ assert.doesNotMatch(prepJs, /Minha frequência vibracional de Hawkins/i, 'V2 mus
 
 assert.match(assistedJs, /Buscar por nome/, 'Assistido selection must provide immediate search.');
 assert.match(assistedJs, /Adicionar e selecionar/, 'Assistido creation must stay in the same guided sheet instead of nesting another modal.');
-assert.match(hawkinsJs, /Uma vez por sessão e Assistido/, 'Hawkins copy must explain same-session reuse before gated work.');
+assert.match(hawkinsJs, /Uma calibração por Assistido nesta sessão/, 'Hawkins copy must explain same-session reuse before gated work.');
 assert.match(triageJs, /Pergunta \$\{questionNumber\} de \$\{investigation\.total\}/, 'Triage must expose current question position.');
 assert.match(triageJs, /data-v2-triage-back/, 'Triage must let the user correct a previous answer before completion.');
 assert.match(findingsJs, /Confirmar achados/, 'Investigation completion must hand off directly to findings confirmation.');
