@@ -16,7 +16,10 @@ function treatmentCard(treatment, { locked = false } = {}) {
     : '';
   let actions = '';
   if (locked && active) {
-    actions = '<p class="v2-helper">Conclua a etapa em andamento em Hoje antes de alterar este tratamento.</p>';
+    actions = `<div class="v2-treatment-card__actions v2-treatment-card__actions--consult">
+      <button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver componentes</button>
+      <p class="v2-helper">Somente consulta por enquanto. Conclua a etapa em andamento em Hoje antes de alterar este tratamento.</p>
+    </div>`;
   } else if (active) {
     actions = `<div class="v2-treatment-card__actions">
       <button class="v2-btn v2-btn--primary" type="button" data-v2-treatment-action="${esc(treatment.primaryAction)}" data-treatment-id="${esc(treatment.id)}">${esc(treatment.primaryLabel)}</button>
@@ -83,7 +86,7 @@ export function treatmentPage(model) {
         </div>
         ${canCreateTreatment ? '<button class="v2-btn v2-btn--primary" type="button" data-v2-preview-action="treat">Novo tratamento</button>' : ''}
       </section>
-      ${continuityLocked && treatments.length ? '<section class="v2-card v2-card--soft"><strong>Há uma etapa em andamento</strong><p class="v2-copy">A fila fica disponível para consulta. Conclua a próxima ação em Hoje antes de alterar tratamentos.</p><button class="v2-btn v2-btn--primary" type="button" data-v2-route="today">Ir para Hoje</button></section>' : ''}
+      ${continuityLocked && treatments.length ? '<section class="v2-card v2-card--soft"><strong>Há uma etapa em andamento</strong><p class="v2-copy">Você pode consultar a composição dos tratamentos, mas alterações ficam pausadas até concluir a próxima ação em Hoje.</p><button class="v2-btn v2-btn--primary" type="button" data-v2-route="today">Ir para Hoje</button></section>' : ''}
       ${treatments.length ? `<section class="v2-treatment-list">${treatments.map((item) => treatmentCard(item, { locked: continuityLocked })).join('')}</section>` : `
         <section class="v2-card v2-card--soft v2-empty-state">
           <strong>${esc(empty.title)}</strong>
