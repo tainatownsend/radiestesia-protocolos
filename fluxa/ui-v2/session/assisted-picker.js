@@ -2,7 +2,7 @@ import { mobileSheet } from '../components/mobile-sheet.js';
 
 const ASSISTED_TYPE_LABELS = Object.freeze({
   PERSON: 'Pessoa',
-  PET: 'PET',
+  PET: 'Pet',
   ENVIRONMENT: 'Ambiente',
   GROUP: 'Grupo',
   SITUATION: 'Situação / Processo',
@@ -29,8 +29,8 @@ export function assistedPicker(model, ui = {}) {
   if (ui.assistedCreate) {
     const body = `
       <div class="v2-stack">
-        <div class="v2-progress" aria-label="Novo Assistido">
-          <div class="v2-progress__meta"><span>Novo Assistido</span><span>Pessoa</span></div>
+        <div class="v2-progress" aria-label="Nova pessoa">
+          <div class="v2-progress__meta"><span>Nova pessoa</span><span>Pessoa</span></div>
           <div class="v2-progress__bar"><span style="width:100%"></span></div>
         </div>
         <section class="v2-section">
@@ -73,7 +73,7 @@ export function assistedPicker(model, ui = {}) {
   const searchEmpty = assistedOptions.length ? `
     <div class="v2-empty v2-assisted-search-empty" role="status" aria-live="polite">
       <strong>Nenhum nome encontrado</strong>
-      <p>Revise a busca ou adicione um novo Assistido.</p>
+      <p>Revise a busca ou adicione uma nova pessoa.</p>
     </div>
   ` : '';
 
@@ -101,7 +101,7 @@ export function assistedPicker(model, ui = {}) {
     eyebrow: 'Sessão em andamento',
     title: 'Quem você vai atender?',
     body,
-    primaryLabel: 'Adicionar novo Assistido',
+    primaryLabel: 'Adicionar nova pessoa',
     secondaryLabel: '',
     error: ui.error,
   });
