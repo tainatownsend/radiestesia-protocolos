@@ -58,6 +58,10 @@ function longitudinalLabel(item, multiAssisted) {
   return [multiAssisted ? item.assistedName : '', item.title, treatmentStatusLabel(item.status)].filter(Boolean).map(esc).join(' · ');
 }
 
+function summaryStat(value, label) {
+  return `<span class="v2-history-stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></span>`;
+}
+
 function sessionDetail(session) {
   const multiAssisted = (session.assistedNames?.length || 0) > 1;
   return `
@@ -69,18 +73,19 @@ function sessionDetail(session) {
         <p class="v2-copy">${esc(dateTime(session.startedAt))}${session.endedAt ? ` · ${esc(duration(session))}` : ''}</p>
       </section>
 
-      <section class="v2-kpis v2-history-kpis" aria-label="Resumo da sessão">
-        <div class="v2-kpi"><strong>${session.investigationCompleted}/${session.investigationOpened}</strong><span>investigações concluídas</span></div>
-        <div class="v2-kpi"><strong>${session.treatmentsWorked}</strong><span>tratamentos trabalhados</span></div>
-        <div class="v2-kpi"><strong>${session.findings + session.notes}</strong><span>achados + notas</span></div>
+      <section class="v2-history-summary" aria-label="Resumo da sessão">
+        ${summaryStat(`${session.investigationCompleted}/${session.investigationOpened}`, 'investigações')}
+        ${summaryStat(session.treatmentsWorked, 'tratamentos')}
+        ${summaryStat(session.findings, 'achados')}
+        ${summaryStat(session.notes, 'notas')}
       </section>
 
-      ${session.longitudinal?.length ? `<section class="v2-card v2-card--soft"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${longitudinalLabel(item, multiAssisted)}</span>`).join('')}</div></section>` : ''}
+      ${session.longitudinal?.length ? `<section class="v2-history-continuity-block"><p class="v2-eyebrow">Continuidade</p><strong>Trabalho que segue ativo</strong><div class="v2-history-continuity">${session.longitudinal.map((item) => `<span>${longitudinalLabel(item, multiAssisted)}</span>`).join('')}</div></section>` : ''}
 
-      ${session.closingNote ? `<section class="v2-card v2-card--soft v2-history-closing-note"><p class="v2-eyebrow">Nota de encerramento</p><p class="v2-copy">${esc(session.closingNote)}</p></section>` : ''}
+      ${session.closingNote ? `<section class="v2-history-closing-note"><p class="v2-eyebrow">Nota de encerramento</p><p class="v2-copy">${esc(session.closingNote)}</p></section>` : ''}
 
       <section class="v2-section">
-        <div class="v2-section-head"><div><p class="v2-eyebrow">Histórico narrativo</p><h2>Linha do tempo</h2></div></div>
+        <div class="v2-section-head"><div><p class="v2-eyebrow">Evolução</p><h2>Linha do tempo</h2></div></div>
         ${narrative(session)}
       </section>
     </div>
@@ -111,7 +116,7 @@ export function historyPage(model, ui) {
       <section class="v2-section">
         <p class="v2-eyebrow">Histórico</p>
         <h1 class="v2-title">Evolução do atendimento</h1>
-        <p class="v2-copy">Primeiro a história que faz sentido. O detalhe técnico continua disponível quando você precisa auditar.</p>
+        <p class="v2-copy">Veja primeiro os marcos do atendimento. O detalhe técnico continua disponível quando você precisar auditar.</p>
       </section>
       ${sessions.length ? `<section class="v2-history-session-list">${sessions.map(sessionCard).join('')}</section>` : `
         <section class="v2-card v2-card--soft v2-empty-state">
