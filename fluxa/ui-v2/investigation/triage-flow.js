@@ -15,14 +15,12 @@ export function triageFlow(model, ui = {}) {
       <div class="v2-progress" aria-label="Pergunta ${questionNumber} de ${investigation.total}">
         <div class="v2-progress__meta">
           <span>Pergunta ${questionNumber} de ${investigation.total}</span>
-          <span>${esc(investigation.name)}</span>
+          <span>Salvo automaticamente</span>
         </div>
         <div class="v2-progress__bar"><span style="width:${(questionNumber / Math.max(investigation.total, 1)) * 100}%"></span></div>
       </div>
       <section class="v2-question" aria-labelledby="v2-triage-question">
-        <p class="v2-eyebrow">${esc(model.assistedName || 'Assistido')}</p>
         <h3 id="v2-triage-question" tabindex="-1" data-v2-autofocus>${esc(investigation.question)}</h3>
-        <p class="v2-copy">Responda apenas à pergunta atual. O progresso é salvo automaticamente.</p>
       </section>
     </div>
   `;
@@ -35,7 +33,7 @@ export function triageFlow(model, ui = {}) {
   `;
 
   return mobileSheet({
-    eyebrow: model.assistedName || 'Assistido',
+    eyebrow: `${esc(model.assistedName || 'Assistido')} · Investigação`,
     title: investigation.name,
     body,
     primaryLabel: 'Continuar',
