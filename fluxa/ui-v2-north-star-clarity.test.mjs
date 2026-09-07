@@ -19,8 +19,9 @@ const cockpitHtml = sessionCockpit({
   treatmentCount: 0,
   reikiEnabled: false,
 });
-assert.match(cockpitHtml, /350 Hz/, 'Hawkins context must always expose its unit.');
-assert.doesNotMatch(cockpitHtml, />350</, 'A bare Hawkins number is ambiguous in the session cockpit.');
+assert.match(cockpitHtml, />Hawkins</, 'The Hawkins value must stay attached to an explicit Hawkins label.');
+assert.match(cockpitHtml, />350</, 'The compact session context must expose the recorded Hawkins level.');
+assert.doesNotMatch(cockpitHtml, /350\s*Hz/, 'The Hawkins scale must not be mislabeled as frequency in Hz.');
 
 const lockedTreatmentHtml = treatmentPage({
   sessionOpen: true,
