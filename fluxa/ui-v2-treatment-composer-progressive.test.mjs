@@ -38,6 +38,8 @@ assert.match(complexHtml, /class="v2-section-number">2<\/div>[\s\S]*?>Itens</);
 assert.doesNotMatch(complexHtml, /class="v2-section-number">[34]<\/div>/,'Context and summary must not become extra workflow steps.');
 assert.match(complexHtml, /Salvar como planejado/);
 assert.match(complexHtml, /Iniciar tratamento/);
+assert.equal((complexHtml.match(/name="v2-treatment-items"/g) || []).length, 2,
+  'All treatment items must share one native details group so only one stays expanded during interaction.');
 assert.equal((complexHtml.match(/class="v2-treatment-item"[^>]*\sopen/g) || []).length, 1, 'A populated composer should keep only one treatment item expanded.');
 assert.match(complexHtml, /data-v2-treatment-item-index="0"\sopen/,'When every item is complete, the first item is the compact default workspace.');
 assert.doesNotMatch(complexHtml, /data-v2-treatment-item-index="1"\sopen/);
