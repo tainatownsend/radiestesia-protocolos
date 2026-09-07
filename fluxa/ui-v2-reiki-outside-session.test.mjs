@@ -23,7 +23,9 @@ const outsideRunning = reikiWorkspace({
   },
 }, ui);
 assert.match(outsideRunning, /foi iniciada fora de uma sessão/);
-assert.match(outsideRunning, /À distância · João/);
+assert.match(outsideRunning, /João · Reiki/,'The sheet header must preserve the Reiki assisted context.');
+assert.match(outsideRunning, /<span>À distância<\/span>/,'The timer should show the application mode without repeating the assisted name.');
+assert.doesNotMatch(outsideRunning, /À distância · João/,'The timer must not duplicate the assisted identity already visible in the sheet header.');
 assert.match(outsideRunning, /data-v2-reiki-control="pause"/);
 assert.doesNotMatch(outsideRunning, /data-v2-reiki-control="pause"[^>]*disabled/,'Outside-session Reiki must remain pausable even while another session is open.');
 assert.doesNotMatch(outsideRunning, /data-v2-reiki-control="complete"[^>]*disabled/,'Outside-session Reiki must remain completable.');
