@@ -4,7 +4,7 @@ import { ROOT_PROTOCOL_METADATA } from './root-protocol-metadata.js';
 
 const TYPE_LABELS = Object.freeze({
   PERSON: 'Pessoa',
-  PET: 'PET',
+  PET: 'Pet',
   ENVIRONMENT: 'Ambiente',
   GROUP: 'Grupo',
   SITUATION: 'Situação / Processo',
