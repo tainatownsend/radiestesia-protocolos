@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { libraryPage } from './ui-v2/library/library-page.js';
+
+const css = fs.readFileSync(new URL('./ui-v2/library-settings.css', import.meta.url), 'utf8');
+assert.match(css,/\.v2-library-search-empty\s*\{[^}]*display:\s*none;/s,'Filtered-empty feedback must stay hidden until search removes every searchable row.');
+assert.match(css,/:has\(\[data-v2-library-search-text\]\):not\(:has\(\[data-v2-library-search-text\]:not\(\[hidden\]\)\)\)\s+\.v2-library-search-empty/,'Search-empty feedback should react to rows hidden by the existing Acervo search controller.');
 
 const populated = {
   library: {
@@ -16,7 +21,7 @@ for (const section of ['assisteds','protocols','resources']) {
   assert.match(html,/data-v2-library-search/);
   assert.match(html,/v2-library-search-empty/);
   assert.match(html,/Nenhum resultado encontrado/);
-  assert.match(html,/:has\(\[data-v2-library-search-text\]\)/,'Search-empty feedback should react to rows hidden by the existing Acervo search controller.');
+  assert.doesNotMatch(html,/<style(?:\s|>)/i,'Acervo rendering must not inject CSS into page markup.');
 }
 
 const empty = {
