@@ -109,6 +109,10 @@ const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 
 assert.match(shell,/model\.source === 'live' \? 'Sessão guiada' : 'Preview seguro'/);
 assert.doesNotMatch(shell,/'Sessão guiada · UI V2'/,'Live header must not expose implementation version labels.');
 
+const documentHtml = fs.readFileSync(new URL('./v2.html', import.meta.url), 'utf8');
+assert.match(documentHtml,/<title>Fluxa<\/title>/,'The browser tab must show the product name.');
+assert.doesNotMatch(documentHtml,/<title>[^<]*(?:UI V2|Preview)/i,'Implementation and preview labels must not leak into the browser tab.');
+
 assert.equal(treatmentStatusLabel('INTERRUPTED'),'Interrompido');
 assert.equal(treatmentStatusLabel('WAITING_REVIEW'),'Waiting review','Unknown status fallback should remain readable instead of exposing underscores.');
 
