@@ -30,7 +30,7 @@ export function closingFlow(model, ui) {
   const body = `
     <div class="v2-closing-review">
       <section class="v2-card v2-card--soft v2-close-context">
-        <p class="v2-eyebrow">Assistido(s) trabalhado(s)</p>
+        <p class="v2-eyebrow">Assistidos desta sessão</p>
         <strong>${esc(summary.assistedNames?.join(', ') || model.assistedName || 'Nenhum Assistido registrado')}</strong>
         <p class="v2-helper">O encerramento fecha somente esta sessão. Tratamentos longitudinais continuam disponíveis.</p>
       </section>
@@ -77,7 +77,7 @@ export function closingFlow(model, ui) {
   if (reikiBlocker) {
     footerHtml = `
       <button class="v2-btn v2-btn--ghost" type="button" data-v2-close-sheet>Voltar</button>
-      <button class="v2-btn v2-btn--primary" type="button" data-v2-closing-reiki>Concluir Reiki primeiro</button>
+      <button class="v2-btn v2-btn--primary" type="button" data-v2-closing-reiki>Abrir Reiki para concluir</button>
     `;
   } else if (openInvestigationCount || pendingFindingCount) {
     footerHtml = recoveryAssistedId ? `
