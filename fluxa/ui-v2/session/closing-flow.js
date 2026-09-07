@@ -5,8 +5,8 @@ function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[char]));
 }
 
-function metric(label, value, detail = '') {
-  return `<div class="v2-close-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ''}</div>`;
+function stat(label, value) {
+  return `<span class="v2-close-stat"><strong>${esc(value)}</strong><span>${esc(label)}</span></span>`;
 }
 
 function continuityTitle(item, multiAssisted) {
@@ -26,20 +26,24 @@ export function closingFlow(model, ui) {
   const recoveryAssistedId = recoveryBlocker?.assistedEntityId || '';
   const recoveryAssistedName = recoveryBlocker?.assistedName || '';
   const hasBlocker = Boolean(reikiBlocker || openInvestigationCount || pendingFindingCount);
-  const multiAssisted = (summary.assistedNames?.length || 0) > 1;
+  const assistedNames = (summary.assistedNames || []).filter(Boolean);
+  const multiAssisted = assistedNames.length > 1;
+  const closingContext = assistedNames.length === 1
+    ? `${assistedNames[0]} · Revisão da sessão`
+    : (assistedNames.length > 1 ? `${assistedNames.length} Assistidos · Revisão da sessão` : 'Revisão da sessão');
+  const multiAssistedList = multiAssisted
+    ? `<p class="v2-helper v2-close-assisteds"><strong>Assistidos:</strong> ${esc(assistedNames.join(', '))}</p>`
+    : '';
+
   const body = `
     <div class="v2-closing-review">
-      <section class="v2-card v2-card--soft v2-close-context">
-        <p class="v2-eyebrow">Assistidos desta sessão</p>
-        <strong>${esc(summary.assistedNames?.join(', ') || model.assistedName || 'Nenhum Assistido registrado')}</strong>
-        <p class="v2-helper">O encerramento fecha somente esta sessão. Tratamentos longitudinais continuam disponíveis.</p>
-      </section>
+      ${multiAssistedList}
 
-      <section class="v2-close-grid" aria-label="Resumo antes de encerrar">
-        ${metric('Investigações', `${summary.investigationCompleted}/${summary.investigationOpened}`, 'concluídas / abertas')}
-        ${metric('Tratamentos', summary.treatmentsWorked, 'trabalhados nesta sessão')}
-        ${metric('Achados', summary.findings, 'registrados')}
-        ${metric('Notas', summary.notes, 'registradas')}
+      <section class="v2-close-summary" aria-label="Resumo antes de encerrar">
+        ${stat('investigações concluídas', `${summary.investigationCompleted}/${summary.investigationOpened}`)}
+        ${stat('tratamentos trabalhados', summary.treatmentsWorked)}
+        ${stat('achados', summary.findings)}
+        ${stat('notas', summary.notes)}
       </section>
 
       ${summary.longitudinal?.length ? `
@@ -66,8 +70,8 @@ export function closingFlow(model, ui) {
       ${!hasBlocker ? `
         <div class="v2-close-ready"><span aria-hidden="true">✓</span><div><strong>Pronto para encerrar</strong><p>Não há investigação, achado pendente ou aplicação de Reiki bloqueando o fechamento.</p></div></div>
         <label class="v2-field">
-          <span>Confirmação / nota de encerramento <small>(opcional)</small></span>
-          <textarea rows="2" data-v2-closing-confirmation placeholder="Ex.: procedimento de encerramento concluído"></textarea>
+          <span>Nota de encerramento <small>(opcional)</small></span>
+          <textarea rows="2" data-v2-closing-confirmation placeholder="O que será útil lembrar depois?"></textarea>
         </label>
       ` : ''}
     </div>
@@ -95,7 +99,7 @@ export function closingFlow(model, ui) {
   }
 
   return mobileSheet({
-    eyebrow: 'Revisão da sessão',
+    eyebrow: closingContext,
     title: hasBlocker ? 'Há ações pendentes' : 'Encerrar sessão',
     body,
     error: ui.error,
