@@ -75,7 +75,7 @@ function permissionStep(prep) {
       <div>
         <p class="v2-eyebrow">Permissão</p>
         <h3 id="v2-prep-summary">Confirme antes de atender</h3>
-        <p class="v2-copy">Revise o essencial uma vez antes de iniciar o atendimento.</p>
+        <p class="v2-copy">Revise o essencial uma vez antes de iniciar o atendimento. Se algo estiver incorreto, volte uma etapa para ajustar.</p>
       </div>
       <div class="v2-card">
         <div class="v2-summary-row">
@@ -107,13 +107,19 @@ export function preparationFlow(model, ui = {}) {
     permission: () => permissionStep(prep),
   }[stepKey] || breathingStep;
   const body = `<div class="v2-stack">${progress(prep)}${content()}</div>`;
+  const primaryLabel = stepKey === 'permission' ? 'Concluir preparação' : 'Concluir etapa';
+  const footerHtml = `
+    ${prep.step > 1
+      ? '<button class="v2-btn v2-btn--ghost" type="button" data-v2-preparation-back>Voltar</button>'
+      : '<span aria-hidden="true"></span>'}
+    <button class="v2-btn v2-btn--primary" type="button" data-v2-primary>${primaryLabel}</button>
+  `;
 
   return mobileSheet({
     eyebrow: 'Preparação da sessão',
     title: 'Antes de começar',
     body,
-    primaryLabel: stepKey === 'permission' ? 'Concluir preparação' : 'Concluir etapa',
-    secondaryLabel: '',
+    footerHtml,
     error: ui.error,
   });
 }
