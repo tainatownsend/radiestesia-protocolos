@@ -148,6 +148,8 @@ body[data-v2-sheet-open="true"] .v2-sheet * {
   flex: 0 0 auto;
   accent-color: var(--v2-primary);
 }
+.v2-assisted-search-empty { display: none; }
+.v2-select-list:has(.v2-select-row):not(:has(.v2-select-row:not([hidden]))) .v2-assisted-search-empty { display: block; }
 
 .v2-question {
   min-height: min(36dvh, 320px);
