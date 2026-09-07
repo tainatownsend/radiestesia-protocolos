@@ -55,6 +55,9 @@ export function settingsSheet(model, ui) {
   const therapeutic = model.therapeuticSettings || { enabled: [], custom: [] };
   const enabled = new Set(therapeutic.enabled || []);
   const dataReplacementLocked = Boolean(model.sessionOpen);
+  const importControl = dataReplacementLocked
+    ? '<button class="v2-btn v2-btn--ghost" type="button" disabled>Selecionar backup para importar</button>'
+    : '<label class="v2-btn v2-btn--ghost v2-file-button">Selecionar backup para importar<input type="file" accept="application/json,.json" data-v2-settings-import-file></label>';
 
   const body = `
     <div class="v2-settings-stack">
@@ -70,7 +73,7 @@ export function settingsSheet(model, ui) {
         ${dataReplacementLocked ? '<div class="v2-card v2-card--soft"><strong>Importação e recuperação estão pausadas</strong><p class="v2-copy">Finalize a sessão atual antes de substituir ou recuperar os dados locais. Exportar backup continua disponível.</p></div>' : ''}
         <div class="v2-settings-actions">
           <button class="v2-btn" type="button" data-v2-settings-export>Exportar backup JSON</button>
-          <label class="v2-btn v2-btn--ghost v2-file-button">Selecionar backup para importar<input type="file" accept="application/json,.json" data-v2-settings-import-file ${dataReplacementLocked ? 'disabled' : ''}></label>
+          ${importControl}
         </div>
         ${health.canRecover && health.status !== 'OK' ? `<button class="v2-btn v2-btn--ghost" type="button" data-v2-settings-recover ${dataReplacementLocked ? 'disabled' : ''}>Tentar recuperar cópia local</button>` : ''}
         ${importPreview(ui.importPreview, dataReplacementLocked)}
