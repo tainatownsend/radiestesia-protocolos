@@ -6,11 +6,11 @@ export function newAssistedSheet(model, ui) {
       <p class="v2-copy">Cadastre a pessoa no Acervo sem alterar o Assistido atual da sessão.</p>
       <label class="v2-field">
         <span>Nome completo</span>
-        <input type="text" autocomplete="name" data-v2-library-person-name placeholder="Nome da pessoa">
+        <input type="text" autocomplete="name" data-v2-library-person-name placeholder="Nome da pessoa" required>
       </label>
       <label class="v2-field">
         <span>Data de nascimento</span>
-        <input type="date" data-v2-library-person-birthdate>
+        <input type="date" data-v2-library-person-birthdate required>
       </label>
     </form>
   `;
