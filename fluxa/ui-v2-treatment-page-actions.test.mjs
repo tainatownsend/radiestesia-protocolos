@@ -51,6 +51,19 @@ assert.equal(isContinuityLocked('FINDINGS'), true);
 assert.equal(isContinuityLocked('TREATMENT_FINAL'), true);
 assert.equal(isContinuityLocked('INVESTIGATE'), false);
 
+const lockedWithTreatmentHtml = treatmentPage({
+  ...base,
+  nextActionCode:'TRIAGE',
+  treatments:[{
+    id:'trt_locked', title:'Consulta segura', objective:'', status:'IN_PROGRESS',
+    resolved:0, total:1, modalities:[{label:'Radiestesia'}],
+    primaryAction:'workspace', primaryLabel:'Ver tratamento',
+  }],
+});
+assert.match(lockedWithTreatmentHtml,/Há uma etapa em andamento/);
+assert.match(lockedWithTreatmentHtml,/data-v2-route="today">Ir para Hoje/,'A locked treatment queue must offer a direct path back to the contiguous workflow.');
+assert.doesNotMatch(lockedWithTreatmentHtml,/data-v2-treatment-action="workspace"/,'Locked active treatments must remain read-only.');
+
 const noSessionHtml = treatmentPage({ sessionOpen:false, assistedSelected:false, hawkinsReady:false, treatments:[] });
 assert.match(noSessionHtml,/Abra uma sessão para entrar no contexto do Assistido/);
 assert.match(noSessionHtml,/data-v2-route="today">Abrir sessão em Hoje/,'No-session empty state must provide a direct recovery path to Hoje.');
