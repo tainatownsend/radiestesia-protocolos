@@ -40,7 +40,9 @@ let html = historyPage(history, { historySessionId: 'ses_1' });
 assert.match(html, /Nota de encerramento/);
 assert.match(html, /Revisar &lt;João&gt; &amp; &quot;Marina&quot; em 7 dias\./, 'Closing note text must be escaped before rendering.');
 assert.doesNotMatch(html, /Revisar <João>/, 'Persisted closing text must never render as raw HTML.');
-assert.match(html, /<strong>1<\/strong><span>achados \+ notas<\/span>/, 'The detail KPI must include the custom closing note.');
+assert.match(html, /<strong>0<\/strong><span>achados<\/span>/, 'History detail should keep findings as its own KPI.');
+assert.match(html, /<strong>1<\/strong><span>notas<\/span>/, 'The custom closing note must be reflected in the separate notes KPI.');
+assert.doesNotMatch(html, /achados \+ notas/, 'History must not regress to the older combined findings-plus-notes KPI.');
 
 let postClose = postCloseSummary(history, 'ses_1');
 assert.match(postClose, /Nota de encerramento salva/, 'The post-close confirmation must reassure the user that the note was persisted.');
@@ -54,7 +56,9 @@ assert.equal(session.notes, 0, 'The automatic closing confirmation must not infl
 
 html = historyPage(history, { historySessionId: 'ses_1' });
 assert.doesNotMatch(html, /Nota de encerramento/);
-assert.match(html, /<strong>0<\/strong><span>achados \+ notas<\/span>/);
+assert.match(html, /<strong>0<\/strong><span>achados<\/span>/);
+assert.match(html, /<strong>0<\/strong><span>notas<\/span>/);
+assert.doesNotMatch(html, /achados \+ notas/);
 postClose = postCloseSummary(history, 'ses_1');
 assert.doesNotMatch(postClose, /Nota de encerramento salva/);
 
