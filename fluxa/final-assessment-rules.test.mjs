@@ -20,6 +20,8 @@ assert.doesNotThrow(
 );
 
 const ui = fs.readFileSync(new URL('./ui-v2/treatment/final-assessment.js', import.meta.url), 'utf8');
+assert.match(ui,/data-v2-final-frequency[^>]*required/,'The required final Hawkins value must be communicated by the V2 form.');
+assert.match(ui,/data-v2-final-imbalance[^>]*required/,'The required imbalance value must be communicated by the V2 form.');
 assert.match(ui,/obrigatório se marcado acima/,'The conditional timing requirement must be visible before submission.');
 
 console.log('final-assessment-rules.test.mjs: ok');
