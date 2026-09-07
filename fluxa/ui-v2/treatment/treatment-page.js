@@ -5,6 +5,10 @@ function esc(value = '') {
   return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
 }
 
+function historyAction() {
+  return '<button class="v2-link-action v2-treatment-history-link" type="button" data-v2-route="history">Histórico</button>';
+}
+
 function treatmentCard(treatment, { locked = false } = {}) {
   const progress = treatment.total
     ? `${treatment.resolved} de ${treatment.total} componentes resolvidos`
@@ -18,15 +22,20 @@ function treatmentCard(treatment, { locked = false } = {}) {
   if (locked && active) {
     actions = `<div class="v2-treatment-card__actions v2-treatment-card__actions--consult">
       <button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver componentes</button>
+      ${historyAction()}
       <p class="v2-helper">Somente consulta por enquanto. Conclua a etapa em andamento em Hoje antes de alterar este tratamento.</p>
     </div>`;
   } else if (active) {
     actions = `<div class="v2-treatment-card__actions">
       <button class="v2-btn v2-btn--primary" type="button" data-v2-treatment-action="${esc(treatment.primaryAction)}" data-treatment-id="${esc(treatment.id)}">${esc(treatment.primaryLabel)}</button>
       ${secondaryAction}
+      ${historyAction()}
     </div>`;
   } else {
-    actions = `<button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver tratamento</button>`;
+    actions = `<div class="v2-treatment-card__actions v2-treatment-card__actions--completed">
+      <button class="v2-btn v2-btn--ghost" type="button" data-v2-treatment-action="workspace" data-treatment-id="${esc(treatment.id)}">Ver tratamento</button>
+      ${historyAction()}
+    </div>`;
   }
   return `
     <article class="v2-treatment-card" data-treatment-id="${esc(treatment.id)}">
