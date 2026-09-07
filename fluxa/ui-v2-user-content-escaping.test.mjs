@@ -5,6 +5,7 @@ import { triageFlow } from './ui-v2/investigation/triage-flow.js';
 import { assistedPicker } from './ui-v2/session/assisted-picker.js';
 import { sessionCockpit } from './ui-v2/session/session-cockpit.js';
 import { postCloseSummary } from './ui-v2/session/post-close-summary.js';
+import { treatmentComposer } from './ui-v2/treatment/treatment-composer.js';
 import { treatmentPage } from './ui-v2/treatment/treatment-page.js';
 import { treatmentWorkspace } from './ui-v2/treatment/treatment-workspace.js';
 import { libraryPage } from './ui-v2/library/library-page.js';
@@ -64,6 +65,22 @@ assertSafe('Investigation findings', findingsSummary({
   findings: [{ questionId: hostile, title: hostile }],
 }, { error: hostile }));
 
+assertSafe('Treatment composer', treatmentComposer({
+  assistedName: hostile,
+  modalityOptions: [{ id:'RADIESTHESIA', label:'Radiestesia', base:true }],
+  graphOptions: [],
+  treatmentFindings: [],
+  library: { resources: [] },
+}, {
+  error:'',
+  treatmentDraft:{
+    title:hostile,
+    objective:hostile,
+    modalities:[], findingIds:[],
+    items:[{ itemLabel:hostile, commands:[{ text:hostile, graphApplications:[{ graphName:hostile, durationValue:'', durationUnit:'DAY' }] }] }],
+  },
+}));
+
 assertSafe('Treatment list', treatmentPage({
   sessionOpen: true,
   assistedSelected: true,
@@ -109,7 +126,7 @@ assertSafe('Treatment workspace', treatmentWorkspace({
 
 assertSafe('Acervo', libraryPage({
   library: {
-    assisteds: [{ name: hostile, typeLabel: hostile, birthDate: '' }],
+    assisteds: [{ name: hostile, type:'OTHER', typeLabel: hostile, birthDate: '', details:hostile }],
   },
 }, { librarySection: 'assisteds' }));
 
