@@ -31,6 +31,7 @@ const closeHtml = closingFlow({
     ],
   },
 }, { error:'' });
+assert.match(closeHtml,/Assistidos desta sessão/);
 assert.match(closeHtml,/Em andamento/);
 assert.match(closeHtml,/Planejado/);
 assert.match(closeHtml,/Pronto para encerrar/);
@@ -49,6 +50,7 @@ const blockedCloseHtml = closingFlow({
 assert.match(blockedCloseHtml,/Há uma investigação em andamento/);
 assert.match(blockedCloseHtml,/Conclua a investigação aberta antes de encerrar/);
 assert.match(blockedCloseHtml,/Voltar à sessão/);
+assert.doesNotMatch(blockedCloseHtml,/data-v2-closing-confirmation/,'Closing note must not be offered while a blocker prevents closure.');
 assert.doesNotMatch(blockedCloseHtml,/data-v2-primary>Encerrar sessão/,'Closing must not remain actionable while an investigation is still open.');
 
 const pendingFindingCloseHtml = closingFlow({
@@ -62,7 +64,19 @@ const pendingFindingCloseHtml = closingFlow({
 assert.match(pendingFindingCloseHtml,/Há 1 achado aguardando revisão/);
 assert.match(pendingFindingCloseHtml,/Revise os achados da investigação antes de encerrar/);
 assert.match(pendingFindingCloseHtml,/Voltar à sessão/);
+assert.doesNotMatch(pendingFindingCloseHtml,/data-v2-closing-confirmation/,'Pending findings must not expose a closing note that cannot be saved yet.');
 assert.doesNotMatch(pendingFindingCloseHtml,/data-v2-primary>Encerrar sessão/,'Closing must not remain actionable while positive findings are awaiting review.');
+
+const reikiBlockedHtml = closingFlow({
+  assistedName:'Marina', findings:[],
+  safeClose:{
+    assistedNames:['Marina'], investigationCompleted:1, investigationOpened:1,
+    treatmentsWorked:0, findings:0, notes:0, longitudinal:[],
+    activeReiki:{ status:'RUNNING', assistedName:'Marina' },
+  },
+}, { error:'' });
+assert.match(reikiBlockedHtml,/Abrir Reiki para concluir/,'Reiki blocker action must describe that it opens the workspace instead of implying instant completion.');
+assert.doesNotMatch(reikiBlockedHtml,/data-v2-closing-confirmation/);
 
 const historyHtml = historyPage({ historySessions:[{
   id:'ses_1', status:'CLOSED', startedAt:'2026-09-06T10:00:00.000Z', endedAt:'2026-09-06T11:00:00.000Z',
