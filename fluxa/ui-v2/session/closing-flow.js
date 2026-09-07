@@ -65,12 +65,11 @@ export function closingFlow(model, ui) {
 
       ${!hasBlocker ? `
         <div class="v2-close-ready"><span aria-hidden="true">✓</span><div><strong>Pronto para encerrar</strong><p>Não há investigação, achado pendente ou aplicação de Reiki bloqueando o fechamento.</p></div></div>
+        <label class="v2-field">
+          <span>Confirmação / nota de encerramento <small>(opcional)</small></span>
+          <textarea rows="2" data-v2-closing-confirmation placeholder="Ex.: procedimento de encerramento concluído"></textarea>
+        </label>
       ` : ''}
-
-      <label class="v2-field">
-        <span>Confirmação / nota de encerramento <small>(opcional)</small></span>
-        <textarea rows="2" data-v2-closing-confirmation placeholder="Ex.: procedimento de encerramento concluído"></textarea>
-      </label>
     </div>
   `;
 
