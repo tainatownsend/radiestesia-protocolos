@@ -40,7 +40,7 @@ export function finalAssessment(model, ui) {
     </form>
   `;
   return mobileSheet({
-    eyebrow: model.assistedName || 'Tratamento',
+    eyebrow: `${esc(model.assistedName || 'Assistido')} · Tratamento`,
     title: 'Avaliação final',
     body,
     error: ui.error,
