@@ -61,7 +61,7 @@ const blockingCloseModel = {
 };
 const blockedClosingHtml = closingFlow(blockingCloseModel, { error:'' });
 assert.doesNotMatch(blockedClosingHtml, /data-v2-closing-confirmation/, 'Closing note must not be shown while closure is blocked because it would be discarded during recovery.');
-assert.match(blockedClosingHtml, /Concluir Reiki primeiro/);
+assert.match(blockedClosingHtml, /Abrir Reiki para concluir/);
 
 const readyCloseModel = structuredClone(blockingCloseModel);
 readyCloseModel.safeClose.activeReiki = null;
