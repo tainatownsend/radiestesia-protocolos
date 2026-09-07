@@ -63,8 +63,7 @@
 .v2-library-category small,
 .v2-library-row small,
 .v2-modality-base span,
-.v2-trust-state span,
-.v2-helper {
+.v2-trust-state span {
   color: var(--v2-muted);
   line-height: 1.45;
 }
