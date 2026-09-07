@@ -12,9 +12,9 @@ export function finalAssessment(model, ui) {
       <section class="v2-final-block">
         <div class="v2-section-number">1</div>
         <div>
-          <p class="v2-eyebrow">Frequência final</p>
-          <p class="v2-helper">Hawkins inicial desta sessão: <strong>${model.hawkins ? `${esc(model.hawkins)} Hz` : 'não disponível'}</strong></p>
-          <label class="v2-field"><span>Hawkins final (Hz)</span><input type="number" min="1" inputmode="decimal" data-v2-final-frequency placeholder="Ex.: 540"></label>
+          <p class="v2-eyebrow">Calibração final</p>
+          <p class="v2-helper">Hawkins inicial desta sessão: <strong>${model.hawkins ? esc(model.hawkins) : 'não disponível'}</strong></p>
+          <label class="v2-field"><span>Nível final de Hawkins</span><input type="number" min="1" inputmode="decimal" data-v2-final-frequency placeholder="Ex.: 540"></label>
         </div>
       </section>
 
