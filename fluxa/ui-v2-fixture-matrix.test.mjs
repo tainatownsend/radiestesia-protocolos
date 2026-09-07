@@ -8,11 +8,11 @@ const REQUIRED = [
   'prepared-no-assisted','assisted-no-hawkins','hawkins-valid','triage-1','triage-3','findings-available',
   'composer-empty','composer-complex','planned-treatment-blocked','active-treatment','treatment-ready-review',
   'component-manual-review','treatment-ready-final','final-assessment','reiki-running','safe-close-review',
-  'post-close-summary','history-grouped','acervo-empty',
+  'post-close-summary','history-grouped','acervo-empty','acervo-populated','settings-local-first',
 ];
 
 for (const id of REQUIRED) assert.ok(V2_FIXTURE_ORDER.includes(id), `Missing required fixture ${id}`);
-assert.ok(V2_FIXTURE_ORDER.length >= 24, 'Blueprint requires at least 24 deterministic V2 states.');
+assert.ok(V2_FIXTURE_ORDER.length >= 26, 'Blueprint requires at least 26 deterministic V2 states, including populated Acervo and Settings.');
 assert.equal(new Set(V2_FIXTURE_ORDER).size, V2_FIXTURE_ORDER.length, 'Fixture ids must be unique.');
 
 const indexLikeUi = {
@@ -38,6 +38,8 @@ for (const id of V2_FIXTURE_ORDER) {
 const fixtureSource = fs.readFileSync(new URL('./ui-v2/testing/fixtures.js', import.meta.url), 'utf8');
 const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 'utf8');
 assert.match(fixtureSource, /V2_FIXTURE_ORDER/);
+assert.match(fixtureSource, /'acervo-populated'/);
+assert.match(fixtureSource, /'settings-local-first'/);
 assert.match(shell, /fixtureVisualData/);
 assert.doesNotMatch(shell, /MutationObserver/);
 
