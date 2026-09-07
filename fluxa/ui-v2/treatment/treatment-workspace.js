@@ -62,10 +62,10 @@ export function treatmentWorkspace(model, ui) {
       <section class="v2-component-list" aria-label="Componentes do tratamento">
         ${(treatment.components || []).map((component) => componentRow(component, { locked: continuityLocked })).join('') || '<p class="v2-helper">Nenhum componente registrado.</p>'}
       </section>
-      <section class="v2-card v2-card--soft v2-workspace-note">
-        <strong>Como funciona a revisão</strong>
-        <p class="v2-copy">Componentes com prazo aparecem quando chegam ao momento de revisão. Componentes sem prazo continuam disponíveis para revisão manual.</p>
-      </section>
+      <details class="v2-workspace-help">
+        <summary>Como funciona a revisão</summary>
+        <p class="v2-helper">Componentes com prazo aparecem quando chegam ao momento de revisão. Componentes sem prazo continuam disponíveis para revisão manual.</p>
+      </details>
     </div>
   `;
   return mobileSheet({
