@@ -53,7 +53,8 @@ const lockedSettingsHtml = settingsSheet({
   therapeuticSettings:{ enabled:['REIKI'], custom:[] },
 }, { error:'', importPreview:{ name:'backup.json', summary:{ sessions:2, assisteds:1, treatments:3, resources:4 } } });
 assert.match(lockedSettingsHtml,/Importação e recuperação estão pausadas/);
-assert.match(lockedSettingsHtml,/data-v2-settings-import-file disabled/,'Import file selection must be disabled during an active session.');
+assert.match(lockedSettingsHtml,/<button class="v2-btn v2-btn--ghost" type="button" disabled>Selecionar backup para importar<\/button>/,'Import selection must render as an unmistakably disabled control during an active session.');
+assert.doesNotMatch(lockedSettingsHtml,/data-v2-settings-import-file/,'Locked settings must not keep an invisible file input inside an active-looking label.');
 assert.match(lockedSettingsHtml,/data-v2-settings-recover disabled/,'Recovery must be disabled during an active session.');
 assert.match(lockedSettingsHtml,/data-v2-settings-import-apply disabled/,'Applying a validated backup must remain disabled during an active session.');
 assert.match(lockedSettingsHtml,/Dados locais precisam de recuperação/,'Fixture-provided storage health must drive the rendered status deterministically.');
@@ -64,7 +65,8 @@ const unlockedSettingsHtml = settingsSheet({
   storageHealth:deterministicHealth,
   therapeuticSettings:{ enabled:[], custom:[] },
 }, { error:'', importPreview:null });
-assert.doesNotMatch(unlockedSettingsHtml,/data-v2-settings-import-file disabled/);
+assert.match(unlockedSettingsHtml,/data-v2-settings-import-file/);
+assert.doesNotMatch(unlockedSettingsHtml,/data-v2-settings-import-file[^>]*disabled/);
 assert.doesNotMatch(unlockedSettingsHtml,/data-v2-settings-recover disabled/);
 
 const library = fs.readFileSync(new URL('./ui-v2/library/library-page.js', import.meta.url), 'utf8');
