@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { hawkinsFlow } from './ui-v2/session/hawkins-flow.js';
 import { preparationFlow } from './ui-v2/session/preparation-flow.js';
+import { assistedPicker } from './ui-v2/session/assisted-picker.js';
 import { triageFlow } from './ui-v2/investigation/triage-flow.js';
+import { findingsSummary } from './ui-v2/investigation/findings-summary.js';
 import { treatmentComposer } from './ui-v2/treatment/treatment-composer.js';
 import { treatmentWorkspace } from './ui-v2/treatment/treatment-workspace.js';
 
@@ -23,6 +25,20 @@ const preparationHtml = preparationFlow({
 assert.match(preparationHtml, /<strong>Hz<\/strong>/,
   'Therapist preparation frequency keeps its explicit Hz unit; the Hawkins rule must not erase this distinct measurement.');
 
+const assistedHtml = assistedPicker({
+  assistedOptions:[{ id:'ast_1', name:'Marina', type:'PERSON' }],
+}, { assistedCreate:false, error:'' });
+assert.match(assistedHtml, /Sessão em andamento · Assistido/);
+assert.match(assistedHtml, /Quem você vai atender\?/);
+assert.doesNotMatch(assistedHtml, /<h3>Selecione o Assistido<\/h3>/,
+  'The Assisted picker must not repeat the selection instruction below an equivalent sheet title.');
+
+const createAssistedHtml = assistedPicker({ assistedOptions:[] }, { assistedCreate:true, error:'' });
+assert.match(createAssistedHtml, /Sessão · Assistido/);
+assert.match(createAssistedHtml, /Adicionar pessoa/);
+assert.doesNotMatch(createAssistedHtml, /Nova pessoa[\s\S]*Pessoa[\s\S]*Quem será atendido/,
+  'A one-step Assisted form must not simulate extra progress and heading layers.');
+
 const triageHtml = triageFlow({
   assistedName:'Marina',
   investigation:{
@@ -37,6 +53,17 @@ assert.equal(occurrences(triageHtml, 'Triagem rápida'), 1,
   'The investigation name belongs to the sheet title and must not be duplicated in progress metadata.');
 assert.match(triageHtml, /Pergunta 2 de 3/);
 assert.match(triageHtml, /Salvo automaticamente/);
+
+const findingsHtml = findingsSummary({
+  assistedName:'Marina',
+  findings:[{ questionId:'q1', title:'Fator emocional prioritário' }],
+}, { error:'' });
+assert.match(findingsHtml, /Marina · Investigação concluída/);
+assert.match(findingsHtml, /Revisar achados/);
+assert.equal(occurrences(findingsHtml, 'Marina'), 1,
+  'Findings must keep the Assisted in the sheet context instead of repeating it in the body.');
+assert.doesNotMatch(findingsHtml, /O que foi encontrado/,
+  'The findings body must not add a second heading below the sheet title.');
 
 const composerHtml = treatmentComposer({
   assistedName:'Marina',
