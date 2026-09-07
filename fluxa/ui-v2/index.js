@@ -27,6 +27,7 @@ import {
 } from './state/actions.js';
 import { deriveHistoryModel } from './history/history-model.js';
 import { deriveLibraryModel } from './library/library-model.js';
+import { stepBackPreparation } from './session/preparation-navigation.js';
 import { deriveV2Model } from './state/selectors.js';
 import { fixtureFromLocation } from './testing/fixtures.js';
 import { isContinuityLocked } from './workflow-continuity.js';
@@ -43,7 +44,7 @@ function deriveLiveModel() {
 
 const emptyLibrary = {
   assisteds: [], resources: [], protocols: [], therapies: [{ id:'RADIESTHESIA', label:'Radiestesia', base:true }],
-  counts: { assisteds:0, resources:0, protocols:0, therapies:1 },
+  counts: { assisteds:0, resources:0, protocols:0,therapies:1 },
 };
 let model = liveMode
   ? deriveLiveModel()
@@ -604,6 +605,18 @@ root.addEventListener('click', (event) => {
       ui.justClosedSessionId = null;
       ui.sheet = nextModel.hawkinsReady ? null : 'hawkins';
       scheduleRender({ focusDialog: Boolean(ui.sheet) });
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
+  const preparationBack = event.target.closest('[data-v2-preparation-back]');
+  if (preparationBack && liveMode && ui.sheet === 'preparation') {
+    clearInlineError();
+    try {
+      stepBackPreparation(store);
+      scheduleRender({ focusDialog: true });
     } catch (error) {
       showInlineError(error);
     }
