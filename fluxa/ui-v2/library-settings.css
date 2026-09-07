@@ -91,6 +91,14 @@
   min-height: 52px;
 }
 
+.v2-library-search-empty {
+  display: none;
+}
+
+.v2-library-list:has([data-v2-library-search-text]):not(:has([data-v2-library-search-text]:not([hidden]))) .v2-library-search-empty {
+  display: block;
+}
+
 .v2-library-list {
   display: grid;
   gap: var(--v2-space-2);
