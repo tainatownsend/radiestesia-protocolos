@@ -71,21 +71,10 @@
   font-size: .78rem;
   font-weight: 850;
 }
-.v2-field { min-width: 0; display: grid; gap: 6px; color: var(--v2-text); font-size: .82rem; font-weight: 750; }
-.v2-field > span small, .v2-helper { color: var(--v2-muted); font-weight: 500; }
-.v2-field input,
-.v2-field textarea,
-.v2-field select {
-  width: 100%;
-  min-height: 48px;
-  padding: 11px 12px;
-  border: 1px solid var(--v2-border);
-  border-radius: var(--v2-radius-sm);
-  background: var(--v2-surface);
-  color: var(--v2-text);
-}
-.v2-field textarea { min-height: 76px; resize: vertical; line-height: 1.45; }
-.v2-field input::placeholder, .v2-field textarea::placeholder { color: color-mix(in srgb, var(--v2-muted) 70%, transparent); }
+/* Field geometry is defined once in golden-path.css. Treatment-specific forms only
+   compact their text areas so a complex composition does not become unnecessarily tall. */
+.v2-treatment-composer .v2-field textarea { min-height: 76px; }
+.v2-helper { color: var(--v2-muted); font-weight: 500; margin: 0; font-size: .8rem; line-height: 1.45; }
 .v2-modality-base,
 .v2-context-note,
 .v2-completion-note {
@@ -122,7 +111,6 @@
 .v2-check-row--standalone { margin-top: var(--v2-space-3); }
 .v2-final-form:has([data-v2-final-needs-new]:checked) [data-v2-final-next-wrap] { display: grid !important; }
 .v2-final-form [data-v2-final-next-wrap] { display: none; }
-.v2-helper { margin: 0; font-size: .8rem; line-height: 1.45; }
 .v2-step-label { color: var(--v2-primary); font-size: .7rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .v2-treatment-item {
   overflow: clip;
