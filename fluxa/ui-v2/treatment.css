@@ -74,7 +74,6 @@
 /* Field geometry is defined once in golden-path.css. Treatment-specific forms only
    compact their text areas so a complex composition does not become unnecessarily tall. */
 .v2-treatment-composer .v2-field textarea { min-height: 76px; }
-.v2-helper { color: var(--v2-muted); font-weight: 500; margin: 0; font-size: .8rem; line-height: 1.45; }
 .v2-treatment-modality-base,
 .v2-context-note,
 .v2-completion-note {
