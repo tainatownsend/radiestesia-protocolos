@@ -9,7 +9,7 @@ export function reikiWorkspace(model, ui) {
   const reiki = model.reiki;
   if (!model.reikiEnabled && !reiki) {
     return mobileSheet({
-      eyebrow: model.assistedName || 'Reiki',
+      eyebrow: `${esc(model.assistedName || 'Assistido')} · Reiki`,
       title: 'Reiki não está ativo',
       body: '<div class="v2-card v2-card--soft"><strong>Ative Reiki nas terapias da prática</strong><p class="v2-copy">Depois disso, a aplicação aparece aqui como uma ação de primeira classe da sessão.</p></div>',
       error: ui.error,
@@ -34,14 +34,14 @@ export function reikiWorkspace(model, ui) {
         <section class="v2-reiki-timer" role="timer" aria-label="Tempo decorrido da aplicação de Reiki" data-v2-reiki-timer data-v2-reiki-running="${reiki.status === 'RUNNING'}" data-v2-reiki-elapsed-seconds="${Math.max(0, Number(reiki.elapsedSeconds) || 0)}">
           <span class="v2-status-pill" data-status="${esc(reiki.status)}">${reiki.status === 'PAUSED' ? 'Pausado' : 'Em andamento'}</span>
           <strong data-v2-reiki-elapsed>${esc(formatElapsed(reiki.elapsedSeconds))}</strong>
-          <span>${esc(reiki.modeLabel)} · ${esc(reiki.assistedName)}</span>
+          <span>${esc(reiki.modeLabel)}</span>
         </section>
         ${contextMessage}
         <label class="v2-field"><span>${staleSessionContext ? 'Nota da recuperação' : 'Notas ao concluir'} <small>(opcional)</small></span><textarea rows="3" data-v2-reiki-notes placeholder="${staleSessionContext ? 'Por que este registro ficou pendente?' : 'Observações da aplicação'}"></textarea></label>
       </div>
     `;
     return mobileSheet({
-      eyebrow: `${reiki.assistedName} · Reiki`,
+      eyebrow: `${esc(reiki.assistedName)} · Reiki`,
       title: staleSessionContext ? 'Registro de Reiki pendente' : (reiki.status === 'PAUSED' ? 'Aplicação pausada' : 'Aplicação em andamento'),
       body,
       error: ui.error,
@@ -56,11 +56,6 @@ export function reikiWorkspace(model, ui) {
 
   const body = `
     <form class="v2-reiki-start" data-v2-reiki-start-form>
-      <section class="v2-card v2-card--soft">
-        <p class="v2-eyebrow">Assistido</p>
-        <strong>${esc(model.assistedName || 'Selecione um Assistido')}</strong>
-        <p class="v2-copy">A aplicação ficará vinculada a este contexto da sessão.</p>
-      </section>
       <fieldset class="v2-choice-group">
         <legend>Como será a aplicação?</legend>
         ${[['IN_PERSON','Presencial'],['DISTANCE','À distância'],['SELF','Autoaplicação'],['OTHER','Outro']].map(([value,label], index) => `
@@ -70,7 +65,7 @@ export function reikiWorkspace(model, ui) {
     </form>
   `;
   return mobileSheet({
-    eyebrow: model.assistedName || 'Reiki',
+    eyebrow: `${esc(model.assistedName || 'Assistido')} · Reiki`,
     title: 'Iniciar Reiki',
     body,
     error: ui.error,
