@@ -49,7 +49,7 @@ export function sessionCockpit(model) {
   }
 
   const assisted = model.assistedSelected ? model.assistedName : 'Sessão em andamento';
-  const hawkins = model.hawkinsReady ? `${model.hawkins} Hz` : 'Pendente';
+  const hawkins = model.hawkinsReady ? String(model.hawkins) : 'Pendente';
   const prerequisitesReady = Boolean(model.prepared && model.assistedSelected && model.hawkinsReady);
   const treatmentCount = model.treatmentCount ?? model.treatmentsWorked ?? 0;
   const investigationCount = model.investigations ?? 0;
