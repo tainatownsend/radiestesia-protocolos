@@ -118,7 +118,7 @@ export function treatmentComposer(model, ui) {
         <div class="v2-section-number">2</div>
         <div class="v2-composer-section__content">
           <p class="v2-eyebrow">Composição</p>
-          <div class="v2-modality-base"><strong>Radiestesia</strong><span>Base do tratamento · sempre incluída</span></div>
+          <div class="v2-treatment-modality-base"><strong>Radiestesia</strong><span>Base do tratamento · sempre incluída</span></div>
           ${optionalModalities.length ? `<fieldset class="v2-check-group"><legend>Terapias complementares</legend>${optionalModalities.map((item) => `
             <label class="v2-check-row">
               <input type="checkbox" data-v2-treatment-modality value="${esc(item.id)}" data-label="${esc(item.label)}" ${selectedModalities.has(item.id) ? 'checked' : ''}>
