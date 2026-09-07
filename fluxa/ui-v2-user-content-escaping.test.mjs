@@ -3,6 +3,7 @@ import { mobileSheet } from './ui-v2/components/mobile-sheet.js';
 import { findingsSummary } from './ui-v2/investigation/findings-summary.js';
 import { triageFlow } from './ui-v2/investigation/triage-flow.js';
 import { assistedPicker } from './ui-v2/session/assisted-picker.js';
+import { hawkinsFlow } from './ui-v2/session/hawkins-flow.js';
 import { sessionCockpit } from './ui-v2/session/session-cockpit.js';
 import { postCloseSummary } from './ui-v2/session/post-close-summary.js';
 import { treatmentComposer } from './ui-v2/treatment/treatment-composer.js';
@@ -31,6 +32,8 @@ assertSafe('MobileSheet title/error', mobileSheet({
 assertSafe('Assistido picker', assistedPicker({
   assistedOptions: [{ id: hostile, name: hostile, type: 'PERSON' }],
 }, { error: '' }));
+
+assertSafe('Hawkins flow', hawkinsFlow({ assistedName: hostile }, { error: hostile }));
 
 assertSafe('Session cockpit', sessionCockpit({
   sessionOpen: true,
