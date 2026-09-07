@@ -78,10 +78,6 @@ export function assistedPicker(model, ui = {}) {
   ` : '';
 
   const body = `
-    <style>
-      .v2-assisted-search-empty { display: none; }
-      .v2-select-list:has(.v2-select-row):not(:has(.v2-select-row:not([hidden]))) .v2-assisted-search-empty { display: block; }
-    </style>
     <div class="v2-stack">
       <section class="v2-section">
         <div>
