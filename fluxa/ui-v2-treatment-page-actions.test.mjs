@@ -41,7 +41,8 @@ const emptyCompositionHtml = treatmentPage({
     primaryAction:'start', primaryLabel:'Iniciar',
   }],
 });
-assert.match(emptyCompositionHtml,/class="v2-progress-count">—</,'Empty compositions should not display a misleading 0\/0 progress ratio.');
+assert.match(emptyCompositionHtml,/class="v2-progress-count"[^>]*>—</,'Empty compositions should not display a misleading 0\/0 progress ratio, even when accessibility metadata is present.');
+assert.doesNotMatch(emptyCompositionHtml,/>0\/0</,'Empty compositions must never surface a 0/0 progress ratio.');
 
 const triageLockedHtml = treatmentPage({ ...base, nextActionCode:'TRIAGE', treatments:[] });
 assert.doesNotMatch(triageLockedHtml,/data-v2-preview-action="treat"/,'Treatment creation must not bypass an investigation in progress.');
