@@ -29,16 +29,8 @@ export function assistedPicker(model, ui = {}) {
   if (ui.assistedCreate) {
     const body = `
       <div class="v2-stack">
-        <div class="v2-progress" aria-label="Nova pessoa">
-          <div class="v2-progress__meta"><span>Nova pessoa</span><span>Pessoa</span></div>
-          <div class="v2-progress__bar"><span style="width:100%"></span></div>
-        </div>
         <section class="v2-section">
-          <div>
-            <p class="v2-eyebrow">Contexto do atendimento</p>
-            <h3>Quem será atendido?</h3>
-            <p class="v2-copy">Cadastre somente o necessário para continuar. Outros detalhes podem ser completados depois no Acervo.</p>
-          </div>
+          <p class="v2-copy">Cadastre somente o necessário para continuar. Outros detalhes podem ser completados depois no Acervo.</p>
           <label class="v2-field">
             <span>Nome completo</span>
             <input type="text" name="assistedName" autocomplete="name" required data-v2-assisted-name>
@@ -51,7 +43,7 @@ export function assistedPicker(model, ui = {}) {
       </div>
     `;
     return mobileSheet({
-      eyebrow: 'Assistido',
+      eyebrow: 'Sessão · Assistido',
       title: 'Adicionar pessoa',
       body,
       primaryLabel: 'Adicionar e selecionar',
@@ -80,11 +72,7 @@ export function assistedPicker(model, ui = {}) {
   const body = `
     <div class="v2-stack">
       <section class="v2-section">
-        <div>
-          <p class="v2-eyebrow">Contexto da sessão</p>
-          <h3>Selecione o Assistido</h3>
-          <p class="v2-copy">O nome ficará visível durante todo o trabalho para reduzir risco de registrar uma ação no contexto errado.</p>
-        </div>
+        <p class="v2-copy">O nome ficará visível durante todo o trabalho para reduzir risco de registrar uma ação no contexto errado.</p>
         <label class="v2-field">
           <span class="v2-visually-hidden">Buscar Assistido</span>
           <input type="search" placeholder="Buscar por nome" autocomplete="off" data-v2-assisted-search-input>
@@ -98,7 +86,7 @@ export function assistedPicker(model, ui = {}) {
   `;
 
   return mobileSheet({
-    eyebrow: 'Sessão em andamento',
+    eyebrow: 'Sessão em andamento · Assistido',
     title: 'Quem você vai atender?',
     body,
     primaryLabel: 'Adicionar nova pessoa',
