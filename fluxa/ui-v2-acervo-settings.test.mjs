@@ -75,6 +75,7 @@ const settings = fs.readFileSync(new URL('./ui-v2/settings/settings-sheet.js', i
 const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 'utf8');
 const index = fs.readFileSync(new URL('./ui-v2/index.js', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('./v2.html', import.meta.url), 'utf8');
+const librarySettingsCss = fs.readFileSync(new URL('./ui-v2/library-settings.css', import.meta.url), 'utf8');
 
 assert.match(library, /Assistidos/);
 assert.match(library, /Protocolos/);
@@ -98,6 +99,11 @@ assert.match(settings, /data-v2-settings-export/);
 assert.match(settings, /data-v2-settings-import-file/);
 assert.match(settings, /Prévia validada/);
 assert.match(settings, /Terapias complementares/);
+
+assert.match(librarySettingsCss,/\.v2-library-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr;/,'Acervo home must remain a compact single-column navigation list on phone instead of four large dashboard cards.');
+assert.match(librarySettingsCss,/\.v2-library-category\s*\{[\s\S]*?flex-direction:\s*row;[\s\S]*?border-radius:\s*0;[\s\S]*?background:\s*transparent;/,'Acervo categories must render as dense rows rather than nested cards.');
+assert.match(librarySettingsCss,/\.v2-settings-block\s*\{[\s\S]*?border-bottom:\s*1px solid var\(--v2-border\);[\s\S]*?background:\s*transparent;/,'Settings sections must use hierarchy and separators rather than card-on-card surfaces.');
+assert.match(librarySettingsCss,/\.v2-import-preview\s*\{[\s\S]*?background:\s*transparent;/,'Validated backup details must stay flat inside Settings instead of creating another nested card layer.');
 
 assert.match(index, /function requireDataReplacementIdle\(\)[\s\S]*session\.status === 'OPEN'[\s\S]*Finalize a sessão atual antes de importar ou recuperar/,'Controller must independently reject destructive data replacement while any session is open.');
 assert.match(index, /data-v2-settings-recover[\s\S]*requireDataReplacementIdle\(\);[\s\S]*recoverLocalData\(\)/,'Recovery handler must enforce the controller guard before replacing state.');
