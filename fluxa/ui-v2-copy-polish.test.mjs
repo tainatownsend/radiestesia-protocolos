@@ -31,13 +31,25 @@ const closeHtml = closingFlow({
     ],
   },
 }, { error:'' });
-assert.match(closeHtml,/Assistidos desta sessão/);
+assert.match(closeHtml,/Marina · Revisão da sessão/,'Single-assisted close should keep context in the sheet header.');
+assert.doesNotMatch(closeHtml,/class="v2-helper v2-close-assisteds"/,'Single-assisted close must not repeat the same identity in a second body block.');
 assert.match(closeHtml,/Em andamento/);
 assert.match(closeHtml,/Planejado/);
 assert.match(closeHtml,/Pronto para encerrar/);
 assert.match(closeHtml,/data-v2-primary>Encerrar sessão/);
 assert.doesNotMatch(closeHtml,/>IN_PROGRESS</);
 assert.doesNotMatch(closeHtml,/>PLANNED</);
+
+const multiCloseHtml = closingFlow({
+  assistedName:'Marina', findings:[],
+  safeClose:{
+    assistedNames:['Marina','João'], investigationCompleted:1, investigationOpened:1,
+    treatmentsWorked:1, findings:1, notes:0, activeReiki:null,
+    longitudinal:[{ title:'Continuidade', assistedName:'João', status:'PLANNED' }],
+  },
+}, { error:'' });
+assert.match(multiCloseHtml,/2 Assistidos · Revisão da sessão/,'Multi-assisted close must make the broader session context explicit in the header.');
+assert.match(multiCloseHtml,/<strong>Assistidos:<\/strong> Marina, João/,'Multi-assisted close must list the people worked with because one header name is insufficient.');
 
 const blockedCloseHtml = closingFlow({
   assistedName:'Marina',
