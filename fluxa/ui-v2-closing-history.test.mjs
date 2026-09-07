@@ -95,7 +95,7 @@ assert.match(actions, /closeSession/);
 assert.match(actions, /closeCurrentSessionV2/);
 assert.match(actions, /plannedInSessionId/);
 assert.match(actions, /sessionId: session\.id/);
-assert.match(closing, /Concluir Reiki primeiro/);
+assert.match(closing, /Abrir Reiki para concluir/);
 assert.match(closing, /Continua depois da sessão/);
 assert.match(index, /justClosedSessionId/);
 assert.match(index, /historySessionId/);
