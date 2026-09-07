@@ -97,7 +97,7 @@ function sessionCard(session) {
         <time>${esc(dateTime(session.startedAt))}</time>
       </div>
       <p class="v2-copy">${session.investigationCompleted} investigação${session.investigationCompleted === 1 ? '' : 'ões'} concluída${session.investigationCompleted === 1 ? '' : 's'} · ${session.treatmentsWorked} tratamento${session.treatmentsWorked === 1 ? '' : 's'} trabalhado${session.treatmentsWorked === 1 ? '' : 's'}${session.endedAt ? ` · ${esc(duration(session))}` : ''}</p>
-      <div class="v2-history-session-card__foot"><span>${eventCount} marco${eventCount === 1 ? '' : 's'} narrativo${eventCount === 1 ? '' : 's'}</span><button class="v2-btn v2-btn--ghost" type="button" data-v2-history-session="${esc(session.id)}">Abrir sessão</button></div>
+      <div class="v2-history-session-card__foot"><span>${eventCount} marco${eventCount === 1 ? '' : 's'} narrativo${eventCount === 1 ? '' : 's'}</span><button class="v2-btn v2-btn--ghost" type="button" data-v2-history-session="${esc(session.id)}">Ver detalhes</button></div>
     </article>
   `;
 }
