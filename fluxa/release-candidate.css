@@ -1,8 +1,8 @@
 /* Fluxa release candidate: one shell, one rhythm, visual-first guidance. */
 :root{
-  --fx-ink:#102F35;
-  --fx-teal:#173F46;
-  --fx-sea:#66898C;
+  --fx-ink:var(--primary-strong,#102F35);
+  --fx-teal:var(--primary,#173F46);
+  --fx-sea:var(--secondary,#66898C);
   --fx-mist:#E8EFED;
   --fx-paper:#F8F9F7;
   --fx-copper:#B77862;
@@ -16,6 +16,39 @@ body{
   background:
     radial-gradient(circle at 14% 0,rgba(143,174,170,.14),transparent 28rem),
     #EFF1EF;
+}
+
+html{scrollbar-gutter:stable;scroll-behavior:auto}
+
+/* Final stability authority: inherited legacy motion cannot shift controls. */
+#app *,#app *::before,#app *::after,.modal-backdrop *,.modal-backdrop *::before,.modal-backdrop *::after{
+  animation:none!important;
+  transition:none!important;
+  scroll-behavior:auto!important;
+}
+#app :is(button,a,.card):active,.modal-backdrop :is(button,a,.card):active{transform:none!important}
+body.fx-ui-transition::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  background:rgba(239,241,239,.96);
+  pointer-events:auto;
+}
+.modal-backdrop.fx-backdrop:not(.fx-ready){visibility:hidden!important;opacity:0!important}
+
+/* Session status lives in the chip; opening a session keeps the shell palette. */
+.topbar.topbar-session-open{
+  border-bottom-color:rgba(203,211,209,.72)!important;
+  background:rgba(248,249,247,.96)!important;
+  color:var(--fx-ink)!important;
+}
+.topbar.topbar-session-open .brand{color:var(--fx-ink)!important}
+.topbar.topbar-session-open .fluxa-brand-mark{color:var(--fx-sea)!important}
+.topbar.topbar-session-open .session-indicator{
+  border-color:rgba(102,137,140,.18)!important;
+  background:var(--fx-mist)!important;
+  color:var(--fx-teal)!important;
 }
 
 main{width:min(100%,1080px)}
@@ -362,6 +395,48 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
   font-weight:850;
 }
 
+/* Large libraries disclose resources in useful batches. */
+[data-basic-tool-library]>.muted{max-width:68ch}
+[data-basic-tool-library]>.stack{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  align-items:stretch;
+}
+[data-basic-tool-library] [data-library-tool-id]{
+  min-width:0;
+  height:100%;
+  padding:16px!important;
+  border-color:var(--fx-line)!important;
+  background:var(--fx-paper)!important;
+  box-shadow:none!important;
+}
+[data-basic-tool-library] [data-library-tool-id] h3{font-size:17px;line-height:1.2}
+[data-basic-tool-library] [data-library-tool-id]>p{font-size:13px;line-height:1.45}
+.fx-library-page-hidden{display:none!important}
+.fx-library-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-top:16px;
+  padding:14px 16px;
+  border:1px solid var(--fx-line);
+  border-radius:15px;
+  background:var(--fx-paper);
+}
+.fx-library-pagination p{margin:0}
+
+main .empty{
+  min-height:0!important;
+  padding:22px!important;
+  border:1px solid var(--fx-line)!important;
+  border-radius:16px!important;
+  background:rgba(248,249,247,.72)!important;
+  color:var(--muted)!important;
+  text-align:left!important;
+}
+
 /* Tablet and desktop: denser workspace, deliberate pointer states. */
 @media(min-width:700px){
   .fx-sheet-body{padding:24px 26px}
@@ -373,10 +448,7 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
 }
 
 @media(hover:hover){
-  .fx-hero-art img{transition:transform .35s ease}
-  .fx-visual-hero:hover .fx-hero-art img{transform:scale(1.025)}
-  .fx-choice-card{transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-  .fx-choice-card:hover{transform:translateY(-2px);border-color:rgba(102,137,140,.42);box-shadow:0 12px 28px rgba(16,47,53,.08)}
+  .fx-choice-card:hover{border-color:rgba(102,137,140,.42);box-shadow:0 12px 28px rgba(16,47,53,.08)}
 }
 
 @media(max-width:699px){
@@ -386,6 +458,7 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
   }
   .modal-backdrop>.sheet.fx-shell{
     width:100%!important;
+    height:calc(100dvh - max(8px,env(safe-area-inset-top)))!important;
     max-height:calc(100dvh - max(8px,env(safe-area-inset-top)))!important;
     border-width:1px 0 0!important;
     border-radius:22px 22px 0 0!important;
@@ -394,6 +467,9 @@ body.fluxa-home-idle main:has([data-backup-reminder])>[data-storage-export-quiet
   .fx-sheet-body{padding:16px}
   .fx-sheet-footer{padding-left:16px;padding-right:16px}
   .fx-journey li>small{font-size:9px}
+  [data-basic-tool-library]>.stack{grid-template-columns:1fr;gap:10px}
+  .fx-library-pagination{align-items:stretch;flex-direction:column}
+  .fx-library-pagination .btn{width:100%!important}
 }
 
 @media(max-width:560px){
