@@ -15,12 +15,15 @@ const COMPACT_COPY = new Map([
 ]);
 
 let scheduled = false;
+const preparedBackdrops = new WeakSet();
+const libraryPages = new WeakMap();
+let transitionTimer = 0;
 
 function stageFor(sheet) {
   if (sheet.querySelector('#final-assessment-form,#final-cycle-form')) return 'review';
   if (sheet.querySelector('#findings-form,#branch-findings-form')) return 'investigate';
-  if (sheet.querySelector('#treatment-form,[data-treatment-items]')) return 'treat';
   if (sheet.querySelector('[data-hawkins-baseline-form],#assessment-hawkins-baseline-form')) return 'measure';
+  if (sheet.querySelector('#treatment-form,[data-treatment-items]')) return 'treat';
   if (sheet.querySelector('[data-prep-step],[data-prep-structured],[data-action="complete-preparation"]')) return 'prepare';
   if (sheet.matches('.premium-protocol-sheet,.premium-workflow-protocol') || sheet.querySelector('.question-panel,.assessment-suggestion-list,.featured-protocol-grid')) return 'investigate';
   return null;
@@ -82,7 +85,8 @@ function ensureQuestionFooter(sheet) {
 
 function enhanceSheet(sheet) {
   sheet.classList.add('fx-shell');
-  sheet.closest('.modal-backdrop')?.classList.add('fx-backdrop');
+  const backdrop = sheet.closest('.modal-backdrop');
+  backdrop?.classList.add('fx-backdrop');
   const header = sheet.querySelector(':scope > .sheet-head');
   if (header) {
     header.classList.add('fx-shell-header');
@@ -99,6 +103,15 @@ function enhanceSheet(sheet) {
   ensureSheetBody(sheet);
   ensureQuestionFooter(sheet);
   compactText(sheet);
+
+  if (backdrop && !preparedBackdrops.has(backdrop)) {
+    preparedBackdrops.add(backdrop);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      backdrop.classList.add('fx-ready');
+      document.body.classList.remove('fx-ui-transition');
+      window.clearTimeout(transitionTimer);
+    }));
+  }
 }
 
 function enhancePreparation() {
@@ -174,12 +187,50 @@ function enhanceProtocolCards() {
   });
 }
 
+function enhanceLibraryDensity() {
+  const section = document.querySelector('[data-basic-tool-library]');
+  const stack = section?.querySelector(':scope .stack');
+  if (!section || !stack) return;
+
+  let page = libraryPages.get(section);
+  if (!page) {
+    page = { limit:12 };
+    libraryPages.set(section, page);
+  }
+
+  const cards = [...stack.children].filter((node) => node.matches?.('[data-library-tool-id]'));
+  const filtered = cards.filter((card) => !card.hidden && !card.classList.contains('favorite-filter-hidden'));
+  const query = section.querySelector('[data-library-search]')?.value.trim();
+  const selectedFilter = [...section.querySelectorAll('[data-library-type],[data-library-tag]')]
+    .some((control) => control.value && control.value !== 'ALL');
+  const favoritesOnly = section.querySelector('[data-library-favorites-only]')?.classList.contains('primary');
+  const filtering = Boolean(query || selectedFilter || favoritesOnly);
+
+  filtered.forEach((card, index) => card.classList.toggle('fx-library-page-hidden', !filtering && index >= page.limit));
+  cards.filter((card) => !filtered.includes(card)).forEach((card) => card.classList.remove('fx-library-page-hidden'));
+
+  let footer = section.querySelector('[data-fx-library-pagination]');
+  if (!footer) {
+    footer = document.createElement('div');
+    footer.className = 'fx-library-pagination';
+    footer.dataset.fxLibraryPagination = 'true';
+    footer.innerHTML = '<p class="muted" data-fx-library-status></p><button type="button" class="btn secondary" data-fx-library-more>Mostrar mais recursos</button>';
+    stack.after(footer);
+  }
+  const shown = filtering ? filtered.length : Math.min(page.limit, filtered.length);
+  const status = footer.querySelector('[data-fx-library-status]');
+  const nextStatus = filtering ? `${filtered.length} resultado${filtered.length === 1 ? '' : 's'}` : `${shown} de ${filtered.length} recursos`;
+  if (status.textContent !== nextStatus) status.textContent = nextStatus;
+  footer.querySelector('[data-fx-library-more]').hidden = filtering || shown >= filtered.length;
+}
+
 function enhance() {
   document.querySelectorAll('.modal-backdrop > .sheet').forEach(enhanceSheet);
   enhancePreparation();
   enhanceIdleHome();
   enhanceIdleSupport();
   enhanceProtocolCards();
+  enhanceLibraryDensity();
 }
 
 function schedule() {
@@ -193,4 +244,19 @@ function schedule() {
 
 new MutationObserver(schedule).observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class','hidden','checked'] });
 window.addEventListener('fluxa:state-changed', schedule);
+document.addEventListener('pointerdown', (event) => {
+  const trigger = event.target.closest('[data-action="start-session"],[data-action="open-preparation"]');
+  if (!trigger || trigger.disabled) return;
+  document.body.classList.add('fx-ui-transition');
+  window.clearTimeout(transitionTimer);
+  transitionTimer = window.setTimeout(() => document.body.classList.remove('fx-ui-transition'), 450);
+}, true);
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('[data-fx-library-more]')) return;
+  const section = event.target.closest('[data-basic-tool-library]');
+  const page = section && libraryPages.get(section);
+  if (!page) return;
+  page.limit += 12;
+  schedule();
+}, true);
 queueMicrotask(schedule);
