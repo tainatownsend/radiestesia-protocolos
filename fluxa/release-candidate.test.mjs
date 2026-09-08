@@ -22,12 +22,23 @@ for (const label of ['Preparar','Medir','Investigar','Tratar','Revisar']) assert
 for (const stage of ['prepare','measure','investigate','treat','review']) assert.match(js, new RegExp(`'${stage}'`), `Shell must recognize ${stage}.`);
 assert.match(js, /ensureSheetBody/, 'All sheets must receive the same scrollable body region.');
 assert.match(js, /ensureQuestionFooter/, 'Question decisions must receive the same fixed footer region.');
+assert.ok(js.indexOf("return 'measure'") < js.indexOf("return 'treat'"), 'Hawkins measurement must win over nested treatment markup.');
+assert.match(js, /preparedBackdrops = new WeakSet/, 'Each new modal must be stabilized once before display.');
+assert.match(js, /requestAnimationFrame\(\(\) => requestAnimationFrame/, 'Modal display must wait for two complete layout frames.');
+assert.match(js, /fx-ui-transition/, 'Opening a session must mask intermediate full-app redraws.');
+assert.match(js, /enhanceLibraryDensity/, 'Large libraries must use progressive disclosure.');
+assert.match(js, /page\.limit \+= 12/, 'Library resources must be revealed in manageable batches.');
 assert.match(js, /fx-hero-art/, 'Idle home must receive a visual anchor.');
 assert.doesNotMatch(js, /reel|video/i, 'Release candidate must not reference stale reel or video assets.');
 
 assert.match(css, /grid-template-rows:auto minmax\(0,1fr\) auto/, 'Shared shell must use fixed header, scrolling body, and footer rows.');
 assert.match(css, /\.fx-sheet-body\{[\s\S]*overflow-y:auto/, 'Only the shell body should scroll.');
 assert.match(css, /max-height:calc\(100dvh/, 'Mobile shell must respect dynamic viewport height.');
+assert.match(css, /height:calc\(100dvh/, 'Mobile shell height must remain fixed between workflow steps.');
+assert.match(css, /modal-backdrop\.fx-backdrop:not\(\.fx-ready\)/, 'Unfinished modal layouts must never flash onscreen.');
+assert.match(css, /\.topbar\.topbar-session-open[\s\S]*background:rgba\(248,249,247/, 'Session opening must preserve the global light navigation palette.');
+assert.match(css, /animation:none!important;[\s\S]*transition:none!important/, 'The release candidate must neutralize inherited motion and layout-shifting transitions.');
+assert.match(css, /\.fx-library-page-hidden/, 'Library pagination must own a final visibility class.');
 assert.match(css, /@media\(max-width:560px\)/, 'Phone layout must be explicit.');
 assert.match(css, /@media\(min-width:700px\)/, 'Tablet and desktop layout must be explicit.');
 assert.match(css, /@media\(max-width:380px\)/, 'Narrow-phone layout must be explicit.');
