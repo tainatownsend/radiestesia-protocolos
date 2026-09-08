@@ -36,6 +36,7 @@ assert.match(css, /\.fx-sheet-body\{[\s\S]*overflow-y:auto/, 'Only the shell bod
 assert.match(css, /max-height:calc\(100dvh/, 'Mobile shell must respect dynamic viewport height.');
 assert.match(css, /height:calc\(100dvh/, 'Mobile shell height must remain fixed between workflow steps.');
 assert.match(css, /modal-backdrop\.fx-backdrop:not\(\.fx-ready\)/, 'Unfinished modal layouts must never flash onscreen.');
+assert.match(css, /body\.fx-ui-transition::after[\s\S]*pointer-events:none/, 'The transition cover must never swallow the click that opens a session.');
 assert.match(css, /\.topbar\.topbar-session-open[\s\S]*background:rgba\(248,249,247/, 'Session opening must preserve the global light navigation palette.');
 assert.match(css, /animation:none!important;[\s\S]*transition:none!important/, 'The release candidate must neutralize inherited motion and layout-shifting transitions.');
 assert.match(css, /\.fx-library-page-hidden/, 'Library pagination must own a final visibility class.');
