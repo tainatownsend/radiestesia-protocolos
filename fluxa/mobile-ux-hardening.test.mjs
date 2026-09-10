@@ -11,8 +11,9 @@ assert.match(index, /mobile-ux-hardening\.css/, 'Round 3 CSS must be loaded.');
 assert.match(index, /mobile-ux-hardening-ui\.js/, 'Round 3 UI enhancer must be loaded.');
 assert.match(index, /planned-treatment-item-timing-ui\.js/, 'Planned item timing hardening must be loaded.');
 const styles = [...index.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((match) => match[1]);
-assert.equal(styles.at(-1), 'idle-home-premium.css', 'Idle Home refinement must remain last in the visual cascade.');
+assert.equal(styles.at(-1), 'release-candidate.css', 'Release-candidate system must own the final visual cascade.');
 assert.ok(styles.indexOf('mobile-ux-hardening.css') < styles.indexOf('idle-home-premium.css'), 'Hardening CSS must load before the protected idle-home layer.');
+assert.ok(styles.indexOf('idle-home-premium.css') < styles.indexOf('release-candidate.css'), 'Release-candidate refinements must extend the protected idle-home layer.');
 
 assert.match(css, /max-height:calc\(100dvh/, 'Mobile sheets must use dynamic viewport height.');
 assert.match(css, /body\.fluxa-mobile-sheet-open\{[^}]*overflow:hidden/, 'Background scroll must be locked while a sheet is open.');

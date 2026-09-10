@@ -13,7 +13,7 @@ const worker=await readFile(new URL('./service-worker.js',import.meta.url),'utf8
 assert.ok(index.includes('therapeutic-flow-refresh.css'),'therapeutic flow CSS must load');
 assert.ok(index.includes('therapeutic-modalities-ui.js'),'therapeutic modality UI must load');
 assert.ok(index.indexOf('data-reset.js')<index.indexOf('src="app.js"'),'one-time reset must execute before app state loads');
-assert.equal([...index.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]).at(-1),'idle-home-premium.css','idle premium layer must remain last');
+assert.equal([...index.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m=>m[1]).at(-1),'release-candidate.css','release candidate must own the final visual cascade');
 
 for(const key of ['fluxa.mvp.v1','fluxa.mvp.v1.backup','fluxa.mvp.v1.recovery'])assert.ok(reset.includes(key),`reset must clear ${key}`);
 assert.ok(reset.includes('fluxa.validation-reset.2026-08-22.v2'),'reset must be versioned and one-time');

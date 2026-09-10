@@ -54,7 +54,7 @@ function assessmentDialog(sourceId = null) {
   wrap.className = 'modal-backdrop';
   wrap.innerHTML = `<section class="sheet orienting-assessment-sheet"><div class="sheet-head"><div><p class="eyebrow">Avaliação orientadora</p><h2>Qual área pede mais atenção agora?</h2><p class="muted">${esc(assisted.displayName)}</p></div><button class="close-btn" data-close-orienting-assessment>×</button></div>
     ${source ? `<div class="assessment-source-note"><strong>Medição registrada</strong><span>${esc(source.subject)} · ${esc(source.result)}${source.scale ? ` ${esc(source.scale)}` : ''}</span></div>` : ''}
-    <p class="muted">Use esta etapa apenas para organizar a escolha do protocolo. A medição e as áreas marcadas não são registradas como causa e nenhuma investigação será iniciada sem sua escolha.</p>
+    <p class="muted">Use para escolher o próximo protocolo. Nada vira causa ou inicia investigação sem sua confirmação.</p>
     <form id="orienting-assessment-form" data-session="${esc(session.id)}" data-assisted="${esc(assisted.id)}" data-source-assessment="${esc(sourceAssessmentId || '')}" class="form-grid">
       <fieldset class="assessment-area-fieldset"><legend>Áreas observadas</legend><div class="assessment-area-grid">${ORIENTING_ASSESSMENT_AREAS.map((area) => `<label class="assessment-area-option ${area.id === 'unclear' ? 'unclear' : ''}"><input type="checkbox" name="focusArea" value="${esc(area.id)}"><span>${esc(area.label)}</span></label>`).join('')}</div></fieldset>
       <div class="field"><label>Observações <span class="muted">opcional</span></label><textarea name="notes" placeholder="Contexto que você quer preservar no histórico desta avaliação"></textarea></div>
