@@ -1,6 +1,6 @@
 # Fluxa UI V2 — Physical iPhone Acceptance Gate
 
-Status: **Required before PR #254 merge, deploy, or `/fluxa/` cutover**  
+Status: **Required before PR #254 merge or `/fluxa/` production cutover**  
 Target: `fluxa/ui-v2-mobile-viewport-hardening`  
 Live entrypoint: `/fluxa/v2.html?mode=live`
 
@@ -10,8 +10,9 @@ This checklist converts the V2 blueprint's physical-device acceptance criteria i
 
 - Use the current PR #254 head.
 - Do not test the fixture URL as the live experience. The live URL must include `?mode=live`.
-- Start a static server from the repository root so `/fluxa/v2.html` resolves correctly.
-- Keep the iPhone and development computer on the same local network when testing through the computer.
+- Preferred local path: start a static server from the repository root so `/fluxa/v2.html` resolves correctly.
+- Founder-authorized remote path (10/09/2026): a temporary Vercel Preview of the exact PR head may be used solely for physical-iPhone acceptance. This does not authorize production deployment, merge, or `/fluxa/` cutover.
+- Keep the iPhone and development computer on the same local network when testing through the computer; this is not required when using the founder-authorized Vercel Preview.
 - Use Safari on iPhone for the primary pass. A second browser is optional.
 - Export a backup before testing with any local data that must be preserved.
 - Record iPhone model, iOS version, browser, orientation, and PR head SHA in the result template below.
@@ -51,7 +52,7 @@ A P0 failure includes:
 - a blocking workflow that can be bypassed through another surface;
 - data replacement/import becoming available while an active session is open.
 
-Any P0 failure keeps PR #254 unmerged and undeployed.
+Any P0 failure keeps PR #254 unmerged and blocks production cutover. A temporary preview used only for acceptance may remain available.
 
 ## 3. Cold-load and shell check
 
@@ -274,4 +275,4 @@ FINAL GATE: PASS | FAIL
 
 **FAIL** means keep PR #254 open, preserve V2 isolation at `/fluxa/v2.html`, fix the failures, rerun automated CI, then repeat only the affected physical scenarios plus the perceived-stability test.
 
-No Vercel deployment, `/fluxa/` cutover, or PR #254 merge is authorized by this checklist alone.
+No production Vercel deployment, `/fluxa/` cutover, or PR #254 merge is authorized by this checklist alone. A temporary preview deployment is permitted only for founder-authorized physical-device acceptance.
