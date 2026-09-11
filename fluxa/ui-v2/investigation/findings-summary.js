@@ -11,11 +11,7 @@ export function findingsSummary(model, ui = {}) {
   const body = `
     <div class="v2-stack">
       <section class="v2-section">
-        <div>
-          <p class="v2-eyebrow">${esc(model.assistedName || 'Assistido')}</p>
-          <h3>O que foi encontrado</h3>
-          <p class="v2-copy">Confirme somente o que deve seguir como achado. A origem permanece registrada no histórico.</p>
-        </div>
+        <p class="v2-copy">Confirme somente o que deve seguir como achado. A origem permanece registrada no histórico.</p>
         <div class="v2-choice-list">
           ${findings.map((finding) => `
             <label class="v2-choice-row">
@@ -32,7 +28,7 @@ export function findingsSummary(model, ui = {}) {
   `;
 
   return mobileSheet({
-    eyebrow: 'Investigação concluída',
+    eyebrow: `${esc(model.assistedName || 'Assistido')} · Investigação concluída`,
     title: 'Revisar achados',
     body,
     primaryLabel: findings.length ? 'Confirmar achados' : 'Continuar',

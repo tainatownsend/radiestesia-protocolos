@@ -8,6 +8,25 @@ function norm(value = '') {
   return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
 }
 
+function dateLabel(value = '') {
+  if (!value) return '';
+  const parts = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (parts) return `${parts[3]}/${parts[2]}/${parts[1]}`;
+  try {
+    const parsed = new Date(value);
+    if (!Number.isFinite(parsed.getTime())) return String(value);
+    return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }).format(parsed);
+  } catch {
+    return String(value);
+  }
+}
+
+function assistedSummary(item) {
+  if (item.birthDate) return `Nascimento · ${dateLabel(item.birthDate)}`;
+  if (item.type === 'PERSON') return 'Data de nascimento não registrada';
+  return item.details || item.typeLabel || 'Assistido';
+}
+
 function heading(title, copy) {
   return `
     <div class="v2-library-heading">
@@ -20,7 +39,18 @@ function heading(title, copy) {
 }
 
 function search(placeholder) {
-  return `<label class="v2-field v2-library-search"><span class="sr-only">Buscar</span><input type="search" data-v2-library-search placeholder="${esc(placeholder)}" autocomplete="off"></label>`;
+  return `
+    <label class="v2-field v2-library-search"><span class="sr-only">Buscar</span><input type="search" data-v2-library-search placeholder="${esc(placeholder)}" autocomplete="off"></label>
+  `;
+}
+
+function filteredEmpty(hasItems) {
+  return hasItems ? `
+    <div class="v2-card v2-card--soft v2-library-search-empty" role="status" aria-live="polite">
+      <strong>Nenhum resultado encontrado</strong>
+      <p class="v2-copy">Revise os termos da busca.</p>
+    </div>
+  ` : '';
 }
 
 function home(model) {
@@ -52,10 +82,11 @@ function assisteds(model) {
       <section class="v2-library-list" data-v2-library-list>
         ${items.length ? items.map((item) => `
           <article class="v2-library-row" data-v2-library-search-text="${esc(norm(`${item.name} ${item.typeLabel} ${item.details || ''}`))}">
-            <span><strong>${esc(item.name)}</strong><small>${esc(item.typeLabel)}${item.birthDate ? ` · ${esc(item.birthDate)}` : ''}</small></span>
+            <span><strong>${esc(item.name)}</strong><small>${esc(assistedSummary(item))}</small></span>
             <span class="v2-library-kind">${esc(item.typeLabel)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum Assistido cadastrado.</div>'}
+        ${filteredEmpty(items.length > 0)}
       </section>
     </div>
   `;
@@ -74,6 +105,7 @@ function protocols(model) {
             <span class="v2-library-kind">${esc(item.source)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum protocolo disponível.</div>'}
+        ${filteredEmpty(items.length > 0)}
       </section>
     </div>
   `;
@@ -92,6 +124,7 @@ function resources(model) {
             <span class="v2-library-kind">${esc(item.typeLabel)}</span>
           </article>
         `).join('') : '<div class="v2-card v2-card--soft">Nenhum recurso cadastrado.</div>'}
+        ${filteredEmpty(items.length > 0)}
       </section>
     </div>
   `;
@@ -106,7 +139,7 @@ function therapies(model) {
         ${items.map((item) => `
           <article class="v2-library-row">
             <span><strong>${esc(item.label)}</strong><small>${item.base ? 'Base permanente do Fluxa' : 'Terapia complementar ativa'}</small></span>
-            <span class="v2-library-kind">${item.base ? 'BASE' : 'ATIVA'}</span>
+            <span class="v2-library-kind">${item.base ? 'Base' : 'Ativa'}</span>
           </article>
         `).join('')}
       </section>

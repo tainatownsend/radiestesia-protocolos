@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createStore } from './store.js';
 import { AssistedType, createAssistedEntity, selectAssistedForSession, startPreparation, startSession, togglePreparationStep, completePreparation } from './domain.js';
-import { ReikiMode, startFlexibleReiki, pauseFlexibleReiki, resumeFlexibleReiki, completeFlexibleReiki } from './reiki-flex.js';
+import { ReikiMode, startFlexibleReiki, pauseFlexibleReiki, resumeFlexibleReiki, completeFlexibleReiki, recoverStaleFlexibleReiki } from './reiki-flex.js';
 
 class MemoryStorage {
   constructor(){this.map=new Map();}
@@ -24,6 +24,7 @@ const app=startFlexibleReiki(store,{assistedEntityId:assisted.id,mode:ReikiMode.
 assert.equal(app.sessionId,null);
 assert.equal(app.mode,ReikiMode.DISTANCE);
 assert.equal(app.status,'RUNNING');
+assert.throws(()=>recoverStaleFlexibleReiki(store,app.id),/fora de sessão/i,'outside-session Reiki must use the normal completion path, never recovery');
 
 pauseFlexibleReiki(store,app.id);
 assert.equal(store.getState().reikiApplications[0].status,'PAUSED');
@@ -61,6 +62,7 @@ assert.equal(store.getState().sessions.find((item)=>item.id===session.id).curren
 
 selectAssistedForSession(store,session.id,sessionOwner.id);
 const sessionApp=startFlexibleReiki(store,{sessionId:session.id,assistedEntityId:sessionOwner.id,mode:ReikiMode.IN_PERSON});
+assert.throws(()=>recoverStaleFlexibleReiki(store,sessionApp.id),/sessão aberta/i,'recovery must never cancel Reiki that still belongs to an open session');
 const startedSnapshot=structuredClone(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id));
 selectAssistedForSession(store,session.id,other.id);
 const eventsBeforeRejectedPause=store.getState().events.length;
@@ -108,5 +110,39 @@ store.setState((state)=>{const draft=structuredClone(state);draft.settings.thera
 resumeFlexibleReiki(store,sessionApp.id);
 assert.equal(store.getState().reikiApplications.find((item)=>item.id===sessionApp.id).status,'RUNNING','existing Reiki must remain resumable after modality is disabled so it can be concluded safely');
 completeFlexibleReiki(store,sessionApp.id,'sessão alinhada');
+
+store.setState((state)=>{
+  const draft=structuredClone(state);
+  const linkedSession=draft.sessions.find((item)=>item.id===session.id);
+  linkedSession.status='CLOSED';
+  linkedSession.closedAt='2026-09-06T10:30:00.000Z';
+  draft.reikiApplications.push({
+    id:'reiki_stale',
+    sessionId:session.id,
+    assistedEntityId:sessionOwner.id,
+    mode:ReikiMode.DISTANCE,
+    status:'RUNNING',
+    startedAt:'2026-09-06T10:00:00.000Z',
+    endedAt:null,
+    durationSeconds:null,
+    notes:null,
+    intervals:[{id:'int_stale',startedAt:'2026-09-06T10:00:00.000Z',endedAt:null}],
+    createdAt:'2026-09-06T10:00:00.000Z',
+    updatedAt:'2026-09-06T10:00:00.000Z',
+  });
+  return draft;
+});
+completeFlexibleReiki(store,'reiki_stale','recuperado após sessão antiga');
+const stale=store.getState().reikiApplications.find((item)=>item.id==='reiki_stale');
+assert.equal(stale.status,'CANCELED','closed-session Reiki must be canceled, never falsely completed');
+assert.ok(stale.endedAt,'recovery must close the stale application');
+assert.ok(Number.isFinite(stale.durationSeconds),'recovery must preserve a duration snapshot');
+assert.equal(stale.notes,'recuperado após sessão antiga');
+const recoveryEvent=store.getState().events.find((e)=>e.eventType==='REIKI_CANCELED' && e.entityId==='reiki_stale');
+assert.ok(recoveryEvent,'recovery must append an auditable cancellation event');
+assert.equal(recoveryEvent.sessionId,session.id,'recovery must preserve the original session reference');
+assert.equal(recoveryEvent.metadata.recovery,true);
+assert.equal(recoveryEvent.metadata.staleSessionContext,true);
+assert.equal(store.getState().sessions.find((item)=>item.id===session.id).status,'CLOSED','recovering stale Reiki must not reopen or alter the closed session');
 
 console.log('reiki-flex.test.mjs: ok');

@@ -1,0 +1,243 @@
+:root {
+  --v2-visual-viewport-height: 100dvh;
+  --v2-visual-viewport-offset-top: 0px;
+  --v2-keyboard-inset: 0px;
+}
+
+/* Body scrolling stays locked by overflow/overscroll. Do not disable touch-action on an
+   ancestor of the sheet: on iOS that can also disable the sheet body's native pan. */
+body[data-v2-sheet-open="true"] {
+  touch-action: auto;
+}
+
+body[data-v2-sheet-open="true"] .v2-sheet__body {
+  touch-action: pan-y;
+}
+
+.v2-overlay {
+  inset: auto 0 auto 0;
+  top: var(--v2-visual-viewport-offset-top, 0px);
+  min-height: 0;
+  height: var(--v2-visual-viewport-height, 100dvh);
+  max-height: 100dvh;
+}
+
+.v2-sheet {
+  max-height: calc(var(--v2-visual-viewport-height, 100dvh) - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
+}
+
+.v2-sheet__body {
+  overflow-x: hidden;
+  scroll-padding-top: var(--v2-space-3);
+  scroll-padding-bottom: calc(var(--v2-touch-primary) + var(--v2-space-5));
+}
+
+.v2-field,
+.v2-choice-card,
+.v2-check-row,
+.v2-treatment-graph {
+  scroll-margin-block: var(--v2-space-4);
+}
+
+.v2-file-button:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--v2-primary) 38%, transparent);
+  outline-offset: 2px;
+}
+
+.v2-context-chip--button {
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.v2-context-chip--button[disabled] {
+  opacity: .62;
+  cursor: default;
+}
+
+/* Session context stays informative without turning Hoje into a dashboard. */
+.v2-session-snapshot {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--v2-space-2);
+  padding: var(--v2-space-2) 0;
+  border-top: 1px solid var(--v2-border);
+  border-bottom: 1px solid var(--v2-border);
+}
+
+.v2-session-indicator {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: var(--v2-space-2);
+}
+
+.v2-session-indicator > span {
+  color: var(--v2-muted);
+  font-size: .7rem;
+  line-height: 1.25;
+}
+
+.v2-session-indicator > strong {
+  min-width: 0;
+  font-size: .84rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.v2-session-activity {
+  grid-column: 1 / -1;
+  margin: 0 var(--v2-space-2);
+  padding-top: var(--v2-space-2);
+  border-top: 1px solid color-mix(in srgb, var(--v2-border) 70%, transparent);
+  color: var(--v2-muted);
+  font-size: .76rem;
+  line-height: 1.35;
+}
+
+/* Keep the narrative timeline connected even when one event wraps to several lines. */
+.v2-history-event__dot {
+  align-self: stretch;
+  width: 14px;
+  height: auto;
+  min-height: 14px;
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.v2-history-event__dot::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--v2-primary);
+  border-radius: 999px;
+  background: var(--v2-surface);
+  z-index: 1;
+}
+
+.v2-history-event__dot::after {
+  top: 15px;
+  bottom: 0;
+  left: 5px;
+  width: 2px;
+  height: auto;
+}
+
+body[data-v2-keyboard-open="true"] .v2-overlay {
+  padding-bottom: var(--v2-space-2);
+}
+
+body[data-v2-keyboard-open="true"] .v2-sheet__footer {
+  padding-bottom: var(--v2-space-3);
+}
+
+body[data-v2-keyboard-open="true"] .v2-sheet__body {
+  scroll-padding-bottom: calc(var(--v2-touch-primary) + var(--v2-space-6));
+}
+
+@media (max-width: 767px) {
+  .v2-field input,
+  .v2-field textarea,
+  .v2-field select,
+  .v2-library-search input[type="search"] {
+    font-size: 16px;
+  }
+
+  /* Keep controls visually identical across preparation, Acervo, Settings and treatment.
+     Individual feature styles may be denser on desktop, but mobile uses one touch geometry. */
+  .v2-field input,
+  .v2-field select,
+  .v2-library-search input[type="search"] {
+    min-height: 52px;
+  }
+
+  .v2-field textarea {
+    min-height: 96px;
+  }
+
+  .v2-question {
+    min-height: 0;
+    padding-top: var(--v2-space-2);
+  }
+
+  .v2-triage {
+    gap: var(--v2-space-3);
+  }
+}
+
+@media (max-width: 430px) {
+  .v2-header {
+    gap: var(--v2-space-2);
+    padding-inline: var(--v2-space-3);
+  }
+
+  .v2-brand span {
+    display: none;
+  }
+
+  .v2-header-actions {
+    gap: var(--v2-space-1);
+  }
+
+  .v2-context-chip {
+    max-width: 96px;
+  }
+
+  .v2-settings-trigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .v2-title {
+    max-width: 100%;
+  }
+
+  .v2-sheet__header h2,
+  .v2-treatment-card h2,
+  .v2-history-session-card__head h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .v2-session-indicator {
+    padding-inline: var(--v2-space-1);
+  }
+
+  /* Long secondary/primary labels were squeezed at 393px by the old two-column footer.
+     Stack them across the entire target iPhone matrix so the main action stays legible. */
+  .v2-sheet__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .v2-sheet__footer > span[aria-hidden="true"] {
+    display: none;
+  }
+
+  .v2-sheet__footer .v2-binary-actions,
+  .v2-sheet__footer > .v2-btn,
+  .v2-sheet__footer > .v2-file-button {
+    width: 100%;
+  }
+}
+
+@media (max-height: 700px) {
+  .v2-overlay {
+    padding-top: var(--v2-space-1);
+    padding-bottom: var(--v2-space-1);
+  }
+
+  .v2-sheet__header {
+    min-height: 56px;
+    padding-block: var(--v2-space-2);
+  }
+
+  .v2-sheet__body {
+    padding-top: var(--v2-space-3);
+    padding-bottom: var(--v2-space-3);
+  }
+}

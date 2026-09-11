@@ -148,7 +148,11 @@ export function completeFlexibleReiki(store, applicationId, notes = '') {
   const state = store.getState();
   const application = state.reikiApplications.find((item) => item.id === applicationId && ['RUNNING','PAUSED'].includes(item.status));
   if (!application) throw new Error('Aplicação de Reiki não disponível para conclusão.');
-  if (application.sessionId) requireSessionContext(state, application.sessionId, application.assistedEntityId, 'complete');
+  if (application.sessionId) {
+    const linkedSessionOpen = (state.sessions || []).some((item) => item.id === application.sessionId && item.status === 'OPEN');
+    if (!linkedSessionOpen) return recoverStaleFlexibleReiki(store, applicationId, notes);
+    requireSessionContext(state, application.sessionId, application.assistedEntityId, 'complete');
+  }
   store.setState((current) => {
     const draft = structuredClone(current);
     const app = draft.reikiApplications.find((item) => item.id === applicationId);
@@ -166,6 +170,42 @@ export function completeFlexibleReiki(store, applicationId, notes = '') {
       eventType: 'REIKI_COMPLETED', entityType: 'ReikiApplication', entityId: app.id,
       sessionId: app.sessionId, assistedEntityId: app.assistedEntityId,
       metadata: { durationSeconds: app.durationSeconds, mode: app.mode || null, outsideSession: !app.sessionId }
+    });
+    return draft;
+  });
+}
+
+export function recoverStaleFlexibleReiki(store, applicationId, notes = '') {
+  const state = store.getState();
+  const application = state.reikiApplications.find((item) => item.id === applicationId && ['RUNNING','PAUSED'].includes(item.status));
+  if (!application) throw new Error('Aplicação de Reiki não disponível para recuperação.');
+  if (!application.sessionId) throw new Error('Esta aplicação foi iniciada fora de sessão e pode ser concluída normalmente.');
+  const sessionStillOpen = (state.sessions || []).some((item) => item.id === application.sessionId && item.status === 'OPEN');
+  if (sessionStillOpen) throw new Error('Esta aplicação ainda pertence a uma sessão aberta e não precisa de recuperação.');
+
+  store.setState((current) => {
+    const draft = structuredClone(current);
+    const app = draft.reikiApplications.find((item) => item.id === applicationId && ['RUNNING','PAUSED'].includes(item.status));
+    if (!app) return draft;
+    const now = store.nowIso();
+    if (app.status === 'RUNNING') {
+      const interval = [...(app.intervals || [])].reverse().find((item) => !item.endedAt);
+      if (interval) interval.endedAt = now;
+    }
+    app.status = 'CANCELED';
+    app.endedAt = now;
+    app.durationSeconds = elapsedSeconds(app, new Date(now).getTime());
+    app.notes = notes.trim() || app.notes || null;
+    app.updatedAt = now;
+    addEvent(store, draft, {
+      eventType: 'REIKI_CANCELED', entityType: 'ReikiApplication', entityId: app.id,
+      sessionId: app.sessionId, assistedEntityId: app.assistedEntityId,
+      metadata: {
+        durationSeconds: app.durationSeconds,
+        mode: app.mode || null,
+        recovery: true,
+        staleSessionContext: true,
+      }
     });
     return draft;
   });

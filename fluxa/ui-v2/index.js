@@ -27,8 +27,10 @@ import {
 } from './state/actions.js';
 import { deriveHistoryModel } from './history/history-model.js';
 import { deriveLibraryModel } from './library/library-model.js';
+import { stepBackPreparation } from './session/preparation-navigation.js';
 import { deriveV2Model } from './state/selectors.js';
 import { fixtureFromLocation } from './testing/fixtures.js';
+import { isContinuityLocked } from './workflow-continuity.js';
 
 const root = document.querySelector('#fluxa-v2-root');
 const params = new URLSearchParams(globalThis.location?.search || '');
@@ -42,7 +44,7 @@ function deriveLiveModel() {
 
 const emptyLibrary = {
   assisteds: [], resources: [], protocols: [], therapies: [{ id:'RADIESTHESIA', label:'Radiestesia', base:true }],
-  counts: { assisteds:0, resources:0, protocols:0, therapies:1 },
+  counts: { assisteds:0, resources:0, protocols:0,therapies:1 },
 };
 let model = liveMode
   ? deriveLiveModel()
@@ -65,6 +67,34 @@ function blankTreatmentDraft(findingIds = [], firstLabel = '') {
 }
 function normalizeSearch(value = '') {
   return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+}
+function requireDataReplacementIdle() {
+  const sessionOpen = Boolean(liveMode && store?.getState?.().sessions?.some((session) => session.status === 'OPEN'));
+  if (sessionOpen) throw new Error('Finalize a sessão atual antes de importar ou recuperar os dados locais.');
+}
+function currentWorkflowModel() {
+  return liveMode ? deriveV2Model(store.getState()) : model;
+}
+function requireTreatmentActionAllowed(action, treatmentId) {
+  const current = currentWorkflowModel();
+  if (!isContinuityLocked(current.nextActionCode) || action === 'workspace') return;
+  const isRecommendedReview = current.nextActionCode === 'TREATMENT_REVIEW'
+    && action === 'review'
+    && current.nextActionTreatmentId === treatmentId;
+  const isRecommendedFinal = current.nextActionCode === 'TREATMENT_FINAL'
+    && action === 'final'
+    && current.nextActionTreatmentId === treatmentId;
+  if (isRecommendedReview || isRecommendedFinal) return;
+  throw new Error('Conclua a próxima ação recomendada em Hoje antes de alterar outro tratamento.');
+}
+function requireNewTreatmentAllowed() {
+  const current = currentWorkflowModel();
+  if (isContinuityLocked(current.nextActionCode)) {
+    throw new Error('Conclua a próxima ação recomendada em Hoje antes de criar outro tratamento.');
+  }
+}
+function assistedContextChangeAllowed() {
+  return !isContinuityLocked(currentWorkflowModel().nextActionCode);
 }
 
 const ui = {
@@ -107,7 +137,7 @@ function scheduleRender({ focusDialog = false } = {}) {
 
 function renderPreservingSheetScroll() {
   const scrollTop = root.querySelector('.v2-sheet__body')?.scrollTop || 0;
-  render();
+  scheduleRender();
   queueMicrotask(() => {
     const body = root.querySelector('.v2-sheet__body');
     if (body) body.scrollTop = scrollTop;
@@ -150,7 +180,7 @@ function openSheet(name, source = null) {
   if (source) opener = source;
   ui.sheet = name;
   ui.error = '';
-  render({ focusDialog: true });
+  scheduleRender({ focusDialog: true });
 }
 
 function openTreatmentComposer(source = null, findingIds = []) {
@@ -195,12 +225,17 @@ function treatmentById(id) {
   return (model.treatments || []).find((item) => item.id === id) || null;
 }
 
+function treatmentIdForComponent(componentId) {
+  return (model.treatments || []).find((treatment) => (treatment.components || []).some((component) => component.id === componentId))?.id || null;
+}
+
 function performTreatmentAction(action, treatmentId, source = null) {
   if (!liveMode) return;
   if (source) opener = source;
   ui.activeTreatmentId = treatmentId;
   ui.error = '';
   try {
+    requireTreatmentActionAllowed(action, treatmentId);
     if (action === 'start') {
       startPlannedTreatmentV2(store, treatmentId);
       ui.sheet = 'treatment-workspace';
@@ -221,10 +256,10 @@ function performTreatmentAction(action, treatmentId, source = null) {
     } else {
       ui.sheet = 'treatment-workspace';
     }
-    render({ focusDialog: true });
+    scheduleRender({ focusDialog: true });
   } catch (error) {
     ui.sheet = 'treatment-workspace';
-    render({ focusDialog: true });
+    scheduleRender({ focusDialog: true });
     showInlineError(error);
   }
 }
@@ -253,6 +288,12 @@ function performNext(source) {
     if (model.nextActionCode === 'TRIAGE') return openSheet('triage', source);
     if (model.nextActionCode === 'FINDINGS') return openSheet('findings', source);
     if (model.nextActionCode === 'COMPOSE_TREATMENT') return openTreatmentComposer(source, (model.treatmentFindings || []).map((item) => item.id));
+    if (model.nextActionCode === 'REIKI_CONTEXT') {
+      if (!model.nextActionAssistedId) throw new Error('Não foi possível restaurar o Assistido da aplicação de Reiki.');
+      selectSessionAssisted(store, model.nextActionAssistedId);
+      openSheet('reiki', source);
+      return;
+    }
     if (model.nextActionCode === 'REIKI_ACTIVE') return openSheet('reiki', source);
     if (['TREATMENT_FINAL', 'TREATMENT_REVIEW', 'TREATMENT_WORKSPACE'].includes(model.nextActionCode)) {
       const treatment = treatmentById(model.nextActionTreatmentId);
@@ -294,11 +335,16 @@ function handlePrimary() {
         render({ focusDialog: true });
         return;
       }
+      if (!assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
       createAndSelectPerson(store, {
         displayName: root.querySelector('[data-v2-assisted-name]')?.value,
         birthDate: root.querySelector('[data-v2-assisted-birthdate]')?.value,
       });
       ui.assistedCreate = false;
+      ui.route = 'today';
+      ui.historySessionId = null;
+      ui.librarySection = 'home';
+      ui.justClosedSessionId = null;
       ui.sheet = 'hawkins';
       scheduleRender({ focusDialog: true });
       return;
@@ -340,6 +386,7 @@ function handlePrimary() {
     }
 
     if (ui.sheet === 'treatment-review') {
+      requireTreatmentActionAllowed('review', ui.activeTreatmentId);
       const outcome = root.querySelector('input[name="reviewOutcome"]:checked')?.value || 'continue';
       reviewTreatmentComponentV2(store, {
         componentId: ui.reviewComponentId,
@@ -357,6 +404,7 @@ function handlePrimary() {
     }
 
     if (ui.sheet === 'final-assessment') {
+      requireTreatmentActionAllowed('final', ui.activeTreatmentId);
       finalizeTreatmentV2(store, ui.activeTreatmentId, {
         frequency: root.querySelector('[data-v2-final-frequency]')?.value,
         imbalancePercent: root.querySelector('[data-v2-final-imbalance]')?.value,
@@ -476,6 +524,7 @@ root.addEventListener('click', (event) => {
     if (!liveMode) return;
     clearInlineError();
     try {
+      requireDataReplacementIdle();
       recoverLocalData();
       store.setState(() => loadState());
       renderPreservingSheetScroll();
@@ -489,6 +538,7 @@ root.addEventListener('click', (event) => {
     if (!liveMode || !ui.importPreview?.normalized) return;
     clearInlineError();
     try {
+      requireDataReplacementIdle();
       const normalized = structuredClone(ui.importPreview.normalized);
       store.setState(() => normalized);
       ui.importPreview = null;
@@ -519,10 +569,18 @@ root.addEventListener('click', (event) => {
     return;
   }
 
-  if (event.target.closest('[data-v2-closing-reiki]')) {
-    ui.sheet = 'reiki';
-    ui.error = '';
-    render({ focusDialog: true });
+  const closingReiki = event.target.closest('[data-v2-closing-reiki]');
+  if (closingReiki) {
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      if (model.reiki?.assistedEntityId && !model.reiki.belongsToCurrentAssisted) {
+        selectSessionAssisted(store, model.reiki.assistedEntityId);
+      }
+      openSheet('reiki', closingReiki);
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
 
@@ -530,8 +588,34 @@ root.addEventListener('click', (event) => {
   if (assisted && liveMode) {
     clearInlineError();
     try {
-      selectSessionAssisted(store, assisted.dataset.v2SelectAssisted);
-      ui.sheet = 'hawkins';
+      const targetAssistedId = assisted.dataset.v2SelectAssisted;
+      const closingRecoveryIds = [
+        model.safeClose?.openInvestigationBlocker?.assistedEntityId,
+        model.safeClose?.pendingFindingBlocker?.assistedEntityId,
+      ].filter(Boolean);
+      const closingRecovery = ui.sheet === 'closing' && closingRecoveryIds.includes(targetAssistedId);
+      if (!closingRecovery && !assistedContextChangeAllowed()) throw new Error('Conclua a próxima ação recomendada antes de trocar o Assistido.');
+      const openSession = store.getState().sessions?.find((session) => session.status === 'OPEN');
+      if (openSession?.currentAssistedEntityId !== targetAssistedId) selectSessionAssisted(store, targetAssistedId);
+      const nextModel = deriveLiveModel();
+      model = nextModel;
+      ui.route = 'today';
+      ui.historySessionId = null;
+      ui.librarySection = 'home';
+      ui.justClosedSessionId = null;
+      ui.sheet = nextModel.hawkinsReady ? null : 'hawkins';
+      scheduleRender({ focusDialog: Boolean(ui.sheet) });
+    } catch (error) {
+      showInlineError(error);
+    }
+    return;
+  }
+
+  const preparationBack = event.target.closest('[data-v2-preparation-back]');
+  if (preparationBack && liveMode && ui.sheet === 'preparation') {
+    clearInlineError();
+    try {
+      stepBackPreparation(store);
       scheduleRender({ focusDialog: true });
     } catch (error) {
       showInlineError(error);
@@ -579,6 +663,7 @@ root.addEventListener('click', (event) => {
   if (treatmentSubmit && liveMode) {
     clearInlineError();
     try {
+      requireNewTreatmentAllowed();
       const treatment = saveTreatmentDraft(store, treatmentInput(), { start: treatmentSubmit.dataset.v2TreatmentSubmit === 'start' });
       ui.activeTreatmentId = treatment.id;
       ui.treatmentDraft = blankTreatmentDraft();
@@ -599,10 +684,19 @@ root.addEventListener('click', (event) => {
 
   const reviewComponent = event.target.closest('[data-v2-review-component]');
   if (reviewComponent) {
-    ui.reviewComponentId = reviewComponent.dataset.v2ReviewComponent;
-    ui.sheet = 'treatment-review';
-    ui.error = '';
-    render({ focusDialog: true });
+    clearInlineError();
+    try {
+      const componentId = reviewComponent.dataset.v2ReviewComponent;
+      const treatmentId = treatmentIdForComponent(componentId);
+      requireTreatmentActionAllowed('review', treatmentId);
+      ui.activeTreatmentId = treatmentId;
+      ui.reviewComponentId = componentId;
+      ui.sheet = 'treatment-review';
+      ui.error = '';
+      render({ focusDialog: true });
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
 
@@ -690,6 +784,10 @@ root.addEventListener('click', (event) => {
     performNext(action);
     return;
   }
+  if (name === 'change-assisted') {
+    if (liveMode && assistedContextChangeAllowed()) openSheet('assisted', action);
+    return;
+  }
   if (name === 'investigate' && liveMode) {
     clearInlineError();
     try {
@@ -701,7 +799,14 @@ root.addEventListener('click', (event) => {
     return;
   }
   if (name === 'treat') {
-    openTreatmentComposer(action, (model.treatmentFindings || []).map((item) => item.id));
+    if (!liveMode) return;
+    clearInlineError();
+    try {
+      requireNewTreatmentAllowed();
+      openTreatmentComposer(action, (model.treatmentFindings || []).map((item) => item.id));
+    } catch (error) {
+      showInlineError(error);
+    }
     return;
   }
   if (name === 'reiki') {
@@ -739,9 +844,10 @@ root.addEventListener('change', async (event) => {
   const importInput = event.target.closest('[data-v2-settings-import-file]');
   if (importInput && liveMode) {
     clearInlineError();
-    const file = importInput.files?.[0];
-    if (!file) return;
     try {
+      requireDataReplacementIdle();
+      const file = importInput.files?.[0];
+      if (!file) return;
       const text = await file.text();
       let parsed;
       try { parsed = JSON.parse(text); }

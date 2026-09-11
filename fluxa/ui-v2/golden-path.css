@@ -61,6 +61,14 @@ body[data-v2-sheet-open="true"] .v2-sheet * {
 .v2-field input::placeholder,
 .v2-field textarea::placeholder { color: color-mix(in srgb, var(--v2-muted) 72%, transparent); }
 
+.v2-helper {
+  margin: 0;
+  color: var(--v2-muted);
+  font-size: .8rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
 .v2-unit-input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -148,6 +156,8 @@ body[data-v2-sheet-open="true"] .v2-sheet * {
   flex: 0 0 auto;
   accent-color: var(--v2-primary);
 }
+.v2-assisted-search-empty { display: none; }
+.v2-select-list:has(.v2-select-row):not(:has(.v2-select-row:not([hidden]))) .v2-assisted-search-empty { display: block; }
 
 .v2-question {
   min-height: min(36dvh, 320px);

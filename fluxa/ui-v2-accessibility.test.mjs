@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { mobileSheet } from './ui-v2/components/mobile-sheet.js';
+
+const source = fs.readFileSync(new URL('./ui-v2/components/mobile-sheet.js', import.meta.url), 'utf8');
+const composer = fs.readFileSync(new URL('./ui-v2/treatment/treatment-composer.js', import.meta.url), 'utf8');
+const finalAssessment = fs.readFileSync(new URL('./ui-v2/treatment/final-assessment.js', import.meta.url), 'utf8');
+const newAssisted = fs.readFileSync(new URL('./ui-v2/library/new-assisted-sheet.js', import.meta.url), 'utf8');
+const html = mobileSheet({
+  eyebrow:'Sessão', title:'Teste', body:'<p>Conteúdo</p>', primaryLabel:'Continuar', secondaryLabel:'Voltar',
+});
+
+assert.match(html, /role="dialog"/);
+assert.match(html, /aria-modal="true"/);
+assert.match(html, /aria-labelledby="v2-sheet-title"/);
+assert.match(html, /tabindex="-1"/);
+assert.match(html, /aria-label="Fechar"/);
+assert.match(source, /a\[href\]/);
+assert.match(source, /summary/,'Native details summaries must participate in dialog keyboard boundaries.');
+assert.match(source, /contenteditable="true"/,'Editable regions must participate in dialog keyboard boundaries.');
+assert.match(source, /offsetParent/,'Focus trap must reject controls hidden by CSS layout branches.');
+assert.match(source, /closest\?\.\('\[hidden\], \[aria-hidden="true"\]'\)/,'Focus trap must reject controls inside hidden ancestors.');
+assert.match(source, /const preferred = sheet\.querySelector\('\[data-v2-autofocus\]'\) \|\| sheet;/);
+assert.doesNotMatch(source, /preferred = [^;]*\.v2-sheet__body input/s);
+assert.match(source, /!sheet\.contains\(activeElement\) \|\| activeElement === sheet/);
+assert.match(source, /sheet\.focus\?\.\(\{ preventScroll: true \}\)/);
+assert.match(source, /event\.preventDefault\(\)/);
+assert.doesNotMatch(composer, /data-v2-treatment-draft="title"[^>]*data-v2-autofocus/);
+assert.doesNotMatch(newAssisted, /data-v2-library-person-name[^>]*data-v2-autofocus/);
+assert.doesNotMatch(finalAssessment, /<input[^>]*data-v2-autofocus/,'Final assessment must not summon the iOS keyboard when its sheet opens.');
+
+console.log('ui-v2-accessibility.test.mjs: ok');

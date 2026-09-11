@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { STARTER_GRAPHS } from './graph-starter-catalog.js';
 import { ROOT_PROTOCOL_METADATA } from './ui-v2/library/root-protocol-metadata.js';
 import { deriveLibraryModel } from './ui-v2/library/library-model.js';
+import { settingsSheet } from './ui-v2/settings/settings-sheet.js';
 
 const state = {
   assistedEntities: [
@@ -45,12 +46,36 @@ assert.ok(model.library.therapies.some((item) => item.id === 'REIKI'));
 assert.ok(model.library.therapies.some((item) => item.label === 'Aromaterapia'));
 assert.deepEqual(model.therapeuticSettings, { enabled:['REIKI'], custom:['Aromaterapia'] });
 
+const deterministicHealth = { status:'PRIMARY_CORRUPT', canRecover:true, lastExportAt:'2026-09-06T10:00:00.000Z' };
+const lockedSettingsHtml = settingsSheet({
+  sessionOpen:true,
+  storageHealth:deterministicHealth,
+  therapeuticSettings:{ enabled:['REIKI'], custom:[] },
+}, { error:'', importPreview:{ name:'backup.json', summary:{ sessions:2, assisteds:1, treatments:3, resources:4 } } });
+assert.match(lockedSettingsHtml,/Importação e recuperação estão pausadas/);
+assert.match(lockedSettingsHtml,/<button class="v2-btn v2-btn--ghost" type="button" disabled>Selecionar backup para importar<\/button>/,'Import selection must render as an unmistakably disabled control during an active session.');
+assert.doesNotMatch(lockedSettingsHtml,/data-v2-settings-import-file/,'Locked settings must not keep an invisible file input inside an active-looking label.');
+assert.match(lockedSettingsHtml,/data-v2-settings-recover disabled/,'Recovery must be disabled during an active session.');
+assert.match(lockedSettingsHtml,/data-v2-settings-import-apply disabled/,'Applying a validated backup must remain disabled during an active session.');
+assert.match(lockedSettingsHtml,/Dados locais precisam de recuperação/,'Fixture-provided storage health must drive the rendered status deterministically.');
+assert.match(lockedSettingsHtml,/data-v2-settings-export/,'Export remains safe and available during a session.');
+
+const unlockedSettingsHtml = settingsSheet({
+  sessionOpen:false,
+  storageHealth:deterministicHealth,
+  therapeuticSettings:{ enabled:[], custom:[] },
+}, { error:'', importPreview:null });
+assert.match(unlockedSettingsHtml,/data-v2-settings-import-file/);
+assert.doesNotMatch(unlockedSettingsHtml,/data-v2-settings-import-file[^>]*disabled/);
+assert.doesNotMatch(unlockedSettingsHtml,/data-v2-settings-recover disabled/);
+
 const library = fs.readFileSync(new URL('./ui-v2/library/library-page.js', import.meta.url), 'utf8');
 const libraryModel = fs.readFileSync(new URL('./ui-v2/library/library-model.js', import.meta.url), 'utf8');
 const settings = fs.readFileSync(new URL('./ui-v2/settings/settings-sheet.js', import.meta.url), 'utf8');
 const shell = fs.readFileSync(new URL('./ui-v2/app-shell.js', import.meta.url), 'utf8');
 const index = fs.readFileSync(new URL('./ui-v2/index.js', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('./v2.html', import.meta.url), 'utf8');
+const librarySettingsCss = fs.readFileSync(new URL('./ui-v2/library-settings.css', import.meta.url), 'utf8');
 
 assert.match(library, /Assistidos/);
 assert.match(library, /Protocolos/);
@@ -63,9 +88,11 @@ assert.match(libraryModel, /STARTER_GRAPHS/);
 assert.match(libraryModel, /protocolKey/);
 assert.match(libraryModel, /archivedNames/);
 assert.match(shell, /libraryPage/);
+assert.match(shell, /Object\.assign\(ui, fixtureUi/,'Fixture overlays must update controller bookkeeping through the same UI object.');
 assert.doesNotMatch(shell, /Em migração/);
 
 assert.match(settings, /Seus dados ficam neste dispositivo/);
+assert.match(settings, /model\.storageHealth \|\| inspectStorageHealth\(\)/,'Settings fixtures must not leak live localStorage state.');
 assert.match(settings, /Não há sincronização em nuvem ativa/);
 assert.match(settings, /Última exportação concluída/);
 assert.match(settings, /data-v2-settings-export/);
@@ -73,6 +100,15 @@ assert.match(settings, /data-v2-settings-import-file/);
 assert.match(settings, /Prévia validada/);
 assert.match(settings, /Terapias complementares/);
 
+assert.match(librarySettingsCss,/\.v2-library-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr;/,'Acervo home must remain a compact single-column navigation list on phone instead of four large dashboard cards.');
+assert.match(librarySettingsCss,/\.v2-library-category\s*\{[\s\S]*?flex-direction:\s*row;[\s\S]*?border-radius:\s*0;[\s\S]*?background:\s*transparent;/,'Acervo categories must render as dense rows rather than nested cards.');
+assert.match(librarySettingsCss,/\.v2-settings-block\s*\{[\s\S]*?border-bottom:\s*1px solid var\(--v2-border\);[\s\S]*?background:\s*transparent;/,'Settings sections must use hierarchy and separators rather than card-on-card surfaces.');
+assert.match(librarySettingsCss,/\.v2-import-preview\s*\{[\s\S]*?background:\s*transparent;/,'Validated backup details must stay flat inside Settings instead of creating another nested card layer.');
+
+assert.match(index, /function requireDataReplacementIdle\(\)[\s\S]*session\.status === 'OPEN'[\s\S]*Finalize a sessão atual antes de importar ou recuperar/,'Controller must independently reject destructive data replacement while any session is open.');
+assert.match(index, /data-v2-settings-recover[\s\S]*requireDataReplacementIdle\(\);[\s\S]*recoverLocalData\(\)/,'Recovery handler must enforce the controller guard before replacing state.');
+assert.match(index, /data-v2-settings-import-apply[\s\S]*requireDataReplacementIdle\(\);[\s\S]*structuredClone\(ui\.importPreview\.normalized\)/,'Import apply handler must enforce the controller guard before replacing state.');
+assert.match(index, /data-v2-settings-import-file[\s\S]*requireDataReplacementIdle\(\);[\s\S]*file\.text\(\)/,'Import file validation must not begin during an active session.');
 assert.match(index, /createAssistedEntity/);
 assert.match(index, /validateImportPayload/);
 assert.match(index, /exportLocalDataFile/);

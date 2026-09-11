@@ -56,6 +56,7 @@ export function validateStateReferences(state={}){
   for(const treatment of asArray(state.treatments)){
     requireRef(treatment.assistedEntityId,assisted,'Treatment.assistedEntityId');
     requireRef(treatment.originSessionId,sessions,'Treatment.originSessionId');
+    requireRef(treatment.plannedInSessionId,sessions,'Treatment.plannedInSessionId');
     requireRef(treatment.previousTreatmentId,treatments,'Treatment.previousTreatmentId');
     requireRef(treatment.recommendedByAssessmentId,assessments,'Treatment.recommendedByAssessmentId');
     if(treatment.previousTreatmentId===treatment.id)throw new Error(`Backup inválido: o tratamento ${treatment.id} não pode apontar para si próprio como ciclo anterior.`);

@@ -8,13 +8,11 @@ export function treatmentReview(model, ui) {
   const treatment = (model.treatments || []).find((item) => item.id === ui.activeTreatmentId || item.components?.some((component) => component.id === ui.reviewComponentId));
   const component = treatment?.components?.find((item) => item.id === ui.reviewComponentId);
   if (!treatment || !component) return '';
+  const commandCount = Number(component.commandCount) || 0;
+  const graphCount = Number(component.graphCount) || 0;
   const body = `
     <form class="v2-review-form" data-v2-component-review-form>
-      <section class="v2-card v2-card--soft v2-review-context">
-        <p class="v2-eyebrow">Componente</p>
-        <strong>${esc(component.name)}</strong>
-        <p class="v2-helper">${component.commandCount} comando${component.commandCount === 1 ? '' : 's'} · ${component.graphCount} gráfico${component.graphCount === 1 ? '' : 's'}</p>
-      </section>
+      <p class="v2-helper v2-review-summary">${commandCount} comando${commandCount === 1 ? '' : 's'} · ${graphCount} gráfico${graphCount === 1 ? '' : 's'} neste componente</p>
 
       <fieldset class="v2-choice-group">
         <legend>O que você verificou agora?</legend>
@@ -36,7 +34,7 @@ export function treatmentReview(model, ui) {
   `;
   return mobileSheet({
     eyebrow: `${model.assistedName || 'Assistido'} · ${treatment.title}`,
-    title: 'Revisar componente',
+    title: `Revisar ${component.name}`,
     body,
     error: ui.error,
     primaryLabel: 'Salvar revisão',

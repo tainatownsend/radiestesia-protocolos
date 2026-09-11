@@ -17,6 +17,7 @@ import { treatmentComposer } from './treatment/treatment-composer.js';
 import { treatmentPage } from './treatment/treatment-page.js';
 import { treatmentReview } from './treatment/treatment-review.js';
 import { treatmentWorkspace } from './treatment/treatment-workspace.js';
+import { isContinuityLocked } from './workflow-continuity.js';
 
 const ROUTES = [
   ['today', 'Hoje'],
@@ -67,8 +68,13 @@ export function renderAppShell(sourceModel, sourceUi) {
   const ui = resolved.ui;
   const route = ui.route || 'today';
   const currentContext = model.sessionOpen
-    ? (model.assistedSelected ? model.assistedName : 'Sessão aberta')
+    ? (model.assistedSelected ? model.assistedName : 'Selecionar Assistido')
     : (ui.justClosedSessionId ? 'Sessão encerrada' : 'Sem sessão');
+  const contextChangeLocked = isContinuityLocked(model.nextActionCode);
+  const contextLabel = model.assistedSelected ? `Trocar Assistido · ${currentContext}` : 'Selecionar Assistido';
+  const contextControl = model.source === 'live' && model.sessionOpen
+    ? `<button class="v2-context-chip v2-context-chip--button" type="button" data-v2-preview-action="change-assisted" aria-label="${esc(contextLabel)}" ${contextChangeLocked ? 'disabled' : ''}>${esc(currentContext)}</button>`
+    : `<span class="v2-context-chip">${esc(currentContext)}</span>`;
   let content;
   if (route === 'today') {
     content = ui.justClosedSessionId ? postCloseSummary(model, ui.justClosedSessionId) : sessionCockpit(model);
@@ -89,10 +95,10 @@ export function renderAppShell(sourceModel, sourceUi) {
       <header class="v2-header">
         <div class="v2-brand">
           <strong>Fluxa</strong>
-          <span>${model.source === 'live' ? 'Sessão guiada · UI V2' : 'UI V2 · preview seguro'}</span>
+          <span>${model.source === 'live' ? 'Sessão guiada' : 'Preview seguro'}</span>
         </div>
         <div class="v2-header-actions">
-          <span class="v2-context-chip">${esc(currentContext)}</span>
+          ${contextControl}
           <button class="v2-settings-trigger" type="button" data-v2-open-settings aria-label="Abrir configurações" ${model.source === 'live' ? '' : 'disabled'}>Ajustes</button>
         </div>
       </header>
