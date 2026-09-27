@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf9"><title>Sintonizze · North Star v4.2.1 · Context Fix</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf9"><title>Sintonizze · North Star v4.2.2 · Assistidos CRUD</title>
 <style>
 :root{--bg:#fbfaf7;--bg2:#f5f8f2;--paper:#ffffff;--ink:#173a31;--sub:#667d72;--green:#1e6b51;--green-strong:#15513d;--leaf:#e8f3e7;--mint:#f2f8f1;--mint-2:#edf6ef;--line:#d9e6dd;--sand:#ffeddf;--orange:#ea7f4d;--orange-soft:#fff2ea;--lav:#ede6fb;--lav-strong:#8e5ad7;--shadow:0 18px 40px rgba(26,63,48,.08);--shadow-soft:0 10px 24px rgba(26,63,48,.05);--radius:24px;color-scheme:light}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at top,#ffffff 0,#fbfaf7 40%,#f7f8f3 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button,input,select,textarea{min-width:0}a{color:inherit;text-decoration:none}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #9ddab1;outline-offset:2px}
@@ -289,7 +289,135 @@ function renderPrintReport(){
 function saveStandalonePrintFile(){
  const source=document.querySelector('#print-document');
  if(!source)return toast('Abra o relatório para impressão primeiro.');
- const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sintonizze · Relatório</title><style>body{font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:760px;margin:32px auto;padding:0 18px;color:#173a31;background:white}.print-brand{font-weight:800;color:#1e6b51}.print-kicker,.print-code{font-size:11px;letter-spacing:1px;font-weight:700;color:#667d72}.print-heading{border-bottom:2px solid #d9e6dd;padding-bottom:14px}.print-heading h1{margin:12px 0 4px;font-size:28px}.print-heading p,.print-description{white-space:pre-wrap;color:#52695f}.print-answer{padding:12px 0;border-bottom:1px solid #d9e6dd;break-inside:avoid}.print-question{font-weight:650;margin:7px 0}.print-values{display:flex;gap:8px}.print-values span{background:#e8f3e7;padding:3px 10px;border-radius:999px}section{margin-top:20px}footer{font-size:11px;color:#667d72;margin-top:28px}button{display:block;margin:16px 0;padding:10px 16px;color:white;background:#1e6b51;border:0;border-radius:10px;font:inherit}@media print{button{display:none}@page{margin:15mm}body{margin:0;padding:0}}</style></head><body><button onclick="window.print()">Imprimir / Salvar PDF</button>${source.outerHTML}</body></html>`;
+ const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sintonizze · Relatório</title><style>body{font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:760px;margin:32px auto;padding:0 18px;color:#173a31;background:white}.print-brand{font-weight:800;color:#1e6b51}.print-kicker,.print-code{font-size:11px;letter-spacing:1px;font-weight:700;color:#667d72}.print-heading{border-bottom:2px solid #d9e6dd;padding-bottom:14px}.print-heading h1{margin:12px 0 4px;font-size:28px}.print-heading p,.print-description{white-space:pre-wrap;color:#52695f}.print-answer{padding:12px 0;border-bottom:1px solid #d9e6dd;break-inside:avoid}.print-question{font-weight:650;margin:7px 0}.print-values{display:flex;gap:8px}.print-values span{background:#e8f3e7;padding:3px 10px;border-radius:999px}section{margin-top:20px}footer{font-size:11px;color:#667d72;margin-top:28px}button{display:block;margin:16px 0;padding:10px 16px;color:white;background:#1e6b51;border:0;border-radius:10px;font:inherit}@media print{button{display:none}@page{margin:15mm}body{margin:0;padding:0}}</style></head><body><button onclick="window.print()">Imprimir / Salvar PDF</button>${source.outerHTML}
+<style id="sintonizze-v423-assistidos">
+.v423-subject-list{max-width:760px;margin:0 auto}
+.v423-subject-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.v423-subject-head .btn{flex:0 0 auto}
+.v423-subject-card{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--v42-line);background:#fff;border-radius:17px;padding:10px;color:var(--v42-navy)}
+.v423-subject-card+.v423-subject-card{margin-top:8px}
+.v423-subject-main{border:0;background:transparent;text-align:left;color:inherit;min-width:0;padding:0}
+.v423-subject-main strong,.v423-subject-main small{display:block}.v423-subject-main strong{font-size:15px}.v423-subject-main small{color:#6f8294;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v423-subject-icon{width:46px;height:46px;border-radius:14px;background:var(--v42-cyan);display:grid;place-items:center;font-size:20px}
+.v423-subject-actions{display:flex;gap:5px}.v423-edit{border:1px solid var(--v42-line);background:#f5fafb;border-radius:11px;padding:8px 10px;color:var(--v42-navy);font-weight:800;font-size:11px}
+.v423-delete{border:0;background:#fff3f1;border-radius:11px;padding:8px;color:#b44a45}
+.v423-form-note{background:#f4fbfc;border:1px solid var(--v42-line);border-radius:14px;padding:10px 12px;color:#5f7788;font-size:11px;margin-bottom:12px}
+@media(max-width:520px){
+ .v423-subject-head{display:grid}.v423-subject-head .btn{width:100%}
+ .v423-subject-card{grid-template-columns:42px minmax(0,1fr) auto;padding:9px}
+ .v423-subject-icon{width:42px;height:42px}.v423-edit{padding:8px;font-size:10px}
+}
+</style>
+<script id="sintonizze-v423-assistidos-script">
+(function(){
+  ui.v423SubjectOrigin=ui.v423SubjectOrigin||null;
+
+  const priorNav=nav;
+  nav=function(){
+    return [
+      ['home','⌂','Hoje'],
+      ['sessions','▣','Sessões'],
+      ['subject-list','◎','Assistidos'],
+      ['treatments','✦','Tratamentos'],
+      ['more','•••','Mais']
+    ].map(([r,ic,t])=>({r,ic,t}));
+  };
+
+  const priorActive=activeNav;
+  activeNav=function(){
+    if(['assistidos','subject-list','subject-new'].includes(ui.route))return 'subject-list';
+    return priorActive();
+  };
+
+  function subjectList423(){
+    const items=[...(db.v421Subjects||[])].sort((a,b)=>(a.kind||'').localeCompare(b.kind||'')||(a.name||'').localeCompare(b.name||''));
+    shell('<section class="v423-subject-list">'+
+      '<div class="v423-subject-head"><div><div class="v42-kicker">ASSISTIDOS</div><h1 class="title">Seus assistidos</h1><p class="lead" style="margin-bottom:0">Cadastre e mantenha pessoas, imóveis, empresas, animais e outros contextos.</p></div><button class="btn primary" data-v423="new">＋ Adicionar assistido</button></div>'+
+      '<div class="v421-context-list">'+(items.length?items.map(s=>
+        '<div class="v423-subject-card">'+
+          '<span class="v423-subject-icon">'+(s.icon||'◎')+'</span>'+
+          '<button class="v423-subject-main" data-v423="open" data-id="'+s.id+'"><strong>'+safe(s.name)+'</strong><small>'+safe(s.kind)+' · '+safe(s.meta||'Sem descrição')+'</small></button>'+
+          '<span class="v423-subject-actions"><button class="v423-edit" data-v423="edit" data-id="'+s.id+'">Editar</button><button class="v423-delete" aria-label="Excluir '+safe(s.name)+'" data-v423="delete" data-id="'+s.id+'">×</button></span>'+
+        '</div>'
+      ).join(''):'<div class="v421-empty">Nenhum assistido cadastrado. Adicione o primeiro para começar.</div>')+'</div>'+
+    '</section>');
+  }
+
+  function subjectForm423(){
+    const s=(db.v421Subjects||[]).find(x=>x.id===ui.v422SubjectEditId);
+    const returning=ui.v423SubjectOrigin==='new-session';
+    shell('<section class="v42-page">'+
+      '<div class="v42-head">'+back(returning?'new-session':'subject-list',returning?'Nova sessão':'Assistidos')+'<span class="badge sky">'+(s?'Editar':'Novo')+'</span></div>'+
+      '<h1 class="title">'+(s?'Editar assistido':'Adicionar assistido')+'</h1>'+
+      (returning?'<div class="v423-form-note">Ao salvar, você volta para a Nova sessão com este assistido já selecionado.</div>':'')+
+      '<form id="v423SubjectForm" class="v421-command-form">'+
+        '<div class="v42-field"><label>Tipo *</label><select name="kind">'+['Pessoa','Imóvel','Empresa','Animal','Outro'].map(k=>'<option '+(s?.kind===k?'selected':'')+'>'+k+'</option>').join('')+'</select></div>'+
+        '<div class="v42-field"><label>Nome / identificação *</label><input name="name" required value="'+safe(s?.name||'')+'" placeholder="Ex.: Rua das Flores, 123"></div>'+
+        '<div class="v42-field"><label>Descrição curta</label><input name="meta" value="'+safe(s?.meta||'')+'" placeholder="Ex.: Casa · Venda"></div>'+
+        '<button class="btn primary wide">'+(s?'Salvar alterações':'Adicionar assistido')+'</button>'+
+      '</form>'+
+    '</section>');
+  }
+
+  const priorRender=render;
+  render=function(){
+    if(ui.route==='subject-list')return subjectList423();
+    if(ui.route==='subject-new')return subjectForm423();
+    return priorRender();
+  };
+
+  function selectSubject423(s){
+    ui.sessionDraft.kind=s.kind;
+    ui.sessionDraft.assistidoId=s.id;
+    ui.v42Draft=ui.v42Draft||{};
+    ui.v42Draft.assistidoId=s.id;
+  }
+
+  document.addEventListener('click',function(e){
+    const newFromSession=e.target.closest('[data-action="v4-new-subject"]');
+    if(newFromSession){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      ui.v423SubjectOrigin='new-session';ui.v422SubjectEditId=null;return go('subject-new');
+    }
+    const el=e.target.closest('[data-v423]');if(!el)return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    const a=el.dataset.v423;
+    if(a==='new'){ui.v423SubjectOrigin='subject-list';ui.v422SubjectEditId=null;return go('subject-new')}
+    if(a==='edit'){ui.v423SubjectOrigin='subject-list';ui.v422SubjectEditId=el.dataset.id;return go('subject-new')}
+    if(a==='open'){
+      const s=(db.v421Subjects||[]).find(x=>x.id===el.dataset.id);if(!s)return;
+      selectSubject423(s);ui.v421AssistidoTab='overview';ui.v423SubjectOrigin=null;return go('assistidos');
+    }
+    if(a==='delete'){
+      const s=(db.v421Subjects||[]).find(x=>x.id===el.dataset.id);if(!s)return;
+      const used=db.sessions.some(x=>x.subjectId===s.id||x.context===s.name)||(db.v42Treatments||[]).some(t=>t.assistidoId===s.id);
+      if(used)return toast('Este assistido possui histórico e não pode ser excluído sem perder vínculos.');
+      if(confirm('Excluir “'+s.name+'”?')){db.v421Subjects=db.v421Subjects.filter(x=>x.id!==s.id);persist();return subjectList423()}
+    }
+  },true);
+
+  document.addEventListener('submit',function(e){
+    if(e.target.id!=='v423SubjectForm')return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    const fd=new FormData(e.target),kind=String(fd.get('kind')||''),name=String(fd.get('name')||'').trim(),meta=String(fd.get('meta')||'').trim();
+    if(!name)return;
+    const ex=(db.v421Subjects||[]).find(x=>x.id===ui.v422SubjectEditId);
+    const icons={Pessoa:'◎','Imóvel':'⌂',Empresa:'▦',Animal:'♧',Outro:'＋'};
+    const n={id:ex?.id||id(),kind,name,meta,icon:icons[kind]||'◎'};
+    if(ex)Object.assign(ex,n);else db.v421Subjects.push(n);
+    const wasNew=!ex,origin=ui.v423SubjectOrigin;
+    ui.v422SubjectEditId=null;ui.v423SubjectOrigin=null;persist();
+    toast(ex?'Assistido atualizado.':'Assistido adicionado.');
+    if(origin==='new-session'){
+      selectSubject423(n);
+      return go('new-session');
+    }
+    return go('subject-list');
+  },true);
+
+  render();
+})();
+</script></body></html>`;
  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
  const url=URL.createObjectURL(blob);
  const a=document.createElement('a');a.href=url;a.download='sintonizze-relatorio.html';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
