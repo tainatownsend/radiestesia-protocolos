@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf9"><title>Sintonizze · North Star v4.2.2 · Assistidos CRUD</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf9"><title>Sintonizze · North Star v4.2.3 · Mobile UX Polish</title>
 <style>
 :root{--bg:#fbfaf7;--bg2:#f5f8f2;--paper:#ffffff;--ink:#173a31;--sub:#667d72;--green:#1e6b51;--green-strong:#15513d;--leaf:#e8f3e7;--mint:#f2f8f1;--mint-2:#edf6ef;--line:#d9e6dd;--sand:#ffeddf;--orange:#ea7f4d;--orange-soft:#fff2ea;--lav:#ede6fb;--lav-strong:#8e5ad7;--shadow:0 18px 40px rgba(26,63,48,.08);--shadow-soft:0 10px 24px rgba(26,63,48,.05);--radius:24px;color-scheme:light}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at top,#ffffff 0,#fbfaf7 40%,#f7f8f3 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button,input,select,textarea{min-width:0}a{color:inherit;text-decoration:none}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #9ddab1;outline-offset:2px}
@@ -1198,6 +1198,115 @@ document.addEventListener('click',e=>{
       return go('new-session');
     }
     return go('subject-list');
+  },true);
+
+  render();
+})();
+</script>
+
+<style id="sintonizze-v424-mobile-polish">
+/* v4.2.3: visible Assistidos CRUD + mobile spacing polish */
+.v42-subject{grid-template-columns:52px minmax(0,1fr) 28px!important;gap:12px!important;padding:12px!important}
+.v42-subject>span:nth-child(2){min-width:0;display:grid;gap:3px}
+.v42-subject>span:nth-child(2) strong{display:block;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
+.v42-subject>span:nth-child(2) small{display:block;font-size:12px;line-height:1.25;color:#718496;overflow-wrap:anywhere}
+.v42-subject .thumb{width:52px!important;height:52px!important;border-radius:14px!important}
+.v424-add-subject-inline{width:100%;margin:0 0 10px;border:1px dashed var(--v42-teal);background:#f4feff;color:var(--v42-navy);border-radius:15px;padding:12px;font-weight:850;text-align:center}
+.v42-more-list button{grid-template-columns:48px minmax(0,1fr) 18px!important;gap:12px!important;padding:13px!important}
+.v42-more-list button>span:nth-child(2){min-width:0;display:grid;gap:3px}
+.v42-more-list button strong{display:block!important;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
+.v42-more-list button small{display:block!important;font-size:11px;line-height:1.3;color:#718496;overflow-wrap:anywhere}
+.v42-more-list .mi{width:48px!important;height:48px!important}
+.v424-profile-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.v424-profile-head .btn{min-height:42px}
+.v424-profile-actions{display:flex;gap:7px;flex-wrap:wrap}
+.v421-assistido .v4-subject-hero{margin-bottom:8px!important}
+.v421-assistido .v4-subject-hero .grow{min-width:0}
+.v421-assistido .v4-subject-hero h1{overflow-wrap:anywhere}
+.v421-assistido-tabs{margin-top:8px!important}
+.v421-assistido .sectionhead{gap:10px}
+.v421-assistido .sectionhead h2{min-width:0}
+.v421-assistido .v4-timeline button .grow{min-width:0}
+.v421-assistido .v4-timeline strong,.v421-assistido .v4-timeline em{overflow-wrap:anywhere}
+.v423-subject-head{position:sticky;top:0;z-index:3;background:linear-gradient(180deg,#f8fcfd 80%,rgba(248,252,253,0));padding:5px 0 12px}
+.v423-subject-card{grid-template-columns:46px minmax(0,1fr) auto!important}
+.v423-subject-actions{align-items:center}
+@media(max-width:560px){
+  .v42-page>.v42-head{margin-bottom:10px}
+  .v42-page>.title{font-size:clamp(28px,8vw,38px);line-height:1.05}
+  .v42-page>.lead{font-size:15px;line-height:1.45}
+  .v42-subjects{gap:8px}
+  .v42-activity-grid{gap:8px}
+  .v42-activity{padding:12px 10px;min-height:116px}
+  .v42-activity strong{font-size:15px;line-height:1.2}.v42-activity small{font-size:11px;line-height:1.3}
+  .v42-more-list{gap:9px}
+  .v424-profile-head{align-items:stretch}
+  .v424-profile-actions .btn{flex:1}
+  .v421-assistido .v4-assistido-hero{grid-template-columns:58px minmax(0,1fr)!important}
+  .v421-assistido .v4-assistido-hero>.btn{grid-column:1/-1;width:100%}
+  .v421-assistido-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .v421-assistido-tabs button{font-size:11px!important;padding:10px 2px!important}
+  .v423-subject-head{display:grid!important}
+  .v423-subject-head .btn{width:100%!important}
+  .v423-subject-actions{display:grid!important;grid-template-columns:1fr 34px;gap:4px}
+}
+</style>
+<script id="sintonizze-v424-mobile-polish-script">
+(function(){
+  const previousShell=shell;
+  shell=function(content){
+    previousShell(content);
+
+    if(ui.route==='new-session'){
+      const subjects=document.querySelector('.v42-subjects');
+      if(subjects && !document.querySelector('[data-v424="add-subject-session"]')){
+        const b=document.createElement('button');
+        b.className='v424-add-subject-inline';
+        b.dataset.v424='add-subject-session';
+        b.textContent='＋ Adicionar novo assistido';
+        subjects.parentNode.insertBefore(b,subjects);
+      }
+    }
+
+    if(ui.route==='assistidos'){
+      const section=document.querySelector('.v421-assistido');
+      if(section){
+        const oldHead=section.querySelector('.v4-page-head');
+        if(oldHead){
+          const head=document.createElement('div');
+          head.className='v424-profile-head';
+          head.innerHTML='<button class="btn subtle" data-v424="back-list">← Assistidos</button><div class="v424-profile-actions"><button class="btn primary" data-v424="add-subject-profile">＋ Adicionar</button></div>';
+          oldHead.replaceWith(head);
+        }
+        section.querySelectorAll('[data-v422="manage-subjects"]').forEach(n=>n.remove());
+      }
+    }
+
+    if(ui.route==='subject-list'){
+      const h=document.querySelector('.v423-subject-head');
+      if(h && !h.querySelector('[data-v423="new"]')){
+        const b=document.createElement('button');
+        b.className='btn primary';b.dataset.v423='new';b.textContent='＋ Adicionar assistido';h.appendChild(b);
+      }
+    }
+  };
+
+  document.addEventListener('click',function(e){
+    const nav=e.target.closest('.bottomnav [data-nav="subject-list"],.desk-side [data-nav="subject-list"]');
+    if(nav){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      ui.v421AssistidoTab='overview';
+      return go('subject-list');
+    }
+    const el=e.target.closest('[data-v424]');if(!el)return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    if(el.dataset.v424==='back-list')return go('subject-list');
+    if(el.dataset.v424==='add-subject-session'){
+      ui.v423SubjectOrigin='new-session';ui.v422SubjectEditId=null;return go('subject-new');
+    }
+    if(el.dataset.v424==='add-subject-profile'){
+      ui.v423SubjectOrigin='subject-list';ui.v422SubjectEditId=null;return go('subject-new');
+    }
   },true);
 
   render();
