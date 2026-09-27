@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf9"><title>Sintonizze · North Star v4.2.3 · Mobile UX Polish</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf9"><title>Sintonizze · North Star v4.2.4 · Assistidos Visible CTA</title>
 <style>
 :root{--bg:#fbfaf7;--bg2:#f5f8f2;--paper:#ffffff;--ink:#173a31;--sub:#667d72;--green:#1e6b51;--green-strong:#15513d;--leaf:#e8f3e7;--mint:#f2f8f1;--mint-2:#edf6ef;--line:#d9e6dd;--sand:#ffeddf;--orange:#ea7f4d;--orange-soft:#fff2ea;--lav:#ede6fb;--lav-strong:#8e5ad7;--shadow:0 18px 40px rgba(26,63,48,.08);--shadow-soft:0 10px 24px rgba(26,63,48,.05);--radius:24px;color-scheme:light}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at top,#ffffff 0,#fbfaf7 40%,#f7f8f3 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.5}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button,input,select,textarea{min-width:0}a{color:inherit;text-decoration:none}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #9ddab1;outline-offset:2px}
@@ -1310,6 +1310,44 @@ document.addEventListener('click',e=>{
   },true);
 
   render();
+})();
+</script>
+
+<style id="sintonizze-v425-assistido-fab">
+.v425-assistido-fab{
+  position:fixed;right:18px;bottom:94px;z-index:50;
+  border:0;border-radius:999px;padding:13px 17px;
+  background:linear-gradient(135deg,#0b98a6,#57d7db);
+  color:#fff;font-weight:900;font-size:14px;
+  box-shadow:0 10px 24px rgba(11,49,84,.22);
+  min-height:48px
+}
+@media(min-width:1020px){.v425-assistido-fab{right:32px;bottom:28px}}
+</style>
+<script id="sintonizze-v425-assistido-fab-script">
+(function(){
+  function syncFab(){
+    document.querySelectorAll('.v425-assistido-fab').forEach(n=>n.remove());
+    if(!['assistidos','subject-list'].includes(ui.route))return;
+    const b=document.createElement('button');
+    b.className='v425-assistido-fab';
+    b.dataset.v425='add-subject';
+    b.textContent='＋ Assistido';
+    document.body.appendChild(b);
+  }
+  const prevRender=render;
+  render=function(){const out=prevRender();requestAnimationFrame(syncFab);return out};
+
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('[data-v425="add-subject"]');if(!el)return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    ui.v423SubjectOrigin='subject-list';
+    ui.v422SubjectEditId=null;
+    document.querySelectorAll('.v425-assistido-fab').forEach(n=>n.remove());
+    go('subject-new');
+  },true);
+
+  syncFab();
 })();
 </script>
 </body></html>
