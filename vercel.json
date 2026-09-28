@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/sintonizze-preview/",
+      "permanent": false
+    },
+    {
+      "source": "/index.html",
+      "destination": "/sintonizze-preview/",
+      "permanent": false
+    }
+  ]
+}

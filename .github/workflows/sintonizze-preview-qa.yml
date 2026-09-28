@@ -1,0 +1,24 @@
+name: Sintonizze preview regression
+on:
+  push:
+    branches: ['sintonizze/northstar-v4-2-implementation-preview']
+    paths: ['sintonizze-preview/**', '.github/workflows/sintonizze-preview-qa.yml']
+  pull_request:
+    paths: ['sintonizze-preview/**', '.github/workflows/sintonizze-preview-qa.yml']
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sintonizze-preview
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: sintonizze-preview/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test
