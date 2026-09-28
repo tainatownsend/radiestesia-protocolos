@@ -39,3 +39,11 @@ DOM simulado verifica funcionamento, não layout ou impressão física. QA visua
 ## Gate humano remanescente
 
 Validar no iPhone físico: cadastro → investigação → tratamento com dois focos → impressão/salvar PDF. Conferir cortes, conforto dos toques, retorno e persistência. Backend/Supabase e promoção a produção continuam após esse aceite, conforme decisão anterior. O preview continua local, sem login/sincronização. “Arquivos” ainda guarda somente metadados, não anexos completos.
+
+## Verificação do preview publicado — 27/09/2026
+
+Fluxo exercitado em Chromium: investigação completa de 12 perguntas, percentual 25%, leituras iniciais 250/10.000, observação, criação de tratamento vinculado, inclusão de gráfico/comando, mudança de duração, salvamento, recarga e reabertura do resultado. Os dados persistiram; o relatório de impressão incluiu contexto, leituras, percentual, foco, gráfico, duração, nota e comando. Retorno da visualização de impressão verificado.
+
+Encontrado e corrigido durante o teste: o resumo de Sessões ainda mostrava zero tratamentos porque contava somente a estrutura antiga. Contagem e rótulo agora incluem tratamentos vinculados v4.2. O cabeçalho de tratamento também acompanha seu estado real. Regressão existente ampliada para cobrir o resumo.
+
+O botão de impressão foi acionado, mas este navegador remoto não exibiu o diálogo nativo. Portanto, impressão física/salvar PDF no Safari ainda NÃO está validada. Não foi feita validação visual de todas as larguras nesta rodada.
