@@ -1,6 +1,6 @@
 # Base privada do Sintonizze
 
-Status: implementada e testada localmente; não ativada no preview e não aplicada a qualquer banco remoto. Aceite do fluxo v4.2.6 recebido do usuário em 28/09/2026 UTC. O teste físico permanece evidência do usuário, não uma execução automatizada.
+Status: migração aplicada ao projeto remoto Sintonizze; integração com o preview ainda não ativada. Aceite do fluxo v4.2.6 recebido do usuário em 28/09/2026 UTC. O teste físico permanece evidência do usuário, não uma execução automatizada.
 
 ## Decisão de implementação
 
@@ -32,3 +32,11 @@ Este é um mecanismo de persistência inicial, não sincronização automática/
 Limites: PGlite não valida entrega de e-mail, PostgREST remoto ou concorrência entre conexões reais. Esses testes permanecem na etapa 6. Nenhuma chamada remota de salvamento foi executada.
 
 Referências consultadas: [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [OTP por e-mail](https://supabase.com/docs/guides/auth/auth-email-passwordless).
+
+## Provisionamento remoto — 28/09/2026 UTC
+
+Projeto `Sintonizze` (`fmddcjleqduthraogray`) criado na organização Vereda, conforme escolha explícita do usuário. Região `ca-central-1`; custo de criação confirmado pelo Supabase: US$ 0/mês. Migração `sintonizze_private_snapshots` aplicada com sucesso.
+
+Verificação remota: RLS ativa nas duas tabelas, leitura anônima negada, UPDATE/DELETE negados ao cliente, políticas por proprietário e associação presentes, funções SECURITY INVOKER com search_path vazio. Advisor de segurança sem alertas. Banco com zero snapshots; nenhum dado local enviado.
+
+Próxima etapa: definir e-mail de acesso, configurar Auth e integrar o frontend. Os itens 1 e 2 da sequência acima estão concluídos. Os testes de login, SMTP, PostgREST autenticado e dois dispositivos ainda estão pendentes.
