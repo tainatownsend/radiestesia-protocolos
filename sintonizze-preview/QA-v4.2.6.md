@@ -36,9 +36,11 @@ Seis testes de regressão usando o HTML integral e DOM simulado:
 
 DOM simulado verifica funcionamento, não layout ou impressão física. QA visual no navegador e aceite Safari/iPhone devem ser registrados separadamente.
 
-## Gate humano remanescente
+## Gate humano — aprovado
 
 Validar no iPhone físico: cadastro → investigação → tratamento com dois focos → impressão/salvar PDF. Conferir cortes, conforto dos toques, retorno e persistência. Backend/Supabase e promoção a produção continuam após esse aceite, conforme decisão anterior. O preview continua local, sem login/sincronização. “Arquivos” ainda guarda somente metadados, não anexos completos.
+
+Aceite recebido do usuário: “Aprovado”, em 28/09/2026 UTC. Próxima etapa iniciada: base privada de persistência; detalhes e limites em `cloud/README.md`. Este aceite não registra uma nova execução automatizada no Safari e não promove o preview a produção.
 
 ## Verificação do preview publicado — 27/09/2026
 
